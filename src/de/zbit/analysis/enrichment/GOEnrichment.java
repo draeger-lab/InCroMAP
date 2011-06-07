@@ -1,0 +1,128 @@
+/**
+ *
+ * @author Clemens Wrzodek
+ */
+package de.zbit.analysis.enrichment;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.logging.Level;
+
+import de.zbit.data.EnrichmentObject;
+import de.zbit.mapper.AbstractMapper;
+import de.zbit.mapper.GO_ID2GO_NameMapper;
+import de.zbit.mapper.MappingUtils.IdentifierType;
+import de.zbit.mapper.enrichment.GeneID2GO_ID_Mapper;
+import de.zbit.math.Bonferroni;
+import de.zbit.parser.Species;
+import de.zbit.util.AbstractProgressBar;
+import de.zbit.util.ProgressBar;
+
+/**
+ * Identifies enriched GO Terms in a list of genes.
+ * @author Clemens Wrzodek
+ */
+public class GOEnrichment extends AbstractEnrichment<String>  {
+
+  /**
+   * @param spec
+   * @param prog
+   * @throws IOException
+   */
+  public GOEnrichment(Species spec, AbstractProgressBar prog) throws IOException {
+    super(spec, prog);
+  }
+  
+  /**
+   * @param spec
+   * @throws IOException
+   */
+  public GOEnrichment(Species spec) throws IOException {
+    super(spec);
+  }
+  
+  /**
+   * @param mapper
+   * @param prog
+   * @throws IOException
+   */
+  public GOEnrichment(GeneID2GO_ID_Mapper mapper, AbstractProgressBar prog) throws IOException {
+    super(mapper, prog);
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.analysis.enrichment.AbstractEnrichment#getDefaultEnrichmentID2NameMapping()
+   */
+  @Override
+  protected AbstractMapper<String, String> getDefaultEnrichmentID2NameMapping() {
+    GO_ID2GO_NameMapper goID2name_mapper=null;
+    try {
+      goID2name_mapper = new GO_ID2GO_NameMapper(false, prog, species.getNCBITaxonID());
+    } catch (IOException e) { // not severe, will leave the id field blank.
+      log.log(Level.WARNING, "Could not read GO term mapping file.", e);
+    }
+    return goID2name_mapper;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.analysis.enrichment.AbstractEnrichment#initializeEnrichmentMappings()
+   */
+  @Override
+  protected void initializeEnrichmentMappings() throws IOException {
+    if (geneID2enrich_ID==null) {
+      geneID2enrich_ID = new GeneID2GO_ID_Mapper(species, prog);
+    }
+    else if (species!=null && geneID2enrich_ID!=null) {
+      int tax_id = ((GeneID2GO_ID_Mapper)geneID2enrich_ID).getTaxonomyID();
+      if (tax_id!=species.getNCBITaxonID().intValue()) {
+        log.log(Level.WARNING, String.format("Incompatible Species in GO enrichment: %s and %s %s", 
+          tax_id, species.getNCBITaxonID(), species));
+      }
+    }
+  }
+
+  /**
+   * @param args
+   * @throws Exception 
+   */
+  @SuppressWarnings("unchecked")
+  public static void main(String[] args) throws Exception {
+    Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
+    
+    GOEnrichment e = new GOEnrichment(species,new ProgressBar(0));
+    
+    // Random Enrichment
+    Collection<Integer> geneList = Arrays.asList(76884, 226781, 216233, 449000, 20848, 17281, 214897, 18117, 67016, 11990, 27418, 17846, 170728, 243272, 93681, 269774, 17129, 215653, 107239, 12419, 19730, 327959, 16502, 51897, 16011, 228357, 104348, 12616, 66868, 109689, 234267, 18789, 216760, 71508, 320184, 56324, 66687, 104174, 170439, 12387, 239447, 23792, 68010, 268860, 13082, 218442, 216456, 239447, 239447, 239447, 11941, 234267, 20617, 17064, 71703, 20855, 239447, 104174, 11846, 14560, 217082, 94040, 11639, 223881, 239447, 14007, 54610, 228071, 16658, 12014, 239447, 18595, 67475, 21912, 320165, 239447, 239447, 19017, 13082, 18595, 22221, 14057, 74206, 73251, 20893, 18027, 16911, 74148, 14634, 330409, 18542, 11826, 56363, 239447, 67468, 433938, 70611, 56468, 215789, 327826, 15191, 243548, 69632, 272027, 18751, 104174, 11855, 80892, 12753, 79235, 93690, 320311, 228491, 230700, 229759, 217371, 64075, 68817, 68465, 17132, 104174, 12032, 245572, 12638, 22415, 14377, 12226, 320924, 213988, 114615, 320538, 226442, 225631, 109594, 77018, 14660, 207212, 230233, 52679, 231769, 353187, 433693, 328949, 241568, 217082, 213491, 231999, 55994, 99375, 70571, 15245, 18488, 109205, 56392, 100017, 12226, 65962, 22762, 18193, 55980, 12145, 67886, 18186, 13593, 26422, 14451, 75901, 18072, 104099, 239447, 239555, 13831, 71777, 217039, 22589, 12156, 236511, 68107, 56809, 19211, 381695, 229759, 11906, 20269, 14348, 70097, 20822, 52348, 230379, 13982, 140486, 226255, 225283, 53614, 227325, 17536, 70900, 54610, 60611, 106143, 76366, 320541, 16443, 21780, 216965, 73379, 27386, 14823, 245622, 16001, 13846, 17933, 494504, 100710, 69257, 211255, 269275, 60532, 12934, 71834, 72033, 53860, 19267, 230753, 16878);
+    e.setFDRCorrectionMethod(new Bonferroni(geneList.size()));
+    List<EnrichmentObject<String>> en = e.getEnrichments(geneList, IdentifierType.GeneID);
+    
+    // Read mRNA
+    /*mRNAReader r = new mRNAReader(3, IdentifierType.GeneID, species);
+    r.addSecondIdentifier(1, IdentifierType.Symbol);
+    r.addAdditionalData(0, "probe_name");
+    r.addAdditionalData(2, "description");
+    r.addSignalColumn(27, SignalType.FoldChange, "Ctnnb1"); // 27-30 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+    r.addSignalColumn(31, SignalType.pValue, "Ctnnb1"); // 31-34 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+    r.setProgressBar(e.prog);
+    
+    // Sort by fold change
+    List<mRNA> c = new ArrayList<mRNA>(r.read("mRNA_data_new.txt"));
+    Collections.sort(c, Signal.getComparator("Ctnnb1", SignalType.FoldChange));
+    
+    // Get all fold changes below -1.7
+    List<mRNA> geneList = new ArrayList<mRNA>();
+    for (int i=0; i<c.size(); i++) {
+      if (c.get(i).getSignal(SignalType.FoldChange, "Ctnnb1").getSignal().floatValue() > -1.7) break;
+      geneList.add(c.get(i));
+    }
+    
+    System.out.println("PW Enrichment on " + geneList.size() + " genes.");
+    List<EnrichmentObject<String>> en = e.getEnrichments(geneList);*/
+    
+    System.out.println(en.toString().replace("]], [", "]]\n["));
+  }
+
+
+}
