@@ -306,10 +306,10 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    */
   @Override
   public String toString() {
-    return Arrays.deepToString(toResultArray());
+    return Arrays.deepToString(toArray());
   }
   
-  public Object[] toResultArray() {
+  public Object[] toArray() {
     
     Object[] ret = new Object[7];
     

@@ -31,7 +31,7 @@ import de.zbit.util.Reflect;
  * many functionalities.
  * @author Clemens Wrzodek
  */
-public abstract class NameAndSignals implements Serializable, Comparable<Object>,Cloneable  {
+public abstract class NameAndSignals implements Serializable, Comparable<Object>, Cloneable, TableResult  {
   private static final long serialVersionUID = 732610412438240532L;
   public static final transient Logger log = Logger.getLogger(NameAndSignals.class.getName());
 
@@ -508,6 +508,88 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     
     r.append("]");
     return r.toString();
+  }
+  
+  public int getNumberOfAdditionalData() {
+    return additional_data==null?0:additional_data.size();
+  }
+  public int getNumberOfSignals() {
+    return signals==null?0:signals.size();
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#getColumnCount()
+   */
+  public int getColumnCount() {
+    int c = 1; //Name
+    c+=getNumberOfSignals(); //Signals
+    c+=getNumberOfAdditionalData(); //Additional data
+    return c;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#getColumnClass(int)
+   */
+  public Class<?> getColumnClass(int columnIndex) {
+    int signalStart=1;
+    int afterSignals = signalStart+getNumberOfSignals();
+    if (columnIndex == 0) return String.class; //Name
+    else if (columnIndex >= signalStart && columnIndex<afterSignals)
+      return Number.class;
+    else if (columnIndex >= afterSignals && columnIndex<afterSignals+getNumberOfAdditionalData()) {
+      columnIndex-=afterSignals;
+      Iterator<String> it = additional_data.keySet().iterator();
+      int i=0;
+      while (it.hasNext()) {
+        if (columnIndex==i++) {
+          String key = it.next();
+          return additional_data.get(key).getClass();
+        } else it.next();
+      }
+    }
+    return Object.class;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#getColumnName(int)
+   */
+  public String getColumnName(int columnIndex) {
+    int signalStart=1;
+    int afterSignals = signalStart+getNumberOfSignals();
+    if (columnIndex == 0) return "Name";
+    else if (columnIndex >= signalStart && columnIndex<afterSignals) {
+      Signal sig = signals.get(columnIndex-signalStart);
+      return sig.getName() + " [" + sig.getType().toString() + "]";
+    } else if (columnIndex >= afterSignals && columnIndex<afterSignals+getNumberOfAdditionalData()) {
+      columnIndex-=afterSignals;
+      Iterator<String> it = additional_data.keySet().iterator();
+      int i=0;
+      while (it.hasNext()) {
+        if (columnIndex==i++) {
+          return it.next();
+        } else it.next();
+      }
+    }
+    return "";
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#toArray()
+   */
+  public Object[] toArray() {
+    // TODO Auto-generated method stub
+    
+    // TODO: Create a generic getObject at Column method (take toArray(int) ?)
+    // And always return the appropriate thing (header, class or content).
+    return null;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#toArray(int)
+   */
+  public Object toArray(int colIndex) {
+    // TODO Auto-generated method stub
+    return null;
   }
   
 }
