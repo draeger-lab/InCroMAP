@@ -50,7 +50,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    * @see javax.swing.table.TableModel#getValueAt(int, int)
    */
   public Object getValueAt(int rowIndex, int columnIndex) {
-    return ns.get(rowIndex).toArray(columnIndex);
+    return ns.get(rowIndex).getObjectAtColumn(columnIndex);
   }
   
   /* (non-Javadoc)
@@ -59,7 +59,8 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
   @Override
   public Class<?> getColumnClass(int columnIndex) {
     if (ns.size()<1) return super.getColumnClass(columnIndex);
-    Class<?> c = ns.get(0).getColumnClass(columnIndex);
+    Object o = ns.get(0).getObjectAtColumn(columnIndex);
+    Class<?> c = o!=null?o.getClass():null;
     if (c==null) return super.getColumnClass(columnIndex);
     return c;
   }

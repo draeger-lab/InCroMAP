@@ -7,7 +7,8 @@ package de.zbit.gui;
 import java.awt.Component;
 import java.io.File;
 import java.net.URL;
-import java.util.logging.Level;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.JFileChooser;
@@ -21,8 +22,11 @@ import javax.swing.filechooser.FileFilter;
 
 import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.integrator.IntegratorIOOptions;
+import de.zbit.io.miRNAReader;
 import de.zbit.util.prefs.KeyProvider;
+import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.SBPreferences;
+import de.zbit.util.prefs.SBProperties;
 
 /**
  * A GUI for the Integrator application
@@ -59,11 +63,32 @@ public class IntegratorUI extends BaseFrame {
    */
   private SBPreferences prefsIO;
   
-
+  
+  public static List<Class<? extends KeyProvider>> getStaticCommandLineOptions() {
+    List<Class<? extends KeyProvider>> configList = new LinkedList<Class<? extends KeyProvider>>();
+    configList.add(IntegratorIOOptions.class);
+    configList.add(GUIOptions.class);
+    return configList;
+  }
+  
   /**
    * @param args
    */
   public static void main(String[] args) {
+    SBProperties props = SBPreferences.analyzeCommandLineArguments(
+      getStaticCommandLineOptions(), args);
+    
+    // TODO: Test
+    // - Command line help text AND F1 help text for readability
+    // - Test if submitting as argument works correctly
+    // - Test if default value (if no argument) works correctly
+    // - Test JLabeledComponent and enhance String (toSimpleName()).
+    
+
+//    Class t = Option.getClassFromRange(IntegratorIOOptions.READER, miRNAReader.class.getSimpleName());
+//    System.out.println(t);
+//    System.out.println(IntegratorIOOptions.READER.getRange().isInRange(miRNAReader.class));
+    
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         IntegratorUI ui = new IntegratorUI();
@@ -236,11 +261,13 @@ public class IntegratorUI extends BaseFrame {
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getCommandLineOptions()
    */
+  @SuppressWarnings("unchecked")
   @Override
   public Class<? extends KeyProvider>[] getCommandLineOptions() {
     // TODO Auto-generated method stub
     log.severe("NOT YET IMPLEMENTED!");
-    return null;
+    
+    return getStaticCommandLineOptions().toArray(new Class[0]);
   }
 
   /* (non-Javadoc)
@@ -321,7 +348,8 @@ public class IntegratorUI extends BaseFrame {
       outputFormat.setTitle("Please select the input data type");
       JOptionPane.showMessageDialog(this, outputFormat, getApplicationName(), JOptionPane.QUESTION_MESSAGE);
       System.out.println(outputFormat.getSelectedItem().toString());
-      format[0] = (Class<?>) outputFormat.getSelectedItem();
+      format[0] = Option.getClassFromRange(IntegratorIOOptions.READER, outputFormat.getSelectedItem().toString());
+      System.out.println(format[0]);
     }
 
 

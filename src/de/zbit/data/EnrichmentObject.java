@@ -19,6 +19,7 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.math.EnrichmentPvalue;
 import de.zbit.math.HypergeometricTest;
+import de.zbit.util.StringUtil;
 import de.zbit.util.Utils;
 
 /**
@@ -311,6 +312,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
   
   public Object[] toArray() {
     
+    // If you change something here, remember to also change #getColumnName(int).
     Object[] ret = new Object[7];
     
     ret[0] = getIdentifier();
@@ -376,5 +378,49 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
   }
   
   
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#toCSV(int)
+   */
+  @Override
+  public String toCSV(int elementNumber) {
+    return StringUtil.implode(toArray(), "\t");
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#getObjectAtColumn(int)
+   */
+  @Override
+  public Object getObjectAtColumn(int columnIndex) {
+    Object[] a = toArray();
+    if (columnIndex>=0 && columnIndex<a.length)
+      return a[columnIndex];
+    else
+      return null;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#getColumnName(int)
+   */
+  @Override
+  public String getColumnName(int columnIndex) {
+    Object[] ret = new Object[7];
+    
+    ret[0] = getIdentifier();
+    ret[1] = getName();
+    ret[2] = new Ratio(getNumberOfEnrichedGenesInClass(), getTotalGenesInSourceList());
+    ret[3] = new Ratio(getTotalGenesInClass(), getTotalGenesInGenome());
+    ret[4] = getPValue();
+    ret[5] = getQValue();
+    ret[6] = getGenesInClass();
+    
+    if (columnIndex==0) return "ID";
+    else if (columnIndex==1) return "Name";
+    else if (columnIndex==2) return "List ratio";
+    else if (columnIndex==3) return "BG ratio";
+    else if (columnIndex==4) return "P-value";
+    else if (columnIndex==5) return "Q-value";
+    else if (columnIndex==6) return "Genes";
+    else return null;
+  }
   
 }

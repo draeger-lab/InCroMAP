@@ -24,11 +24,11 @@ public class mRNA extends NameAndSignals {
    */
   private final static int default_geneID = -1;
   
-  
   /**
-   * Corresponding NCBI Gene ID (Entrez).
+   * The key to use in the {@link #addData(String, Object)} map to add
+   * the corresponding NCBI Gene ID (Entrez).
    */
-  private int geneID;
+  private final static String gene_id_key = "Gene_ID";
   
   /**
    * Initialize a new mRNA with the given name.
@@ -36,7 +36,7 @@ public class mRNA extends NameAndSignals {
    */
   public mRNA(String name) {
     super(name);
-    geneID=default_geneID;
+    setGeneID(default_geneID);
   }
   
   /**
@@ -53,14 +53,15 @@ public class mRNA extends NameAndSignals {
    * @param geneID
    */
   public void setGeneID(int geneID) {
-    this.geneID = geneID;
+    super.addData(gene_id_key, new Integer(geneID));
   }
   
   /**
    * @return associated NCBI Gene ID.
    */
   public int getGeneID() {
-    return geneID;
+    Integer i = (Integer) super.getData(gene_id_key);
+    return i==null?default_geneID:i;
   }
   
   
@@ -72,7 +73,7 @@ public class mRNA extends NameAndSignals {
     int r = super.compareTo(o); // Compare mRNA name
     if (o instanceof mRNA) {
       mRNA ot = (mRNA) o;
-      if (r==0) r = geneID-ot.geneID;
+      if (r==0) r = getGeneID()-ot.getGeneID();
     }
     
     return r;
@@ -83,7 +84,7 @@ public class mRNA extends NameAndSignals {
    */
   @Override
   public int hashCode() {
-    return super.hashCode() + geneID;
+    return super.hashCode() + getGeneID();
   }
   
   /* (non-Javadoc)
@@ -92,7 +93,7 @@ public class mRNA extends NameAndSignals {
   @Override
   public String toString() {
     String add = null;
-    if (geneID>=0) add="gene_id:"+geneID;
+    //if (geneID>=0) add="gene_id:"+geneID;
     return super.toString(add);
   }
   
@@ -110,7 +111,7 @@ public class mRNA extends NameAndSignals {
     }
     
     // Set gene id, if same or unset if they differ
-    ((mRNA)target).geneID = geneIDs.size()==1?geneIDs.iterator().next():default_geneID;
+    ((mRNA)target).setGeneID(geneIDs.size()==1?geneIDs.iterator().next():default_geneID);
   }
   
   /* (non-Javadoc)
@@ -118,7 +119,7 @@ public class mRNA extends NameAndSignals {
    */
   @Override
   protected Object clone() throws CloneNotSupportedException {
-    mRNA nm = new mRNA(name, geneID);
+    mRNA nm = new mRNA(name, getGeneID());
     super.cloneAbstractFields(nm, this);
     return nm;
   }

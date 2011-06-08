@@ -19,7 +19,7 @@ public interface IntegratorIOOptions extends de.zbit.util.prefs.KeyProvider {
    */
   public static final Option<Class> READER = new Option<Class>("Data type",
       Class.class, "Readable input data types",
-      new Range<Class>(Class.class, Range.toRangeString(Arrays.asList(available_formats))),
-      (short) 2, "-r", available_formats[0]);
+      new Range<Class>(Class.class, Arrays.asList(available_formats)),
+      (short) 2, "-t", available_formats[0]);
   
 }

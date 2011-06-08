@@ -24,24 +24,12 @@ public interface TableResult {
   public int getColumnCount();
   
   /**
-   * @return the column contents
-   */
-  public Object[] toArray();
-  
-  /**
-   * The value at the given columnIndex
+   * The value at the given columnIndex. This is and can also be used
+   * to get the {@link Class} of each column!
    * @param colIndex
    * @return
    */
-  public Object toArray(int colIndex);
-  
-  /**
-   * The class of the {@link Object} at the given index.
-   * Must be descriptive for {@link #toArray()}.
-   * @param columnIndex
-   * @return
-   */
-  public Class<?> getColumnClass(int columnIndex);
+  public Object getObjectAtColumn(int colIndex);
   
   /**
    * A name for the given columnIndex.

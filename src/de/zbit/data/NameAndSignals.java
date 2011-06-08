@@ -20,6 +20,8 @@ import java.util.logging.Logger;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.exception.CorruptInputStreamException;
+import de.zbit.io.CSVwriteable;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Reflect;
 
@@ -31,7 +33,7 @@ import de.zbit.util.Reflect;
  * many functionalities.
  * @author Clemens Wrzodek
  */
-public abstract class NameAndSignals implements Serializable, Comparable<Object>, Cloneable, TableResult  {
+public abstract class NameAndSignals implements Serializable, Comparable<Object>, Cloneable, CSVwriteable, TableResult  {
   private static final long serialVersionUID = 732610412438240532L;
   public static final transient Logger log = Logger.getLogger(NameAndSignals.class.getName());
 
@@ -526,37 +528,27 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     c+=getNumberOfAdditionalData(); //Additional data
     return c;
   }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.data.TableResult#getColumnClass(int)
-   */
-  public Class<?> getColumnClass(int columnIndex) {
-    int signalStart=1;
-    int afterSignals = signalStart+getNumberOfSignals();
-    if (columnIndex == 0) return String.class; //Name
-    else if (columnIndex >= signalStart && columnIndex<afterSignals)
-      return Number.class;
-    else if (columnIndex >= afterSignals && columnIndex<afterSignals+getNumberOfAdditionalData()) {
-      columnIndex-=afterSignals;
-      Iterator<String> it = additional_data.keySet().iterator();
-      int i=0;
-      while (it.hasNext()) {
-        if (columnIndex==i++) {
-          String key = it.next();
-          return additional_data.get(key).getClass();
-        } else it.next();
-      }
-    }
-    return Object.class;
-  }
 
   /* (non-Javadoc)
    * @see de.zbit.data.TableResult#getColumnName(int)
    */
   public String getColumnName(int columnIndex) {
-    int signalStart=1;
+    return getColumnName(columnIndex, null);
+  }
+  
+  /**
+   * Allows extending classes to put their own objects between the {@link #name}
+   * (always the first column) and {@link #signals}.
+   * @param columnIndex
+   * @param extensionNames column headers for extending columns.
+   * @return column header at the given index.
+   */
+  public String getColumnName(int columnIndex, String[] extensionNames) {
+    int signalStart=1+(extensionNames==null?0:extensionNames.length);
     int afterSignals = signalStart+getNumberOfSignals();
     if (columnIndex == 0) return "Name";
+    else if (columnIndex >= 1 && columnIndex<signalStart)
+      return extensionNames[columnIndex-1];
     else if (columnIndex >= signalStart && columnIndex<afterSignals) {
       Signal sig = signals.get(columnIndex-signalStart);
       return sig.getName() + " [" + sig.getType().toString() + "]";
@@ -572,24 +564,72 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     }
     return "";
   }
-
+  
   /* (non-Javadoc)
-   * @see de.zbit.data.TableResult#toArray()
+   * @see de.zbit.data.TableResult#getObjectAtColumn(int)
    */
-  public Object[] toArray() {
-    // TODO Auto-generated method stub
-    
-    // TODO: Create a generic getObject at Column method (take toArray(int) ?)
-    // And always return the appropriate thing (header, class or content).
-    return null;
-  }
-
-  /* (non-Javadoc)
-   * @see de.zbit.data.TableResult#toArray(int)
-   */
-  public Object toArray(int colIndex) {
-    // TODO Auto-generated method stub
-    return null;
+  public Object getObjectAtColumn(int columnIndex) {
+    return getObjectAtColumn(columnIndex, null);
   }
   
+  /**
+   * Allows extending classes to put their own objects between the {@link #name}
+   * (always the first column) and {@link #signals}.
+   * @param columnIndex
+   * @param extensions columns that should be put between name and signals
+   * @return object at the given index
+   */
+  public Object getObjectAtColumn(int columnIndex, Object[] extensions) {
+    int signalStart=1+(extensions==null?0:extensions.length);
+    int afterSignals = signalStart+getNumberOfSignals();
+    if (columnIndex == 0) return this.name;
+    else if (columnIndex >= 1 && columnIndex<signalStart)
+      return extensions[columnIndex-1];
+    else if (columnIndex >= signalStart && columnIndex<afterSignals)
+      return signals.get(columnIndex-signalStart);
+    else if (columnIndex >= afterSignals && columnIndex<afterSignals+getNumberOfAdditionalData()) {
+      columnIndex-=afterSignals;
+      Iterator<String> it = additional_data.keySet().iterator();
+      int i=0;
+      while (it.hasNext()) {
+        if (columnIndex==i++) {
+          String key = it.next();
+          return additional_data.get(key);
+        } else it.next();
+      }
+    }
+    return null;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.io.CSVwriteable#fromCSV(java.lang.String[], int, int)
+   */
+  public void fromCSV(String[] elements, int elementNumber, int CSVversionNumber)
+    throws CorruptInputStreamException {
+    log.log(Level.SEVERE, "fromCSV() not supported in NameAndSignals.");
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.io.CSVwriteable#getCSVOutputVersionNumber()
+   */
+  public int getCSVOutputVersionNumber() {
+    return 0;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.io.CSVwriteable#toCSV(int)
+   */
+  public String toCSV(int elementNumber) {
+    return toCSV(elementNumber, null);
+  }
+  public String toCSV(int elementNumber, Object[] extensions) {
+    StringBuffer ret = new StringBuffer();
+    Object o; int i=0;
+    while ((o=getObjectAtColumn(i++, extensions))!=null) {
+      if (i>1) ret.append("\t");
+      ret.append(o.toString());
+    }
+    return ret.toString();
+  }
+
 }
