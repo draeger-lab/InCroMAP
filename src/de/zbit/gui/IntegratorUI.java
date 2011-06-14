@@ -6,23 +6,34 @@ package de.zbit.gui;
 
 import java.awt.Component;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
+import de.zbit.data.Signal.SignalType;
+import de.zbit.data.mRNA.mRNA;
 import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.integrator.IntegratorIOOptions;
-import de.zbit.io.miRNAReader;
+import de.zbit.io.mRNAReader;
+import de.zbit.mapper.MappingUtils.IdentifierType;
+import de.zbit.parser.Species;
+import de.zbit.util.Utils;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.SBPreferences;
@@ -51,7 +62,7 @@ public class IntegratorUI extends BaseFrame {
    */
   private JTabbedPane tabbedPane;
   
-
+  
   /**
    * Default directory path's for saving and opening files. Only init them
    * once. Other classes should use these variables.
@@ -73,21 +84,22 @@ public class IntegratorUI extends BaseFrame {
   
   /**
    * @param args
+   * @throws IOException 
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     SBProperties props = SBPreferences.analyzeCommandLineArguments(
       getStaticCommandLineOptions(), args);
     
-    // TODO: Test
+    // TODO: Test Class as option type:
     // - Command line help text AND F1 help text for readability
     // - Test if submitting as argument works correctly
     // - Test if default value (if no argument) works correctly
     // - Test JLabeledComponent and enhance String (toSimpleName()).
     
-
-//    Class t = Option.getClassFromRange(IntegratorIOOptions.READER, miRNAReader.class.getSimpleName());
-//    System.out.println(t);
-//    System.out.println(IntegratorIOOptions.READER.getRange().isInRange(miRNAReader.class));
+    
+    //    Class t = Option.getClassFromRange(IntegratorIOOptions.READER, miRNAReader.class.getSimpleName());
+    //    System.out.println(t);
+    //    System.out.println(IntegratorIOOptions.READER.getRange().isInRange(miRNAReader.class));
     
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -132,8 +144,8 @@ public class IntegratorUI extends BaseFrame {
       prefsIO = SBPreferences.getPreferencesFor(IntegratorIOOptions.class);
     }
   }
-
-
+  
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#closeFile()
    */
@@ -143,7 +155,7 @@ public class IntegratorUI extends BaseFrame {
     log.severe("NOT YET IMPLEMENTED!");
     return false;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#createJToolBar()
    */
@@ -153,7 +165,7 @@ public class IntegratorUI extends BaseFrame {
     // TODO: Create toolbar
     return r;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#createMainComponent()
    */
@@ -206,7 +218,7 @@ public class IntegratorUI extends BaseFrame {
     return ((Object) o);
   }
   
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#exit()
    */
@@ -219,7 +231,7 @@ public class IntegratorUI extends BaseFrame {
         return;
       }
     }*/
-
+    
     // Close the app and save caches.
     setVisible(false);
     /*try {
@@ -249,7 +261,7 @@ public class IntegratorUI extends BaseFrame {
     System.exit(0);
     
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getApplicationName()
    */
@@ -257,7 +269,7 @@ public class IntegratorUI extends BaseFrame {
   public String getApplicationName() {
     return appName;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getCommandLineOptions()
    */
@@ -269,7 +281,7 @@ public class IntegratorUI extends BaseFrame {
     
     return getStaticCommandLineOptions().toArray(new Class[0]);
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getDottedVersionNumber()
    */
@@ -277,7 +289,7 @@ public class IntegratorUI extends BaseFrame {
   public String getDottedVersionNumber() {
     return appVersion;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getMaximalFileHistorySize()
    */
@@ -285,7 +297,7 @@ public class IntegratorUI extends BaseFrame {
   public short getMaximalFileHistorySize() {
     return 10;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getURLAboutMessage()
    */
@@ -295,7 +307,7 @@ public class IntegratorUI extends BaseFrame {
     log.severe("NOT YET IMPLEMENTED!");
     return null;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getURLLicense()
    */
@@ -305,7 +317,7 @@ public class IntegratorUI extends BaseFrame {
     log.severe("NOT YET IMPLEMENTED!");
     return null;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getURLOnlineHelp()
    */
@@ -315,7 +327,7 @@ public class IntegratorUI extends BaseFrame {
     log.severe("NOT YET IMPLEMENTED!");
     return null;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getURLOnlineUpdate()
    */
@@ -325,13 +337,17 @@ public class IntegratorUI extends BaseFrame {
     log.severe("NOT YET IMPLEMENTED!");
     return null;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#openFile(java.io.File[])
    */
   @Override
   protected File[] openFile(File... files) {
-    
+    return openFile(files, (Class<?>) null);
+  }
+  
+  protected File[] openFile(File[] files, Class<?>... reader) {
+
     // Ask input file
     if ((files == null) || (files.length < 1)) {
       files = GUITools.openFileDialog(this, openDir, false, true,
@@ -339,27 +355,62 @@ public class IntegratorUI extends BaseFrame {
     }
     if ((files == null) || (files.length < 1)) return files;
     
-    // Ask output format
-    Class<?>[] format=null;
-    if ( (format == null) || (format.length < 1)) {
-      format = new Class[files.length];
-      // TODO: a) multiple files, b) possibility to give fixed input format
+    // Ask file format
+    if ( (reader == null) || (reader.length < 1)) {
+      reader = new Class[1];
       JLabeledComponent outputFormat = (JLabeledComponent) PreferencesPanel.getJComponentForOption(IntegratorIOOptions.READER, prefsIO, null);
       outputFormat.setTitle("Please select the input data type");
       JOptionPane.showMessageDialog(this, outputFormat, getApplicationName(), JOptionPane.QUESTION_MESSAGE);
-      System.out.println(outputFormat.getSelectedItem().toString());
-      format[0] = Option.getClassFromRange(IntegratorIOOptions.READER, outputFormat.getSelectedItem().toString());
-      System.out.println(format[0]);
+      if (Class.class.isAssignableFrom(outputFormat.getSelectedItem().getClass())) {
+        reader[0] = (Class<?>) outputFormat.getSelectedItem();
+      } else {
+        reader[0] = Option.getClassFromRange(IntegratorIOOptions.READER, outputFormat.getSelectedItem().toString());
+      }
     }
-
-
+    
+    //Z:\workspace\Integrator\mRNA_data_new.txt
+      // TODO: Create a new ColumnChooser that allows importing FC/pVal or combinations of multiple observations (like ingenuity).
+    for (int i=0; i<files.length; i++) {
+      JPanel jp = new JPanel(new VerticalLayout());
+      jp.add(IntegratorGUITools.getOrganismSelector());
+      Class<?> r = i<reader.length?reader[i]:reader[0];
+      CSVImporter i = new CSVImporter(jp, f.getPath(), reader[i])
+    }
+    
+    
+      for (int i=0; i<files.length; i++) {
+        Species species;
+        try {
+          species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
+          // TODO: Create dialog for species, identifierType and ColumnSelector.
+          if (mRNAReader.class.isAssignableFrom(reader[i])) {
+            mRNAReader r = new mRNAReader(3, IdentifierType.GeneID, species);
+            r.addSecondIdentifier(1, IdentifierType.Symbol);
+            r.addAdditionalData(0, "probe_name");
+            r.addAdditionalData(2, "description");
+            r.addSignalColumn(27, SignalType.FoldChange, "Ctnnb1"); // 27-30 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+            r.addSignalColumn(31, SignalType.pValue, "Ctnnb1"); // 31-34 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+            
+            //r.progress = new ProgressBar(0);
+            Collection<mRNA> c = r.read(files[i]);
+            ArrayList<mRNA> list = new ArrayList<mRNA>(c);
+            TableResultTableModel<mRNA> table = new TableResultTableModel<mRNA>(list);
+            tabbedPane.addTab(files[i].getName(), new JTable(table));
+          } 
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+            
+      }
+    
+    
     // Translate
     for (File f : files) {
       //createNewTab(f, format);
     }
     return files;
   }
-
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#saveFile()
    */

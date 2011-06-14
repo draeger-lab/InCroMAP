@@ -60,7 +60,6 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
    */
   private ValuePair<Integer, IdentifierType> secondID = null;
   
-  
   public mRNAReader(int identifierCol, IdentifierType idType, Species species) {
     super(identifierCol);
     this.idType = idType;
@@ -185,5 +184,6 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     }
     System.out.println(noGI + " mRNAs without Gene ID.");
   }
+
   
 }

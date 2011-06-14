@@ -4,6 +4,7 @@
  */
 package de.zbit.io;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +14,7 @@ import java.util.logging.Logger;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.mRNA.mRNA;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 
@@ -71,9 +73,21 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     if (additionalDataToRead==null) additionalDataToRead = new ArrayList<ValuePair<Integer, String>>();
     additionalDataToRead.add(new ValuePair<Integer, String>(col,key));
   }
+  
+  /**
+   * @see #read(String)
+   * @param file
+   * @return
+   * @throws Exception 
+   * @throws IOException 
+   */
+  public Collection<T> read(File file) throws IOException, Exception {
+    // TODO Auto-generated method stub
+    return read(file.getPath());
+  }
 
   /**
-   * Read miRNA data from given CSV file.
+   * Read {@link NameAndSignals} data from given CSV file.
    * 
    * <p>Remark:<br/>
    * Your <T extends NameAndSignal> class should define its hashcode
