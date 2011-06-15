@@ -134,7 +134,7 @@ public class PathwayEnrichment {
 
     // Initialize mapper from InputID to GeneID
     AbstractMapper<String, Integer> mapper=null;
-    if (idType!=null && !idType.equals(IdentifierType.GeneID)) {
+    if (idType!=null && !idType.equals(IdentifierType.NCBI_GeneID)) {
       try {
         mapper = MappingUtils.initialize2GeneIDMapper(idType, prog, species);
       } catch (IOException e) {
@@ -162,7 +162,7 @@ public class PathwayEnrichment {
         }
       } else if (Integer.class.isAssignableFrom(gene.getClass())) {
         geneID = (Integer) gene;
-      } else if (idType.equals(IdentifierType.GeneID)) {
+      } else if (idType.equals(IdentifierType.NCBI_GeneID)) {
         geneID = Integer.parseInt(gene.toString());
       } else {
         log.log(Level.WARNING, "Could not get Entrez Gene ID for " + gene);
@@ -301,8 +301,8 @@ public class PathwayEnrichment {
     
     // Read mRNA
     Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
-    mRNAReader r = new mRNAReader(3, IdentifierType.GeneID, species);
-    r.addSecondIdentifier(1, IdentifierType.Symbol);
+    mRNAReader r = new mRNAReader(3, IdentifierType.NCBI_GeneID, species);
+    r.addSecondIdentifier(1, IdentifierType.GeneSymbol);
     r.addAdditionalData(0, "probe_name");
     r.addAdditionalData(2, "description");
     r.addSignalColumn(27, SignalType.FoldChange, "Ctnnb1"); // 27-30 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
