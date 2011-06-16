@@ -12,8 +12,10 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.CSVImporterV2.CSVImporterV2;
 import de.zbit.gui.CSVImporterV2.ExpectedColumn;
+import de.zbit.parser.Species;
 import de.zbit.util.Utils;
 import de.zbit.util.ValueTriplet;
 
@@ -28,6 +30,11 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
    * Optional: Column with probe name
    */
   private int probeNameCol=-1;
+  
+  /**
+   * This is not required! It is an optional information.
+   */
+  private Species species=null;
   
   /**
    * @return  This method returns all {@link ExpectedColumn}s required
@@ -51,19 +58,23 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
   @Override
   public Collection<miRNA> importWithGUI(Component parent, String file) {
     
+    // Create a new panel that allows selection of species (Not required! Optional)
+    JLabeledComponent spec = IntegratorGUITools.getOrganismSelector();
+    
     // Create and show the import dialog
     try {
       
       // Show the CSV Import dialog
       ExpectedColumn[] exCol = getExpectedColumns();
       final CSVImporterV2 c = new CSVImporterV2(file, exCol);
-      boolean dialogConfirmed = IntegratorGUITools.showCSVImportDialog(parent, c, null);
+      boolean dialogConfirmed = IntegratorGUITools.showCSVImportDialog(parent, c, spec);
       
       // Process user input and read data
       if (dialogConfirmed) {
         // Read all columns and types
         nameCol = exCol[0].getAssignedColumn();
         probeNameCol = exCol[1].getAssignedColumn();
+        this.species = (Species) spec.getSelectedItem();
         for (int i=2; i<exCol.length; i++) {
           if (exCol[i].hasAssignedColumns()) {
             for (int j=0; j<exCol[i].getAssignedColumns().size(); i++) {
@@ -147,4 +158,11 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
     System.out.println("Total miRNAs: " + c.size() + " miRNAs_with_targets: " + matched + " = " +(matched/(double)c.size()*100.0)+ "%");
   }
   
+  /* (non-Javadoc)
+   * @see de.zbit.io.NameAndSignalReader#getSpecies()
+   */
+  @Override
+  public Species getSpecies() {
+    return species;
+  }
 }

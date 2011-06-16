@@ -127,4 +127,12 @@ public class KEGGPathwayEnrichment extends AbstractEnrichment<String> {
     System.out.println(en.toString().replace("]], [", "]]\n["));
   }
 
+  /* (non-Javadoc)
+   * @see de.zbit.analysis.enrichment.AbstractEnrichment#getName()
+   */
+  @Override
+  public String getName() {
+    return "KEGG Pathway Enrichment";
+  }
+
 }

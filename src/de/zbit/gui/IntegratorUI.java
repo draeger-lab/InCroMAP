@@ -8,18 +8,14 @@ import java.awt.Component;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
@@ -30,6 +26,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.integrator.IntegratorIOOptions;
 import de.zbit.io.NameAndSignalReader;
+import de.zbit.util.logging.LogUtil;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.SBPreferences;
@@ -83,6 +80,7 @@ public class IntegratorUI extends BaseFrame {
    * @throws IOException 
    */
   public static void main(String[] args) throws IOException {
+    LogUtil.initializeLogging((String[])null);
     SBProperties props = SBPreferences.analyzeCommandLineArguments(
       getStaticCommandLineOptions(), args);
     
@@ -113,6 +111,7 @@ public class IntegratorUI extends BaseFrame {
     
     // init preferences
     initPreferences();
+    
     
     // TODO: ...
     /*File file = new File(prefsIO.get(KEGGtranslatorIOOptions.INPUT));
@@ -151,13 +150,25 @@ public class IntegratorUI extends BaseFrame {
     int idx = tabbedPane.getSelectedIndex();
     if (idx>=0) {
       try {
-        synchronized (this) {
-          tabbedPane.removeTabAt(idx);
-          tabContent.remove(idx);
-        }
+        tabbedPane.removeTabAt(idx);
         return true;
       } catch (Exception e) {
         log.log(Level.WARNING, "Could not close tab.", e);
+      }
+    }
+    return false;
+  }
+  
+  /**
+   * Close the given tab from the {@link #tabbedPane}.
+   * @param tab
+   * @return true if and only if the tab has been removed from the tabbedPane.
+   */
+  public boolean closeTab(IntegratorTab<?> tab) {
+    for (Component c: tabbedPane.getComponents()) {
+      if (c.equals(tab)) {
+        tabbedPane.remove(tab);
+        return true;
       }
     }
     return false;
@@ -381,18 +392,16 @@ public class IntegratorUI extends BaseFrame {
       }
     }
     
-    // Read all files
+    // Read all files and add tabs
     for (int i=0; i<files.length; i++) {
       try {
         // Initialize reader
         Class<?> r = i<reader.length?reader[i]:reader[0];
         NameAndSignalReader<? extends NameAndSignals> nsreader = (NameAndSignalReader<?>) r.newInstance();
-        nsreader.setProgressBar(null); // XXX: Set bar
         
         // Show import dialog and read data
-        Collection<? extends NameAndSignals> col = nsreader.importWithGUI(this, files[i].getPath());
-        addTab(col, files[i].getName()); // Col may be null if cancel pressed
-
+        addTab(new NameAndSignalsTab(this, nsreader, files[i].getPath()), files[i].getName());
+        getStatusBar().showProgress(nsreader.getProgressBar());
       } catch (Exception e) {
         GUITools.showErrorMessage(this, e);
       }
@@ -402,39 +411,24 @@ public class IntegratorUI extends BaseFrame {
   }
   
   /**
-   * @param col
+   * Add a new tab to the {@link #tabbedPane}
+   * @param tab
+   * @param name
    */
-  private void addTab(Collection<?> col, String name) {
-    // e.g. cancel button pressed. No message necessary!
-    if (col==null || col.size()==0) return;
-    
-    //1. Create a list
-    List<?> list;
-    if (col instanceof List) {
-      list = (List<?>) col;
-    } else {
-      list = new ArrayList<Object>(col);
-    }
-    
-    // 2. Add to tabbedPane
-    Object example = list.get(0);
-    JComponent visualization;
-    if (example instanceof NameAndSignals) {
-      TableResultTableModel<? extends NameAndSignals> table = new TableResultTableModel(list);
-      visualization = TableResultTableModel.buildJTable(table);
-    } else {
-      System.err.println("*********IMPLEMENT VISUALIZATION FOR " + example + " (" + example.getClass() + ")");
-      visualization=new JTable();
-    }
-    synchronized (this) {
-      tabbedPane.addTab(name, visualization);
-      tabbedPane.setSelectedComponent(visualization);
-      
-      // 3. Add to list
-      tabContent.add(list);
-    }
-    
-
+  public void addTab(IntegratorTab<?> tab, String name) {
+    addTab(tab,name,null);
+  }
+  
+  /**
+   * Add a new tab to the {@link #tabbedPane}
+   * @param tab
+   * @param name
+   * @param toolTip
+   */
+  public void addTab(IntegratorTab<?> tab, String name, String toolTip) {
+    tab.setName(name);
+    tabbedPane.addTab(name, null, tab, toolTip);
+    tabbedPane.setSelectedComponent(tab);
   }
 
   /* (non-Javadoc)

@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -25,6 +27,7 @@ import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
 import de.zbit.util.ProgressBar;
 import de.zbit.util.ValuePair;
+import de.zbit.util.ValueTriplet;
 
 /**
  * A generic reader to read mRNA data.
@@ -99,8 +102,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
       // Process user input and read data
       if (dialogConfirmed) {
         // Read all columns and types
-        nameCol = exCol[0].getAssignedColumn();
-        this.idType = (IdentifierType) exCol[0].getAssignedType();
+        setNameAndIdentifierTypes(exCol[0]);        
         this.species = (Species) spec.getSelectedItem();
         for (int i=1; i<exCol.length; i++) {
           if (exCol[i].hasAssignedColumns()) {
@@ -127,6 +129,40 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     return null;
   }
   
+  /**
+   * Evaluates the selected identifiers and builds the reader according
+   * to the priority of selected identifiers.
+   * @param expectedColumn
+   */
+  private void setNameAndIdentifierTypes(ExpectedColumn idCol) {
+    int selCols = idCol.getAssignedColumns().size();
+    
+    // Create a list of columns, types and priorities
+    List<ValueTriplet<Integer, IdentifierType, Integer>> l = 
+      new LinkedList<ValueTriplet<Integer, IdentifierType, Integer>>();
+    ValueTriplet<Integer, IdentifierType, Integer> vp = null;
+    for (int i=0; i<selCols; i++) {
+      // Get type and infere priority
+      IdentifierType type = (IdentifierType) idCol.getAssignedType(i);
+      
+      vp = new ValueTriplet<Integer, IdentifierType, Integer>(
+          idCol.getAssignedColumns().get(i), type, IntegratorGUITools.getPriority(type)); 
+      l.add(vp);
+    }
+    // Sort by priority
+   Collections.sort(l, vp.getComparator_OnlyCompareC());
+    
+    // add ids to reader
+   this.nameCol = l.get(0).getA();
+   this.idType = l.get(0).getB();
+   if (l.size()>1) {
+     addSecondIdentifier(l.get(1).getA(), l.get(1).getB());
+     for (int i=2; i<l.size(); i++) {
+       addAdditionalData(l.get(i).getA(), l.get(i).getB().toString());
+     }
+   }
+  }
+
   /**
    * This is ONLY for use in combination with {@link #importWithGUI(String)} afterwards.
    */
@@ -161,7 +197,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     // Init Mapper (primary for idType)
     if (!idType.equals(IdentifierType.NCBI_GeneID)) {
       mapper = MappingUtils.initialize2GeneIDMapper(idType, progress, species);
-    } else {
+    } else if (secondID!=null) {
       // Only if primary identifier does not require a mapper,
       // init one for the secondary identifier
       mapper = MappingUtils.initialize2GeneIDMapper(secondID.getB(), progress, species);
@@ -259,5 +295,12 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     System.out.println(noGI + " mRNAs without Gene ID.");
   }
 
+  /* (non-Javadoc)
+   * @see de.zbit.io.NameAndSignalReader#getSpecies()
+   */
+  @Override
+  public Species getSpecies() {
+    return species;
+  }
   
 }

@@ -136,6 +136,11 @@ public abstract class AbstractEnrichment <EnrichIDType> {
   protected abstract void initializeEnrichmentMappings() throws IOException;
   
   /**
+   * @return a human readable name for this enrichment type.
+   */
+  public abstract String getName();
+  
+  /**
    * Maps all given genes to a enrichment object (e.g., pathway) centered view.
    * 
    * 
@@ -254,12 +259,17 @@ public abstract class AbstractEnrichment <EnrichIDType> {
       enrich_ID2Name = getDefaultEnrichmentID2NameMapping();
     }
     
-    // Initialize pValue calculations
+    // Initialize pValue calculations and ProgressBar
     EnrichmentPvalue pval = new HypergeometricTest(geneID2enrich_ID.getGenomeSize(), geneList.size());
+    if (prog!=null) {
+      prog.reset();
+      prog.setNumberOfTotalCalls(pwList.size());
+    }
     
     // Create EnrichmentObjects
     List<EnrichmentObject<EnrichIDType>> ret = new LinkedList<EnrichmentObject<EnrichIDType>>();
     for (Map.Entry<EnrichIDType, Set<?>> entry : pwList.entrySet()) {
+      if (prog!=null) prog.DisplayBar();
       
       // KEGG Pathway id 2 Pathway Name
       String pw_name=entry.getKey().toString();

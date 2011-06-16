@@ -21,6 +21,7 @@ import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.CSVImporterV2.CSVImporterV2;
 import de.zbit.gui.CSVImporterV2.ExpectedColumn;
+import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
@@ -144,6 +145,9 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * reading the input data to the desired format impossible.
    */
   public Collection<T> read(CSVReader r) throws IOException, Exception {
+    r.setProgressBar(getProgressBar());
+    r.setDisplayProgress(getProgressBar()!=null);
+    r.open();
     Map<T, T> ret = new HashMap<T, T>();
     
     String[] line;
@@ -239,5 +243,19 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    */
   public void setProgressBar(AbstractProgressBar progress) {
     this.progress = progress;
+  }
+
+  /**
+   * Please override this method and return a species, if it is known
+   * while reading the data. Else, simply return null.
+   * @return
+   */
+  public abstract Species getSpecies();
+
+  /**
+   * @return
+   */
+  public AbstractProgressBar getProgressBar() {
+    return this.progress;
   }
 }
