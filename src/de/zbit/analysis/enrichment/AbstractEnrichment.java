@@ -153,7 +153,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
 
     // Initialize mapper from InputID to GeneID
     AbstractMapper<String, Integer> mapper=null;
-    if (idType!=null && !idType.equals(IdentifierType.GeneID)) {
+    if (idType!=null && !idType.equals(IdentifierType.NCBI_GeneID)) {
       try {
         mapper = MappingUtils.initialize2GeneIDMapper(idType, prog, species);
       } catch (IOException e) {
@@ -181,7 +181,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
         }
       } else if (Integer.class.isAssignableFrom(gene.getClass())) {
         geneID = (Integer) gene;
-      } else if (idType.equals(IdentifierType.GeneID)) {
+      } else if (idType.equals(IdentifierType.NCBI_GeneID)) {
         geneID = Integer.parseInt(gene.toString());
       } else {
         log.log(Level.WARNING, "Could not get Entrez Gene ID for " + gene);

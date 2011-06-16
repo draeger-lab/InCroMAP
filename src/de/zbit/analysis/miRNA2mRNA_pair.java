@@ -409,8 +409,8 @@ public class miRNA2mRNA_pair {
 //    r.addSignalColumn(4, SignalType.pValue); // 4-6 = Cat/Ras/Ras_vs_Cat
 //    Collection<mRNA> mRNA = r.read("mRNA_data.txt");
     // New dataset
-    mRNAReader r = new mRNAReader(3, IdentifierType.GeneID, species);
-    r.addSecondIdentifier(1, IdentifierType.Symbol);
+    mRNAReader r = new mRNAReader(3, IdentifierType.NCBI_GeneID, species);
+    r.addSecondIdentifier(1, IdentifierType.GeneSymbol);
     r.addAdditionalData(0, "probe_name");
     r.addAdditionalData(2, "description");
     r.addSignalColumn(27+offset, SignalType.FoldChange, experimentName); // 27-30 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN

@@ -4,23 +4,33 @@
  */
 package de.zbit.io;
 
+import java.awt.Component;
+import java.awt.Dialog;
+import java.awt.Frame;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.data.mRNA.mRNA;
+import de.zbit.gui.CSVImporterV2.CSVImporterV2;
+import de.zbit.gui.CSVImporterV2.ExpectedColumn;
+import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 
 /**
  * A generic class to read data, consisting of name and signals.
  * E.g., mRNA or miRNA data.
+ * <p>Note:<br/>Your extending class should have an empty
+ * constructor, such that an instance of the reader can be created
+ * and {@link #importWithGUI(String)} can be called.
  * @author Clemens Wrzodek
  */
 public abstract class NameAndSignalReader<T extends NameAndSignals> {
@@ -29,11 +39,11 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
   /**
    * Required: Column that contains the name
    */
-  private int nameCol;
+  protected int nameCol;
   
   /**
    * Required: List of different signal columns
-   * Integer=ColumnNamer, SignalType={@link SignalType}, String=ExperimentName/ObservationName
+   * Integer=ColumnNumber, SignalType={@link SignalType}, String=ExperimentName/ObservationName
    */
   private Collection<ValueTriplet<Integer, SignalType, String>> signalColumns;
   
@@ -43,6 +53,27 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * a key, identified by the String.
    */
   private Collection<ValuePair<Integer, String>> additionalDataToRead=null;
+  
+  /**
+   * Import a file with a GUI. There are many helper methods that allow to quickly
+   * implement this method:<ol><li>Create {@link ExpectedColumn}s by using
+   * {@link #getExpectedSignalColumns(int)} and adding you own columns (especially
+   * for {@link #nameCol}!
+   * <li>Use {@link CSVImporterV2} to get the {@link CSVReader} and columns assignments
+   * and build the reader. 
+   * <li>Afterwards, return {@link #read(CSVReader)} using the
+   * {@link CSVImporterV2#getApprovedCSVReader()}.
+   * </ol>
+   * @param parent the parent {@link Frame} or {@link Dialog}
+   * @param file
+   * @return
+   */
+  public abstract Collection<T> importWithGUI(Component parent, String file);
+  
+  /**
+   * This can also be used by extending classes.
+   */
+  protected AbstractProgressBar progress;
   
   public NameAndSignalReader(int nameCol) {
     super();
@@ -82,10 +113,21 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * @throws IOException 
    */
   public Collection<T> read(File file) throws IOException, Exception {
-    // TODO Auto-generated method stub
     return read(file.getPath());
   }
 
+  /**
+   * @see #read(CSVReader)
+   * @param inputCSV
+   * @return
+   * @throws IOException
+   * @throws Exception
+   */
+  public Collection<T> read(String inputCSV) throws IOException, Exception {
+    CSVReader r = new CSVReader(inputCSV);
+    return read(r);
+  }
+  
   /**
    * Read {@link NameAndSignals} data from given CSV file.
    * 
@@ -101,8 +143,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * @throws Exception - critical exception (not IO related) that make
    * reading the input data to the desired format impossible.
    */
-  public Collection<T> read(String inputCSV) throws IOException, Exception {
-    CSVReader r = new CSVReader(inputCSV);
+  public Collection<T> read(CSVReader r) throws IOException, Exception {
     Map<T, T> ret = new HashMap<T, T>();
     
     String[] line;
@@ -125,10 +166,17 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
       }
       
       // Add signals
-      for (ValueTriplet<Integer, SignalType, String> vp: signalColumns) {
-        mi.addSignal(Float.parseFloat(line[vp.getA()]), vp.getC(), vp.getB());
+      if (signalColumns!=null) {
+        for (ValueTriplet<Integer, SignalType, String> vp: signalColumns) {
+          Float signal = Float.NaN;
+          try {
+            signal = Float.parseFloat(line[vp.getA()]);
+          } catch (NumberFormatException e) {
+            log.log(Level.WARNING, "Error while parsing signal number.", r);
+          }
+          mi.addSignal(signal, vp.getC(), vp.getB());
+        }
       }
-      
     }
     
     return ret.values();
@@ -150,4 +198,46 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    */
   protected abstract T createObject(String name, String[] line) throws Exception;
   
+  /**
+   * Creates a collection of maxNumberOfObservations optional {@link ExpectedColumn}s
+   * that accepts FoldChanges and pValues of renameable signals. This is optimal for 
+   * importing {@link Signal} using the {@link CSVImporterV2}.
+   * @param maxNumberOfObservations number of expected observation columns to create
+   * @return
+   */
+  protected static Collection<ExpectedColumn> getExpectedSignalColumns(int maxNumberOfObservations) {
+    // Application can (as of today) only process pValues and fold changes.
+    SignalType[] types = new SignalType[]{SignalType.FoldChange, SignalType.pValue};
+    
+    Collection<ExpectedColumn> r = new ArrayList<ExpectedColumn>(maxNumberOfObservations); 
+    for (int i=1; i<=maxNumberOfObservations; i++) {
+      ExpectedColumn e = new ExpectedColumn("Observation " + i, types, false, true,true,true,null);
+      r.add(e);
+    }
+    return r;
+  }
+  
+  /**
+   * Creates a collection of maxNumberOfColumns optional {@link ExpectedColumn}s
+   * that accepts any additional data. This is optimal for 
+   * importing {@link #addAdditionalData(int, String)} using the {@link CSVImporterV2}.
+   * @param maxNumberOfColumns number of {@link ExpectedColumn}s to create
+   * @return
+   */
+  protected static Collection<ExpectedColumn> getAdditionalDataColumns(int maxNumberOfColumns) {
+    // Application can (as of today) only process pValues and fold changes.
+    Collection<ExpectedColumn> r = new ArrayList<ExpectedColumn>(maxNumberOfColumns); 
+    for (int i=1; i<=maxNumberOfColumns; i++) {
+      ExpectedColumn e = new ExpectedColumn("Additional data " + i, null, false, false,false,true,null);
+      r.add(e);
+    }
+    return r;
+  }
+
+  /**
+   * @param progress
+   */
+  public void setProgressBar(AbstractProgressBar progress) {
+    this.progress = progress;
+  }
 }

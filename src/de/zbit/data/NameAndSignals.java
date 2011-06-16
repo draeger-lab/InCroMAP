@@ -24,6 +24,7 @@ import de.zbit.exception.CorruptInputStreamException;
 import de.zbit.io.CSVwriteable;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Reflect;
+import de.zbit.util.StringUtil;
 
 /**
  * An abstract class that handles something
@@ -548,7 +549,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     int afterSignals = signalStart+getNumberOfSignals();
     if (columnIndex == 0) return "Name";
     else if (columnIndex >= 1 && columnIndex<signalStart)
-      return extensionNames[columnIndex-1];
+      return StringUtil.formatOptionName(extensionNames[columnIndex-1]);
     else if (columnIndex >= signalStart && columnIndex<afterSignals) {
       Signal sig = signals.get(columnIndex-signalStart);
       return sig.getName() + " [" + sig.getType().toString() + "]";
@@ -558,7 +559,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       int i=0;
       while (it.hasNext()) {
         if (columnIndex==i++) {
-          return it.next();
+          return StringUtil.formatOptionName(it.next());
         } else it.next();
       }
     }
@@ -630,6 +631,13 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       ret.append(o.toString());
     }
     return ret.toString();
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#getRowObject()
+   */
+  public Object getRowObject() {
+    return this;
   }
 
 }

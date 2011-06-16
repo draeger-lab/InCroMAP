@@ -102,8 +102,8 @@ public class KEGGPathwayEnrichment extends AbstractEnrichment<String> {
 //    List<EnrichmentObject<String>> en = e.getEnrichments(geneList, IdentifierType.GeneID);
     
     // Read mRNA
-    mRNAReader r = new mRNAReader(3, IdentifierType.GeneID, species);
-    r.addSecondIdentifier(1, IdentifierType.Symbol);
+    mRNAReader r = new mRNAReader(3, IdentifierType.NCBI_GeneID, species);
+    r.addSecondIdentifier(1, IdentifierType.GeneSymbol);
     r.addAdditionalData(0, "probe_name");
     r.addAdditionalData(2, "description");
     r.addSignalColumn(27, SignalType.FoldChange, "Ctnnb1"); // 27-30 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN

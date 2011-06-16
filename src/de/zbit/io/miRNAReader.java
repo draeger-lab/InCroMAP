@@ -1,11 +1,19 @@
 package de.zbit.io;
 
+import java.awt.Component;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.CSVImporterV2.CSVImporterV2;
+import de.zbit.gui.CSVImporterV2.ExpectedColumn;
 import de.zbit.util.Utils;
 import de.zbit.util.ValueTriplet;
 
@@ -19,8 +27,74 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
   /**
    * Optional: Column with probe name
    */
-  private int probeNameCol;
+  private int probeNameCol=-1;
   
+  /**
+   * @return  This method returns all {@link ExpectedColumn}s required
+   * to read a new file with the {@link CSVImporterV2}. This is
+   * [0] miRNA identifier, [1] probeNames and [2-10] signal columns.
+   */
+  public static ExpectedColumn[] getExpectedColumns() {
+    List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
+    
+    list.add(new ExpectedColumn("miRNA identifier",null,true,false,false,false,miRNATargetReader.miRNAidentifierRegEx));
+    list.add(new ExpectedColumn("Probe name",false));
+    
+    list.addAll(NameAndSignalReader.getExpectedSignalColumns(10));
+    return list.toArray(new ExpectedColumn[0]);
+  }
+  
+
+  /* (non-Javadoc)
+   * @see de.zbit.io.NameAndSignalReader#importWithGUI(java.awt.Component, java.lang.String)
+   */
+  @Override
+  public Collection<miRNA> importWithGUI(Component parent, String file) {
+    
+    // Create and show the import dialog
+    try {
+      
+      // Show the CSV Import dialog
+      ExpectedColumn[] exCol = getExpectedColumns();
+      final CSVImporterV2 c = new CSVImporterV2(file, exCol);
+      boolean dialogConfirmed = IntegratorGUITools.showCSVImportDialog(parent, c, null);
+      
+      // Process user input and read data
+      if (dialogConfirmed) {
+        // Read all columns and types
+        nameCol = exCol[0].getAssignedColumn();
+        probeNameCol = exCol[1].getAssignedColumn();
+        for (int i=2; i<exCol.length; i++) {
+          if (exCol[i].hasAssignedColumns()) {
+            for (int j=0; j<exCol[i].getAssignedColumns().size(); i++) {
+              addSignalColumn(exCol[i].getAssignedColumns().get(j), 
+                (SignalType) exCol[i].getAssignedType(j), exCol[i].getName().toString());
+            }
+          }
+        }
+        
+        try {
+          return read(c.getApprovedCSVReader());
+        } catch (Exception e) {
+          GUITools.showErrorMessage(parent, e, "Could not read input file.");
+        }
+      }
+      
+    } catch (IOException e) {
+      GUITools.showErrorMessage(parent, e);
+    }
+
+    
+    // Only errors or canceled
+    return null;
+  }
+  
+  /**
+   * This is ONLY for use in combination with {@link #importWithGUI(String)} afterwards.
+   */
+  public miRNAReader() {
+    super(-1);
+  }
   
   public miRNAReader(int miRNAnameCol) {
     super(miRNAnameCol);

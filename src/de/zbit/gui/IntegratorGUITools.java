@@ -4,16 +4,19 @@
  */
 package de.zbit.gui;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dialog;
+import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.io.IOException;
 import java.util.List;
 
-import javax.swing.ComboBoxModel;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import de.zbit.gui.CSVImporterV2.CSVImporterV2;
 import de.zbit.io.OpenFile;
 import de.zbit.parser.Species;
 import de.zbit.util.Utils;
@@ -22,6 +25,7 @@ import de.zbit.util.Utils;
  * @author Clemens Wrzodek
  */
 
+@SuppressWarnings("unchecked")
 public class IntegratorGUITools {
   
   static {
@@ -60,7 +64,35 @@ public class IntegratorGUITools {
    * @return
    */
   public static JLabeledComponent getOrganismSelector() {
-    return new JLabeledComponent("Please select your organism",true,organisms);
+    JLabeledComponent l = new JLabeledComponent("Please select your organism",true,organisms);
+    // Make a flexible layout
+    l.setLayout(new FlowLayout());
+    l.setPreferredSize(null);
+    GUITools.createTitledPanel(l, "Organism selection");
+    return l;
+  }
+
+  /**
+   * Show the {@link CSVImporterV2} dialog.
+   * @param parent parent {@link Frame} or {@link Dialog}
+   * @param c {@link CSVImporterV2}
+   * @param additionalComponent e.g., speciesSelector from {@link #getOrganismSelector()}
+   * @return true if ok has been pressed.
+   * @throws IOException 
+   */
+  public static boolean showCSVImportDialog(Component parent, CSVImporterV2 c, JComponent additionalComponent) throws IOException {
+    c.setRenameButtonCaption("Edit observation names");
+    c.setPreferredSize(new java.awt.Dimension(800, 450));
+    
+    // Customize the north-dialog.
+    if (additionalComponent!=null) {
+      JPanel jp = new JPanel(new BorderLayout());
+      jp.add(additionalComponent, BorderLayout.NORTH);
+      jp.add(c.getOptionalPanel(), BorderLayout.CENTER);
+      c.add(jp, BorderLayout.NORTH);
+    }
+    
+    return CSVImporterV2.showDialog(parent, c);
   }
   
 }

@@ -4,18 +4,25 @@
  */
 package de.zbit.io;
 
+import java.awt.Component;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.JLabeledComponent;
+import de.zbit.gui.CSVImporterV2.CSVImporterV2;
+import de.zbit.gui.CSVImporterV2.ExpectedColumn;
 import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.ProgressBar;
 import de.zbit.util.ValuePair;
 
@@ -45,11 +52,6 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
   private AbstractMapper<String, Integer> mapper = null;
   
   /**
-   * This is handed to the mapper only.
-   */
-  private AbstractProgressBar progress;
-  
-  /**
    * A second identifier that is used as Backup, <B>only if the
    * first identifier is the GeneID</B>.
    * Assigns this identifier as name, instead of the GeneID.
@@ -59,6 +61,78 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
    * work too.
    */
   private ValuePair<Integer, IdentifierType> secondID = null;
+  
+  /**
+   * @return  This method returns all {@link ExpectedColumn}s required
+   * to read a new file with the {@link CSVImporterV2}. This is
+   * [0] an identifier and [1-10] signal columns.
+   */
+  public static ExpectedColumn[] getExpectedColumns() {
+    List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
+    List<IdentifierType> idTypes = new ArrayList<IdentifierType>(Arrays.asList(IdentifierType.values()));
+    idTypes.remove(IdentifierType.Unknown);
+    
+    // The user may choose multiple identifier columns
+    ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),true,true,true,false,null);
+    list.add(e);
+    list.addAll(NameAndSignalReader.getExpectedSignalColumns(10));
+    return list.toArray(new ExpectedColumn[0]);
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.io.NameAndSignalReader#importWithGUI(java.awt.Component, java.lang.String)
+   */
+  @Override
+  public Collection<mRNA> importWithGUI(Component parent, String file) {
+    
+    // Create a new panel that allows selection of species
+    JLabeledComponent spec = IntegratorGUITools.getOrganismSelector();
+    
+    // Create and show the import dialog
+    try {
+      
+      // Show the CSV Import dialog
+      ExpectedColumn[] exCol = getExpectedColumns();
+      final CSVImporterV2 c = new CSVImporterV2(file, exCol);
+      boolean dialogConfirmed = IntegratorGUITools.showCSVImportDialog(parent, c, spec);
+      
+      // Process user input and read data
+      if (dialogConfirmed) {
+        // Read all columns and types
+        nameCol = exCol[0].getAssignedColumn();
+        this.idType = (IdentifierType) exCol[0].getAssignedType();
+        this.species = (Species) spec.getSelectedItem();
+        for (int i=1; i<exCol.length; i++) {
+          if (exCol[i].hasAssignedColumns()) {
+            for (int j=0; j<exCol[i].getAssignedColumns().size(); i++) {
+              addSignalColumn(exCol[i].getAssignedColumns().get(j), 
+                (SignalType) exCol[i].getAssignedType(j), exCol[i].getName().toString());
+            }
+          }
+        }
+        
+        try {
+          return read(c.getApprovedCSVReader());
+        } catch (Exception e) {
+          GUITools.showErrorMessage(parent, e, "Could not read input file.");
+        }
+      }
+      
+    } catch (IOException e) {
+      GUITools.showErrorMessage(parent, e);
+    }
+
+    
+    // Only errors or canceled
+    return null;
+  }
+  
+  /**
+   * This is ONLY for use in combination with {@link #importWithGUI(String)} afterwards.
+   */
+  public mRNAReader() {
+    super(-1);
+  }
   
   public mRNAReader(int identifierCol, IdentifierType idType, Species species) {
     super(identifierCol);
@@ -77,19 +151,15 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
   public void addSecondIdentifier(int col, IdentifierType type) {
     secondID = new ValuePair<Integer, IdentifierType>(col, type);
   }
-  
-  public void setProgressBar(AbstractProgressBar progress) {
-    this.progress = progress;
-  }
 
   
   /* (non-Javadoc)
-   * @see de.zbit.io.NameAndSignalReader#read(java.lang.String)
+   * @see de.zbit.io.NameAndSignalReader#read(de.zbit.io.CSVReader)
    */
   @Override
-  public Collection<mRNA> read(String inputCSV) throws IOException, Exception {
+  public Collection<mRNA> read(CSVReader inputCSV) throws IOException, Exception {
     // Init Mapper (primary for idType)
-    if (!idType.equals(IdentifierType.GeneID)) {
+    if (!idType.equals(IdentifierType.NCBI_GeneID)) {
       mapper = MappingUtils.initialize2GeneIDMapper(idType, progress, species);
     } else {
       // Only if primary identifier does not require a mapper,
@@ -113,7 +183,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
   protected mRNA createObject(String name, String[] line) throws Exception {
     // Map to GeneID
     Integer geneID = null;
-    if (!idType.equals(IdentifierType.GeneID)) {
+    if (!idType.equals(IdentifierType.NCBI_GeneID)) {
       geneID = mapper.map(name);
     } else {
       try {
@@ -154,6 +224,10 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
    */
   @SuppressWarnings("unchecked")
   public static void main(String[] args) throws IOException, Exception {
+    mRNAReader r2 = new mRNAReader();
+    r2.importWithGUI(null, "mRNA_data_new.txt");
+    if (true) return;
+    
     Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
     
     // Jaworski Dataset:
@@ -168,8 +242,8 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
 //    Collection<mRNA> c = r.read("mRNA_data.txt");
     
     // New dataset
-    mRNAReader r = new mRNAReader(3, IdentifierType.GeneID, species);
-    r.addSecondIdentifier(1, IdentifierType.Symbol);
+    mRNAReader r = new mRNAReader(3, IdentifierType.NCBI_GeneID, species);
+    r.addSecondIdentifier(1, IdentifierType.GeneSymbol);
     r.addAdditionalData(0, "probe_name");
     r.addAdditionalData(2, "description");
     r.addSignalColumn(27, SignalType.FoldChange, "Ctnnb1"); // 27-30 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN

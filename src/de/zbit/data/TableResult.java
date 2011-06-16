@@ -38,5 +38,10 @@ public interface TableResult {
    */
   public String getColumnName(int column);
   
+  /**
+   * @return the object that creates the current row. Usually, this returns <pre>this</pre>.
+   */
+  public Object getRowObject();
+  
   
 }

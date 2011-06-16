@@ -12,12 +12,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
@@ -26,14 +26,10 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
-import de.zbit.data.Signal.SignalType;
-import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.NameAndSignals;
 import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.integrator.IntegratorIOOptions;
-import de.zbit.io.mRNAReader;
-import de.zbit.mapper.MappingUtils.IdentifierType;
-import de.zbit.parser.Species;
-import de.zbit.util.Utils;
+import de.zbit.io.NameAndSignalReader;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.SBPreferences;
@@ -107,6 +103,7 @@ public class IntegratorUI extends BaseFrame {
         ui.setVisible(true);
         GUITools.hideSplashScreen();
         ui.toFront();
+        // Z:\workspace\Integrator\mRNA_data_new.txt
       }
     });
   }
@@ -151,8 +148,18 @@ public class IntegratorUI extends BaseFrame {
    */
   @Override
   public boolean closeFile() {
-    // TODO Auto-generated method stub
-    log.severe("NOT YET IMPLEMENTED!");
+    int idx = tabbedPane.getSelectedIndex();
+    if (idx>=0) {
+      try {
+        synchronized (this) {
+          tabbedPane.removeTabAt(idx);
+          tabContent.remove(idx);
+        }
+        return true;
+      } catch (Exception e) {
+        log.log(Level.WARNING, "Could not close tab.", e);
+      }
+    }
     return false;
   }
   
@@ -346,6 +353,7 @@ public class IntegratorUI extends BaseFrame {
     return openFile(files, (Class<?>) null);
   }
   
+  @SuppressWarnings("unchecked")
   protected File[] openFile(File[] files, Class<?>... reader) {
 
     // Ask input file
@@ -356,11 +364,16 @@ public class IntegratorUI extends BaseFrame {
     if ((files == null) || (files.length < 1)) return files;
     
     // Ask file format
-    if ( (reader == null) || (reader.length < 1)) {
+    if ( (reader == null) || (reader.length < 1) || (reader.length==1 && reader[0]==null)) {
       reader = new Class[1];
       JLabeledComponent outputFormat = (JLabeledComponent) PreferencesPanel.getJComponentForOption(IntegratorIOOptions.READER, prefsIO, null);
       outputFormat.setTitle("Please select the input data type");
-      JOptionPane.showMessageDialog(this, outputFormat, getApplicationName(), JOptionPane.QUESTION_MESSAGE);
+      //JOptionPane.showMessageDialog(this, outputFormat, getApplicationName(), JOptionPane.QUESTION_MESSAGE);
+      // Equals:
+      int button = JOptionPane.showOptionDialog(this, outputFormat, getApplicationName(), JOptionPane.DEFAULT_OPTION, 
+        JOptionPane.QUESTION_MESSAGE, null, null, null);
+      if (button!=JOptionPane.OK_OPTION) return null;
+        
       if (Class.class.isAssignableFrom(outputFormat.getSelectedItem().getClass())) {
         reader[0] = (Class<?>) outputFormat.getSelectedItem();
       } else {
@@ -368,49 +381,62 @@ public class IntegratorUI extends BaseFrame {
       }
     }
     
-    //Z:\workspace\Integrator\mRNA_data_new.txt
-      // TODO: Create a new ColumnChooser that allows importing FC/pVal or combinations of multiple observations (like ingenuity).
+    // Read all files
     for (int i=0; i<files.length; i++) {
-      JPanel jp = new JPanel(new VerticalLayout());
-      jp.add(IntegratorGUITools.getOrganismSelector());
-      Class<?> r = i<reader.length?reader[i]:reader[0];
-      CSVImporter i = new CSVImporter(jp, f.getPath(), reader[i])
-    }
-    
-    
-      for (int i=0; i<files.length; i++) {
-        Species species;
-        try {
-          species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
-          // TODO: Create dialog for species, identifierType and ColumnSelector.
-          if (mRNAReader.class.isAssignableFrom(reader[i])) {
-            mRNAReader r = new mRNAReader(3, IdentifierType.GeneID, species);
-            r.addSecondIdentifier(1, IdentifierType.Symbol);
-            r.addAdditionalData(0, "probe_name");
-            r.addAdditionalData(2, "description");
-            r.addSignalColumn(27, SignalType.FoldChange, "Ctnnb1"); // 27-30 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-            r.addSignalColumn(31, SignalType.pValue, "Ctnnb1"); // 31-34 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-            
-            //r.progress = new ProgressBar(0);
-            Collection<mRNA> c = r.read(files[i]);
-            ArrayList<mRNA> list = new ArrayList<mRNA>(c);
-            TableResultTableModel<mRNA> table = new TableResultTableModel<mRNA>(list);
-            tabbedPane.addTab(files[i].getName(), new JTable(table));
-          } 
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-            
+      try {
+        // Initialize reader
+        Class<?> r = i<reader.length?reader[i]:reader[0];
+        NameAndSignalReader<? extends NameAndSignals> nsreader = (NameAndSignalReader<?>) r.newInstance();
+        nsreader.setProgressBar(null); // XXX: Set bar
+        
+        // Show import dialog and read data
+        Collection<? extends NameAndSignals> col = nsreader.importWithGUI(this, files[i].getPath());
+        addTab(col, files[i].getName()); // Col may be null if cancel pressed
+
+      } catch (Exception e) {
+        GUITools.showErrorMessage(this, e);
       }
-    
-    
-    // Translate
-    for (File f : files) {
-      //createNewTab(f, format);
     }
+    
     return files;
   }
   
+  /**
+   * @param col
+   */
+  private void addTab(Collection<?> col, String name) {
+    // e.g. cancel button pressed. No message necessary!
+    if (col==null || col.size()==0) return;
+    
+    //1. Create a list
+    List<?> list;
+    if (col instanceof List) {
+      list = (List<?>) col;
+    } else {
+      list = new ArrayList<Object>(col);
+    }
+    
+    // 2. Add to tabbedPane
+    Object example = list.get(0);
+    JComponent visualization;
+    if (example instanceof NameAndSignals) {
+      TableResultTableModel<? extends NameAndSignals> table = new TableResultTableModel(list);
+      visualization = TableResultTableModel.buildJTable(table);
+    } else {
+      System.err.println("*********IMPLEMENT VISUALIZATION FOR " + example + " (" + example.getClass() + ")");
+      visualization=new JTable();
+    }
+    synchronized (this) {
+      tabbedPane.addTab(name, visualization);
+      tabbedPane.setSelectedComponent(visualization);
+      
+      // 3. Add to list
+      tabContent.add(list);
+    }
+    
+
+  }
+
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#saveFile()
    */

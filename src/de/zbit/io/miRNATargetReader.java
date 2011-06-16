@@ -67,6 +67,13 @@ public class miRNATargetReader {
   protected boolean isExperimental=false;
   
   /**
+   * Regular expression that can be used with
+   * {@link CSVReader#getColumnByMatchingContent(String)} to identify
+   * column with miRNA names.
+   */
+  public final static String miRNAidentifierRegEx = "(.*-)?miR-\\d\\S*";
+  
+  /**
    * Target identifier.
    */
   protected IdentifierType targetIDtype=IdentifierType.Unknown;
@@ -111,11 +118,10 @@ public class miRNATargetReader {
   public static IdentifierType checkColumnContent(CSVReader in, int colNumber) throws IOException {
     int c;
     String[] content = in.getColumn(colNumber, 150);
-    //Regex (".*-miR-\\d.*") = miRNA id
     
     // Recognize numeric columns
     c = StringUtil.matches("\\d+", content);
-    if (c>=(double)content.length*0.9) return IdentifierType.GeneID;
+    if (c>=(double)content.length*0.9) return IdentifierType.NCBI_GeneID;
 
     // Recognize RefSeq mRNA transcript ID
     c = StringUtil.matches("(.*\\s)?[NX][MR]_\\d+.*", content);
@@ -128,7 +134,7 @@ public class miRNATargetReader {
     
     //return IdentifierType.Unknown;
     // In doubt, try sticking with gene symbols.
-    return IdentifierType.Symbol;
+    return IdentifierType.GeneSymbol;
   }
   
   
@@ -139,7 +145,7 @@ public class miRNATargetReader {
     // Infere columns
     //int col_miRNA = this.col_miRNA;
     if (col_miRNA<0) {
-      col_miRNA = in.getColumnByMatchingContent("(.*-)?miR-\\d\\S*");
+      col_miRNA = in.getColumnByMatchingContent(miRNAidentifierRegEx);
     }
     
     //int col_Target = this.col_Target;
@@ -258,7 +264,7 @@ public class miRNATargetReader {
     String target) {
     // Translate between different identifiers.
     Integer targetInt=null;
-    if (targetIDtype.equals(IdentifierType.GeneID)) {
+    if (targetIDtype.equals(IdentifierType.NCBI_GeneID)) {
       targetInt = Integer.parseInt(target);
     } else if (mapper!=null) {
       try {
