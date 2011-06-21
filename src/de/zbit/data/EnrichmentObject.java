@@ -330,7 +330,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
   /* (non-Javadoc)
    * @see de.zbit.data.NameAndSignal#merge(java.util.Collection, de.zbit.data.NameAndSignal, de.zbit.data.Signal.MergeType)
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   protected <T extends NameAndSignals> void merge(Collection<T> source,
     T target, MergeType m) {
@@ -377,6 +377,13 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
     
   }
   
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#getColumnCount()
+   */
+  @Override
+  public int getColumnCount() {
+    return toArray().length;
+  }
   
   /* (non-Javadoc)
    * @see de.zbit.data.NameAndSignals#toCSV(int)
@@ -421,6 +428,52 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
     else if (columnIndex==5) return "Q-value";
     else if (columnIndex==6) return "Genes";
     else return null;
+  }
+
+  /**
+   * Merge all {@link #getGenesInClass()} to one list.
+   * @param geneList
+   * @return
+   */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  public static Collection<mRNA> mergeGeneLists(Iterable<EnrichmentObject> geneList) {
+    Set unique = new HashSet();
+    for (EnrichmentObject e : geneList) {
+      unique.addAll(e.getGenesInClass());
+    }
+    return unique;
+  }
+
+  /**
+   * @param geneList
+   * @return
+   */
+  public static <T> Collection<T> getUniqueListOfIdentifiers(List<EnrichmentObject<T>> geneList) {
+    Set<T> ret = new HashSet<T>();
+    for (EnrichmentObject<T> e : geneList) {
+      ret.add(e.getIdentifier());
+    }
+    return ret;
+  }
+
+  /**
+   * @return a {@link HashSet} with unique geneIDs from genes in this {@link EnrichmentObject}.
+   */
+  public Collection<Integer> getGeneIDsFromGenesInClass() {
+    Set<Integer> unique = new HashSet<Integer>();
+    if (genesInClass==null || genesInClass.size()<1) return unique;
+    
+    for (Object o : genesInClass) {
+      if (o instanceof mRNA) {
+        unique.add(((mRNA)o).getGeneID());
+      } else if (o instanceof Integer) {
+        unique.add((Integer)o);
+      } else {
+        log.log(Level.SEVERE, "Please implement 2GeneId for " + o.getClass());
+      }
+    }
+    
+    return unique;
   }
   
 }

@@ -60,11 +60,11 @@ public class IntegratorGUITools {
   
   
   /**
-   * Centralized methods to create unified JLabels.
+   * Centralized method to create unified {@link JLabel}s.
    * @param s
    * @return {@link JLabel}
    */
-  public JLabel createJLabel(String s) {
+  public static JLabel createJLabel(String s) {
     return new JLabel(s);    
   }
   
@@ -113,18 +113,47 @@ public class IntegratorGUITools {
    */
   public static JPopupMenu createEnrichmentPopup(EnrichmentActionListener l) {
     JPopupMenu enrichment = new JPopupMenu("Enrichments");
+    createEnrichmentPopup(l, enrichment);
+    return enrichment;
+  }
+  
+  /**
+   * Append enrichment analysis {@link JMenuItem}s to the given
+   * {@link JPopupMenu},
+   * @param l
+   * @param append
+   * @return append
+   */
+  public static JPopupMenu createEnrichmentPopup(EnrichmentActionListener l, JPopupMenu append) {
     
     JMenuItem jm = new JMenuItem("Pathway enrichment");
     jm.setActionCommand(EnrichmentActionListener.KEGG_ENRICHMENT);
-    enrichment.add(jm);
+    append.add(jm);
     jm.addActionListener(l);
     
     jm = new JMenuItem("Gene ontology enrichment");
     jm.setActionCommand(EnrichmentActionListener.GO_ENRICHMENT);
-    enrichment.add(jm);
+    append.add(jm);
     jm.addActionListener(l);
     
-    return enrichment;
+    return append;
+  }
+  
+  /**
+   * Add a "Visualize pathway" {@link JMenuItem} to the given
+   * {@link JPopupMenu}.
+   * @param l
+   * @param append
+   * @return
+   */
+  public static JPopupMenu createKeggPathwayPopup(KEGGPathwayActionListener l, JPopupMenu append) {
+    
+    JMenuItem jm = new JMenuItem("Visualize pathway");
+    jm.setActionCommand(KEGGPathwayActionListener.VISUALIZE_PATHWAY);
+    append.add(jm);
+    jm.addActionListener(l);
+    
+    return append;
   }
   
   /**

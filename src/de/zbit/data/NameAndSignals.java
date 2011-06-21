@@ -5,6 +5,7 @@
 package de.zbit.data;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,14 +13,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.exception.CorruptInputStreamException;
 import de.zbit.io.CSVwriteable;
 import de.zbit.util.ArrayUtils;
@@ -639,5 +642,53 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   public Object getRowObject() {
     return this;
   }
-
+  
+  /**
+   * <T extends NameAndSignals> or Integer (direct GeneID).
+   * @param o
+   * @return
+   */
+  @SuppressWarnings("rawtypes")
+  public static Collection<Integer> getGeneIds(Object o) {
+    HashSet<Integer> geneIds = new HashSet<Integer>();
+    if (o==null) return geneIds;
+    
+    if (o instanceof Iterable) {
+      for (Object o2 : ((Iterable)o)) {
+        geneIds.addAll(getGeneIds(o2));
+      }
+      
+    } else if (o.getClass().isArray()) {
+      for (int i=0; i<Array.getLength(o); i++) {
+        geneIds.addAll(getGeneIds(Array.get(o, i)));
+      }
+      
+    } else if (o instanceof mRNA) {
+      geneIds.add(((mRNA)o).getGeneID());
+      
+    } else if (o instanceof miRNA) {
+      miRNA mi = ((miRNA)o);
+      if (!mi.hasTargets()) {
+        log.warning("miRNA " +o+ " has no annotated targets.");
+      } else {
+        for (miRNAtarget t: mi.getTargets()) {
+          geneIds.add(t.getTarget());
+        }
+      }
+      
+    } else if (o instanceof Integer) {
+      geneIds.add((Integer)o);
+      
+    } else if (o instanceof EnrichmentObject) {
+      for (Object o2: ((EnrichmentObject)o).getGenesInClass()) {
+        geneIds.addAll(getGeneIds(o2));
+      }
+      
+    } else {
+      log.severe("Please implement 2GeneID for " + o.getClass());
+    }
+    
+    return geneIds;
+  }
+  
 }

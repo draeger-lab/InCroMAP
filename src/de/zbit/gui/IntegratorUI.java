@@ -164,7 +164,7 @@ public class IntegratorUI extends BaseFrame {
    * @param tab
    * @return true if and only if the tab has been removed from the tabbedPane.
    */
-  public boolean closeTab(IntegratorTab<?> tab) {
+  public boolean closeTab(Component tab) {
     for (Component c: tabbedPane.getComponents()) {
       if (c.equals(tab)) {
         tabbedPane.remove(tab);
@@ -415,7 +415,7 @@ public class IntegratorUI extends BaseFrame {
    * @param tab
    * @param name
    */
-  public void addTab(IntegratorTab<?> tab, String name) {
+  public void addTab(Component tab, String name) {
     addTab(tab,name,null);
   }
   
@@ -425,7 +425,7 @@ public class IntegratorUI extends BaseFrame {
    * @param name
    * @param toolTip
    */
-  public void addTab(IntegratorTab<?> tab, String name, String toolTip) {
+  public void addTab(Component tab, String name, String toolTip) {
     tab.setName(name);
     tabbedPane.addTab(name, null, tab, toolTip);
     tabbedPane.setSelectedComponent(tab);

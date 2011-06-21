@@ -153,7 +153,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
    * @param idType
    * @return a mapping from EnrichedObjects (e.g., Pathways) to [preferable mRNAs from geneList, else: GeneIDs from the geneList].
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   private <T> Map<EnrichIDType, Set<?>> getContainedEnrichments(Collection<T> geneList, IdentifierType idType) {
 
     // Initialize mapper from InputID to GeneID
@@ -302,6 +302,29 @@ public abstract class AbstractEnrichment <EnrichIDType> {
     Collections.sort(ret, Signal.getComparator(NameAndSignals.defaultExperimentName, SignalType.pValue));
     
     return ret;
+  }
+  
+  /**
+   * Couns the unqie genes in a gene list, based on the NCBI Gene id.
+   * @param <T> either {@link mRNA} or {@link Integer} (gene ids)
+   * @param geneList
+   * @return number of unique genes in the list.
+   */
+  @SuppressWarnings("rawtypes")
+  public static Set<Integer> getUniqueGeneIDs(Iterable geneList) {
+    Set<Integer> unique = new HashSet<Integer>();
+    for (Object o : geneList) {
+      if (o instanceof Iterable) {
+        unique.addAll(getUniqueGeneIDs((Iterable) o));
+      } else if (o instanceof mRNA) {
+        unique.add(((mRNA)o).getGeneID());
+      } else if (o instanceof Integer) {
+        unique.add((Integer)o);
+      } else {
+        log.info("Please implement 2GeneId enrichment counter for " + o.getClass());
+      }
+    }
+    return unique;
   }
   
   

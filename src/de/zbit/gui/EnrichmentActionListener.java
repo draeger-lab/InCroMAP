@@ -56,13 +56,12 @@ public class EnrichmentActionListener implements ActionListener {
     }
     final String loadingString = "Performing enrichment analysis...";
     
-    System.out.println(Arrays.deepToString(geneList.toArray()));
-
-    
+    // Log this action.
+    log.fine(loadingString + e.getActionCommand() + " on " + Arrays.deepToString(geneList.toArray()));
     
     // Create a worker to execute everything in a new thread.
     SwingWorker<Collection<? extends NameAndSignals>, Void> worker = new ProgressWorker<Collection<? extends NameAndSignals>, Void>() {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
       protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
         
@@ -92,9 +91,20 @@ public class EnrichmentActionListener implements ActionListener {
           // Assume geneIDs
           log.log(Level.INFO, "Received an Integer List for enrichment analysis. Assuming they are GeneIDs!");
           l = enrich.getEnrichments((List<Integer>)geneList, IdentifierType.NCBI_GeneID);
+        } else if (geneList.get(0) instanceof EnrichmentObject) {
+          l = enrich.getEnrichments(EnrichmentObject.mergeGeneLists((Iterable<EnrichmentObject>) geneList));
         } else {
           GUITools.showErrorMessage(source, String.format("Enrichment for %s is not yet implemented.", geneList.get(0).getClass()));
         }
+        
+        // Inform user about results
+        if (l!=null && l.size()<1) {
+          GUITools.showMessage("Could not find any enriched objects.", enrich.getName());
+          return null; // Will close the tab on null-result.
+        } /*else {
+          System.out.println(l.toString().replace("]], [", "]]\n["));
+        }*/
+        
         return l;
       }
     };

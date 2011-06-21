@@ -71,9 +71,13 @@ public class BenjaminiHochberg implements Correction {
     Collections.sort(enrichments, Signal.getComparator(EnrichmentObject.defaultExperimentName, SignalType.pValue));
     int m = enrichments.size();
     
+    // Biggest value doesn't change
+    EnrichmentObject<?> vp = enrichments.get(m-1);
+    vp.setQValue(vp.getPValue().doubleValue());
+    
     // Apply (pVal*N/Rank) BH correction
     for (int i = (m-1); i > 0; i--) {
-      EnrichmentObject<?> vp = enrichments.get(i-1);
+      vp = enrichments.get(i-1);
       double q = vp.getPValue().doubleValue()*m/i;
       
       vp.setQValue(Math.min(q, 1));

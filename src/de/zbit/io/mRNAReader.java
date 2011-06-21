@@ -226,7 +226,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
         geneID = Integer.parseInt(name);
         if (geneID<=0) geneID=null;
       } catch (NumberFormatException e) {
-        log.warning("Could not parse GeneID from String'" + name + "'.");
+        log.warning("Could not parse GeneID from String '" + name + "'.");
         geneID=null;
       }
       

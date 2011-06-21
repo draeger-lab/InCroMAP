@@ -7,11 +7,13 @@ package de.zbit.gui;
 import java.awt.Dimension;
 import java.util.List;
 
+import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
+import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
@@ -94,14 +96,24 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     return s;
   }
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public static <T extends TableResult> JTable buildJTable(NameAndSignalsTab tab) {
     // Build table on scroll pane
     JTable jc = buildJTable(new TableResultTableModel(tab.getData()));
     
     // Add enrichment capabilities
     EnrichmentActionListener al = new EnrichmentActionListener(tab);
-    IntegratorGUITools.addRightMousePopup(jc, IntegratorGUITools.createEnrichmentPopup(al));
+    JPopupMenu popUp = IntegratorGUITools.createEnrichmentPopup(al);
+    IntegratorGUITools.addRightMousePopup(jc, popUp);
+    
+    // Other data type dependent capabilities
+    if (tab.getDataContentType().equals(EnrichmentObject.class)) {
+      if (((EnrichmentObject)tab.getExampleData()).getIdentifier().toString().startsWith("path:")) {
+        // It's a KEGG Pathway enrichment.
+        KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
+        IntegratorGUITools.addRightMousePopup(jc, IntegratorGUITools.createKeggPathwayPopup(al2, popUp));
+      }
+    }
     
     return jc;
   }

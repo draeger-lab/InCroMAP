@@ -157,7 +157,7 @@ public abstract class IntegratorTab <T> extends JScrollPane {
    * in the array or list.
    * @return
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   public Object getExampleData() {
     Object ret = null;
     if (data instanceof Iterable || Iterable.class.isAssignableFrom(data.getClass())) {

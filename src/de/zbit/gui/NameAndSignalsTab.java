@@ -118,7 +118,7 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
    * close it if the worker did fail.
    * @param worker
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   private void swingWorkerDone(SwingWorker worker) {
     Object data=null;
     if (intermediateBar!=null) intermediateBar.finished();
@@ -134,7 +134,7 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
   }
   
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   private void setData(Object data) {
     if (data==null) return;
     
@@ -167,7 +167,9 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
   @Override
   public JComponent getVisualization() {
     if (data==null) return null;
+    // Also adds the enrichment right mouse menu
     table = TableResultTableModel.buildJTable(this);
+    
     return table;
   }
 
@@ -198,7 +200,7 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
   /* (non-Javadoc)
    * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   public void propertyChange(PropertyChangeEvent evt) {
     // Checks if intermediate swing workers are done.
     String name = evt.getPropertyName();
