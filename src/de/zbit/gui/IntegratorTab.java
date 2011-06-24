@@ -22,6 +22,8 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
+import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.miRNA.miRNA;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 
@@ -49,6 +51,12 @@ public abstract class IntegratorTab <T> extends JScrollPane {
    * The data associated with this tab.
    */
   T data;
+  
+  /**
+   * If this is the result of data from another tab, this pointer
+   * should refer to the other tab.
+   */
+  IntegratorTab<?> sourceTab=null;
   
   /**
    * Stores the data and initialized visualization.
@@ -116,6 +124,20 @@ public abstract class IntegratorTab <T> extends JScrollPane {
   
   
   /**
+   * @return the sourceTab
+   */
+  public IntegratorTab<?> getSourceTab() {
+    return sourceTab;
+  }
+
+  /**
+   * @param sourceTab the sourceTab to set
+   */
+  public void setSourceTab(IntegratorTab<?> sourceTab) {
+    this.sourceTab = sourceTab;
+  }
+
+  /**
    * @see #getSpecies(boolean)
    * @return {@link #getSpecies(true)}
    */
@@ -144,6 +166,7 @@ public abstract class IntegratorTab <T> extends JScrollPane {
    * Get the data type of the stored data. If this tab
    * is based on a collection or array, this will automtically
    * return the type of the collection/array/etc.
+   * <p>E.g., {@link mRNA} or {@link miRNA},...
    * @return
    */
   public Class<?> getDataContentType() {

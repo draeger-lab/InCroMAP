@@ -3,6 +3,7 @@
  */
 package de.zbit.gui;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -14,7 +15,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 
 import de.zbit.data.EnrichmentObject;
-import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.Signal.MergeType;
+import de.zbit.data.Signal.SignalType;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.gui.TranslatorUI;
@@ -43,7 +45,7 @@ public class KEGGPathwayActionListener implements ActionListener {
   /* (non-Javadoc)
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void actionPerformed(ActionEvent e) {
     
@@ -59,23 +61,36 @@ public class KEGGPathwayActionListener implements ActionListener {
         // message has already been issued by the translator.
         this.source.getIntegratorUI().closeTab(source);
       } else {
-        // Highlight source genes
-        Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData()).getGeneIDsFromGenesInClass();
-        TranslatorTools tools = new TranslatorTools(source);
-        tools.highlightGenes(geneIDs);
-        
-        // Write signals into nodes
-        //if (this.source.getDataContentType().equals(EnrichmentObject.class)) {
-          //if (this.source.getDataContentType().equals(mRNA.class)) {
-        //}
+        // Get input signals and write to nodes
         Signal2PathwayTools tools2 = new Signal2PathwayTools(source);
-          tools2.writeSignalsToNodes((Iterable<mRNA>) this.source.getData());
+        IntegratorTab st = this.source;
+        while (st.getSourceTab()!=null) {
+          st = st.getSourceTab();
         }
+        tools2.writeSignalsToNodes((Iterable) st.getData());
+        
+        
+        int r = GUITools.showQuestionMessage(source, "Do you want to color the nodes accoring to an observation?", 
+          IntegratorUI.appName, new String[]{"Yes", "No"});
+        if (r==0) {
+          // Color nodes
+          // TODO: Show input signals chooser dialog
+          tools2.colorNodesAccordingToSignals((Iterable) st.getData(), MergeType.Mean, 
+            "Observation 1", SignalType.FoldChange, Color.BLUE, Color.WHITE, Color.RED);
+          
+          
+        } else {
+          // Highlight source genes
+          Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData()).getGeneIDsFromGenesInClass();
+          TranslatorTools tools = new TranslatorTools(source);
+          tools.highlightGenes(geneIDs);
+        }
+        
       }
     }
   }
-  
-  
+
+
   /**
    * Download the pathways, selected in the source {@link JTable} and
    * add a {@link TranslatorPanel} for each one.

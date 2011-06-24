@@ -12,6 +12,7 @@ import java.awt.Frame;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,11 +27,14 @@ import javax.swing.JTable;
 import javax.swing.SwingWorker;
 
 import de.zbit.analysis.enrichment.AbstractEnrichment;
+import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.CSVImporterV2.CSVImporterV2;
 import de.zbit.io.OpenFile;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
 import de.zbit.util.Utils;
+import de.zbit.util.ValuePair;
 
 /**
  * @author Clemens Wrzodek
@@ -236,6 +240,20 @@ public class IntegratorGUITools {
       log.log(Level.SEVERE, "Please implement priority for " + type);
       return 3;
     }
+  }
+
+  /**
+   * @param exampleData
+   */
+  public static <T extends NameAndSignals> JLabeledComponent createSelectExperimentBox(T ns) {
+    Collection<ValuePair<String, SignalType>> c = ns.getSignalNames();
+    
+    // TODO: Create two labels, one for each input dataset, and the second one for each experiment
+    // in this dataset (see next todo).
+    // TODO: Create a static lable for "Observation"/ "Experiment" such that this
+    // can easily be changes
+    JLabeledComponent jc = new JLabeledComponent("Select an observation",true,c);
+    return jc;
   }
     
 }

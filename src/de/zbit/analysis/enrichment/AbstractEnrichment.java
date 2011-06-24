@@ -151,7 +151,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
    * @param <T> A type that is mappable to GeneID (speciefied by idType).
    * @param geneList
    * @param idType
-   * @return a mapping from EnrichedObjects (e.g., Pathways) to [preferable mRNAs from geneList, else: GeneIDs from the geneList].
+   * @return a mapping from EnrichedObjects (e.g., Pathways) to [NameAndSignals-List (if available) or Integer (GeneIDs)].
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private <T> Map<EnrichIDType, Set<?>> getContainedEnrichments(Collection<T> geneList, IdentifierType idType) {
@@ -172,59 +172,79 @@ public abstract class AbstractEnrichment <EnrichIDType> {
     for(T gene: geneList) {
       
       // Get Entrez gene ID of gene
-      Integer geneID;
-      mRNA mr = null;
-      if (gene instanceof mRNA) {
-        geneID = ((mRNA)gene).getGeneID();
-        mr = ((mRNA)gene);
-      } else if (mapper != null){
+      Collection<Integer> geneIDs = new LinkedList<Integer>();
+      Collection<NameAndSignals> mr = new LinkedList<NameAndSignals>();
+      if (mapper != null){
         try {
-          geneID = mapper.map(gene.toString());
+          geneIDs.add(mapper.map(gene.toString()));
         } catch (Exception e) {
           log.log(Level.WARNING, "Could not map " + gene, e);
           continue;
         }
-      } else if (Integer.class.isAssignableFrom(gene.getClass())) {
-        geneID = (Integer) gene;
-      } else if (idType.equals(IdentifierType.NCBI_GeneID)) {
-        geneID = Integer.parseInt(gene.toString());
-      } else {
+      } else if (idType!=null && idType.equals(IdentifierType.NCBI_GeneID)) {
+        geneIDs.add(Integer.parseInt(gene.toString()));
+      } else { //mRNA miRNA EnrichmentObject and such...
+        geneIDs.addAll(NameAndSignals.getGeneIds(gene));
+        mr.addAll(NameAndSignals.getGenes(gene));
+      }
+      
+      if (!checkGeneIDs(geneIDs)) {
         log.log(Level.WARNING, "Could not get Entrez Gene ID for " + gene);
-        geneID = -1;
-      }
-      if (geneID<=0) continue;
-      
-      // Get pathways, in which this gene is contained
-      Collection<EnrichIDType> pws=null;
-      try {
-        // Map Gene_id id 2 pathways in which this gene is contained
-        pws = geneID2enrich_ID.map(geneID);
-      } catch (Exception e) {
-        log.log(Level.WARNING, "Could not get Enrichment objects for " + geneID, e);
+        continue;
       }
       
-      // Add to list
-      if (pws!=null && pws.size()>0) {
-        for (EnrichIDType pw : pws) {
-          // Ensure that PW is in our map
-          Set pwGenes = enrichClass2Genes.get(pw);
-          if (pwGenes==null) {
-            if (mr!=null) {
-              pwGenes = new HashSet<mRNA>();
-            } else {
-              pwGenes = new HashSet<Integer>();
+      // Add each geneID to pathway
+      for (Integer geneID: geneIDs) {
+        if (geneID==null || geneID.intValue()<1) continue;
+        
+        // Get pathways, in which this gene is contained
+        Collection<EnrichIDType> pws=null;
+        try {
+          // Map Gene_id id 2 pathways in which this gene is contained
+          pws = geneID2enrich_ID.map(geneID);
+        } catch (Exception e) {
+          log.log(Level.WARNING, "Could not get Enrichment objects for " + geneID, e);
+        }
+        
+        // Add to list
+        if (pws!=null && pws.size()>0) {
+          for (EnrichIDType pw : pws) {
+            // Ensure that PW is in our map
+            Set pwGenes = enrichClass2Genes.get(pw);
+            if (pwGenes==null) {
+              if (mr!=null) {
+                pwGenes = new HashSet<NameAndSignals>();
+              } else {
+                pwGenes = new HashSet<Integer>();
+              }
+              enrichClass2Genes.put(pw, pwGenes);
             }
-            enrichClass2Genes.put(pw, pwGenes);
+            
+            // Add current gene to pw list
+            if (mr!=null && mr.size()>0) {
+              pwGenes.addAll(mr);
+            } else {
+              pwGenes.add(geneID);
+            }
           }
-          
-          // Add current gene to pw list
-          pwGenes.add(mr!=null?mr:geneID);
         }
       }
-      
     }
     
     return enrichClass2Genes;
+  }
+  
+  /**
+   * @param geneID
+   * @return true if and only if the list contains at least one valid
+   * geneID.
+   */
+  public static boolean checkGeneIDs(Collection<Integer> geneID) {
+    if (geneID==null || geneID.size()<1) return false;
+    for (Integer i: geneID) {
+      if (i!=null && i.intValue()>0) return true;
+    }
+    return false;
   }
   
   /**
@@ -312,7 +332,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
    */
   @SuppressWarnings("rawtypes")
   public static Set<Integer> getUniqueGeneIDs(Iterable geneList) {
-    Set<Integer> unique = new HashSet<Integer>();
+    /*Set<Integer> unique = new HashSet<Integer>();
     for (Object o : geneList) {
       if (o instanceof Iterable) {
         unique.addAll(getUniqueGeneIDs((Iterable) o));
@@ -325,6 +345,8 @@ public abstract class AbstractEnrichment <EnrichIDType> {
       }
     }
     return unique;
+    */
+    return (Set<Integer>) NameAndSignals.getGeneIds(geneList);
   }
   
   

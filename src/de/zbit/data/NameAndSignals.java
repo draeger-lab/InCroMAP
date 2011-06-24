@@ -28,6 +28,7 @@ import de.zbit.io.CSVwriteable;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Reflect;
 import de.zbit.util.StringUtil;
+import de.zbit.util.ValuePair;
 
 /**
  * An abstract class that handles something
@@ -162,6 +163,22 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    */
   public List<Signal> getSignals() {
     return signals;
+  }
+  
+  /**
+   * Returns a list of available Signal Names and Types.
+   * @return
+   */
+  public Collection<ValuePair<String, SignalType>> getSignalNames() {
+    Set<ValuePair<String, SignalType>> sn = new HashSet<ValuePair<String, SignalType>>();
+    for (Signal sig : signals) {
+      sn.add(new ValuePair<String, SignalType>(sig.getName(), sig.getType()));
+    }
+    return sn;
+  }
+  
+  public boolean hasSignals() {
+    return signals!=null && signals.size()>0;
   }
   
   /**
@@ -644,13 +661,14 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
-   * <T extends NameAndSignals> or Integer (direct GeneID).
+   * Get the GeneIDs from <T extends NameAndSignals> or Integer (direct GeneID). 
+   * Can also be mixed lists and arrays of these types.
    * @param o
    * @return
    */
   @SuppressWarnings("rawtypes")
-  public static Collection<Integer> getGeneIds(Object o) {
-    HashSet<Integer> geneIds = new HashSet<Integer>();
+  public static Set<Integer> getGeneIds(Object o) {
+    Set<Integer> geneIds = new HashSet<Integer>();
     if (o==null) return geneIds;
     
     if (o instanceof Iterable) {
@@ -691,4 +709,52 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     return geneIds;
   }
   
+  /**
+   * @param o
+   * @return
+   */
+  public static Collection<NameAndSignals> getGenes(Object o) {
+    Set<NameAndSignals> geneIds = new HashSet<NameAndSignals>();
+    if (o==null) return geneIds;
+    
+    if (o instanceof Iterable) {
+      for (Object o2 : ((Iterable<?>)o)) {
+        geneIds.addAll(getGenes(o2));
+      }
+      
+    } else if (o.getClass().isArray()) {
+      for (int i=0; i<Array.getLength(o); i++) {
+        geneIds.addAll(getGenes(Array.get(o, i)));
+      }
+      
+    } else if (o instanceof NameAndSignals || NameAndSignals.class.isAssignableFrom(o.getClass())) {
+      geneIds.add(((NameAndSignals)o));
+            
+    } else {
+      log.severe("Cannot get NameAndSignals for " + o.getClass());
+    }
+    
+    return geneIds;
+  }
+  
+  /**
+   * 
+   * @param <T>
+   * @param nsList
+   * @return an array of [0=minSignal] and [1=maxSignal]
+   */
+  public static <T extends NameAndSignals> double[] getMinMaxSignalGlobal(Iterable<T> nsList) {
+    double[] minMax = new double[]{Double.MAX_VALUE, Double.MIN_VALUE};
+    for (NameAndSignals ns: nsList) {
+      if (ns.hasSignals()) {
+        for (Signal sig: ns.getSignals()) {
+          Number signal = sig.getSignal();
+          minMax[0] = Math.min(minMax[0], signal.doubleValue());
+          minMax[1] = Math.max(minMax[1], signal.doubleValue());
+        }
+      }
+    }
+    return minMax;
+  }
+    
 }

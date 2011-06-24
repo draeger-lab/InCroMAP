@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.gui.GUITools;
@@ -66,6 +67,13 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
   private ValuePair<Integer, IdentifierType> secondID = null;
   
   /**
+   * This column is the most readable name, that will define the
+   * Name of the {@link NameAndSignals} object. It is not equal
+   * to the primary identifier (which is the most machine readable id).
+   */
+  private int preferredNameColumn=-1;
+  
+  /**
    * @return  This method returns all {@link ExpectedColumn}s required
    * to read a new file with the {@link CSVImporterV2}. This is
    * [0] an identifier and [1-10] signal columns.
@@ -106,7 +114,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
         this.species = (Species) spec.getSelectedItem();
         for (int i=1; i<exCol.length; i++) {
           if (exCol[i].hasAssignedColumns()) {
-            for (int j=0; j<exCol[i].getAssignedColumns().size(); i++) {
+            for (int j=0; j<exCol[i].getAssignedColumns().size(); j++) {
               addSignalColumn(exCol[i].getAssignedColumns().get(j), 
                 (SignalType) exCol[i].getAssignedType(j), exCol[i].getName().toString());
             }
@@ -161,6 +169,20 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
        addAdditionalData(l.get(i).getA(), l.get(i).getB().toString());
      }
    }
+   
+   // Most human readable name is the name, last in the list
+   preferredNameColumn = l.get(l.size()-1).getA();
+   // But still, Gene symbols should be preferred to descriptions
+   for (int i=l.size()-1; i>=0; i--) {
+     if (l.get(i).getB().equals(IdentifierType.GeneSymbol)) {
+       preferredNameColumn = l.get(i).getA();
+       if (i>=2) { // If it is no primary or secondary identifier,  do not add it twice...
+         removeAdditionalData(l.get(i).getA(), l.get(i).getB().toString());
+       }
+       break;
+     }
+   }
+   
   }
 
   /**
@@ -174,6 +196,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     super(identifierCol);
     this.idType = idType;
     this.species = species;
+    this.preferredNameColumn = identifierCol;
   }
   
   /**
@@ -186,6 +209,9 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
    */
   public void addSecondIdentifier(int col, IdentifierType type) {
     secondID = new ValuePair<Integer, IdentifierType>(col, type);
+    if (type.equals(IdentifierType.GeneSymbol)) {
+      preferredNameColumn = col;
+    }
   }
 
   
@@ -222,6 +248,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     if (!idType.equals(IdentifierType.NCBI_GeneID)) {
       geneID = mapper.map(name);
     } else {
+      // Primary identifier is a gene id.
       try {
         geneID = Integer.parseInt(name);
         if (geneID<=0) geneID=null;
@@ -241,12 +268,27 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
       }
     }
     
+    // Change name to a more human readable one.
+    boolean addSecondIDasAdditionalInfo=false;
+    if (preferredNameColumn>=0) {
+      name = line[preferredNameColumn];
+      if (secondID!=null && (!secondID.getA().equals(preferredNameColumn))) {
+        addSecondIDasAdditionalInfo = true;
+      }
+    }
+    
     // Create mRNA
     mRNA m;
     if (geneID!=null) {
       m = new mRNA(name, geneID);
     } else {
       m = new mRNA(name);
+    }
+    
+    // SecondID is normally the name. If not, still keep this
+    // information as additional information.
+    if (addSecondIDasAdditionalInfo) {
+      m.addData(secondID.getB().toString(), line[secondID.getA()]);
     }
     
     return m;

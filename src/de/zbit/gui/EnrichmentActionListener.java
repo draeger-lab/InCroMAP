@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.SwingWorker;
@@ -20,8 +19,6 @@ import de.zbit.analysis.enrichment.GOEnrichment;
 import de.zbit.analysis.enrichment.KEGGPathwayEnrichment;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
-import de.zbit.data.mRNA.mRNA;
-import de.zbit.mapper.MappingUtils.IdentifierType;
 
 /**
  * Can handle enrichment actions for {@link IntegratorTab}s.
@@ -85,7 +82,7 @@ public class EnrichmentActionListener implements ActionListener {
         // Perform analysis
         log.info(loadingString);
         List<EnrichmentObject<String>> l=null;
-        if (geneList.get(0) instanceof mRNA) {
+        /*if (geneList.get(0) instanceof mRNA) {
           l = enrich.getEnrichments((List<mRNA>)geneList);
         } else if (geneList.get(0) instanceof Integer) {
           // Assume geneIDs
@@ -93,9 +90,15 @@ public class EnrichmentActionListener implements ActionListener {
           l = enrich.getEnrichments((List<Integer>)geneList, IdentifierType.NCBI_GeneID);
         } else if (geneList.get(0) instanceof EnrichmentObject) {
           l = enrich.getEnrichments(EnrichmentObject.mergeGeneLists((Iterable<EnrichmentObject>) geneList));
-        } else {
-          GUITools.showErrorMessage(source, String.format("Enrichment for %s is not yet implemented.", geneList.get(0).getClass()));
+        } else {*/
+          //GUITools.showErrorMessage(source, String.format("Enrichment for %s is not yet implemented.", geneList.get(0).getClass()));
+        try {
+          l = enrich.getEnrichments(geneList, null);
+        } catch (Throwable e) {
+          e.printStackTrace();
+          GUITools.showErrorMessage(null, e);
         }
+        //}
         
         // Inform user about results
         if (l!=null && l.size()<1) {
@@ -114,6 +117,7 @@ public class EnrichmentActionListener implements ActionListener {
     String tip = getEnrichmentName(e.getActionCommand()) + " for " + geneList.size() + " objects";
     if (source.getName()!=null) tip+= " from \"" + source.getName() + "\".";
     source.getIntegratorUI().addTab(tab, getEnrichmentName(e.getActionCommand()), tip);
+    tab.setSourceTab(this.source);
   }
   
   

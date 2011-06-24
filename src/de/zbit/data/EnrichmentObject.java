@@ -460,7 +460,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    * @return a {@link HashSet} with unique geneIDs from genes in this {@link EnrichmentObject}.
    */
   public Collection<Integer> getGeneIDsFromGenesInClass() {
-    Set<Integer> unique = new HashSet<Integer>();
+    /*Set<Integer> unique = new HashSet<Integer>();
     if (genesInClass==null || genesInClass.size()<1) return unique;
     
     for (Object o : genesInClass) {
@@ -473,7 +473,8 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
       }
     }
     
-    return unique;
+    return unique;*/
+    return NameAndSignals.getGeneIds(genesInClass);
   }
   
 }

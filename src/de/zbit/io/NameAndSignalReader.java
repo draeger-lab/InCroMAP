@@ -106,6 +106,11 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     additionalDataToRead.add(new ValuePair<Integer, String>(col,key));
   }
   
+  public void removeAdditionalData(int col, String key) {
+    if (additionalDataToRead==null) return;
+    additionalDataToRead.remove(new ValuePair<Integer, String>(col,key));
+  }
+  
   /**
    * @see #read(String)
    * @param file

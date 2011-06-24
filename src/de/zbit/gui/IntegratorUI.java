@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
@@ -26,6 +27,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.integrator.IntegratorIOOptions;
 import de.zbit.io.NameAndSignalReader;
+import de.zbit.kegg.Translator;
 import de.zbit.util.logging.LogUtil;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
@@ -104,6 +106,7 @@ public class IntegratorUI extends BaseFrame {
         // Z:\workspace\Integrator\mRNA_data_new.txt
       }
     });
+    
   }
   
   public IntegratorUI() {
@@ -190,10 +193,8 @@ public class IntegratorUI extends BaseFrame {
   @Override
   protected Component createMainComponent() {
     // TODO: Make and use a logo
-    //ImageIcon logo = new ImageIcon(IntegratorUI.class.getResource("img/Logo2.png"));
-    //tabbedPane = new JTabbedLogoPane(logo);
-    
-    tabbedPane = new JTabbedPane();
+    ImageIcon logo = new ImageIcon(IntegratorUI.class.getResource("img/logo.jpg"));
+    tabbedPane = new JTabbedLogoPane(logo);
     
     // Change active buttons, based on selection.
     tabbedPane.addChangeListener(new ChangeListener() {
@@ -252,9 +253,9 @@ public class IntegratorUI extends BaseFrame {
     
     // Close the app and save caches.
     setVisible(false);
-    /*try {
+    //try {
       Translator.saveCache();
-      
+      /*
       SBProperties props = new SBProperties();
       File f = getInputFile(toolBar);
       if (f != null && KEGGtranslatorIOOptions.INPUT.getRange().isInRange(f)) {
@@ -269,7 +270,7 @@ public class IntegratorUI extends BaseFrame {
         props.put(GUIOptions.SAVE_DIR, saveDir);
       }
       SBPreferences.saveProperties(GUIOptions.class, props);
-      
+        
     } catch (BackingStoreException exc) {
       exc.printStackTrace();
       // Unimportant error... don't bother the user here.
