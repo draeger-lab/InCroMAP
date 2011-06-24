@@ -28,7 +28,7 @@ import de.zbit.util.Reflect;
 /**
  * @author Clemens Wrzodek
  */
-public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSignals>> implements PropertyChangeListener {
+public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSignals>> implements PropertyChangeListener, Comparable<NameAndSignalsTab> {
   private static final long serialVersionUID = -6373461312937415980L;
   public static final transient Logger log = Logger.getLogger(NameAndSignalsTab.class.getName());
   
@@ -209,6 +209,15 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
         swingWorkerDone((SwingWorker) evt.getSource());
       }
     }
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+  @Override
+  public int compareTo(NameAndSignalsTab o) {
+    // Just to make this class useable with ValuePair and ValueTriplet.
+    return toString().compareTo(o.toString());
   }
   
 }

@@ -21,6 +21,7 @@ import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.gui.TranslatorUI;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
+import de.zbit.util.ValueTriplet;
 
 /**
  * An {@link ActionListener} that can visualize KEGG Pathways
@@ -41,7 +42,7 @@ public class KEGGPathwayActionListener implements ActionListener {
   public KEGGPathwayActionListener(IntegratorTab<?> source) {
     this.source = source;
   }
-
+  
   /* (non-Javadoc)
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
@@ -61,36 +62,40 @@ public class KEGGPathwayActionListener implements ActionListener {
         // message has already been issued by the translator.
         this.source.getIntegratorUI().closeTab(source);
       } else {
-        // Get input signals and write to nodes
-        Signal2PathwayTools tools2 = new Signal2PathwayTools(source);
-        IntegratorTab st = this.source;
-        while (st.getSourceTab()!=null) {
-          st = st.getSourceTab();
-        }
-        tools2.writeSignalsToNodes((Iterable) st.getData());
-        
-        
         int r = GUITools.showQuestionMessage(source, "Do you want to color the nodes accoring to an observation?", 
           IntegratorUI.appName, new String[]{"Yes", "No"});
         if (r==0) {
-          // Color nodes
-          // TODO: Show input signals chooser dialog
-          tools2.colorNodesAccordingToSignals((Iterable) st.getData(), MergeType.Mean, 
-            "Observation 1", SignalType.FoldChange, Color.BLUE, Color.WHITE, Color.RED);
+          // Let the user choose a signal to color the nodes
+          Signal2PathwayTools tools2 = new Signal2PathwayTools(source);
+          IntegratorTab st = this.source;
+          while (st.getSourceTab()!=null) {
+            st = st.getSourceTab();
+          }
+          ValueTriplet<NameAndSignalsTab, String, SignalType>  vt =
+            IntegratorGUITools.showSelectExperimentBox(this.source.getIntegratorUI(), st);
           
-          
-        } else {
+          if (vt!=null) {
+            // Write signals to nodes
+            st = vt.getA();
+            tools2.writeSignalsToNodes((Iterable) st.getData());
+            
+            // Color nodes
+            tools2.colorNodesAccordingToSignals((Iterable) st.getData(), MergeType.Mean, 
+              vt.getB(), vt.getC(), Color.BLUE, Color.WHITE, Color.RED);
+          } else {
+            r = -1; // At least hightligh source gene nodes
+          }
+        } if (r!=0) {
           // Highlight source genes
           Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData()).getGeneIDsFromGenesInClass();
           TranslatorTools tools = new TranslatorTools(source);
           tools.highlightGenes(geneIDs);
         }
-        
       }
     }
   }
-
-
+  
+  
   /**
    * Download the pathways, selected in the source {@link JTable} and
    * add a {@link TranslatorPanel} for each one.

@@ -24,6 +24,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
 import de.zbit.data.NameAndSignals;
+import de.zbit.gui.prefs.FileHistory;
 import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.integrator.IntegratorIOOptions;
 import de.zbit.io.NameAndSignalReader;
@@ -192,7 +193,6 @@ public class IntegratorUI extends BaseFrame {
    */
   @Override
   protected Component createMainComponent() {
-    // TODO: Make and use a logo
     ImageIcon logo = new ImageIcon(IntegratorUI.class.getResource("img/logo.jpg"));
     tabbedPane = new JTabbedLogoPane(logo);
     
@@ -439,6 +439,13 @@ public class IntegratorUI extends BaseFrame {
   public void saveFile() {
     // TODO Auto-generated method stub
     log.severe("NOT YET IMPLEMENTED!");
+  }
+
+  /**
+   * @return the current {@link #tabbedPane}.
+   */
+  public JTabbedPane getTabbedPane() {
+    return tabbedPane;
   }
   
 }
