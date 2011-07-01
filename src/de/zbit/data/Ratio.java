@@ -30,7 +30,7 @@ public class Ratio extends Number implements Serializable, Comparable<Object> {
   public Ratio (int a, int b) {
     this.a = a;
     this.b = b;
-    this.valueOf = b!=0? a/b :0;
+    this.valueOf = b!=0? (double)a/(double)b :0;
   }
   
 

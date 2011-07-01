@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
+import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.mapper.AbstractMapper;
@@ -269,7 +270,18 @@ public abstract class AbstractEnrichment <EnrichIDType> {
    * @param geneList
    * @param idType
    */
+  @SuppressWarnings("unchecked")
   public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<T> geneList, IdentifierType idType) {
+    // Gene center input list (e.g., list of probes).
+    // Else, it may occur that you have more genes in a pathway that this pathway contains and
+    // Hypergeometric test then returns 0 which is an obvious fault.
+    if (NameAndSignals.isNameAndSignals(geneList)) {
+      log.info("Gene centering input list...");
+      Collection<T> newList = (Collection<T>) NameAndSignals.geneCentered((Collection<? extends NameAndSignals>)geneList, MergeType.Mean);
+      if (newList!=null && newList.size()>0) {
+        geneList = newList;
+      }
+    }
     
     // Map enriched objects on gene list
     Map<EnrichIDType, Set<?>> pwList = getContainedEnrichments(geneList, idType);
@@ -296,6 +308,9 @@ public abstract class AbstractEnrichment <EnrichIDType> {
       if (enrich_ID2Name!=null && enrich_ID2Name.isReady()) {
         try {
           pw_name = enrich_ID2Name.map(entry.getKey());
+          if (pw_name==null||pw_name.length()<1) {
+            pw_name = "Unknown";//entry.getKey().toString();
+          }
         } catch (Exception e) {
           if (enrich_ID2Name!=null) {
             log.log(Level.WARNING, String.format("Could not map Enrichment id 2 name: %s", entry.getKey()), e);

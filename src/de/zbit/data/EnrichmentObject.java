@@ -59,7 +59,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
   /**
    * The pValue calculator
    */
-  private EnrichmentPvalue pValCalculator;
+  private EnrichmentPvalue pValCalculator=null;
   
   /**
    * This is the key, under which the identifier is stored in the {@link #addData(String, Object)} list.
@@ -410,16 +410,6 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    */
   @Override
   public String getColumnName(int columnIndex) {
-    Object[] ret = new Object[7];
-    
-    ret[0] = getIdentifier();
-    ret[1] = getName();
-    ret[2] = new Ratio(getNumberOfEnrichedGenesInClass(), getTotalGenesInSourceList());
-    ret[3] = new Ratio(getTotalGenesInClass(), getTotalGenesInGenome());
-    ret[4] = getPValue();
-    ret[5] = getQValue();
-    ret[6] = getGenesInClass();
-    
     if (columnIndex==0) return "ID";
     else if (columnIndex==1) return "Name";
     else if (columnIndex==2) return "List ratio";

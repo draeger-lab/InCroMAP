@@ -157,6 +157,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     
     String[] line;
     while ((line=r.getNextLine())!=null) {
+      if (nameCol>=line.length) continue;
       
       T m = createObject(line[nameCol], line);
       

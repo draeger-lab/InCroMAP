@@ -5,13 +5,6 @@
 package de.zbit.math;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.Map;
-
-import de.zbit.util.ValuePair;
 
 /**
  * Quick and Cache-based implementation of the Hypergeometric test
@@ -30,28 +23,19 @@ public class HypergeometricTest implements Serializable, EnrichmentPvalue {
   /**
    * Total number of genes in the genome (or number or marbles in the urn) (=N).
    */
-  private final BigInteger genomeSize;
+  private final int genomeSize;
   
   /**
    * Total number of genes in the genelist (or number of marbles to draw from the urn) (=n).
    */
-  private final BigInteger geneListSize;
+  private final int geneListSize;
   
   /**
-   * {@link #binomialCoefficient(BigInteger, BigInteger)} of {@link #genomeSize} over {@link #geneListSize}.
+   * This is a threshold to detect overflows in pValue calculations.
    */
-  private final BigDecimal binom_N_n;
+  private final double MAXEXP = (1023)*Math.log(2);
   
-  /**
-   * A cache for the binomial coefficient.
-   */
-  private Map<ValuePair<BigInteger,BigInteger>, BigInteger> binomCache = new HashMap<ValuePair<BigInteger,BigInteger>, BigInteger>();
-  
-  /**
-   * Maximum allowed cache size.
-   */
-  private static final int maxCacheSize = 100;
-  
+  private final ExactHypergeometricTest exact;
   
   /**
    * Initialize the hypergeometric test with static parameters.
@@ -59,105 +43,149 @@ public class HypergeometricTest implements Serializable, EnrichmentPvalue {
    * @param genomeSize Total number of genes in the genome (or number or marbles in the urn).
    * @param geneListSize Total number of genes in the genelist (or number of marbles to draw from the urn).
    */
-  public HypergeometricTest (long genomeSize, long geneListSize) {
-    this.genomeSize = BigInteger.valueOf(genomeSize);
-    this.geneListSize = BigInteger.valueOf(geneListSize);
-    binom_N_n = new BigDecimal(binomialCoefficient(this.genomeSize, this.geneListSize));
+  public HypergeometricTest (int genomeSize, int geneListSize) {
+    super();
+    if (genomeSize <= 0)
+      throw new IllegalArgumentException ("geneListSize must be greater than or equal to 0");
+    if (geneListSize <= 0 || geneListSize > genomeSize)
+      throw new IllegalArgumentException ("geneListSize is invalid: 0>=geneListSize<=genomeSize");
+    
+    this.genomeSize = genomeSize;
+    this.geneListSize = geneListSize;
+    
+    // For small r values, an exact implementation is required.
+    exact = new ExactHypergeometricTest(genomeSize, geneListSize);
   }
   
   /**
-   * binomialCoefficient that also can calculate bigger values, using a {@link BigInteger}.
+   * binomialCoefficient that uses approximation for large numbers.
    * @param n
    * @param k
    * @return
    */
-  private BigInteger binomialCoefficient(BigInteger n, BigInteger k){
-    
-    // Return cached bigInt
-    ValuePair<BigInteger, BigInteger> vp = new ValuePair<BigInteger, BigInteger>(n,k);
-    if (binomCache.containsKey(vp)) return binomCache.get(vp);
-    
-    // Symetric enhancement (swap k with n_minus_k eventually.
-    BigInteger n_minus_k=n.subtract(k);
-    if(n_minus_k.compareTo(k)<0){
-      BigInteger temp=k;
-      k=n_minus_k;
-      n_minus_k=temp;
+  public static double binomialCoefficient (int n, int k) {
+    // Limit defines when to use the approximation.
+    final int LIMIT = 100;
+    int i;
+    if (k == 0 || k == n)
+      return 1;
+    if (k < 0) {
+      System.err.println("binomialCoefficient with k<0: "+k);
+      return 0;
+    }
+    if (k > n) {
+      System.err.println("binomialCoefficient with k>n: "+k + " > " + n);
+      return 0;
     }
     
-    
-    // Calculate the binomial coefficient
-    BigInteger numerator=BigInteger.ONE;
-    BigInteger denominator=BigInteger.ONE;
-    for(BigInteger j=BigInteger.ONE; j.compareTo(k)<=0; j=j.add(BigInteger.ONE)){
-      numerator=numerator.multiply(j.add(n_minus_k));
-      denominator=denominator.multiply(j);
-      BigInteger gcd=numerator.gcd(denominator);
-      numerator=numerator.divide(gcd);
-      denominator=denominator.divide(gcd);
+    if (k > (n/2)) {
+      // Kuerzen ist schneller
+      k = n - k;
+    } if (n <= LIMIT) {
+      // Exact, simple calculation
+      double ret = 1.0;
+      int n_minus_k = n - k;
+      for (i = 1; i <= k; i++) {
+        ret *= (double)(n_minus_k + i)/(double)i;
+      }
+      return ret;
+    } else {
+      // Approximation (in lnFac) = n!/(k!*(n-k)!) logarithmized
+      double ret = (lnFac (n) - lnFac (k)) - lnFac (n - k);
+      return Math.exp (ret);
     }
-    
-    // Cache and return
-    binomCache.put(vp, numerator);
-    return numerator;
   }
   
+  
   /**
-   * The hypergeometric distribution, calculated as<br/>
-   * <img src="http://upload.wikimedia.org/math/7/e/c/7ecd507bdc33dc636fdae2000d9b31fb.png"/>
-   * 
-   * @see <a href="http://en.wikipedia.org/wiki/Hypergeometric_distribution">Wikipedia</a>.
-   * 
-   * @param N total number of objects in urn
-   * @param m number of white objects in urn
-   * @param n number objects to draw without replacement
-   * @param k number of objects to calculate the probability that they are white
-   * @return
+   * Approximation of a logarithmized (base e) factorial.
+   * @param n
+   * @return ln(n!)
    */
-  private double hypergeometric_distribution(BigInteger m, BigInteger k) {
-    // Values are getting really really big in here!
-    BigDecimal zaehler = new BigDecimal(binomialCoefficient(m,k).multiply(binomialCoefficient(genomeSize.subtract(m),geneListSize.subtract(k))));
-    return (zaehler.divide(this.binom_N_n, 20, RoundingMode.HALF_UP)).doubleValue();
+  public static double lnFac (int n) {
+    n = Math.abs(n);
+    
+    // Define limit for simple calculations
+    final int LIMIT = 15;
+
+    if (n<=1) {
+      return 0; // ln(1) = 0
+    } else if (n < LIMIT) {
+      // Naive calculation
+      long ret = 1;
+      for (int i = 2; i <= n; i++) {
+        ret *= i;
+      }
+      return Math.log (ret);
+    } else {
+      // Approximation
+      double x = (double)(n + 1);
+      double y = 1.0/(Math.pow(x, 2));
+      double ret = ((-(5.95238095238E-4*y) + 7.936500793651E-4)*y -
+          2.7777777777778E-3)*y + 8.3333333333333E-2;
+      ret = ((x - 0.5)*Math.log (x) - x) + 9.1893853320467E-1 + ret/x;
+      return ret;
+    }
   }
   
   
   /* (non-Javadoc)
-   * @see de.zbit.math.EnrichmentPvalue#getPvalue(long, long)
+   * @see de.zbit.math.EnrichmentPvalue#getPvalue(int, int)
    */
-  public double getPvalue(long t, long r) {
-    double p = 0;
-    BigInteger t2 = BigInteger.valueOf(t);
-    
-    for (int x=0; x<r; x++) {
-      p+=hypergeometric_distribution(t2,BigInteger.valueOf(x));
+  public double getPvalue(int t, int r) {
+    final int LIMIT = 100;
+    if (t <= 0 || t > genomeSize) {
+      throw new IllegalArgumentException ("Invalid pathway size: " + t);
+    }
+    if (r < Math.max (0, t - genomeSize + geneListSize) || r > Math.min (genomeSize, geneListSize)) {
+      System.err.println("Returning zero due to invalid boundaries in hypergeometric test.");
+      return 0;
     }
     
-    cleanCache();
+    /*
+     * Values of r lower than this threshold are not correct approximated.
+     */
+    if (r<=(t/(genomeSize/geneListSize)) +1) {
+      if (exact!=null) {
+        return exact.getPvalue(t, r);
+      } else {
+        // They are anyway relatively insignificant.
+        return 1.0;
+      }
+    }
     
-    return 1-p;
-  }
-
-  /**
-   * Avoid the cache from being too big.
-   */
-  private void cleanCache() {
-    if (binomCache.size()>maxCacheSize) {
-      binomCache.clear();
+    if (genomeSize <= LIMIT) {
+      // Exact calculation
+      return binomialCoefficient (geneListSize, r) * binomialCoefficient (genomeSize - geneListSize, t - r)
+        /binomialCoefficient (genomeSize, t);
+    } else {
+      // Approximation
+      double res =
+        lnFac (geneListSize) + lnFac (genomeSize-geneListSize) - lnFac (genomeSize)
+        - lnFac (r) - lnFac (t - r) + lnFac (t)
+        - lnFac (geneListSize - r) - lnFac (genomeSize - geneListSize - t + r) 
+        + lnFac (genomeSize - t);
+      if (res >= MAXEXP) {
+        System.err.println("WARNING: term overflow - numbers too big.");
+      }
+      // Return a number between 0 and 1.
+      return Math.min(Math.max(Math.exp (res), 0), 1);
     }
   }
+  
 
   /* (non-Javadoc)
    * @see de.zbit.math.EnrichmentPvalue#getGeneListSize()
    */
   public int getGeneListSize() {
-    return geneListSize.intValue();
+    return geneListSize;
   }
 
   /* (non-Javadoc)
    * @see de.zbit.math.EnrichmentPvalue#getGenomeSize()
    */
   public int getGenomeSize() {
-    return genomeSize.intValue();
+    return genomeSize;
   }
   
   /* (non-Javadoc)
@@ -182,7 +210,54 @@ public class HypergeometricTest implements Serializable, EnrichmentPvalue {
    */
   @Override
   public int hashCode() {
-    return genomeSize.add(geneListSize).intValue();
+    return genomeSize + geneListSize;
   }
+  
+  public static void main(String[] args) {
+    // TODO: Das stimmt nicht.
+    HypergeometricTest t = new HypergeometricTest(24391, 1977);
+    
+    /*int schranke=1;
+    for (int i=100; i<2000; i+=50) {
+      double lastPVAL = Integer.MAX_VALUE;
+      for (int j=1; j<=i; j++) {
+        double pVal = t.getPvalue(i,j);
+        if (pVal > lastPVAL) schranke = j;
+        lastPVAL = pVal;
+      }
+      System.out.println(i+"\t" + schranke);
+      System.out.println(lnFac(1977-(schranke-1)) + " :: " + lnFac(1977-(schranke)) + " :: " + lnFac(1977-(schranke+1)));
+      System.out.println(lnFac(i-(schranke-1)) + " :: " + lnFac(i-(schranke)) + " :: " + lnFac(i-(schranke+1)));
+    }
+    //System.out.println(t.getPvalue(100, 1));
+    //System.out.println(t.getPvalue(100, 8));
+    
+    if (true) return;
+    */
+    
+    ExactHypergeometricTest t2 = new ExactHypergeometricTest(24391, 1977);
+    /*System.out.println(t.getPvalue(1035, 1));
+    System.out.println(t.getPvalue(1035, 10));
+    System.out.println(t.getPvalue(1035, 100));
+    System.out.println(t.getPvalue(1035, 1000));
+    System.out.println("=================");
+    System.out.println(t.getPvalue(1193, 1));
+    System.out.println(t.getPvalue(1193, 361));
+    System.out.println(t.getPvalue(1193, 1000));*/
+    
+    for (int i=1; i<100; i++) {
+      System.out.println(i + "\t" + t.getPvalue(100,i) + "\t" + t2.getPvalue(100,i));
+    }
+    
+    /*
+    HypergeometricDist d = new HypergeometricDist(1977, 24391, 1035);
+    System.out.println(d.prob(1));
+    System.out.println(d.prob(100));
+    
+    System.out.println(HypergeometricDist.prob(1, 24391, 1035, 1977));
+    System.out.println(HypergeometricDist.prob(100, 24391, 1035, 1977));
+    */
+  }
+  
 
 }

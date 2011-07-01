@@ -21,12 +21,14 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.ext.GenericDataMap;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.math.LinearRescale;
 import de.zbit.util.ValuePair;
+import de.zbit.util.prefs.SBPreferences;
 
 /**
  * This class is intended to provide tools for connecting {@link Signal}s
@@ -35,6 +37,11 @@ import de.zbit.util.ValuePair;
  */
 public class Signal2PathwayTools {
   public static final transient Logger log = Logger.getLogger(Signal2PathwayTools.class.getName());
+  
+  /**
+   * SBPreferences object to store all preferences for this class.
+   */
+  protected SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
   
   /**
    * A graph on which operations are performed.
@@ -69,7 +76,7 @@ public class Signal2PathwayTools {
     
     // Get GeneID 2 Node map
     TranslatorTools tools = new TranslatorTools(graph);
-    Map<Integer, Node> map = tools.getGeneID2NodeMap();
+    Map<Integer, List<Node>> map = tools.getGeneID2NodeMap();
     
     // Write signals to nodes
     Map<ValuePair<String, SignalType>, NodeMap> signalMaps = new HashMap<ValuePair<String, SignalType>, NodeMap>();
@@ -127,15 +134,20 @@ public class Signal2PathwayTools {
     return signals;
   }
 
-  private static List<Node> getNodesForNameAndSignal(Map<Integer, Node> map,
+  /**
+   * @param map obtained from {@link TranslatorTools#getGeneID2NodeMap()}
+   * @param ns
+   * @return a list of all Nodes for a {@link NameAndSignals}.
+   */
+  private static List<Node> getNodesForNameAndSignal(Map<Integer, List<Node>> map,
     NameAndSignals ns) {
     List<Node> node = new LinkedList<Node>();
     Collection<Integer> gis = NameAndSignals.getGeneIds(ns);
     for (Integer gi : gis) {
       if (gi!=null && gi.intValue()>0) {
-        Node n = map.get(gi);
-        if (n!=null) {
-          node.add(n);
+        Collection<Node> nList = map.get(gi);
+        if (nList!=null) {
+          node.addAll(nList);
         }
       }
     }
@@ -143,19 +155,34 @@ public class Signal2PathwayTools {
   }
 
   /**
-   * @param data
+   * 
+   * @param <T>
+   * @param nsList list of {@link NameAndSignals}
+   * @param sigMerge define how to merge non unique signals (e.g., defined by multiple probes)
+   * @param experimentName for selecting the signal.
+   * @param type of signal (e.g., fold change).
+   * @param gradientColors OPTIONAL - set to null to read from preferences. Else:
+   * list of colors for a gradient. Will be distributed equally, linear on the signal sample range.
    */
   public <T extends NameAndSignals> void colorNodesAccordingToSignals(Iterable<T> nsList, MergeType sigMerge, String experimentName, SignalType type, Color... gradientColors) {
+    // Get defaults
+    if (gradientColors==null || gradientColors.length<1) {
+      // Load default from config (e.g., blue-white-red).
+      gradientColors = new Color[]{PathwayVisualizationOptions.COLOR_FOR_MIN_FC.getValue(prefs),
+          PathwayVisualizationOptions.COLOR_FOR_NO_FC.getValue(prefs),
+          PathwayVisualizationOptions.COLOR_FOR_MAX_FC.getValue(prefs)};
+    }
 
     // Get GeneID 2 Node map
     TranslatorTools tools = new TranslatorTools(graph);
-    Map<Integer, Node> map = tools.getGeneID2NodeMap();
+    Map<Integer, List<Node>> map = tools.getGeneID2NodeMap();
     
-    // TODO: Make a symmetric min and max (-3 to +3) instead of -2.9 to + 3.2 because of better coloring then.
-    // Get min max signals for linear rescale models
-    double[] minMax = NameAndSignals.getMinMaxSignalGlobal(nsList); // TODO: add experiment Name and Type in max search!
-    // TODO Implement local gradient and make selection via Options.
-    // TODO Implement color choosers via options
+    // Get min max signals for determin logarithmized (negative) fcs or not.
+    double[] minMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
+    // Make a symmetric min and max (-3 to +3) instead of -2.9 to + 3.2 because of better coloring then.
+    Float maxFC = PathwayVisualizationOptions.FC_FOR_MAX_COLOR.getValue(prefs);
+    double minFCthreshold = minMax[0]<0?(maxFC*-1):1/maxFC.doubleValue();
+    minMax = new double[]{minFCthreshold,maxFC.doubleValue()};
     
     // Initiate color rescaler
     LinearRescale lred = new LinearRescale(minMax[0], minMax[1], getColorChannel(0, gradientColors));
@@ -175,7 +202,7 @@ public class Signal2PathwayTools {
             Number v = sig.getSignal();
             if (v!=null && (!(v instanceof Double ) || !Double.isNaN((Double)v))) {
               double d = v.doubleValue();
-              Color newColor = new Color(lred.rescale(d).intValue(),lgreen.rescale(d).intValue(),lblue.rescale(d).intValue());
+              Color newColor = new Color(rescaleColorPart(lred, d),rescaleColorPart(lgreen, d),rescaleColorPart(lblue, d));
               for (Node n: node) {
                 graph.getRealizer(n).setFillColor(newColor);
               }
@@ -186,6 +213,16 @@ public class Signal2PathwayTools {
         
       }
     }
+  }
+  
+  /**
+   * Returns a value between 0 and 255.
+   * @param lcolor configured rescaler for the color
+   * @param oldValue old experimental value (e.g., fold change)
+   * @return color code of the corresponding color part (r,g or b) of the new color.
+   */
+  public static int rescaleColorPart(LinearRescale lcolor, double oldValue) {
+    return Math.max(0, Math.min(255, lcolor.rescale(oldValue).intValue()));
   }
 
   /**

@@ -3,7 +3,6 @@
  */
 package de.zbit.gui;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -81,7 +80,7 @@ public class KEGGPathwayActionListener implements ActionListener {
             
             // Color nodes
             tools2.colorNodesAccordingToSignals((Iterable) st.getData(), MergeType.Mean, 
-              vt.getB(), vt.getC(), Color.BLUE, Color.WHITE, Color.RED);
+              vt.getB(), vt.getC());
           } else {
             r = -1; // At least hightligh source gene nodes
           }

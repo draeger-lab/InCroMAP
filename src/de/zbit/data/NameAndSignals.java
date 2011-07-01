@@ -246,13 +246,13 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   
   /**
    * Returns a CLONED, gene-centered collection of the given {@link NameAndSignals}s.
-   * @param miRNA
+   * @param nameAndSignals
    * @return
    */
-  public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> miRNA, MergeType m) {
+  public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals, MergeType m) {
     
     // Group data by name
-    Map<String, Collection<T>> group = group_by_name(miRNA);
+    Map<String, Collection<T>> group = group_by_name(nameAndSignals);
     
     Collection<T> toReturn = new ArrayList<T>();
     for (String mi : group.keySet()) {
@@ -292,7 +292,9 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       
       // Collect names and signals
       names.add(ns.getName());
-      signals.addAll(ns.getSignals());
+      if (ns.hasSignals()) {
+        signals.addAll(ns.getSignals());
+      }
       
       // Remember all additional data
       if (ns.additional_data!=null) {
@@ -755,6 +757,40 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       }
     }
     return minMax;
+  }
+  
+  /**
+   * 
+   * @param <T>
+   * @param nsList
+   * @param experimentName
+   * @param type
+   * @return minimum and maximum for a specific signal in a list of {@link NameAndSignals}.
+   */
+  public static <T extends NameAndSignals> double[] getMinMaxSignalGlobal(Iterable<T> nsList, String experimentName, SignalType type) {
+    double[] minMax = new double[]{Double.MAX_VALUE, Double.MIN_VALUE};
+    for (NameAndSignals ns: nsList) {
+      Number sig = ns.getSignalValue(type, experimentName);
+      if (sig!=null && !Double.isNaN(sig.doubleValue())) {
+        minMax[0] = Math.min(minMax[0], sig.doubleValue());
+        minMax[1] = Math.max(minMax[1], sig.doubleValue());
+      }
+    }
+    return minMax;
+  }
+  
+  /**
+   * @param col any iterable.
+   * @return true if and only if this iterable contains {@link NameAndSignals} objects.
+   */
+  public static boolean isNameAndSignals(Iterable<?> col) {
+    if (col==null) return false; // Empty list
+    Iterator<?> it = col.iterator();
+    if (!it.hasNext()) return false; // Empty list
+    
+    if (it.next() instanceof NameAndSignals) return true;
+    
+    return false;
   }
     
 }

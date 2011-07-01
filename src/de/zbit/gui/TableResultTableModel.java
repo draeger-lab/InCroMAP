@@ -10,6 +10,7 @@ import java.util.List;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
@@ -17,6 +18,8 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
+import de.zbit.util.JTableTools;
+import de.zbit.util.ScientificNumberRenderer;
 
 /**
  * A {@link TableModel} that can be used to visualize a {@link TableResult} class as {@link JTable}.
@@ -32,8 +35,18 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    */
   private List<T> ns;
   
+  /**
+   * Should the first col be a row index?
+   */
+  private boolean includeRowIndex;
+  
   public TableResultTableModel(List<T> ns) {
+    this(ns, true);
+  }
+  
+  public TableResultTableModel(List<T> ns, boolean includeRowIndex) {
     this.ns = ns;
+    this.includeRowIndex = includeRowIndex;
   }
   
   /**
@@ -47,8 +60,10 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    * @see javax.swing.table.TableModel#getColumnCount()
    */
   public int getColumnCount() {
-    if (ns.size()<1) return 0;
-    return ns.get(0).getColumnCount();
+    // 1 is the row index.
+    int offset = includeRowIndex?1:0;
+    if (ns.size()<1) return offset;
+    return ns.get(0).getColumnCount()+offset;
   }
 
   /* (non-Javadoc)
@@ -58,10 +73,22 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     return ns.size();
   }
 
+  /**
+   * @return
+   */
+  public boolean isRowIndexIncluded() {
+    return includeRowIndex;
+  }
+  
   /* (non-Javadoc)
    * @see javax.swing.table.TableModel#getValueAt(int, int)
    */
   public Object getValueAt(int rowIndex, int columnIndex) {
+    if (includeRowIndex) {
+      if (columnIndex==0) return (rowIndex);
+      columnIndex = columnIndex-1;
+    }
+    
     Object o = ns.get(rowIndex).getObjectAtColumn(columnIndex);
     if (o instanceof Signal) {
       // Experiment name and signal type is already in header!
@@ -76,6 +103,10 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    */
   @Override
   public Class<?> getColumnClass(int columnIndex) {
+    if (includeRowIndex) {
+      if (columnIndex==0) return Integer.class;
+      columnIndex = columnIndex-1;
+    }
     if (ns.size()<1) return super.getColumnClass(columnIndex);
     Object o = ns.get(0).getObjectAtColumn(columnIndex);
     Class<?> c = o!=null?o.getClass():null;
@@ -88,6 +119,10 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    */
   @Override
   public String getColumnName(int column) {
+    if (includeRowIndex) {
+      if (column==0) return "#";
+      column = column-1;
+    }
     if (ns.size()<1) return super.getColumnName(column);
     String s = ns.get(0).getColumnName(column);
     if (s==null || s.length()<1) {
@@ -159,18 +194,30 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     // Disallow dragging columns
     table.getTableHeader().setReorderingAllowed(true);
     
-    // Resize columns to a reasonable width
+    // Resize columns to a reasonable, unique width
     if (table.getColumnModel().getColumnCount()>0)  {
       int width = table.getColumnModel().getColumn(0).getWidth();
-      width = Math.max(width, 120);
+      width = Math.max(width, 125);
       for (int i=0; i<table.getColumnModel().getColumnCount(); i++)
-        table.getColumnModel().getColumn(i).setPreferredWidth(width); 
+        table.getColumnModel().getColumn(i).setPreferredWidth(width);
+      if (model.isRowIndexIncluded()) {
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+      }
     }
     
     // Add sorting capabilities
     TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(model);
     table.setRowSorter(sorter);
-
+    
+    // Make doubles scientific
+    TableCellRenderer rend = new ScientificNumberRenderer();
+    table.setDefaultRenderer(Double.class, rend);
+    table.setDefaultRenderer(Float.class, rend);
+    //table.setDefaultRenderer(RowIndex.class, RowIndex.getRowHeaderRenderer(table));
+    
+    // Allow searching
+    JTableTools.setQuickSearch(table);
+    
     return table;
   }
 

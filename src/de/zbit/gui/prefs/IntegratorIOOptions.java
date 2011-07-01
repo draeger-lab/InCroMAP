@@ -1,4 +1,4 @@
-package de.zbit.integrator;
+package de.zbit.gui.prefs;
 
 import java.util.Arrays;
 

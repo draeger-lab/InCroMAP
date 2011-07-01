@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
@@ -24,11 +25,14 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
 import de.zbit.data.NameAndSignals;
-import de.zbit.gui.prefs.FileHistory;
+import de.zbit.gui.prefs.IntegratorIOOptions;
+import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.PreferencesPanel;
-import de.zbit.integrator.IntegratorIOOptions;
 import de.zbit.io.NameAndSignalReader;
+import de.zbit.kegg.KEGGtranslatorOptions;
 import de.zbit.kegg.Translator;
+import de.zbit.kegg.gui.TranslatorPanel;
+import de.zbit.util.StringUtil;
 import de.zbit.util.logging.LogUtil;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
@@ -75,6 +79,7 @@ public class IntegratorUI extends BaseFrame {
     List<Class<? extends KeyProvider>> configList = new LinkedList<Class<? extends KeyProvider>>();
     configList.add(IntegratorIOOptions.class);
     configList.add(GUIOptions.class);
+    configList.add(PathwayVisualizationOptions.class);
     return configList;
   }
   
@@ -83,9 +88,20 @@ public class IntegratorUI extends BaseFrame {
    * @throws IOException 
    */
   public static void main(String[] args) throws IOException {
+    /* TODO: Put in (SysBio?) resources folder (because no more KEGG FTP):
+     * KeggID2PathwayMapper.java
+     * GeneID2KeggIDMapper.java
+     * KeggPathwayID2PathwayName.java <= implement also webservice here.
+     * TODO:
+     * RestrictedEditMode - getNodeTip()
+     */
     LogUtil.initializeLogging((String[])null);
+    // Set default values for KEGGtranslator
+    KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
+    KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
     SBProperties props = SBPreferences.analyzeCommandLineArguments(
       getStaticCommandLineOptions(), args);
+    
     
     // TODO: Test Class as option type:
     // - Command line help text AND F1 help text for readability
@@ -210,16 +226,21 @@ public class IntegratorUI extends BaseFrame {
    * pane content.
    */
   private void updateButtons() {
-    /* TODO: Implement common interface. See todo in getCurrentlySelectedPanel().
-    GUITools.setEnabled(false, getJMenuBar(), null);
-    Object o = getCurrentlySelectedPanel();
+    // TODO: Implement common interface. See todo in getCurrentlySelectedPanel().
+    /*
+    GUITools.setEnabled(false, getJMenuBar(), BaseAction.FILE_SAVE,
+      BaseAction.FILE_CLOSE);
+    TranslatorPanel o = getCurrentlySelectedPanel();
     if (o != null) {
       o.updateButtons(getJMenuBar());
     }*/
+    // Temp, set all to enables.
+    GUITools.setEnabled(true, getJMenuBar(), BaseAction.FILE_SAVE,
+      BaseAction.FILE_CLOSE);
   }
   
   /**
-   * @return the currently selected TranslatorPanel from the
+   * @return the currently selected panel from the
    *         {@link #tabbedPane}, or null if either no or no valid selection
    *         exists.
    */
@@ -437,7 +458,11 @@ public class IntegratorUI extends BaseFrame {
    */
   @Override
   public void saveFile() {
-    // TODO Auto-generated method stub
+    Object o = getCurrentlySelectedPanel();
+    if (o != null && o instanceof TranslatorPanel) {
+      ((TranslatorPanel)o).saveToFile();
+    }
+    // TODO Auto-generated method stub, Implement other tabs (IntegratorTab).
     log.severe("NOT YET IMPLEMENTED!");
   }
 

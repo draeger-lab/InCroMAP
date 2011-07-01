@@ -14,7 +14,8 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.util.ValuePair;
 
 /**
- * Implementation of the Bonferroni-Holm FDR correction method.
+ * Implementation of the Bonferroni-Holm FDR correction method. Also known as
+ * "Bonferroni step-down".
  * @see <a href="http://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method">Wikipedia</a>
  * @see <a href="http://www.silicongenetics.com/Support/GeneSpring/GSnotes/analysis_guides/mtc.pdf">Implementation tutorial</a>
  * @author Clemens Wrzodek

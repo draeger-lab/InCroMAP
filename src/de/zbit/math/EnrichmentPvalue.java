@@ -35,6 +35,6 @@ public interface EnrichmentPvalue {
    * @param r Number of genes from the input set that are in the current pathway.
    * @return
    */
-  public double getPvalue(long t, long r);
+  public double getPvalue(int t, int r);
   
 }

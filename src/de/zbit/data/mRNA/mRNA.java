@@ -10,6 +10,7 @@ import java.util.Set;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.mapper.MappingUtils.IdentifierType;
 
 
 /**
@@ -64,7 +65,14 @@ public class mRNA extends NameAndSignals {
     return i==null?default_geneID:i;
   }
   
-  
+  /**
+   * @return associated gene symbol. Only uses stored symbol,
+   * does not call any mapper or such.
+   */
+  public String getGeneSymbol() {
+    Object s = super.getData(IdentifierType.GeneSymbol.toString());
+    return s==null?getName():s.toString();
+  }
 
   /* (non-Javadoc)
    * @see java.lang.Comparable#compareTo(java.lang.Object)
