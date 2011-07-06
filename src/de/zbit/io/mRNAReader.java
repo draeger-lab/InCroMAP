@@ -239,6 +239,25 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
   }
   
   /* (non-Javadoc)
+   * @see de.zbit.io.NameAndSignalReader#read(java.lang.String[])
+   */
+  @Override
+  public Collection<mRNA> read(String[] identifiers) throws IOException, Exception {
+    // Init Mapper (primary for idType)
+    if (!idType.equals(IdentifierType.NCBI_GeneID)) {
+      mapper = MappingUtils.initialize2GeneIDMapper(idType, progress, species);
+    }
+    if (mapper!=null) mapper.readMappingData();
+    
+    // Read file
+    Collection<mRNA> ret =  super.read(identifiers);
+    
+    // Free resources
+    mapper = null;
+    return ret;
+  }
+  
+  /* (non-Javadoc)
    * @see de.zbit.io.NameAndSignalReader#createObject(java.lang.String, java.lang.String[])
    */
   @Override

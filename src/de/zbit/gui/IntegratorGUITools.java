@@ -13,6 +13,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -20,7 +22,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -28,8 +32,10 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileFilter;
 
 import de.zbit.analysis.enrichment.AbstractEnrichment;
 import de.zbit.data.LabeledObject;
@@ -39,6 +45,7 @@ import de.zbit.gui.CSVImporterV2.CSVImporterV2;
 import de.zbit.io.OpenFile;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
+import de.zbit.util.StringUtil;
 import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
@@ -89,6 +96,25 @@ public class IntegratorGUITools {
     l.setLayout(new FlowLayout());
     l.setPreferredSize(null);
     GUITools.createTitledPanel(l, "Organism selection");
+    return l;
+  }
+  
+  public static Species showOrganismSelectorDialog(Component parent) {
+    JLabeledComponent organismSelector = IntegratorGUITools.getOrganismSelector();
+    int ret = GUITools.showAsDialog(parent, organismSelector, "Please select your species", true);
+    if (ret == JOptionPane.OK_OPTION) {
+      return (Species) organismSelector.getSelectedItem();
+    }
+    return null;
+  }
+  
+  public static JLabeledComponent getIdentifierSelector() {
+    JLabeledComponent l = new JLabeledComponent("Please select the used identifier",true,IdentifierType.values());
+    l.setSelectedItem(IdentifierType.GeneSymbol);
+    // Make a flexible layout
+    l.setLayout(new FlowLayout());
+    l.setPreferredSize(null);
+    GUITools.createTitledPanel(l, "Identifier selection");
     return l;
   }
   
@@ -342,6 +368,68 @@ public class IntegratorGUITools {
       }
       
     }
+  }
+  
+  /**
+   * Shows a dialog that requests a gene list from the user.
+   * @return Selected {@link Species}, selected {@link IdentifierType} and list of genes (newline separated)
+   * or <code>null</code> if canceled.
+   */
+  public static ValueTriplet<Species, IdentifierType, String> showInputGeneListDialog() {
+    
+    // Ask user for species and Identifiertype in the north.
+    JPanel north = new JPanel(new BorderLayout());
+    JLabeledComponent organism = getOrganismSelector();
+    JLabeledComponent identifier = getIdentifierSelector();
+    north.add(organism, BorderLayout.NORTH);
+    north.add(identifier, BorderLayout.CENTER);
+    north.add(new JLabel("Please enter a list of genes, separated by new lines."), BorderLayout.SOUTH);
+    
+    // Create the main panel
+    JPanel p = new JPanel(new BorderLayout());
+    p.add(north, BorderLayout.NORTH);
+    
+    // Input gene list in the center
+    final JTextArea text = new JTextArea (10, 50);
+    JScrollPane scrollPane = new JScrollPane(text);
+    scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+    p.add(scrollPane, BorderLayout.CENTER);
+    
+    // Allow reading genes from input file via button on bottom of the list
+    JButton readFromFile = new JButton("Read from file", UIManager.getIcon("ICON_OPEN_16"));
+    readFromFile.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        File file = GUITools.openFileDialog(IntegratorUI.getInstance(), 
+          IntegratorUI.openDir, true, JFileChooser.FILES_ONLY, (FileFilter)null);
+        if (file!=null) {
+          try {
+            BufferedReader reader = OpenFile.openFile(file.getPath());
+            StringBuffer buff = new StringBuffer();
+            String line;
+            while ((line=reader.readLine())!=null) {
+              buff.append(line);
+              buff.append(StringUtil.newLine());
+            }
+            text.setText(buff.toString());
+          } catch (IOException e1) {
+            GUITools.showErrorMessage(IntegratorUI.getInstance(), e1);
+          }
+        }
+      }
+    });
+    p.add(readFromFile, BorderLayout.SOUTH);
+    
+    // Show dialog and return input string.
+    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), p, "Please enter a list of genes", JOptionPane.OK_CANCEL_OPTION);
+    if (ret==JOptionPane.OK_OPTION) {
+      return new ValueTriplet<Species, IdentifierType, String>((Species)organism.getSelectedItem(), 
+          (IdentifierType)identifier.getSelectedItem(), 
+          text.getText());
+    } else {
+      return null;
+    }
+    
   }
     
 }

@@ -5,6 +5,7 @@
 package de.zbit.gui;
 
 import java.awt.Dimension;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.swing.JPopupMenu;
@@ -18,6 +19,7 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
+import de.zbit.util.BooleanRendererYesNo;
 import de.zbit.util.JTableTools;
 import de.zbit.util.ScientificNumberRenderer;
 
@@ -85,16 +87,31 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    */
   public Object getValueAt(int rowIndex, int columnIndex) {
     if (includeRowIndex) {
-      if (columnIndex==0) return (rowIndex);
+      if (columnIndex==0) return (rowIndex+1);
       columnIndex = columnIndex-1;
     }
     
     Object o = ns.get(rowIndex).getObjectAtColumn(columnIndex);
     if (o instanceof Signal) {
       // Experiment name and signal type is already in header!
-      return ((Signal)o).getSignal();
+      Number n = ((Signal)o).getSignal();
+      return returnNumberOrNA(n);
     } else {
-      return o;
+      return returnNumberOrNA(o);
+    }
+  }
+  
+  /**
+   * Returns "N/A" for {@link Double#NaN} numbers.
+   * @param n
+   * @return the number or "N/A".
+   */
+  private static Object returnNumberOrNA(Object n) {
+    if (n==null) return n;
+    if (n.equals(Double.NaN)) {
+      return "N/A";
+    } else {
+      return n;
     }
   }
   
@@ -132,7 +149,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
   }
   
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public static <T extends TableResult> JTable buildJTable(NameAndSignalsTab tab) {
+  public static <T extends TableResult> JTable buildJTable(IntegratorTab<List<? extends TableResult>> tab) {
     // Build table on scroll pane
     JTable jc = buildJTable(new TableResultTableModel(tab.getData()));
     
@@ -210,9 +227,11 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     table.setRowSorter(sorter);
     
     // Make doubles scientific
-    TableCellRenderer rend = new ScientificNumberRenderer();
+    TableCellRenderer rend = new ScientificNumberRenderer(100);
     table.setDefaultRenderer(Double.class, rend);
     table.setDefaultRenderer(Float.class, rend);
+    table.setDefaultRenderer(Boolean.class, new BooleanRendererYesNo());
+    table.setDefaultRenderer(HashSet.class, new IterableRenderer());
     //table.setDefaultRenderer(RowIndex.class, RowIndex.getRowHeaderRenderer(table));
     
     // Allow searching

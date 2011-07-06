@@ -2,6 +2,7 @@ package de.zbit.data.miRNA;
 
 import java.io.Serializable;
 
+import de.zbit.data.TableResult;
 import de.zbit.exception.CorruptInputStreamException;
 import de.zbit.io.CSVwriteable;
 
@@ -10,7 +11,7 @@ import de.zbit.io.CSVwriteable;
  * Holder class to hold targets for an miRNA.
  * @author Clemens Wrzodek
  */
-public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwriteable {
+public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwriteable, TableResult {
   private static final long serialVersionUID = -9197560384266247185L;
 
   /**
@@ -203,6 +204,48 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
   public miRNAtarget clone() {
     miRNAtarget t = new miRNAtarget(target, experimental, new String(source), pValue);
     return t;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#getColumnCount()
+   */
+  @Override
+  public int getColumnCount() {
+    return 4;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#getObjectAtColumn(int)
+   */
+  @Override
+  public Object getObjectAtColumn(int colIndex) {
+    if (colIndex==0) return target;
+    else if (colIndex==1) return experimental;
+    else if (colIndex==2) return source;
+    else if (colIndex==3) return pValue;
+    
+    return null;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#getColumnName(int)
+   */
+  @Override
+  public String getColumnName(int colIndex) {
+    if (colIndex==0) return "Target GeneID";
+    else if (colIndex==1) return "Experimentally validated";
+    else if (colIndex==2) return "Source";
+    else if (colIndex==3) return "Score or p-value";
+    
+    return null;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.TableResult#getRowObject()
+   */
+  @Override
+  public Object getRowObject() {
+    return this;
   }
   
 }

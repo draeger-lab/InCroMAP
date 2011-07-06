@@ -24,6 +24,7 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.exception.CorruptInputStreamException;
+import de.zbit.gui.miRNAandTarget;
 import de.zbit.io.CSVwriteable;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Reflect;
@@ -695,6 +696,12 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
           geneIds.add(t.getTarget());
         }
       }
+      
+    } else if (o instanceof miRNAtarget) {
+      geneIds.add(((miRNAtarget)o).getTarget());
+      
+    } else if (o instanceof miRNAandTarget) {
+      geneIds.add(((miRNAandTarget)o).getTarget().getTarget());
       
     } else if (o instanceof Integer) {
       geneIds.add((Integer)o);

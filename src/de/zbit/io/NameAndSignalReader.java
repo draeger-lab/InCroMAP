@@ -124,13 +124,13 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
 
   /**
    * @see #read(CSVReader)
-   * @param inputCSV
+   * @param inputCSVFile
    * @return
    * @throws IOException
    * @throws Exception
    */
-  public Collection<T> read(String inputCSV) throws IOException, Exception {
-    CSVReader r = new CSVReader(inputCSV);
+  public Collection<T> read(String inputCSVFile) throws IOException, Exception {
+    CSVReader r = new CSVReader(inputCSVFile);
     return read(r);
   }
   
@@ -157,41 +157,76 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     
     String[] line;
     while ((line=r.getNextLine())!=null) {
-      if (nameCol>=line.length) continue;
-      
-      T m = createObject(line[nameCol], line);
-      
-      // Assign additional data
-      if (additionalDataToRead!=null) {
-        for (ValuePair<Integer, String> vp : additionalDataToRead) {
-          m.addData(vp.getB(), line[vp.getA()]);
-        }
-      }
-      
-      // Get unique object to assign signals
-      T mi = ret.get(m);
-      if (mi==null) {
-        mi = m;
-        ret.put(mi, mi);
-      }
-      
-      // Add signals
-      if (signalColumns!=null) {
-        for (ValueTriplet<Integer, SignalType, String> vp: signalColumns) {
-          Float signal = Float.NaN;
-          try {
-            signal = Float.parseFloat(line[vp.getA()]);
-          } catch (NumberFormatException e) {
-            log.log(Level.WARNING, "Error while parsing signal number.", r);
-          }
-          mi.addSignal(signal, vp.getC(), vp.getB());
-        }
-      }
+      processLine(line, ret);
     }
     
     return ret.values();
   }
   
+  
+  /**
+   * This will set the {@link #nameCol} to zero and simply create a data
+   * structure using the given <code>identifiers</code> as names.
+   * <p>Very helpful, e.g., when reading a gene list.
+   * @param identifiers
+   * @return
+   * @throws IOException
+   * @throws Exception
+   */
+  public Collection<T> read(String[] identifiers) throws IOException, Exception {
+    Map<T, T> ret = new HashMap<T, T>();
+    
+    nameCol = 0;
+    for (String id : identifiers) {
+      processLine(new String[]{id}, ret);
+    }
+    
+    return ret.values();
+  }
+  
+  /**
+   * Processes one line from the CSVReader.
+   * @param line current line
+   * @param ret current data that has been read
+   * @throws Exception 
+   */
+  private void processLine(String[] line, Map<T, T> ret) throws Exception {
+    if (nameCol>=line.length) return; // continue;
+    
+    T m = createObject(line[nameCol], line);
+    
+    // Assign additional data
+    if (additionalDataToRead!=null) {
+      for (ValuePair<Integer, String> vp : additionalDataToRead) {
+        if (line.length>vp.getA()) {
+          m.addData(vp.getB(), line[vp.getA()]);
+        }
+      }
+    }
+    
+    // Get unique object to assign signals
+    T mi = ret.get(m);
+    if (mi==null) {
+      mi = m;
+      ret.put(mi, mi);
+    }
+    
+    // Add signals
+    if (signalColumns!=null) {
+      for (ValueTriplet<Integer, SignalType, String> vp: signalColumns) {
+        if (line.length>vp.getA()) {
+          Float signal = Float.NaN;
+          try {
+            signal = Float.parseFloat(line[vp.getA()]);
+          } catch (NumberFormatException e) {
+            log.log(Level.WARNING, "Error while parsing signal number.", e);
+          }
+          mi.addSignal(signal, vp.getC(), vp.getB());
+        }
+      }
+    }
+  }
+
   /*
    *       String probeName = probeNameCol>=0?line[probeNameCol]:null;
       miRNA m = new miRNA(line[miRNAnameCol], probeName);

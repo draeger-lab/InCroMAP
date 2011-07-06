@@ -13,12 +13,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JComponent;
-import javax.swing.JTable;
 import javax.swing.SwingWorker;
 import javax.swing.SwingWorker.StateValue;
 
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.mRNA.mRNA;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
@@ -28,14 +27,9 @@ import de.zbit.util.Reflect;
 /**
  * @author Clemens Wrzodek
  */
-public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSignals>> implements PropertyChangeListener, Comparable<NameAndSignalsTab> {
+public class NameAndSignalsTab extends IntegratorTabWithTable implements PropertyChangeListener {
   private static final long serialVersionUID = -6373461312937415980L;
   public static final transient Logger log = Logger.getLogger(NameAndSignalsTab.class.getName());
-  
-  /**
-   * The {@link JTable} holding visualized Names and Signals.
-   */
-  private JTable table;
   
   /**
    * For intermediate loading operations.
@@ -65,6 +59,7 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
   }
 
   /**
+   * Creates a new {@link SwingWorker} and starts reading the data in background.
    * @param integratorUI
    * @param nsreader
    * @param path
@@ -114,6 +109,29 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
   }
 
   /**
+   * Creates a {@link SwingWorker} to read the given <code>genes</code> with the
+   * given <code>nsreader</code>.
+   * @see #NameAndSignalsTab(IntegratorUI, SwingWorker, String, Species)
+   * @param integratorUI
+   * @param nsreader
+   * @param genes
+   */
+  public NameAndSignalsTab(IntegratorUI parent, final NameAndSignalReader<mRNA> nsreader, final String[] genes, Species spec) {
+    this(parent, 
+      
+      new SwingWorker<Collection<? extends NameAndSignals>, Void>() {
+        @Override
+        protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
+          Collection<? extends NameAndSignals> col = nsreader.read(genes);
+          return col; // col==null if cancel button pressed
+        }
+      },
+    
+    "Reading data...",
+    spec);
+  }
+
+  /**
    * Change this (intermediate) panel to a real {@link NameAndSignalsTab} or
    * close it if the worker did fail.
    * @param worker
@@ -125,12 +143,15 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
     parent.getStatusBar().reset();
     try {
       data = worker.get();
-    } catch (Exception e) {}
+    } catch (Exception e) {
+      log.log(Level.SEVERE, "Error during worker execution.", e);
+    }
     if (data==null || worker.isCancelled()) {
       parent.closeTab(this);
     } else {
       setData(data);
     }
+    updateButtons(parent.getJMenuBar(), parent.getJToolBar());
   }
   
 
@@ -159,43 +180,6 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
     
     init();
   }
-  
-  
-  /* (non-Javadoc)
-   * @see de.zbit.gui.IntegratorTab#getVisualization()
-   */
-  @Override
-  public JComponent getVisualization() {
-    if (data==null) return null;
-    // Also adds the enrichment right mouse menu
-    table = TableResultTableModel.buildJTable(this);
-    
-    return table;
-  }
-
-  /* (non-Javadoc)
-   * @see de.zbit.gui.IntegratorTab#getSelectedIndices()
-   */
-  @Override
-  public int[] getSelectedIndices() {
-    // Get selected items
-    int[] selRows = table.getSelectedRows();
-    
-    // Map to view rows (account for sorted tables!)
-    for (int i=0; i<selRows.length; i++) {
-      selRows[i] = table.convertRowIndexToModel(selRows[i]);
-    }
-    
-    return selRows;
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.gui.IntegratorTab#getObjectAt(int)
-   */
-  @Override
-  public Object getObjectAt(int i) {
-    return data.get(i);
-  }
 
   /* (non-Javadoc)
    * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
@@ -209,15 +193,6 @@ public class NameAndSignalsTab extends IntegratorTab<List<? extends NameAndSigna
         swingWorkerDone((SwingWorker) evt.getSource());
       }
     }
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
-   */
-  @Override
-  public int compareTo(NameAndSignalsTab o) {
-    // Just to make this class useable with ValuePair and ValueTriplet.
-    return toString().compareTo(o.toString());
   }
   
 }

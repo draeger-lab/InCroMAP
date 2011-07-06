@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
@@ -33,7 +32,7 @@ import de.zbit.util.AbstractProgressBar;
  * @author Clemens Wrzodek
  * @param <T> type of the data that is visualized in this tab.
  */
-public abstract class IntegratorTab <T> extends JScrollPane {
+public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrameTab {
   private static final long serialVersionUID = 653444691629282605L;
   public static final transient Logger log = Logger.getLogger(IntegratorTab.class.getName());
   
@@ -153,11 +152,7 @@ public abstract class IntegratorTab <T> extends JScrollPane {
    */
   public Species getSpecies(boolean showDialogIfUnknown) {
     if (species==null && showDialogIfUnknown) {
-      JLabeledComponent organismSelector = IntegratorGUITools.getOrganismSelector();
-      int ret = GUITools.showAsDialog(parent, organismSelector, "Please select your species", true);
-      if (ret == JOptionPane.OK_OPTION) {
-        species = (Species) organismSelector.getSelectedItem();
-      }
+      species = IntegratorGUITools.showOrganismSelectorDialog(parent);
     }
     return species;
   }
