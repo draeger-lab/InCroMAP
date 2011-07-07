@@ -4,6 +4,8 @@
  */
 package de.zbit.gui;
 
+import java.awt.event.ActionListener;
+import java.beans.EventHandler;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.Array;
@@ -13,11 +15,15 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JButton;
+import javax.swing.JToolBar;
 import javax.swing.SwingWorker;
 import javax.swing.SwingWorker.StateValue;
+import javax.swing.UIManager;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.gui.IntegratorUI.Action;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
@@ -179,6 +185,36 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     }
     
     init();
+  }
+  
+  public void createJToolBarItems(JToolBar bar) {
+    if (bar.getName().equals(getClass().getSimpleName())) return; //Already done.
+    bar.removeAll();
+    bar.setName(getClass().getSimpleName());
+    
+    JButton showPathway = GUITools.createJButton(EventHandler.create(ActionListener.class, this, "showAndColorPathway"),
+      Action.VISUALIZE_IN_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
+    
+    
+    // TODO: Add these options also as additionalFileMenuEntries.
+    
+    bar.add(showPathway);
+    
+    GUITools.setOpaqueForAllElements(bar, false);    
+  }
+  
+  public void showAndColorPathway() {
+    if (data!=null) {
+      /* TODO:
+       * - if organism is unknown, show organism box
+       * - Show pathway selection box (and accept also ,-separated kegg ids!)
+       * - IntegratorGUITools.showSelectExperimentBox(ui, initialSelection, BOOLEAN RESTRICTED_TO_INITIAL_SELECTION)
+       *   that returns immedeately if only 1 FC is available, else, lets the user chosse the fc
+       *   
+       * Add (one or more) tabs for every pathway and !!color immediately!!.
+       */
+      
+    }
   }
 
   /* (non-Javadoc)

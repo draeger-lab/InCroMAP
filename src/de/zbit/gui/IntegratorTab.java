@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JToolBar;
 
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
@@ -193,6 +194,12 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
    * @return
    */
   public abstract JComponent getVisualization();
+  
+  /**
+   * Modify the <code>bar</code> to fit the tabs content.
+   * @param bar
+   */
+  public abstract void createJToolBarItems(JToolBar bar);
 
   /**
    * If this object is visualized, e.g., by a JTable, this method should

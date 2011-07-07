@@ -3,24 +3,17 @@
  */
 package de.zbit.gui;
 
-import java.awt.event.ActionListener;
-import java.beans.EventHandler;
 import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
-import javax.swing.UIManager;
 
 import de.zbit.data.TableResult;
 import de.zbit.gui.BaseFrame.BaseAction;
-import de.zbit.gui.IntegratorUI.Action;
 import de.zbit.io.CSVWriter;
 import de.zbit.io.SBFileFilter;
 import de.zbit.parser.Species;
@@ -85,20 +78,31 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
    */
   @Override
   public void updateButtons(JMenuBar menuBar, JToolBar toolbar) {
+    // Update the toolbar.
+    if (toolbar!=null) {
+      createJToolBarItems(toolbar);
+    }
+    
+    // Enable and disable items
+    // TODO: Enable and disable toolbar items, based on the current state.
     if (data!=null) {
       GUITools.setEnabled(true, menuBar, BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
     } else {
       // Reading/Analyzing is still in progress.
-      // If analysing failed, tab will be closed automatically!
+      // If analyzing failed, tab will be closed automatically!
       GUITools.setEnabled(false, menuBar, BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
     }
   }
   
-  private void createJToolBarItems(JToolBar bar) {
+  public void createJToolBarItems(JToolBar bar) {
     if (bar.getName().equals(getClass().getSimpleName())) return; //Already done.
-    if (true) return; // TODO: REMOVE THIS
-    bar.removeAll();
     bar.setName(getClass().getSimpleName());
+    createJToolBarItems(bar, true);
+    GUITools.setOpaqueForAllElements(bar, false);
+  }
+  public void createJToolBarItems(JToolBar bar, boolean clearExistingToolbar) {
+    if (clearExistingToolbar) bar.removeAll();
+    
     
     /* TODO:
      * if (mRNA)
@@ -125,7 +129,7 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
      */
     
     // Create several loadData buttons
-    JPopupMenu load = new JPopupMenu("Load data");
+    /*JPopupMenu load = new JPopupMenu("Load data");
     JMenuItem lmRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMRNAfile"),
       Action.LOAD_MRNA, UIManager.getIcon("ICON_OPEN_16"));
     load.add(lmRNA);
@@ -133,34 +137,13 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
       Action.LOAD_MICRO_RNA, UIManager.getIcon("ICON_OPEN_16"));
     load.add(lmiRNA);
     JDropDownButton loadDataButton = new JDropDownButton("Load data", UIManager.getIcon("ICON_OPEN_16"), load);
-    
-    JButton genelist = GUITools.createJButton(EventHandler.create(ActionListener.class, this, "showInputGenelistDialog"),
-      Action.INPUT_GENELIST, UIManager.getIcon("ICON_OPEN_16"));
-    
-    JButton miRNAtargets = GUITools.createJButton(EventHandler.create(ActionListener.class, this, "showMicroRNAtargets"),
-      Action.SHOW_MICRO_RNA_TARGETS, UIManager.getIcon("ICON_GEAR_16"));
-    
-    JButton newPathway = GUITools.createJButton(EventHandler.create(ActionListener.class, this, "openPathwayTab"),
-      Action.NEW_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
+    */
     
     // TODO: Add these options also as additionalFileMenuEntries.
     
-    // TODO: UpdateButtons [öfter aufrufen] und in interface toolbar mitgeben.
-    
-    /* XXX: EnrichmentObject ideen
-     * - Cutoff für > pValue, qValue, list ratio
-     * - Change statistical correction
-     * Generell: [-Suche]
-     */
-    
-    bar.add(loadDataButton);
-    bar.add(genelist);
-    bar.add(miRNAtargets);
-    bar.add(newPathway);
-    
-    GUITools.setOpaqueForAllElements(bar, false);
-    
+        
   }
+  
 
   /* (non-Javadoc)
    * @see de.zbit.gui.IntegratorTab#getVisualization()

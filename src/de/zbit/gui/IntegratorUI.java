@@ -141,7 +141,12 @@ public class IntegratorUI extends BaseFrame {
     /**
      * {@link Action} to show a pathway selection dialog. 
      */
-    NEW_PATHWAY;
+    NEW_PATHWAY,
+    /**
+     * {@link Action} similar to  {@link #NEW_PATHWAY} but
+     * immediately colors nodes accoring fold changes.
+     */
+    VISUALIZE_IN_PATHWAY;
     
     /*
      * (non-Javadoc)
@@ -191,6 +196,8 @@ public class IntegratorUI extends BaseFrame {
           return "Show raw microRNA targets for an organism.";
         case NEW_PATHWAY:
           return "Download and visualize a KEGG pathway.";
+        case VISUALIZE_IN_PATHWAY:
+          return "Show a KEGG pathway and color nodes accoring to fold changes.";
           
         default:
           return "";
@@ -226,6 +233,7 @@ public class IntegratorUI extends BaseFrame {
      * - Pathway visualization auch ohne enrichment auswählbar machen
      * - save und openDir jedesmal merken!
      * - GraphML default auf JPG beim speichern setzen.
+     * - Rename Observation to Column Headers
      * 
      * TODO: Bei GeneList eingabe:
      * - Show organism selector also
@@ -428,8 +436,6 @@ public class IntegratorUI extends BaseFrame {
       
       // TODO: Add these options also as additionalFileMenuEntries.
       
-      // TODO: UpdateButtons [öfter aufrufen] und in interface toolbar mitgeben.
-      
       r.add(loadDataButton);
       r.add(genelist);
       r.add(miRNAtargets);
@@ -486,6 +492,19 @@ public class IntegratorUI extends BaseFrame {
    * for this organism.
    */
   public void showMicroRNAtargets() {
+    /* TODO: 
+     * - Implement a central loadTargets method
+     * - With Filter for
+     *   - EXperimental?
+     *     - DIANA - microT v3.0
+     *     - ElMMo v4
+     *     - TargetScan v5.1
+     *     
+     *     - miRecords_v3
+     *     - miRTarBase (SE)
+     *       - miRTarBase (WE)
+     *     - TarBase V5.0
+     */
     final Species species = IntegratorGUITools.showOrganismSelectorDialog(this);
     if (species!=null) {
       SwingWorker<Collection<? extends NameAndSignals>, Void> worker = new SwingWorker<Collection<? extends NameAndSignals>, Void>() {
