@@ -47,8 +47,13 @@ public class HypergeometricTest implements Serializable, EnrichmentPvalue {
     super();
     if (genomeSize <= 0)
       throw new IllegalArgumentException ("geneListSize must be greater than or equal to 0");
-    if (geneListSize <= 0 || geneListSize > genomeSize)
-      throw new IllegalArgumentException ("geneListSize is invalid: 0>=geneListSize<=genomeSize");
+    if (geneListSize <= 0 || geneListSize > genomeSize) {
+      if (geneListSize > genomeSize) {
+        throw new IllegalArgumentException (String.format("Can not preform an enrichment of %s objects. Maximum number allowed: %s", geneListSize, genomeSize));
+      } else {
+        throw new IllegalArgumentException (String.format("geneListSize is invalid: 0>=geneListSize %s <=genomeSize %s", geneListSize, genomeSize));
+      }
+    }
     
     this.genomeSize = genomeSize;
     this.geneListSize = geneListSize;

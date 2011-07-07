@@ -58,7 +58,6 @@ public class EnrichmentActionListener implements ActionListener {
     
     // Create a worker to execute everything in a new thread.
     SwingWorker<Collection<? extends NameAndSignals>, Void> worker = new ProgressWorker<Collection<? extends NameAndSignals>, Void>() {
-      @SuppressWarnings({ "unchecked", "rawtypes" })
       @Override
       protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
         

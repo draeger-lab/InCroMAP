@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,9 @@ import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.miRNA.miRNAtarget;
+import de.zbit.gui.miRNAandTarget;
 import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
@@ -213,7 +217,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
             // Ensure that PW is in our map
             Set pwGenes = enrichClass2Genes.get(pw);
             if (pwGenes==null) {
-              if (mr!=null) {
+              if (mr!=null && mr.size()>0) {
                 pwGenes = new HashSet<NameAndSignals>();
               } else {
                 pwGenes = new HashSet<Integer>();
@@ -223,6 +227,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
             
             // Add current gene to pw list
             if (mr!=null && mr.size()>0) {
+              mr = getSingleTarget(mr, geneID);
               pwGenes.addAll(mr);
             } else {
               pwGenes.add(geneID);
@@ -235,6 +240,42 @@ public abstract class AbstractEnrichment <EnrichIDType> {
     return enrichClass2Genes;
   }
   
+  /**
+   * Convert lists of {@link mRNA}s to single {@link miRNAandTarget} relations.
+   * This allows to display the actual target that cased the pathway to popup
+   * in the enrichment.
+   * <p>For any other datatype, this method simply returns the input list.
+   * @param mr
+   * @return
+   */
+  private Collection<NameAndSignals> getSingleTarget(Collection<NameAndSignals> mr, int geneID) {
+    boolean inkonsistency = false;
+    if (mr!=null && mr.size()>0) {
+      Iterator<NameAndSignals> it = mr.iterator();
+      Collection<NameAndSignals> mrNew = new LinkedList<NameAndSignals>();
+      while (it.hasNext()) {
+        Object o = it.next();
+        if (o instanceof miRNA && !(o instanceof miRNAandTarget)) {
+          miRNAtarget t = ((miRNA)o).getTarget(geneID);
+          if (t!=null) {
+            mrNew.add(new miRNAandTarget(((miRNA)o).getName(), t));
+          } else {
+            // Should actually never happen...
+            inkonsistency=true;
+          }
+        } else {
+          // our list is of mixed type. dont't change it!
+          inkonsistency=true;
+        }
+        if (inkonsistency) break;
+      }
+      if (!inkonsistency && mrNew.size()>0) {
+        // We could convert all miRNAs to single miRNA and target relations.
+        mr = mrNew;
+      }
+    }
+    return mr;
+  }
   /**
    * @param geneID
    * @return true if and only if the list contains at least one valid
@@ -270,21 +311,31 @@ public abstract class AbstractEnrichment <EnrichIDType> {
    * @param geneList
    * @param idType
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<T> geneList, IdentifierType idType) {
+    
+    // We have to take the gene lists in EnrichmentObjects, thus
+    // the geneList is no more of type T.
+    Collection geneList2 = geneList;
+    if (EnrichmentObject.isEnrichmentObjectList(geneList)) {
+      // Merge gene lists to collection of unique objects.
+      geneList2 = EnrichmentObject.mergeGeneLists((Iterable<EnrichmentObject>) geneList);
+    }
+    
     // Gene center input list (e.g., list of probes).
     // Else, it may occur that you have more genes in a pathway that this pathway contains and
     // Hypergeometric test then returns 0 which is an obvious fault.
-    if (NameAndSignals.isNameAndSignals(geneList)) {
+    if (NameAndSignals.isNameAndSignals(geneList2)) {
       log.info("Gene centering input list...");
-      Collection<T> newList = (Collection<T>) NameAndSignals.geneCentered((Collection<? extends NameAndSignals>)geneList, MergeType.Mean);
+      // Remark: Converts miRNAandTargets to miRNAs.
+      Collection newList = NameAndSignals.geneCentered((Collection<? extends NameAndSignals>)geneList2, MergeType.Mean);
       if (newList!=null && newList.size()>0) {
-        geneList = newList;
+        geneList2 = newList;
       }
     }
     
     // Map enriched objects on gene list
-    Map<EnrichIDType, Set<?>> pwList = getContainedEnrichments(geneList, idType);
+    Map<EnrichIDType, Set<?>> pwList = getContainedEnrichments(geneList2, idType);
     
     // Init the enriched id 2 readable name mapping (e.g. Kegg Pathway ID 2 Kegg Pathway Name mapping)
     if (enrich_ID2Name==null) {
@@ -292,7 +343,8 @@ public abstract class AbstractEnrichment <EnrichIDType> {
     }
     
     // Initialize pValue calculations and ProgressBar
-    EnrichmentPvalue pval = new HypergeometricTest(geneID2enrich_ID.getGenomeSize(), geneList.size());
+    int geneListSize = geneList2.size();
+    EnrichmentPvalue pval = new HypergeometricTest(geneID2enrich_ID.getGenomeSize(), geneListSize);
     if (prog!=null) {
       prog.reset();
       prog.setNumberOfTotalCalls(pwList.size());
@@ -323,7 +375,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
       
       // Create result object
       EnrichmentObject<EnrichIDType> o = new EnrichmentObject<EnrichIDType>(pw_name,entry.getKey(),
-          entry.getValue().size(), geneList.size(), pwSize, geneID2enrich_ID.getGenomeSize(),
+          entry.getValue().size(), geneListSize, pwSize, geneID2enrich_ID.getGenomeSize(),
           pval, entry.getValue());
       ret.add(o);
     }

@@ -129,9 +129,12 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   public boolean removeSignals(String experimentName, SignalType type) {
     boolean ret = false;
     if (signals==null) return ret;
-    for (Signal signal : signals) {
+    for (int i=0; i<signals.size(); i++) {
+      Signal signal = signals.get(i);
       if (signal.getType().equals(type) && signal.getName().equals(experimentName)) {
-        ret|=signals.remove(signal);
+        boolean removed = signals.remove(signal);
+        ret|=removed;
+        if (removed) i--;
       }
     }
     return ret;
@@ -247,6 +250,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   
   /**
    * Returns a CLONED, gene-centered collection of the given {@link NameAndSignals}s.
+   * <p>Gene centering is performed by name, thus, {@link miRNA}s are centered by the
+   * miRNA, and not by the target.
    * @param nameAndSignals
    * @return
    */
@@ -397,6 +402,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @return E.g. a map with miRNA names ({@link miRNA#getName()}) as keys and all belonging {@link miRNA}s as values.
    * Or anything else extending {@link NameAndSignals}.
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <T extends NameAndSignals> Map<String, Collection<T>> group_by_name(Collection<T> miRNA) {
     // Group by miRNA name
     Map<String, Collection<T>> ret = new HashMap<String, Collection<T>>();
@@ -406,10 +412,29 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     while (it.hasNext()) {
       mi = it.next();
       
-      Collection<T> col = ret.get(mi.getName());
+      // Center objects by name and mRNAs be geneId.
+      String name = mi.getName();
+      if (mi instanceof mRNA) {
+        name = Integer.toString(((mRNA)mi).getGeneID());
+      
+      } else if (mi instanceof EnrichmentObject) {
+        // A little bit more complicated for EnrichmentObjects,
+        // return a list of genes in the class here!
+        Iterator gic = ((EnrichmentObject)mi).getGenesInClass().iterator();
+        if (!gic.hasNext()) continue;
+        Object listType = gic.next();
+        if (listType instanceof NameAndSignals) {
+          ret.putAll(group_by_name(((EnrichmentObject)mi).getGenesInClass()));
+        } else {
+          log.severe("Cannot gene center list of: " + listType.getClass());
+        }
+        continue;
+      }
+      
+      Collection<T> col = ret.get(name);
       if (col==null) {
         col = new ArrayList<T>();
-        ret.put(mi.getName(), col);
+        ret.put(name, col);
       }
       col.add(mi);
     }
@@ -426,11 +451,15 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @param source
    * @throws CloneNotSupportedException
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   protected <T extends NameAndSignals> void cloneAbstractFields(T target, T source) throws CloneNotSupportedException {
     target.name = new String(source.name);
     target.signals = (List<Signal>) cloneCollection(source.signals);
-    target.additional_data = (Map<String, Object>) ((HashMap)additional_data).clone();
+    if (additional_data==null) {
+      target.additional_data = null;
+    } else {
+      target.additional_data = (Map<String, Object>) ((HashMap)additional_data).clone();
+    }
   }
   
   /**
@@ -738,7 +767,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       
     } else if (o instanceof NameAndSignals || NameAndSignals.class.isAssignableFrom(o.getClass())) {
       geneIds.add(((NameAndSignals)o));
-            
+      
     } else {
       log.severe("Cannot get NameAndSignals for " + o.getClass());
     }

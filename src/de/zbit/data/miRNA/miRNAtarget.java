@@ -1,6 +1,7 @@
 package de.zbit.data.miRNA;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
 import de.zbit.data.TableResult;
 import de.zbit.exception.CorruptInputStreamException;
@@ -128,6 +129,7 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
     // Compare by target, isExperimental, Source and pValue.
     if (o instanceof miRNAtarget) {
       miRNAtarget t = (miRNAtarget)o;
+      // Important to primary sort by target! see, e.g. compareOnlyTargetGeneID() 
       int r = target-t.getTarget();
       if (r==0) {
         if (isExperimental()&&!t.isExperimental()) return -1;
@@ -142,6 +144,19 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
       return r;
     }
     return -1;
+  }
+  
+  /**
+   * Can be used to quickly identify targets for a geneID.
+   * @return
+   */
+  public static Comparator<miRNAtarget> compareOnlyTargetGeneID() {
+    return new Comparator<miRNAtarget>() {
+      @Override
+      public int compare(miRNAtarget o1, miRNAtarget o2) {
+        return o1.getTarget()-o2.getTarget();
+      }
+    };
   }
   
   /* (non-Javadoc)

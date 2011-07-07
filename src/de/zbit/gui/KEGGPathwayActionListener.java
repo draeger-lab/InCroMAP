@@ -167,11 +167,11 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    */
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
+    // If the user has been presented a pathway selection dialog and he chooses
+    // a pathway, rename this tab accordingly.
     if (evt.getPropertyName().equals("PATHWAY_NAME")) {
-      System.out.println(evt.getSource());
       if (evt.getSource() instanceof Component) {
         int idx = IntegratorUI.getInstance().getTabIndex((Component) evt.getSource());
-        System.out.println(idx);
         if (idx>=0) {
           IntegratorUI.getInstance().getTabbedPane().setTitleAt(idx, evt.getNewValue().toString());
         }

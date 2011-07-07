@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -362,7 +364,13 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
     // Do Not always call mergeAbstract. If list contains geneIDs, they will
     // be averaged, what is really senseless. Though make a type checking!
     if (anyObjectFromGenesInClass instanceof NameAndSignals) {
-      t.genesInClass=(Collection<?>) NameAndSignals.mergeAbstract(genesInClass, m);
+      Object merged = NameAndSignals.mergeAbstract(genesInClass, m);
+      if (merged instanceof Collection) {
+        t.genesInClass=(Collection<?>)merged;
+      } else {
+        t.genesInClass = new LinkedList();
+        t.genesInClass.add(merged);
+      } 
     } else {
       t.genesInClass=genesInClass;
     }
@@ -426,7 +434,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    * @return
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public static Collection<mRNA> mergeGeneLists(Iterable<EnrichmentObject> geneList) {
+  public static Collection<?> mergeGeneLists(Iterable<EnrichmentObject> geneList) {
     Set unique = new HashSet();
     for (EnrichmentObject e : geneList) {
       unique.addAll(e.getGenesInClass());
@@ -465,6 +473,34 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
     
     return unique;*/
     return NameAndSignals.getGeneIds(genesInClass);
+  }
+  
+  /**
+   * @param col any iterable.
+   * @return true if and only if this iterable contains {@link EnrichmentObject} objects.
+   */
+  public static boolean isEnrichmentObjectList(Iterable<?> col) {
+    if (col==null) return false; // Empty list
+    Iterator<?> it = col.iterator();
+    if (!it.hasNext()) return false; // Empty list
+    
+    if (it.next() instanceof EnrichmentObject) return true;
+    
+    return false;
+  }
+  
+  /**
+   * @param col any iterable.
+   * @return true if and only if this iterable contains {@link EnrichmentObject} objects.
+   */
+  @SuppressWarnings("rawtypes")
+  public static boolean containsNameAndSignals(Iterable<? extends EnrichmentObject> col) {
+    if (col==null) return false; // Empty list
+    Iterator<?> it = col.iterator();
+    if (!it.hasNext()) return false; // Empty list
+    
+    EnrichmentObject o = (EnrichmentObject) it.next();
+    return (NameAndSignals.isNameAndSignals(o.getGenesInClass()));
   }
   
 }

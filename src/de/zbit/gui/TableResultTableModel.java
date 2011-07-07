@@ -19,6 +19,7 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
+import de.zbit.parser.Species;
 import de.zbit.util.BooleanRendererYesNo;
 import de.zbit.util.JTableTools;
 import de.zbit.util.ScientificNumberRenderer;
@@ -151,7 +152,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public static <T extends TableResult> JTable buildJTable(IntegratorTab<List<? extends TableResult>> tab) {
     // Build table on scroll pane
-    JTable jc = buildJTable(new TableResultTableModel(tab.getData()));
+    JTable jc = buildJTable(new TableResultTableModel(tab.getData()), tab.getSpecies());
     
     // Add enrichment capabilities
     EnrichmentActionListener al = new EnrichmentActionListener(tab);
@@ -171,6 +172,10 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
   }
   
   public static <T extends TableResult> JTable buildJTable(TableResultTableModel<T> model) {
+    return buildJTable(model, null);
+  }
+  
+  public static <T extends TableResult> JTable buildJTable(TableResultTableModel<T> model, Species spec) {
     // TODO: Implement a filtered table (a model that automatically adds
     // a JTextField row (similar to online marcar db filter) below headers
     final JTable table = new JTable(model); // new JComponentTableModel()
@@ -231,7 +236,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     table.setDefaultRenderer(Double.class, rend);
     table.setDefaultRenderer(Float.class, rend);
     table.setDefaultRenderer(Boolean.class, new BooleanRendererYesNo());
-    table.setDefaultRenderer(HashSet.class, new IterableRenderer());
+    table.setDefaultRenderer(HashSet.class, new IterableRenderer(spec));
     //table.setDefaultRenderer(RowIndex.class, RowIndex.getRowHeaderRenderer(table));
     
     // Allow searching

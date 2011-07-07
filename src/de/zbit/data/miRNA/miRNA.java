@@ -4,9 +4,12 @@
  */
 package de.zbit.data.miRNA;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -26,7 +29,7 @@ public class miRNA extends NameAndSignals {
    * miRNA targets, identified by the NCBI Gene ID (Integer)
    * and a pValue (Float)
    */
-  private Collection<miRNAtarget> targets=null;
+  private List<miRNAtarget> targets=null;
   
   /**
    * Probe names are added to {@link #addData(String, Object)} with this key.
@@ -66,18 +69,26 @@ public class miRNA extends NameAndSignals {
 
 
   /**
-   * @param targets2
+   * Set the targets of this miRNA. Ensures that this is always a
+   * sorted list.
+   * @param targets
    */
   public void setTargets(Collection<miRNAtarget> targets) {
-    this.targets = targets;
+    if (!(targets instanceof List)) {
+      // Ensure that we have a list.
+      targets = new ArrayList<miRNAtarget>(targets);
+    }
+    Collections.sort((List<miRNAtarget>)targets);
+    this.targets = (List<miRNAtarget>) targets;
   }
 
   /* (non-Javadoc)
    * @see java.lang.Comparable#compareTo(java.lang.Object)
    */
   public int compareTo(Object o) {
+    if (o==null) return -1;
     int r = super.compareTo(o); // Compare miRNA name
-    if (o instanceof miRNA) {
+    if (o instanceof miRNA || miRNA.class.isAssignableFrom(o.getClass())) {
       miRNA ot = (miRNA) o;
       if (r==0) {
         Object probe_name1 = getProbeName();
@@ -120,10 +131,22 @@ public class miRNA extends NameAndSignals {
   /**
    * @return list of targets for this miRNA
    */
-  public Collection<miRNAtarget> getTargets() {
-    return targets;
+  public List<miRNAtarget> getTargets() {
+    return Collections.unmodifiableList(targets);
   }
 
+  /**
+   * @param geneID
+   * @return the {@link miRNAtarget} for the given <code>geneID</code> or null
+   * if not found.
+   */
+  public miRNAtarget getTarget(int geneID) {
+    if (targets==null || targets.size()<1) return null;
+    miRNAtarget search = new miRNAtarget(geneID);
+    int pos = Collections.binarySearch(targets, search, miRNAtarget.compareOnlyTargetGeneID());
+    return pos>=0?targets.get(pos):null;
+  }
+  
   /**
    * @return true if and only if this miRNA has annotated targets.
    */
@@ -176,7 +199,7 @@ public class miRNA extends NameAndSignals {
       }
     }
     
-    ((miRNA)target).targets = unique_targets;
+    setTargets(unique_targets);
   }
   
   /* (non-Javadoc)
@@ -186,7 +209,7 @@ public class miRNA extends NameAndSignals {
   protected Object clone() throws CloneNotSupportedException {
     miRNA nm = new miRNA(name, getProbeName());
     super.cloneAbstractFields(nm, this); // Copies also the probeName
-    nm.targets = NameAndSignals.cloneCollection(targets);
+    nm.targets = (List<miRNAtarget>) NameAndSignals.cloneCollection(targets);
     return nm;
   }
 

@@ -6,43 +6,50 @@ package de.zbit.gui;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
 
+import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal.MergeType;
 import de.zbit.data.TableResult;
+import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.data.miRNA.miRNAtargets;
 
 /**
  * A {@link TableModel} implementing the {@link TableResult} interface
  * to create tables for {@link miRNAtargets}.
+ * 
+ * <p>This is a special version of {@link miRNA} with exactly one {@link miRNAtarget}
+ * for each {@link miRNA}. It is required to build {@link JTable}s.
  * <p>One instance is required for every miRNA, miRNAtarget pair.
+ * 
  * @author Clemens Wrzodek
  */
-public class miRNAandTarget implements TableResult, Serializable {
+public class miRNAandTarget extends miRNA implements TableResult, Serializable {
   private static final long serialVersionUID = 2025556134114661117L;
-
-  /**
-   * miRNA identifier.
-   */
-  String mir;
-  
-  /**
-   * One miRNA target.
-   */
-  private miRNAtarget target;
   
   /**
    * @param miRNAsystematicName
    * @param target
    */
   public miRNAandTarget(String miRNAsystematicName, miRNAtarget target) {
-    super();
-    this.mir = miRNAsystematicName;
-    this.target = target;
+    super(miRNAsystematicName);
+    setTarget(target);
+  }
+  public miRNAandTarget(String miRNAsystematicName, String probeName, miRNAtarget target) {
+    super(miRNAsystematicName, probeName);
+    setTarget(target);
+  }
+  
+  private void setTarget (miRNAtarget target) {
+    Collection<miRNAtarget> targets = new LinkedList<miRNAtarget>();
+    targets.add(target);
+    setTargets(targets);
   }
 
   /* (non-Javadoc)
@@ -50,7 +57,7 @@ public class miRNAandTarget implements TableResult, Serializable {
    */
   @Override
   public int getColumnCount() {
-    return target.getColumnCount()+1;
+    return getTarget().getColumnCount()+1;
   }
 
   /* (non-Javadoc)
@@ -58,8 +65,8 @@ public class miRNAandTarget implements TableResult, Serializable {
    */
   @Override
   public Object getObjectAtColumn(int colIndex) {
-    if (colIndex==0) return mir;
-    else return target.getObjectAtColumn(colIndex-1);
+    if (colIndex==0) return getName();
+    else return getTarget().getObjectAtColumn(colIndex-1);
   }
 
   /* (non-Javadoc)
@@ -68,7 +75,7 @@ public class miRNAandTarget implements TableResult, Serializable {
   @Override
   public String getColumnName(int colIndex) {
     if (colIndex==0) return "microRNA";
-    else return target.getColumnName(colIndex-1);
+    else return getTarget().getColumnName(colIndex-1);
   }
 
   /* (non-Javadoc)
@@ -102,14 +109,31 @@ public class miRNAandTarget implements TableResult, Serializable {
    * @return associated {@link miRNAtarget}
    */
   public miRNAtarget getTarget() {
-    return target;
+    return getTargets().iterator().next();
   }
   
   /**
    * @return this microRNA systematic name.
    */
   public String getMicroRNA() {
-    return mir;
+    return getName();
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#merge(java.util.Collection, de.zbit.data.NameAndSignals, de.zbit.data.Signal.MergeType)
+   */
+  @Override
+  protected <T extends NameAndSignals> void merge(Collection<T> source,
+    T target, MergeType m) {
+    super.merge(source, target, m);
+  }
+  
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return super.toString("target:"+getTarget().toString()+" ");
   }
   
 }

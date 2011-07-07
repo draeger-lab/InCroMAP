@@ -11,6 +11,7 @@ import java.beans.EventHandler;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -27,6 +28,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -428,12 +430,6 @@ public class IntegratorUI extends BaseFrame {
       
       // TODO: UpdateButtons [öfter aufrufen] und in interface toolbar mitgeben.
       
-      /* XXX: EnrichmentObject ideen
-       * - Cutoff für > pValue, qValue, list ratio
-       * - Change statistical correction
-       * Generell: [-Suche]
-       */
-      
       r.add(loadDataButton);
       r.add(genelist);
       r.add(miRNAtargets);
@@ -460,13 +456,11 @@ public class IntegratorUI extends BaseFrame {
   }
   
   public void openMRNAfile() {
-    File[] f = openFile(null, mRNAReader.class);
-    //addToFileHistory(f);
+    openFile(null, mRNAReader.class);
   }
   
   public void openMiRNAfile() {
-    File[] f = openFile(null, miRNAReader.class);
-    //addToFileHistory(f);
+    openFile(null, miRNAReader.class);
   }
   
   /**
@@ -492,17 +486,26 @@ public class IntegratorUI extends BaseFrame {
    * for this organism.
    */
   public void showMicroRNAtargets() {
-    Species species = IntegratorGUITools.showOrganismSelectorDialog(this);
+    final Species species = IntegratorGUITools.showOrganismSelectorDialog(this);
     if (species!=null) {
-      miRNAtargets t_all;
-      try {
-        t_all = (miRNAtargets) Utils.loadGZippedObject(
-          OpenFile.searchFileAndGetInputStream("miRNA_targets/" + species.getNCBITaxonID() + "_HC.dat"));
-        if (t_all==null) throw new IOException("Could not read miRNA target file.");
-        addTab(new IntegratorTabWithTable(this, miRNAandTarget.getList(t_all), species), "miRNA targets (" + species.getCommonName() + ")");
-      } catch (IOException e) {
-        GUITools.showErrorMessage(this, e);
-      }
+      SwingWorker<Collection<? extends NameAndSignals>, Void> worker = new SwingWorker<Collection<? extends NameAndSignals>, Void>() {
+        @Override
+        protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
+          miRNAtargets t_all;
+          try {
+            t_all = (miRNAtargets) Utils.loadGZippedObject(
+              OpenFile.searchFileAndGetInputStream("miRNA_targets/" + species.getNCBITaxonID() + "_HC.dat"));
+            if (t_all==null) throw new IOException("Could not read miRNA target file.");
+            return miRNAandTarget.getList(t_all);
+          } catch (IOException e) {
+            GUITools.showErrorMessage(instance, e);
+            return null;
+          }
+        }
+      };
+      
+      // Add as tab
+      addTab(new NameAndSignalsTab(this, worker, "Loading miRNA targets.", species), "miRNA targets (" + species.getCommonName() + ")");
     }
   }
   
@@ -590,11 +593,15 @@ public class IntegratorUI extends BaseFrame {
       
       props.clear();
       */
-      props.put(GUIOptions.OPEN_DIR, openDir);
+      if (openDir != null && openDir.length() > 1) {
+        props.put(GUIOptions.OPEN_DIR, openDir);
+      }
       if (saveDir != null && saveDir.length() > 1) {
         props.put(GUIOptions.SAVE_DIR, saveDir);
       }
-      SBPreferences.saveProperties(GUIOptions.class, props);
+      if (props.size()>0) {
+        SBPreferences.saveProperties(GUIOptions.class, props);
+      }
         
     } catch (BackingStoreException exc) {
       exc.printStackTrace();
@@ -697,7 +704,9 @@ public class IntegratorUI extends BaseFrame {
     if ((files == null) || (files.length < 1)) return files;
     else {
       // Update openDir.
-      openDir = files[0].getParent();
+      if (files[0].getParent().length()>0) {
+        openDir = files[0].getParent();
+      }
     }
     
     // Ask file format
@@ -735,6 +744,10 @@ public class IntegratorUI extends BaseFrame {
       }
     }
     
+    /* History has to be logged here, beacuse 
+     * 1) if this method is invoked by e.g. "openMRNAfile()", it is not logged and
+     * 2) the additionalHistory has to be changed too.
+     */
     addToFileHistory(files);
     
     return files;

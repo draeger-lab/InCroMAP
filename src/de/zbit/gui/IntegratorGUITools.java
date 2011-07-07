@@ -43,6 +43,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.CSVImporterV2.CSVImporterV2;
 import de.zbit.io.OpenFile;
+import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
@@ -430,6 +431,28 @@ public class IntegratorGUITools {
       return null;
     }
     
+  }
+
+  /**
+   * Returns a 2GeneID mapping for the given <code>species</code>.
+   * <p>Every created instance is cached for later usage.
+   * @param species
+   * @return 
+   */
+  public static GeneID2GeneSymbolMapper get2GeneSymbolMapping(Species species) {
+    String key = GeneID2GeneSymbolMapper.class.getSimpleName().concat(species.getCommonName());
+    Object mapper = UIManager.get(key);
+    if (mapper==null) {
+      try {
+        mapper = new GeneID2GeneSymbolMapper(species.getCommonName());
+      } catch (IOException e) {
+        GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
+      }
+      if (mapper!=null) {
+        UIManager.put(key, mapper);
+      }
+    }
+    return (GeneID2GeneSymbolMapper) mapper;
   }
     
 }

@@ -109,10 +109,15 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
      * - Annotate targets
      * - Pair with mRNA
      * 
+     * if (EnrichmentObject)
+     * - Cutoff für > pValue, qValue, list ratio
+     * - Change statistical correction
+     * 
      * Always
      * - Perform Enrichment => List...
      * - Search table
      * - Visualize in pathway
+     * - for (!EnrichmentObject) "integrate data" (pair data)
      * 
      * Eventuell
      * [- Add pathways] column with pathways for gene/ target
