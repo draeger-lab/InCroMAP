@@ -4,13 +4,12 @@
  */
 package de.zbit.gui;
 
-import java.awt.event.ActionListener;
-import java.beans.EventHandler;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,6 +30,8 @@ import de.zbit.util.FileTools;
 import de.zbit.util.Reflect;
 
 /**
+ * A special tab for the {@link IntegratorUI} for
+ * {@link Collections} of {@link NameAndSignals}.
  * @author Clemens Wrzodek
  */
 public class NameAndSignalsTab extends IntegratorTabWithTable implements PropertyChangeListener {
@@ -188,34 +189,23 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
   }
   
   public void createJToolBarItems(JToolBar bar) {
-    if (bar.getName().equals(getClass().getSimpleName())) return; //Already done.
+    // Not here just name, because button actions are linked to this instance!
+    String uniqueName = getClass().getSimpleName() + hashCode();
+    if (bar.getName().equals(uniqueName)) return;
     bar.removeAll();
-    bar.setName(getClass().getSimpleName());
+    bar.setName(uniqueName);
     
-    JButton showPathway = GUITools.createJButton(EventHandler.create(ActionListener.class, this, "showAndColorPathway"),
-      Action.VISUALIZE_IN_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
+    KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(this);
+    JButton showPathway = GUITools.createJButton(al2,
+        Action.VISUALIZE_IN_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
+    // TODO: Create a temporary batch button.
     
-    
-    // TODO: Add these options also as additionalFileMenuEntries.
     
     bar.add(showPathway);
     
     GUITools.setOpaqueForAllElements(bar, false);    
   }
   
-  public void showAndColorPathway() {
-    if (data!=null) {
-      /* TODO:
-       * - if organism is unknown, show organism box
-       * - Show pathway selection box (and accept also ,-separated kegg ids!)
-       * - IntegratorGUITools.showSelectExperimentBox(ui, initialSelection, BOOLEAN RESTRICTED_TO_INITIAL_SELECTION)
-       *   that returns immedeately if only 1 FC is available, else, lets the user chosse the fc
-       *   
-       * Add (one or more) tabs for every pathway and !!color immediately!!.
-       */
-      
-    }
-  }
 
   /* (non-Javadoc)
    * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
