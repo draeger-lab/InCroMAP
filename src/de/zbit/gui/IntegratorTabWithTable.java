@@ -4,6 +4,7 @@
 package de.zbit.gui;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -29,7 +30,7 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
   /**
    * The {@link JTable} holding visualized Names and Signals.
    */
-  private JTable table;
+  private JTable table=null;
 
   /**
    * @param parent
@@ -151,8 +152,11 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
   @Override
   public JComponent getVisualization() {
     if (data==null) return null;
-    // Also adds the enrichment right mouse menu
-    table = TableResultTableModel.buildJTable(this);
+    
+    if (table==null) {
+      // Also adds the enrichment right mouse menu
+      table = TableResultTableModel.buildJTable(this);
+    }
     
     return table;
   }
@@ -179,5 +183,22 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
     }
     
     return selRows;
+  }
+  
+  /**
+   * Converts the given indices to the model and returns the actual underlying items.
+   * @param selectedIndices
+   * @return
+   */
+  public List<?> getSelectedItems(List<Integer> selectedIndices) {
+    // Get selected rows
+    if (selectedIndices==null) return null;
+    
+    List<Object> geneList = new ArrayList<Object>(selectedIndices.size());
+    for (int i=0; i<selectedIndices.size(); i++) {
+      geneList.add(getObjectAt(table.convertRowIndexToModel(selectedIndices.get(i))));
+    }
+    
+    return geneList;
   }
 }

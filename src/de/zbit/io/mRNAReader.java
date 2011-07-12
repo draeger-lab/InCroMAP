@@ -319,13 +319,11 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
    * @throws Exception 
    * @throws IOException 
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unused" })
   public static void main(String[] args) throws IOException, Exception {
     mRNAReader r2 = new mRNAReader();
     r2.importWithGUI(null, "mRNA_data_new.txt");
     if (true) return;
-    
-    Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
     
     // Jaworski Dataset:
 //    mRNAReader r = new mRNAReader("Ctnnb1",16, IdentifierType.Numeric,species);
@@ -338,6 +336,21 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
 //    r.progress = new ProgressBar(0);
 //    Collection<mRNA> c = r.read("mRNA_data.txt");
     
+    mRNAReader r = getExampleReader();
+    r.progress = new ProgressBar(0);
+    Collection<mRNA> c = r.read("mRNA_data_new.txt");
+    
+    int noGI=0;
+    for (mRNA mRNA : c) {
+      if (mRNA.getGeneID()<0) noGI++;
+      System.out.println(mRNA);
+    }
+    System.out.println(noGI + " mRNAs without Gene ID.");
+  }
+
+  public static mRNAReader getExampleReader() throws IOException {
+    @SuppressWarnings("unchecked")
+    Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
     // New dataset
     mRNAReader r = new mRNAReader(3, IdentifierType.NCBI_GeneID, species);
     r.addSecondIdentifier(1, IdentifierType.GeneSymbol);
@@ -346,14 +359,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     r.addSignalColumn(27, SignalType.FoldChange, "Ctnnb1"); // 27-30 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
     r.addSignalColumn(31, SignalType.pValue, "Ctnnb1"); // 31-34 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
     
-    r.progress = new ProgressBar(0);
-    Collection<mRNA> c = r.read("mRNA_data_new.txt");
-    int noGI=0;
-    for (mRNA mRNA : c) {
-      if (mRNA.getGeneID()<0) noGI++;
-      System.out.println(mRNA);
-    }
-    System.out.println(noGI + " mRNAs without Gene ID.");
+    return r;
   }
 
   /* (non-Javadoc)

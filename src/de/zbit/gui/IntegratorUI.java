@@ -141,12 +141,7 @@ public class IntegratorUI extends BaseFrame {
     /**
      * {@link Action} to show a pathway selection dialog. 
      */
-    NEW_PATHWAY,
-    /**
-     * {@link Action} similar to  {@link #NEW_PATHWAY} but
-     * immediately colors nodes accoring fold changes.
-     */
-    VISUALIZE_IN_PATHWAY;
+    NEW_PATHWAY;
     
     /*
      * (non-Javadoc)
@@ -196,8 +191,6 @@ public class IntegratorUI extends BaseFrame {
           return "Show raw microRNA targets for an organism.";
         case NEW_PATHWAY:
           return "Download and visualize a KEGG pathway.";
-        case VISUALIZE_IN_PATHWAY:
-          return "Show a KEGG pathway and color nodes accoring to fold changes.";
           
         default:
           return "";
@@ -268,6 +261,14 @@ public class IntegratorUI extends BaseFrame {
         ui.setVisible(true);
         GUITools.hideSplashScreen();
         ui.toFront();
+        
+        try {
+          mRNAReader r = mRNAReader.getExampleReader();
+          Collection<mRNA> c = r.read("mRNA_data_new.txt");
+          ui.addTab(new NameAndSignalsTab(ui, c, IntegratorGUITools.organisms.get(1)), "Example");
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
       }
     });
     

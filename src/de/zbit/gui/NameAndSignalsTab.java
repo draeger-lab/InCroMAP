@@ -43,6 +43,10 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
    */
   private AbstractProgressBar intermediateBar;
   
+  /**
+   * Actions for the {@link JToolBar} to be performed on this data.
+   */
+  private NameAndSignalTabActions actions = new NameAndSignalTabActions(this);
   
   /**
    * Ensures that data is a list, instead of a collection.
@@ -189,8 +193,10 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
   }
   
   public void createJToolBarItems(JToolBar bar) {
+    actions.createJToolBarItems(bar);
+    
     // Not here just name, because button actions are linked to this instance!
-    String uniqueName = getClass().getSimpleName() + hashCode();
+    /*String uniqueName = getClass().getSimpleName() + hashCode();
     if (bar.getName().equals(uniqueName)) return;
     bar.removeAll();
     bar.setName(uniqueName);
@@ -203,7 +209,7 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     
     bar.add(showPathway);
     
-    GUITools.setOpaqueForAllElements(bar, false);    
+    GUITools.setOpaqueForAllElements(bar, false);  */  
   }
   
 

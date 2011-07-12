@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.swing.JTable;
 import javax.swing.SwingWorker;
 
 import de.zbit.analysis.enrichment.AbstractEnrichment;
@@ -31,13 +32,26 @@ public class EnrichmentActionListener implements ActionListener {
   /**
    * The source tab
    */
-  IntegratorTab<?> source;
+  IntegratorTabWithTable source;
+  
+  /**
+   * Determins wether the {@link JTable} selection should
+   * be taken (false) or a dialog should prompt the user
+   * for genes (true).
+   */
+  boolean withDialog = false;
   
   public final static String GO_ENRICHMENT = "GO";
   public final static String KEGG_ENRICHMENT = "KEGG";
   
-  public EnrichmentActionListener(IntegratorTab<?> source) {
+  public EnrichmentActionListener(IntegratorTabWithTable source) {
     this.source = source;
+  }
+  
+  public EnrichmentActionListener(IntegratorTabWithTable source, boolean withDialog) {
+    this(source);
+    this.withDialog = withDialog;
+    
   }
   
   
@@ -46,7 +60,7 @@ public class EnrichmentActionListener implements ActionListener {
    */
   public synchronized  void actionPerformed(final ActionEvent e) {
     // Get selected items
-    final List<?> geneList = source.getSelectedItems();
+    final List<?> geneList = getGeneList();
     if (geneList==null || geneList.size()<1) {
       GUITools.showErrorMessage(source, "No elements selected for enrichment analysis.");
       return;
@@ -117,6 +131,32 @@ public class EnrichmentActionListener implements ActionListener {
     if (source.getName()!=null) tip+= " from \"" + source.getName() + "\".";
     source.getIntegratorUI().addTab(tab, getEnrichmentName(e.getActionCommand()), tip);
     tab.setSourceTab(this.source);
+  }
+  
+  /**
+   * @return list of selected genes for the enrichment.
+   */
+  private List<?> getGeneList() {
+    List<?> geneList = source.getSelectedItems();
+    
+    // Eventually ask user
+    if (withDialog) {
+      boolean showDialog=true;
+      if (geneList!=null && geneList.size()>1) {
+        int ret = GUITools.showQuestionMessage(source, "Do you want to take the selected genes for the enrichment analysis?", "Enrichment analysis", "Yes", "No");
+        if (ret==0) {
+          showDialog=false;
+        }
+      }
+      if (showDialog) {
+        JTableFilter filt = JTableFilter.showDialog(source, (JTable) source.getVisualization());
+        if (filt==null) return null;
+        geneList = source.getSelectedItems(filt.getSelectedRows());
+        System.out.println(geneList);
+      }
+
+    }
+    return geneList;
   }
   
   

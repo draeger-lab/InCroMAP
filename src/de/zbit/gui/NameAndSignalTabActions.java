@@ -1,9 +1,14 @@
 package de.zbit.gui;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JToolBar;
@@ -13,6 +18,9 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.IntegratorUI.Action;
+import de.zbit.math.BenjaminiHochberg;
+import de.zbit.math.Bonferroni;
+import de.zbit.math.BonferroniHolm;
 import de.zbit.util.StringUtil;
 
 /**
@@ -41,8 +49,6 @@ public class NameAndSignalTabActions implements ActionListener {
      * immediately colors nodes according fold changes.
      */
     VISUALIZE_IN_PATHWAY,
-    KEGG_PATHWAY_ENRICHMENT,
-    GENE_ONTOLOGY_ENRICHMENT,
     SEARCH_TABLE,
     INTEGRATE,
     ADD_GENE_SYMBOLS,
@@ -59,8 +65,13 @@ public class NameAndSignalTabActions implements ActionListener {
      */
     public String getName() {
       switch (this) {
-//      case WORKSPACE_SAVE:
-//        return "Save workspace";
+      /**
+       * Icon is enough in search table.
+       */
+      case SEARCH_TABLE:
+        return "Search";
+      case ADD_GENE_SYMBOLS:
+        return "Show gene symbols";
         
       default:
         return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
@@ -76,9 +87,11 @@ public class NameAndSignalTabActions implements ActionListener {
       switch (this) {
         case VISUALIZE_IN_PATHWAY:
           return "Show a KEGG pathway and color nodes accoring to fold changes.";
+        case ADD_GENE_SYMBOLS:
+          return "Show Gene symbols as names, using a GeneID to gene symbol converter.";
           
         default:
-          return "";
+          return null; // Deactivate
       }
     }
   }
@@ -88,31 +101,26 @@ public class NameAndSignalTabActions implements ActionListener {
   
   public void createJToolBarItems(JToolBar bar) {
     // Not here just name, because button actions are linked to this instance!
-    String uniqueName = parent.getClass().getSimpleName() + parent.hashCode();
+    Class<?> tableContent = parent.getDataContentType();
+    String uniqueName = parent.getClass().getSimpleName() + parent.hashCode() + tableContent.hashCode();
     if (bar.getName().equals(uniqueName)) return;
     bar.removeAll();
     bar.setName(uniqueName);
     
-    Class<?> tableContent = parent.getDataContentType();
     
  // TODO: Create a temporary batch button.
     
-    // Create several Enrichment buttons
-    JPopupMenu enrichment = new JPopupMenu("Enrichments");
-    JMenuItem kegg = GUITools.createJMenuItem(this,
-      NSAction.KEGG_PATHWAY_ENRICHMENT, UIManager.getIcon("ICON_GEAR_16"));
-    enrichment.add(kegg);
-    JMenuItem go = GUITools.createJMenuItem(this,
-        NSAction.GENE_ONTOLOGY_ENRICHMENT, UIManager.getIcon("ICON_GEAR_16"));
-      enrichment.add(go);
+    // Search
+    JButton search = GUITools.createJButton(this,
+        NSAction.SEARCH_TABLE, UIManager.getIcon("ICON_SEARCH_16"));
+    search.setPreferredSize(new Dimension(16,16));
+    bar.add(search);
+    
+    EnrichmentActionListener al = new EnrichmentActionListener(parent, true);
+    JPopupMenu enrichment = IntegratorGUITools.createEnrichmentPopup(al);
     JDropDownButton enrichmentButton = new JDropDownButton("Enrichment", 
         UIManager.getIcon("ICON_GEAR_16"), enrichment);
     bar.add(enrichmentButton);
-    
-    // Search
-    JButton search = GUITools.createJButton(this,
-        NSAction.SEARCH_TABLE, UIManager.getIcon("ICON_GEAR_16"));
-    bar.add(search);
     
     // Visualize in Pathway
     KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(parent);
@@ -144,12 +152,12 @@ public class NameAndSignalTabActions implements ActionListener {
       
       JPopupMenu fdr = new JPopupMenu("FDR correction method");
       JMenuItem BH_cor = GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BH, UIManager.getIcon("ICON_GEAR_16"));
+          NSAction.FDR_CORRECTION_BH, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class);
       fdr.add(BH_cor);
       fdr.add(GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_GEAR_16")));
+          NSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class));
       fdr.add(GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_GEAR_16")));
+          NSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class));
       JDropDownButton fdrButton = new JDropDownButton("FDR correction method", 
           UIManager.getIcon("ICON_GEAR_16"), fdr);
       fdrButton.setToolTipText("Change the false-discovery-rate correction method.");
@@ -188,10 +196,50 @@ public class NameAndSignalTabActions implements ActionListener {
 
 
 
+  @SuppressWarnings("unchecked")
   @Override
   public void actionPerformed(ActionEvent e) {
-    // TODO Auto-generated method stub
+    String command = e.getActionCommand();
     
+    if (command.equals(NSAction.SEARCH_TABLE.toString())) {
+      // Fire F3 Key for search
+      if (parent.getVisualization()!=null) {
+        KeyEvent F3 = new KeyEvent(parent.getVisualization(), 
+            0, 0, 0, 114, (char)114);
+        for (KeyListener l: parent.getVisualization().getKeyListeners()) {
+          l.keyPressed(F3);
+        }
+      }
+      
+      
+    } else if (command.equals(NSAction.INTEGRATE.toString())) {
+      // TODO: ...
+      GUITools.showMessage("Not yet implemented.", "");
+      
+    } else if (command.equals(NSAction.ADD_GENE_SYMBOLS.toString())) {
+      try {
+        mRNA.convertNamesToGeneSymbols((List<? extends mRNA>) parent.getData(), parent.getSpecies());
+      } catch (Exception e1) {
+        GUITools.showErrorMessage(parent, e1);
+      }
+      parent.getVisualization().repaint();
+      
+    } else if (command.equals(NSAction.ANNOTATE_TARGETS.toString())) {
+      // TODO: ...
+    } else if (command.equals(NSAction.CUTOFFS.toString())) {
+      // TODO: ...
+    } else if (command.equals(NSAction.FDR_CORRECTION_BH.toString())) {
+      new BenjaminiHochberg().setQvalue((List<EnrichmentObject<Object>>) parent.getData());
+      parent.getVisualization().repaint();
+      
+    } else if (command.equals(NSAction.FDR_CORRECTION_BFH.toString())) {
+      new BonferroniHolm().setQvalue((List<EnrichmentObject<Object>>) parent.getData());
+      parent.getVisualization().repaint();
+      
+    } else if (command.equals(NSAction.FDR_CORRECTION_BO.toString())) {
+      new Bonferroni().setQvalue((List<EnrichmentObject<Object>>) parent.getData());
+      parent.getVisualization().repaint();
+    }
   }
   
   

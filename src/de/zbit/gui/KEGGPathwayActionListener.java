@@ -23,7 +23,7 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.gui.IntegratorUI.Action;
+import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.PathwaySelector;
@@ -71,7 +71,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     if (e.getActionCommand().equals(VISUALIZE_PATHWAY)) {
       visualizePathway();
       
-    } else if (e.getActionCommand().equals(Action.VISUALIZE_IN_PATHWAY.toString())) {
+    } else if (e.getActionCommand().equals(NSAction.VISUALIZE_IN_PATHWAY.toString())) {
       try {
         visualizeAndColorPathway();
       } catch (Exception e1) {

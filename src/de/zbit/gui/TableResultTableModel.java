@@ -155,16 +155,19 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     JTable jc = buildJTable(new TableResultTableModel(tab.getData()), tab.getSpecies());
     
     // Add enrichment capabilities
-    EnrichmentActionListener al = new EnrichmentActionListener(tab);
-    JPopupMenu popUp = IntegratorGUITools.createEnrichmentPopup(al);
-    IntegratorGUITools.addRightMousePopup(jc, popUp);
-    
-    // Other data type dependent capabilities
-    if (tab.getDataContentType().equals(EnrichmentObject.class)) {
-      if (((EnrichmentObject)tab.getExampleData()).getIdentifier().toString().startsWith("path:")) {
-        // It's a KEGG Pathway enrichment.
-        KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
-        IntegratorGUITools.addRightMousePopup(jc, IntegratorGUITools.createKeggPathwayPopup(al2, popUp));
+    if (tab instanceof IntegratorTabWithTable) {
+      EnrichmentActionListener al = new EnrichmentActionListener((IntegratorTabWithTable)tab);
+      JPopupMenu popUp = IntegratorGUITools.createEnrichmentPopup(al);
+      IntegratorGUITools.addRightMousePopup(jc, popUp);
+
+
+      // Other data type dependent capabilities
+      if (tab.getDataContentType().equals(EnrichmentObject.class)) {
+        if (((EnrichmentObject)tab.getExampleData()).getIdentifier().toString().startsWith("path:")) {
+          // It's a KEGG Pathway enrichment.
+          KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
+          IntegratorGUITools.addRightMousePopup(jc, IntegratorGUITools.createKeggPathwayPopup(al2, popUp));
+        }
       }
     }
     

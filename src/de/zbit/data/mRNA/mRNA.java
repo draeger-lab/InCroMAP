@@ -6,11 +6,15 @@ package de.zbit.data.mRNA;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.gui.IntegratorGUITools;
+import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
+import de.zbit.parser.Species;
 
 
 /**
@@ -130,6 +134,27 @@ public class mRNA extends NameAndSignals {
     mRNA nm = new mRNA(name, getGeneID());
     super.cloneAbstractFields(nm, this);
     return nm;
+  }
+
+  /**
+   * Convert {@link #getGeneID()}s to gene symbols and set names
+   * to the symbol.
+   * @param data
+   * @param species
+   * @throws Exception
+   */
+  public static void convertNamesToGeneSymbols(List<? extends mRNA> data, Species species) throws Exception {
+    log.info("Loading GeneSymbol mapping...");
+    GeneID2GeneSymbolMapper mapper = IntegratorGUITools.get2GeneSymbolMapping(species);
+    for (mRNA m: data) {
+      if (m.getGeneID()>0) {
+        String symbol = mapper.map(m.getGeneID());
+        if (symbol!=null && symbol.length()>0) {
+          m.name = symbol;
+        }
+      }
+    }
+    log.info("Converted GeneIDs to Gene symbols.");
   }
   
 }

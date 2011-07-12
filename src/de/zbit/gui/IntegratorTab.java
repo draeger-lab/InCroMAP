@@ -166,7 +166,9 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
    * @return
    */
   public Class<?> getDataContentType() {
-    return getExampleData().getClass();
+    Object d = getExampleData();
+    if (d==null) return Object.class;
+    else return d.getClass();
   }
   
   /**
@@ -178,6 +180,7 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
    */
   @SuppressWarnings("rawtypes")
   public Object getExampleData() {
+    if (data==null) return null;
     Object ret = null;
     if (data instanceof Iterable || Iterable.class.isAssignableFrom(data.getClass())) {
       ret = (((Iterable)data).iterator().hasNext()?((Iterable)data).iterator().next():null);
