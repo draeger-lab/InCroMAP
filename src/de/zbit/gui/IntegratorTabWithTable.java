@@ -85,7 +85,6 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
     }
     
     // Enable and disable items
-    // TODO: Enable and disable toolbar items, based on the current state.
     if (data!=null) {
       GUITools.setEnabled(true, menuBar, BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
     } else {
@@ -101,48 +100,12 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
     createJToolBarItems(bar, true);
     GUITools.setOpaqueForAllElements(bar, false);
   }
+  
   public void createJToolBarItems(JToolBar bar, boolean clearExistingToolbar) {
     if (clearExistingToolbar) bar.removeAll();
-    
-    
-    /* TODO:
-     * if (mRNA)
-     * - Show gene symbols as names
-     * - Pair with miRNA
-     * 
-     * if (miRNA)
-     * - Annotate targets
-     * - Pair with mRNA
-     * 
-     * if (EnrichmentObject)
-     * - Cutoff für > pValue, qValue, list ratio
-     * - Change statistical correction
-     * 
-     * Always
-     * - Perform Enrichment => List...
-     * - Search table
-     * - Visualize in pathway
-     * - for (!EnrichmentObject) "integrate data" (pair data)
-     * 
-     * Eventuell
-     * [- Add pathways] column with pathways for gene/ target
-     * 
-     */
-    
-    // Create several loadData buttons
-    /*JPopupMenu load = new JPopupMenu("Load data");
-    JMenuItem lmRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMRNAfile"),
-      Action.LOAD_MRNA, UIManager.getIcon("ICON_OPEN_16"));
-    load.add(lmRNA);
-    JMenuItem lmiRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMiRNAfile"),
-      Action.LOAD_MICRO_RNA, UIManager.getIcon("ICON_OPEN_16"));
-    load.add(lmiRNA);
-    JDropDownButton loadDataButton = new JDropDownButton("Load data", UIManager.getIcon("ICON_OPEN_16"), load);
-    */
-    
-    // TODO: Add these options also as additionalFileMenuEntries.
-    
-        
+    //XXX: Place buttons here in overriding functions.
+    // Overrider also updateButtons() with call to super() and enable /
+    // disable buttons on toolbar.
   }
   
 
@@ -154,8 +117,7 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
     if (data==null) return null;
     
     if (table==null) {
-      // Also adds the enrichment right mouse menu
-      table = TableResultTableModel.buildJTable(this);
+      createTable();
     }
     
     return table;
@@ -200,5 +162,20 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
     }
     
     return geneList;
+  }
+
+  private void createTable() {
+    if (data==null) return;
+    
+    // Also adds the enrichment right mouse menu
+    table = TableResultTableModel.buildJTable(this);
+  }
+
+  /**
+   * Creates a new table for the given data.
+   */
+  public void rebuildTable() {
+    createTable();
+    super.init();
   }
 }

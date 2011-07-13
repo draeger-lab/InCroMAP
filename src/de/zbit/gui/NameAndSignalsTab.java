@@ -14,15 +14,14 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JButton;
+import javax.swing.JMenuBar;
 import javax.swing.JToolBar;
 import javax.swing.SwingWorker;
 import javax.swing.SwingWorker.StateValue;
-import javax.swing.UIManager;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.mRNA.mRNA;
-import de.zbit.gui.IntegratorUI.Action;
+import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
@@ -157,12 +156,13 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     } catch (Exception e) {
       log.log(Level.SEVERE, "Error during worker execution.", e);
     }
+    
     if (data==null || worker.isCancelled()) {
       parent.closeTab(this);
     } else {
       setData(data);
+      updateButtons(parent.getJMenuBar(), parent.getJToolBar());
     }
-    updateButtons(parent.getJMenuBar(), parent.getJToolBar());
   }
   
 
@@ -173,18 +173,24 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     // Convert Iterables and arrays to list and store the list as internal data structure.
     if (data instanceof List) {
       this.data = (List<? extends NameAndSignals>) data;
+      
     } else if (data instanceof Iterable) { // e.g. collections or sets
       List dataNew = new ArrayList();
       for (Object object : ((Iterable)data)) {
         dataNew.add(object);
       }
       this.data = (List<? extends NameAndSignals>) dataNew;
+      
     } else if (data.getClass().isArray()) {
       List dataNew = new ArrayList();
       for (int i=0; i<Array.getLength(data); i++) {
         dataNew.add(Array.get(data, i));
       }
       this.data = (List<? extends NameAndSignals>) dataNew;
+      
+    } else if (data.getClass().equals(miRNAtargets.class)) {
+      this.data = miRNAandTarget.getList((miRNAtargets) data);
+      
     } else {
       log.log(Level.SEVERE, "Implement representation for " + data.getClass().getName());
     }
@@ -210,6 +216,12 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     bar.add(showPathway);
     
     GUITools.setOpaqueForAllElements(bar, false);  */  
+  }
+  
+  @Override
+  public void updateButtons(JMenuBar menuBar, JToolBar toolbar) {
+    super.updateButtons(menuBar, toolbar);
+    actions.updateToolbarButtons(toolbar);
   }
   
 

@@ -19,11 +19,13 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 
+import y.view.Graph2D;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
+import de.zbit.gui.TranslatorTabActions.TPAction;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.PathwaySelector;
@@ -49,15 +51,24 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
   /**
    * The source tab
    */
-  IntegratorTab<?> source;
+  BaseFrameTab source;
   
   /**
    * Action command for VISUALIZE_PATHWAY actions.
    */
-  public final static String VISUALIZE_PATHWAY = "VP";
+  public final static ActionCommand VISUALIZE_PATHWAY = new ActionCommand() {
+    @Override
+    public String getToolTip() {
+      return "Download and visualize a KEGG pathway.";
+    }
+    @Override
+    public String getName() {
+      return "Visualize pathway";
+    }
+  };
   
   
-  public KEGGPathwayActionListener(IntegratorTab<?> source) {
+  public KEGGPathwayActionListener(BaseFrameTab source) {
     this.source = source;
   }
   
@@ -68,7 +79,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
   @Override
   public void actionPerformed(ActionEvent e) {
     
-    if (e.getActionCommand().equals(VISUALIZE_PATHWAY)) {
+    if (e.getActionCommand().equals(VISUALIZE_PATHWAY.toString())) {
       visualizePathway();
       
     } else if (e.getActionCommand().equals(NSAction.VISUALIZE_IN_PATHWAY.toString())) {
@@ -76,6 +87,27 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         visualizeAndColorPathway();
       } catch (Exception e1) {
         GUITools.showErrorMessage(null, e1);
+      }
+            
+    } else if (e.getActionCommand().equals(TPAction.VISUALIZE_DATA.toString()) &&
+        source instanceof TranslatorPanel) {
+      ValueTriplet<NameAndSignalsTab, String, SignalType>  vt
+        = IntegratorGUITools.showSelectExperimentBox(IntegratorUI.getInstance(), null,
+            "Please select an observation to color nodes accordingly.");
+       if (vt!=null) {
+         colorPathway((TranslatorPanel) source,(Iterable)vt.getA().getData(),vt.getB(), vt.getC());
+       }
+       // TODO: Color all no-data-nodes in a defined color!
+       
+    } else if (e.getActionCommand().equals(TPAction.HIGHLIGHT_ENRICHED_GENES.toString()) &&
+        source instanceof TranslatorPanel) {
+      TranslatorPanel source = (TranslatorPanel) this.source;
+      if (source.getData()!=null && (source.getData() instanceof EnrichmentObject<?>) ) {
+        // Highlight source genes
+        Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData()).getGeneIDsFromGenesInClass();
+        TranslatorTools tools = new TranslatorTools(source);
+        tools.highlightGenes(geneIDs);
+        source.repaint();
       }
       
     } else if (e.getActionCommand().equals(TranslatorUI.Action.OPEN_PATHWAY.toString())) {
@@ -107,11 +139,15 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
           }
           if (vt==null || vt.getA()==null) {
             // Let the user choose a signal to color the nodes
-            IntegratorTab st = this.source;
-            while (st.getSourceTab()!=null) {
-              st = st.getSourceTab();
+            IntegratorTab st = null;
+            if (this.source instanceof IntegratorTab) {
+              st = (IntegratorTab) this.source;
+              while (st.getSourceTab()!=null) {
+                st = st.getSourceTab();
+              }
             }
-            vt = IntegratorGUITools.showSelectExperimentBox(IntegratorUI.getInstance(), st);
+            vt = IntegratorGUITools.showSelectExperimentBox(IntegratorUI.getInstance(), st,
+                "Please select an observation to color nodes accordingly.");
           }
           
           if (vt!=null) {
@@ -153,15 +189,18 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     // Color nodes
     tools2.colorNodesAccordingToSignals(dataSource, 
         MergeType.Mean, experimentName, signalType);
+    tp.repaint();
   }
   
   
   /**
    * Download the pathways, selected in the source {@link JTable} and
    * add a {@link TranslatorPanel} for each one.
+   * <p>This method is used in {@link EnrichmentObject}s.
    */
   private void visualizePathway() {
-    if (source==null) return;
+    if (source==null || !(source instanceof IntegratorTab)) return;
+    IntegratorTab<?> source = (IntegratorTab<?>) this.source;
     
     // Get selected items
     final List<?> geneList = source.getSelectedItems();
@@ -203,7 +242,10 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       name = pwo.getName();
     }
     
-    String extra = (source==null?"":" for " + source.species.getCommonName());
+    String extra = "";
+    if (source!=null && (source instanceof IntegratorTab)) {
+      extra = " for " + ((IntegratorTab<?>)source).species.getCommonName();
+    }
     IntegratorUI.getInstance().addTab(pwTab, name, "Pathway: '" + name + "'" + extra + ".");
     return pwTab;
   }
@@ -215,50 +257,62 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    */
   @SuppressWarnings("unchecked")
   public void visualizeAndColorPathway() throws Exception {
+    // Preprocessing: Check if ready and get organism.
     String organism = null;
-    if (source.getSpecies(false)!=null) organism = source.getSpecies().getKeggAbbr();
-    if (source.getData()!=null) { // Is Ready check
-      // Create pathway and experiment selectors
-      final PathwaySelector selector = new PathwaySelector(Translator.getFunctionManager(),null, organism);
-      final JLabeledComponent expSel;
-      if (source instanceof NameAndSignalsTab) {
-        expSel = IntegratorGUITools.createSelectExperimentBox((NameAndSignals)source.getExampleData());
+    if (source instanceof IntegratorTab) {
+      IntegratorTab<?> source = (IntegratorTab<?>) this.source;
+      if (source.getData()==null) return; // Is Ready check
+      if (source.getSpecies(false)!=null) 
+        organism = source.getSpecies().getKeggAbbr();
+    } else if (source instanceof TranslatorPanel) {
+      TranslatorPanel source = (TranslatorPanel) this.source;
+      if (source.getDocument()==null) return; // Is Ready check
+      organism = TranslatorTools.getOrganismKeggAbbrFromGraph((Graph2D) source.getDocument());
+    }
+
+
+    // Create pathway and experiment selectors
+    final PathwaySelector selector = new PathwaySelector(Translator.getFunctionManager(),null, organism);
+    final JLabeledComponent expSel;
+    if (source instanceof NameAndSignalsTab) {
+      NameAndSignals ns = (NameAndSignals)((NameAndSignalsTab)source).getExampleData();
+      if (ns.hasSignals()) {
+        expSel = IntegratorGUITools.createSelectExperimentBox(ns);
       } else {
         expSel = null;
       }
-      
-      // Make one panel of both selectors
-      JPanel ret = new JPanel(new BorderLayout());
-      ret.add(selector, BorderLayout.NORTH);
-      ret.add(expSel, BorderLayout.SOUTH);
+    } else {
+      expSel = null;
+    }
 
-      // Let user chooser
-      int val = JOptionPane.showConfirmDialog(source, ret, UIManager.getString("OptionPane.titleText"), JOptionPane.OK_CANCEL_OPTION);
-      GUITools.disableOkButton(ret);
-      
-      // Evaluate and evetually open new tab.
-      if (val==JOptionPane.OK_OPTION) {
-        ValueTriplet<NameAndSignalsTab, String, SignalType> dataSource;
-        if (expSel!=null) {
-          ValuePair<String, SignalType> expSignal = (ValuePair<String, SignalType>) expSel.getSelectedItem();
-          dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>((NameAndSignalsTab) source,
-              expSignal.getA(), expSignal.getB());
-        } else {
-          // Will show the selector later (in TranslationDone).
-          dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>(null, null, null);
-        }
-        
-        // Open pathway and set experiment to visualize.
-        TranslatorPanel tp = visualizePathway(selector.getSelectedPathwayID(), null);
-        tp.setData(dataSource);
+    // Make one panel of both selectors
+    JPanel ret = new JPanel(new BorderLayout());
+    ret.add(selector, BorderLayout.NORTH);
+    if (expSel!=null) {
+      ret.add(expSel, BorderLayout.SOUTH);
+    }
+
+    // Let user chooser
+    int val = JOptionPane.showConfirmDialog((Component)source, ret, UIManager.getString("OptionPane.titleText"), JOptionPane.OK_CANCEL_OPTION);
+    GUITools.disableOkButton(ret);
+
+    // Evaluate and evetually open new tab.
+    if (val==JOptionPane.OK_OPTION && selector.getSelectedPathwayID()!=null) {
+      ValueTriplet<NameAndSignalsTab, String, SignalType> dataSource;
+      if (expSel!=null) {
+        ValuePair<String, SignalType> expSignal = (ValuePair<String, SignalType>) expSel.getSelectedItem();
+        dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>((NameAndSignalsTab) source,
+            expSignal.getA(), expSignal.getB());
+      } else {
+        // Will show the selector later (in TranslationDone).
+        dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>(null, null, null);
       }
 
-      /* TODO:
-       * - In SwingWorker und nach execute disableOkButton machen.
-       * - Add (one or more) tabs for every pathway and !!color immediately!!.
-       */
-
+      // Open pathway and set experiment to visualize.
+      TranslatorPanel tp = visualizePathway(selector.getSelectedPathwayID(), null);
+      tp.setData(dataSource);
     }
+
   }
 
   /* (non-Javadoc)

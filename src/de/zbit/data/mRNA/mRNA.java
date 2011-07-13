@@ -11,6 +11,8 @@ import java.util.Set;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.IntegratorGUITools;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
@@ -143,15 +145,26 @@ public class mRNA extends NameAndSignals {
    * @param species
    * @throws Exception
    */
-  public static void convertNamesToGeneSymbols(List<? extends mRNA> data, Species species) throws Exception {
+  public static void convertNamesToGeneSymbols(List<? extends NameAndSignals> data, Species species) throws Exception {
     log.info("Loading GeneSymbol mapping...");
     GeneID2GeneSymbolMapper mapper = IntegratorGUITools.get2GeneSymbolMapping(species);
-    for (mRNA m: data) {
-      if (m.getGeneID()>0) {
-        String symbol = mapper.map(m.getGeneID());
-        if (symbol!=null && symbol.length()>0) {
-          m.name = symbol;
+    for (NameAndSignals m: data) {
+      if (m instanceof mRNA) {
+        if (((mRNA) m).getGeneID()>0) {
+          String symbol = mapper.map(((mRNA) m).getGeneID());
+          if (symbol!=null && symbol.length()>0) {
+            ((mRNA) m).name = symbol;
+          }
         }
+      } else if (m instanceof miRNA) {
+        if (((miRNA)m).hasTargets()) {
+          for (miRNAtarget t: ((miRNA)m).getTargets()) {
+            t.setTargetSymbol(mapper.map(t.getTarget()));
+          }
+        }
+      } else {
+        log.warning("Can not annotate gene symbols for " + m.getClass());
+        return;
       }
     }
     log.info("Converted GeneIDs to Gene symbols.");

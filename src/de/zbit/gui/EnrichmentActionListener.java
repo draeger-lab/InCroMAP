@@ -20,6 +20,7 @@ import de.zbit.analysis.enrichment.GOEnrichment;
 import de.zbit.analysis.enrichment.KEGGPathwayEnrichment;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.miRNA.miRNA;
 
 /**
  * Can handle enrichment actions for {@link IntegratorTab}s.
@@ -64,7 +65,7 @@ public class EnrichmentActionListener implements ActionListener {
     if (geneList==null || geneList.size()<1) {
       GUITools.showErrorMessage(source, "No elements selected for enrichment analysis.");
       return;
-    }
+    } else if (!checkGeneList(geneList)) return;
     final String loadingString = "Performing enrichment analysis...";
     
     // Log this action.
@@ -133,6 +134,37 @@ public class EnrichmentActionListener implements ActionListener {
     tab.setSourceTab(this.source);
   }
   
+  
+  /**
+   * Checks the genelist e.g. if it contains miRNAs and
+   * if these miRNAs contain targets.
+   * <p>Errors are displayed by this method itself.
+   * @param geneList
+   * @return
+   */
+  private boolean checkGeneList(List<?> geneList) {
+    boolean issueNoTargetMessage = true;
+    for (Object o: geneList) {
+      if (o instanceof miRNA) {
+        if (((miRNA)o).hasTargets()) {
+          issueNoTargetMessage = false;
+          break;
+        }
+      } else {
+        issueNoTargetMessage = false;
+        break;
+      }
+    }
+    
+    if (issueNoTargetMessage) {
+      GUITools.showMessage("None of the selected miRNAs has annotated targets. Please use the " +
+      		"\"annotate targets\" button to annotate your miRNAs with targets.", "Can not continnue");
+      return false;
+    }
+    
+    return true;
+  }
+
   /**
    * @return list of selected genes for the enrichment.
    */
@@ -149,10 +181,10 @@ public class EnrichmentActionListener implements ActionListener {
         }
       }
       if (showDialog) {
-        JTableFilter filt = JTableFilter.showDialog(source, (JTable) source.getVisualization());
+        JTableFilter filt = JTableFilter.showDialog(source, (JTable) source.getVisualization(),
+            "Apply filter to table to select genes for enrichment");
         if (filt==null) return null;
         geneList = source.getSelectedItems(filt.getSelectedRows());
-        System.out.println(geneList);
       }
 
     }

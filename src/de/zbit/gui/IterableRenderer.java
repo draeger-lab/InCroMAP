@@ -56,55 +56,75 @@ public class IterableRenderer extends DefaultTableCellRenderer {
     if (value==null) setText("");
     else {
       if (value instanceof Iterable || Iterable.class.isAssignableFrom(value.getClass())) {
-        StringBuffer buff = new StringBuffer(initialString);
-        Map<String, List<miRNAtarget>> miRNAandTarget = new HashMap<String, List<miRNAtarget>>();
-        
-        // Create comma separated list of values.
-        for (Object v:((Iterable<?>)value)) {
-          if (buff.length()>initialString.length()) buff.append(","+ space);
-          
-          if (v instanceof miRNAandTarget) {
-            // Create a map of miRNA and targets in the pathway.
-            List<miRNAtarget> l = miRNAandTarget.get(((miRNAandTarget)v).getName());
-            if (l==null) {
-              l = new LinkedList<miRNAtarget>();
-              miRNAandTarget.put(((miRNAandTarget)v).getName(), l);
-            }
-            l.add(((miRNAandTarget)v).getTarget());
-            
-          } else if (v instanceof NameAndSignals || NameAndSignals.class.isAssignableFrom(v.getClass())) {
-            buff.append(((NameAndSignals)v).getName());
-            
-          } else if (v instanceof Integer) {
-            // Gene IDs
-            String symbol = toSymbol((Integer) v,mapper);
-            buff.append(symbol);
-            
-          } else {
-            log.severe("Plese implement renderer for " + v.getClass());
-            buff.append(v.toString());
-            
-          }
-        }
-        
-        // Process miRNA and targets.
-        for (String miR: miRNAandTarget.keySet()) {
-          if (buff.length()>initialString.length()) buff.append(";" + space);
-          buff.append("<b>" + miR + ":</b>"+space);
-          List<miRNAtarget> l = miRNAandTarget.get(miR);
-          for (int i=0; i<l.size(); i++) {
-            if (i>0) buff.append(","+space);
-            String symbol = toSymbol((Integer) l.get(i).getTarget(),mapper);
-            buff.append(symbol);
-          }
-        }
-        
+        StringBuffer buff = getCommaStringFromIterable(value, mapper, initialString, space);
         buff.append("</nobr></body></html>");
         setText(buff.toString());
       } else {
         setText(value.toString());
       }
     }
+  }
+
+  /**
+   * Converts a list to a single comma separated string of elements.
+   * @param value the actual list to convert
+   * @param mapper a GeneID2GeneSymbolMapper, may be null
+   * @param initialString start string to append at the beginning of StringBuffer
+   * @param space the string to use to mimic a space between to elements (a comma
+   * will automatically be prepended)
+   * @return
+   */
+  public static StringBuffer getCommaStringFromIterable(Object value,
+      GeneID2GeneSymbolMapper mapper, String initialString, String space) {
+    StringBuffer buff = new StringBuffer(initialString);
+    Map<String, List<miRNAtarget>> miRNAandTarget = new HashMap<String, List<miRNAtarget>>();
+    
+    // Create comma separated list of values.
+    for (Object v:((Iterable<?>)value)) {
+      if (buff.length()>initialString.length()) buff.append(","+ space);
+      
+      if (v instanceof miRNAandTarget) {
+        // Create a map of miRNA and targets in the pathway.
+        List<miRNAtarget> l = miRNAandTarget.get(((miRNAandTarget)v).getName());
+        if (l==null) {
+          l = new LinkedList<miRNAtarget>();
+          miRNAandTarget.put(((miRNAandTarget)v).getName(), l);
+        }
+        l.add(((miRNAandTarget)v).getTarget());
+        
+      } else if (v instanceof NameAndSignals || NameAndSignals.class.isAssignableFrom(v.getClass())) {
+        buff.append(((NameAndSignals)v).getName());
+        
+      } else if (v instanceof miRNAtarget) {
+        buff.append(((miRNAtarget)v).getNiceTargetString());
+        
+      } else if (v instanceof Integer) {
+        // Gene IDs
+        String symbol = toSymbol((Integer) v,mapper);
+        buff.append(symbol);
+        
+      } else if (v.getClass().equals(String.class)) {
+        buff.append((String)v);
+        
+      } else {
+        log.severe("Plese implement renderer for " + v.getClass());
+        buff.append(v.toString());
+        
+      }
+    }
+    
+    // Process miRNA and targets.
+    for (String miR: miRNAandTarget.keySet()) {
+      if (buff.length()>initialString.length()) buff.append(";" + space);
+      buff.append("<b>" + miR + ":</b>"+space);
+      List<miRNAtarget> l = miRNAandTarget.get(miR);
+      for (int i=0; i<l.size(); i++) {
+        if (i>0) buff.append(","+space);
+        String symbol = toSymbol((Integer) l.get(i).getTarget(),mapper);
+        buff.append(symbol);
+      }
+    }
+    return buff;
   }
   
   
@@ -114,8 +134,8 @@ public class IterableRenderer extends DefaultTableCellRenderer {
    * @param mapper
    * @return
    */
-  public String toSymbol(int GeneID, GeneID2GeneSymbolMapper mapper) {
-    if (species==null || mapper==null) return Integer.toString(GeneID);
+  public static String toSymbol(int GeneID, GeneID2GeneSymbolMapper mapper) {
+    if (mapper==null) return Integer.toString(GeneID);
     String s=null;
     try {
       s = mapper.map(GeneID);

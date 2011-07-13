@@ -21,6 +21,12 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
   private int target;
   
   /**
+   * Optional and just for a nicer disaplying of data:
+   * The gene symbol of the target.
+   */
+  private String targetSymbol=null;
+  
+  /**
    * Experimental verified or predicted target
    */
   private boolean experimental;
@@ -121,6 +127,14 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
   public void setPValue(float value) {
     pValue = value;
   }
+  
+  public void setTargetSymbol(String targetSymbol) {
+    this.targetSymbol = targetSymbol;
+  }
+
+  public String getTargetSymbol() {
+    return targetSymbol;
+  }
 
   /* (non-Javadoc)
    * @see java.lang.Comparable#compareTo(java.lang.Object)
@@ -182,8 +196,16 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
    */
   @Override
   public String toString() {
-    return "[miRNAtarget " + target + (experimental?" experimental":" predicted") + 
+    return "[miRNAtarget " + getNiceTargetString() + (experimental?" experimental":" predicted") + 
     (source!=null?" source:\"" + source+"\"":"") + (Float.isNaN(pValue)?"":" pValueOrScore:" + pValue) + "]";
+  }
+  
+  /**
+   * @return the target gene symbol if set, else the target gene id.
+   */
+  public String getNiceTargetString() {
+    if (targetSymbol!=null && targetSymbol.length()>0) return targetSymbol;
+    else return Integer.toString(target);
   }
 
   /* (non-Javadoc)
@@ -218,6 +240,7 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
   @Override
   public miRNAtarget clone() {
     miRNAtarget t = new miRNAtarget(target, experimental, new String(source), pValue);
+    t.setTargetSymbol(this.getTargetSymbol());
     return t;
   }
 
@@ -234,7 +257,7 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
    */
   @Override
   public Object getObjectAtColumn(int colIndex) {
-    if (colIndex==0) return target;
+    if (colIndex==0) return getNiceTargetString();
     else if (colIndex==1) return experimental;
     else if (colIndex==2) return source;
     else if (colIndex==3) return pValue;
@@ -247,7 +270,7 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
    */
   @Override
   public String getColumnName(int colIndex) {
-    if (colIndex==0) return "Target GeneID";
+    if (colIndex==0) return "Target Gene" + (targetSymbol==null?"ID":"");
     else if (colIndex==1) return "Experimentally validated";
     else if (colIndex==2) return "Source";
     else if (colIndex==3) return "Score or p-value";

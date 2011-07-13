@@ -1,11 +1,14 @@
 package de.zbit.gui;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -15,13 +18,17 @@ import javax.swing.JToolBar;
 import javax.swing.UIManager;
 
 import de.zbit.data.EnrichmentObject;
+import de.zbit.data.NameAndSignals;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.IntegratorUI.Action;
 import de.zbit.math.BenjaminiHochberg;
 import de.zbit.math.Bonferroni;
 import de.zbit.math.BonferroniHolm;
+import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
+import de.zbit.util.ValuePair;
 
 /**
  * Actions for the {@link JToolBar} in {@link IntegratorTabWithTable}
@@ -29,8 +36,20 @@ import de.zbit.util.StringUtil;
  * @author Clemens Wrzodek
  */
 public class NameAndSignalTabActions implements ActionListener {
+  public static final transient Logger log = Logger.getLogger(NameAndSignalTabActions.class.getName());
   
+  /**
+   * The actual tab to perform actions on.
+   */
   IntegratorTabWithTable parent;
+  
+  /*
+   * MenuItems for statistical corrections. They are toggled, thus
+   * must be remembered to disable the others when one is selected.
+   */
+  JMenuItem BH_cor;
+  JMenuItem BFH_cor;
+  JMenuItem BO_cor;
   
   public NameAndSignalTabActions(IntegratorTabWithTable parent) {
     super();
@@ -53,7 +72,6 @@ public class NameAndSignalTabActions implements ActionListener {
     INTEGRATE,
     ADD_GENE_SYMBOLS,
     ANNOTATE_TARGETS,
-    CUTOFFS,
     FDR_CORRECTION_BH,
     FDR_CORRECTION_BFH,
     FDR_CORRECTION_BO;
@@ -73,6 +91,13 @@ public class NameAndSignalTabActions implements ActionListener {
       case ADD_GENE_SYMBOLS:
         return "Show gene symbols";
         
+      case FDR_CORRECTION_BH:
+        return "Benjamini Hochberg";
+      case FDR_CORRECTION_BFH:
+        return "Bonferroni Holm";
+      case FDR_CORRECTION_BO:
+        return "Bonferroni";
+        
       default:
         return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
       }
@@ -89,6 +114,13 @@ public class NameAndSignalTabActions implements ActionListener {
           return "Show a KEGG pathway and color nodes accoring to fold changes.";
         case ADD_GENE_SYMBOLS:
           return "Show Gene symbols as names, using a GeneID to gene symbol converter.";
+          
+        case FDR_CORRECTION_BH:
+          return "Correct p-values with the Benjamini and Hochberg method and save as q-values.";
+        case FDR_CORRECTION_BFH:
+          return "Correct p-values with the Holm–Bonferroni method and save as q-values.";
+        case FDR_CORRECTION_BO:
+          return "Correct p-values with the Bonferroni method and save as q-values.";
           
         default:
           return null; // Deactivate
@@ -123,9 +155,16 @@ public class NameAndSignalTabActions implements ActionListener {
     bar.add(enrichmentButton);
     
     // Visualize in Pathway
+    ActionCommand pathwayCommand;
+    if (tableContent.equals(EnrichmentObject.class)) {
+      pathwayCommand = KEGGPathwayActionListener.VISUALIZE_PATHWAY;
+    } else {
+      pathwayCommand = NSAction.VISUALIZE_IN_PATHWAY;
+    }
+    
     KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(parent);
     JButton showPathway = GUITools.createJButton(al2,
-        NSAction.VISUALIZE_IN_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
+        pathwayCommand, UIManager.getIcon("ICON_GEAR_16"));
     bar.add(showPathway);
     
     // Integrate (pair) data button
@@ -136,29 +175,28 @@ public class NameAndSignalTabActions implements ActionListener {
     }
     
     // Datatype specific buttons:
-    if (tableContent.equals(mRNA.class)) {
+    if (tableContent.equals(mRNA.class) || tableContent.equals(miRNAandTarget.class)
+        || tableContent.equals(miRNA.class)) {
       bar.add(GUITools.createJButton(this,
           NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_GEAR_16")));
       
-    } else if (tableContent.equals(miRNA.class)) {
+    } if (tableContent.equals(miRNA.class)) {
       bar.add(GUITools.createJButton(this,
           NSAction.ANNOTATE_TARGETS, UIManager.getIcon("ICON_GEAR_16")));
     
-    } else if (tableContent.equals(EnrichmentObject.class)) {
-      bar.add(GUITools.createJButton(this,
-          NSAction.CUTOFFS, UIManager.getIcon("ICON_GEAR_16")));
-//      bar.add(GUITools.createJButton(this,
-//          NSAction.FDR_CORRECTION_METHOD, UIManager.getIcon("ICON_GEAR_16")));
+    } if (tableContent.equals(EnrichmentObject.class)) {
       
-      JPopupMenu fdr = new JPopupMenu("FDR correction method");
-      JMenuItem BH_cor = GUITools.createJMenuItem(this,
+      JPopupMenu fdr = new JPopupMenu("FDR correction");
+      BH_cor = GUITools.createJMenuItem(this,
           NSAction.FDR_CORRECTION_BH, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class);
       fdr.add(BH_cor);
-      fdr.add(GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class));
-      fdr.add(GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class));
-      JDropDownButton fdrButton = new JDropDownButton("FDR correction method", 
+      BFH_cor = GUITools.createJMenuItem(this,
+          NSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class);
+      fdr.add(BFH_cor);
+      BO_cor = GUITools.createJMenuItem(this,
+          NSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class);
+      fdr.add(BO_cor);
+      JDropDownButton fdrButton = new JDropDownButton("FDR correction", 
           UIManager.getIcon("ICON_GEAR_16"), fdr);
       fdrButton.setToolTipText("Change the false-discovery-rate correction method.");
       
@@ -168,22 +206,13 @@ public class NameAndSignalTabActions implements ActionListener {
     
     /* TODO:
      * if (mRNA)
-     * - Show gene symbols as names
      * - Pair with miRNA
      * 
      * if (miRNA)
-     * - Annotate targets
      * - Pair with mRNA
      * 
      * if (EnrichmentObject)
      * - Cutoff für > pValue, qValue, list ratio
-     * - Change statistical correction
-     * 
-     * Always
-     * - Perform Enrichment => List...
-     * - Search table
-     * - Visualize in pathway
-     * - for (!EnrichmentObject) "integrate data" (pair data)
      * 
      * Eventuell
      * [- Add pathways] column with pathways for gene/ target
@@ -196,7 +225,7 @@ public class NameAndSignalTabActions implements ActionListener {
 
 
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void actionPerformed(ActionEvent e) {
     String command = e.getActionCommand();
@@ -217,30 +246,59 @@ public class NameAndSignalTabActions implements ActionListener {
       GUITools.showMessage("Not yet implemented.", "");
       
     } else if (command.equals(NSAction.ADD_GENE_SYMBOLS.toString())) {
+      IntegratorTab parent = this.parent;
+      if (parent.getDataContentType().equals(EnrichmentObject.class)) {
+        while (parent.getSourceTab()!=null) {
+          parent = parent.getSourceTab();
+        }
+      }
+      /*List<? extends mRNA> list=null;
+      if (parent.getDataContentType().equals(mRNA.class)) {
+        list = (List<? extends mRNA>) parent.getData();
+      } else if (pa)
+      }*/
       try {
-        mRNA.convertNamesToGeneSymbols((List<? extends mRNA>) parent.getData(), parent.getSpecies());
+        mRNA.convertNamesToGeneSymbols((List<? extends NameAndSignals>) parent.getData(), parent.getSpecies());
       } catch (Exception e1) {
         GUITools.showErrorMessage(parent, e1);
       }
       parent.getVisualization().repaint();
       
     } else if (command.equals(NSAction.ANNOTATE_TARGETS.toString())) {
-      // TODO: ...
-    } else if (command.equals(NSAction.CUTOFFS.toString())) {
-      // TODO: ...
+      ValuePair<miRNAtargets, Species> t_all = IntegratorGUITools.loadMicroRNAtargets(parent.getSpecies(false));
+      if (t_all==null || t_all.getA()==null) return;
+      int annot = miRNA.link_miRNA_and_targets(t_all.getA(), (Collection<miRNA>) parent.getData());
+      log.info(String.format("Annotated %s/%s microRNAs with targets.", annot, parent.getData().size()));
+      parent.rebuildTable();
+      parent.repaint();
+
     } else if (command.equals(NSAction.FDR_CORRECTION_BH.toString())) {
+      BFH_cor.setSelected(false); BO_cor.setSelected(false); BH_cor.setSelected(true);
       new BenjaminiHochberg().setQvalue((List<EnrichmentObject<Object>>) parent.getData());
       parent.getVisualization().repaint();
       
     } else if (command.equals(NSAction.FDR_CORRECTION_BFH.toString())) {
+      BFH_cor.setSelected(true); BO_cor.setSelected(false); BH_cor.setSelected(false);
       new BonferroniHolm().setQvalue((List<EnrichmentObject<Object>>) parent.getData());
       parent.getVisualization().repaint();
       
     } else if (command.equals(NSAction.FDR_CORRECTION_BO.toString())) {
+      BFH_cor.setSelected(false); BO_cor.setSelected(true); BH_cor.setSelected(false);
       new Bonferroni().setQvalue((List<EnrichmentObject<Object>>) parent.getData());
       parent.getVisualization().repaint();
     }
   }
+  
+  
+  public synchronized void updateToolbarButtons(JToolBar toolBar) {
+    boolean state = parent.getData()!=null;
+    for (Component c: toolBar.getComponents()) {
+      c.setEnabled(state);
+    }
+    // Example usage for single state change:
+    //GUITools.setEnabled(state, toolBar, TPAction.HIGHLIGHT_ENRICHED_GENES);
+  }
+
   
   
 

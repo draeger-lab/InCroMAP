@@ -5,6 +5,8 @@
 package de.zbit.gui;
 
 import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -23,6 +25,7 @@ import de.zbit.parser.Species;
 import de.zbit.util.BooleanRendererYesNo;
 import de.zbit.util.JTableTools;
 import de.zbit.util.ScientificNumberRenderer;
+import de.zbit.util.SortedArrayList;
 
 /**
  * A {@link TableModel} that can be used to visualize a {@link TableResult} class as {@link JTable}.
@@ -126,7 +129,13 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
       columnIndex = columnIndex-1;
     }
     if (ns.size()<1) return super.getColumnClass(columnIndex);
-    Object o = ns.get(0).getObjectAtColumn(columnIndex);
+    
+    // Get first non-null object in column
+    Object o = null; int i=0;
+    while (o==null && i<ns.size()) {
+      o = ns.get(i++).getObjectAtColumn(columnIndex);
+    }
+    
     Class<?> c = o!=null?o.getClass():null;
     if (c==null) return super.getColumnClass(columnIndex);
     return c;
@@ -239,7 +248,15 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     table.setDefaultRenderer(Double.class, rend);
     table.setDefaultRenderer(Float.class, rend);
     table.setDefaultRenderer(Boolean.class, new BooleanRendererYesNo());
+    
     table.setDefaultRenderer(HashSet.class, new IterableRenderer(spec));
+    table.setDefaultRenderer(SortedArrayList.class, new IterableRenderer(spec));
+    table.setDefaultRenderer(ArrayList.class, new IterableRenderer(spec));
+    
+    // Cannot refer directly to "java.util.HashMap$Values".
+    HashMap<String,String> map = new HashMap<String,String>();
+    map.put("test", "test");
+    table.setDefaultRenderer(map.values().getClass(), new IterableRenderer(spec));
     //table.setDefaultRenderer(RowIndex.class, RowIndex.getRowHeaderRenderer(table));
     
     // Allow searching

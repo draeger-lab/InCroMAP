@@ -61,6 +61,9 @@ public class miRNA extends NameAndSignals {
       if (targets2!=null) {
         m.setTargets(targets2);
         matched++;
+      } else {
+        // Remove all old targets
+        m.setTargets(null);
       }
     }
     return matched;
@@ -74,11 +77,13 @@ public class miRNA extends NameAndSignals {
    * @param targets
    */
   public void setTargets(Collection<miRNAtarget> targets) {
-    if (!(targets instanceof List)) {
-      // Ensure that we have a list.
-      targets = new ArrayList<miRNAtarget>(targets);
+    if (targets!=null) {
+      if (!(targets instanceof List)) {
+        // Ensure that we have a list.
+        targets = new ArrayList<miRNAtarget>(targets);
+      }
+      Collections.sort((List<miRNAtarget>)targets);
     }
-    Collections.sort((List<miRNAtarget>)targets);
     this.targets = (List<miRNAtarget>) targets;
   }
 
@@ -132,6 +137,7 @@ public class miRNA extends NameAndSignals {
    * @return list of targets for this miRNA
    */
   public List<miRNAtarget> getTargets() {
+    if (targets==null) return null;
     return Collections.unmodifiableList(targets);
   }
 
@@ -212,6 +218,37 @@ public class miRNA extends NameAndSignals {
     nm.targets = (List<miRNAtarget>) NameAndSignals.cloneCollection(targets);
     return nm;
   }
+  
+  @Override
+  public int getColumnCount() {
+    // hasTargets() check is here wrong, because if the first item of
+    // n has no targets, no target column will be used for any!
+    return super.getColumnCount() + 1;
+  }
+  
+  @Override
+  public String getColumnName(int columnIndex) {
+    if (columnIndex<super.getColumnCount()) {
+      return super.getColumnName(columnIndex);
+    } else {
+      return "Targets";
+    }
+  }
+  
+  @Override
+  public Object getObjectAtColumn(int columnIndex) {
+    if (columnIndex<super.getColumnCount()) {
+      return super.getObjectAtColumn(columnIndex);
+    } else {
+      if (hasTargets()) {
+        return getUniqueTargets();
+      } else {
+        return null;
+      }
+    }
+    
+  }
+  
 
 
 }

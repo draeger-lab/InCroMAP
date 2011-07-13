@@ -9,6 +9,7 @@ import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.FlowLayout;
 import java.awt.Frame;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -22,7 +23,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -35,12 +38,15 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
 import de.zbit.analysis.enrichment.AbstractEnrichment;
 import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.CSVImporterV2.CSVImporterV2;
 import de.zbit.io.OpenFile;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
@@ -185,11 +191,11 @@ public class IntegratorGUITools {
    * @return
    */
   public static JPopupMenu createKeggPathwayPopup(KEGGPathwayActionListener l, JPopupMenu append) {
+    JMenuItem showPathway = GUITools.createJMenuItem(l,
+        KEGGPathwayActionListener.VISUALIZE_PATHWAY,
+        UIManager.getIcon("ICON_GEAR_16"));
     
-    JMenuItem jm = new JMenuItem("Visualize pathway");
-    jm.setActionCommand(KEGGPathwayActionListener.VISUALIZE_PATHWAY);
-    append.add(jm);
-    jm.addActionListener(l);
+    append.add(showPathway);
     
     return append;
   }
@@ -319,6 +325,20 @@ public class IntegratorGUITools {
    */
   @SuppressWarnings("rawtypes")
   public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorUI ui, IntegratorTab initialSelection) {
+    return showSelectExperimentBox(ui, initialSelection, null);
+  }
+  
+
+  /**
+   * Shows a signal selection box.
+   * @param <T>
+   * @param ui
+   * @param initialSelection
+   * @param dialogTitle
+   * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.
+   */
+  @SuppressWarnings("rawtypes")
+  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorUI ui, IntegratorTab initialSelection, String dialogTitle) {
     final JPanel jp = new JPanel(new BorderLayout());
     int initialSelIdx=0;
     
@@ -358,7 +378,8 @@ public class IntegratorGUITools {
       });
       
       // Show and evaluate dialog
-      int ret = JOptionPane.showConfirmDialog(ui, jp, UIManager.getString("OptionPane.titleText"), JOptionPane.OK_CANCEL_OPTION);
+      if (dialogTitle==null) dialogTitle = UIManager.getString("OptionPane.titleText");
+      int ret = JOptionPane.showConfirmDialog(ui, jp, dialogTitle, JOptionPane.OK_CANCEL_OPTION);
       if (ret==JOptionPane.OK_OPTION) {
         ValuePair<String, SignalType> expSignal = (ValuePair<String, SignalType>) selExpBox.getSelectedItem();
         return new ValueTriplet<NameAndSignalsTab, String, SignalType>(
@@ -454,5 +475,104 @@ public class IntegratorGUITools {
     }
     return (GeneID2GeneSymbolMapper) mapper;
   }
+  
+  /**
+   * Load and filter microRNA targets.
+   * @param species if null, user will be asked for a species.
+   * @return
+   */
+  public static ValuePair<miRNAtargets, Species> loadMicroRNAtargets(Species species) {
+    
+    // Initialize panel and place organism selector on top.
+    JPanel p = new JPanel();
+    LayoutHelper lh = new LayoutHelper(p);
+    JLabeledComponent orgSel = null;
+    if (species==null) {
+      orgSel = getOrganismSelector();
+      lh.add(orgSel);
+    }
+    
+    // Create only experimental button
+    final JCheckBox onlyExperimental = new JCheckBox("Only experimentally validated targets");
+    onlyExperimental.setSelected(false);
+    lh.add(onlyExperimental);
+    
+    // One button per data source
+    JPanel dbs = new JPanel(new GridLayout(6, 1));
+    final JCheckBox miRecords = new JCheckBox("miRecords v3", true);
+    final JCheckBox miRTarBase = new JCheckBox("miRTarBase", true);
+    final JCheckBox tarBase = new JCheckBox("TarBase V5.0", true);
+    
+    final JCheckBox DIANA = new JCheckBox("DIANA - microT v3.0", true);
+    final JCheckBox ElMMo = new JCheckBox("ElMMo v4", true);
+    final JCheckBox TargetScan = new JCheckBox("TargetScan v5.1", true);
+    DIANA.setToolTipText("Predicted \"" + DIANA.getText() + "\" targets. Only high confidence targets are included.");
+    ElMMo.setToolTipText("Predicted \"" + ElMMo.getText() + "\" targets. Only high confidence targets are included.");
+    TargetScan.setToolTipText("Predicted \"" + TargetScan.getText() + "\" targets. Only high confidence targets are included.");
+    
+    dbs.add(miRecords); dbs.add(miRTarBase); dbs.add(tarBase);
+    dbs.add(DIANA); dbs.add(ElMMo); dbs.add(TargetScan);
+    dbs.setBorder(BorderFactory.createTitledBorder("Select databases to load"));
+    lh.add(dbs);
+    
+    // Enable and disable predictions on only-experimental click
+    onlyExperimental.addChangeListener(new ChangeListener() {
+      @Override
+      public void stateChanged(ChangeEvent e) {
+        boolean state=true;
+        if (onlyExperimental.isSelected()) {
+          state=false;
+        }
+        DIANA.setEnabled(state);
+        ElMMo.setEnabled(state);
+        TargetScan.setEnabled(state);
+      }
+    });
+    
+    // Ask user
+    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), p, 
+        "Please select microRNA targets to load.", JOptionPane.OK_CANCEL_OPTION);
+    if (ret==JOptionPane.OK_OPTION) {
+      if (orgSel!=null) species = (Species) orgSel.getSelectedItem();
+      log.info("Loading microRNA target file for " + species + ".");
+      
+      // Load targets
+      miRNAtargets t_all;
+      // XXX: Show loading message here.
+      try {
+        t_all = (miRNAtargets) Utils.loadGZippedObject(
+          OpenFile.searchFileAndGetInputStream("miRNA_targets/" + species.getNCBITaxonID() + "_HC.dat"));
+        if (t_all==null) throw new IOException("Could not read miRNA target file.");
+      } catch (IOException e) {
+        GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
+        return null;
+      }
+      
+      // Filter targets
+      if (onlyExperimental.isSelected()) t_all.filterTargetsOnlyExperimental();
+      if (!miRecords.isSelected()) t_all.removeTargetsFrom("miRecords");
+      if (!miRTarBase.isSelected()) t_all.removeTargetsFrom("miRTarBase");
+      if (!tarBase.isSelected()) t_all.removeTargetsFrom("TarBase");
+      if (!DIANA.isSelected()) t_all.removeTargetsFrom("DIANA");
+      if (!ElMMo.isSelected()) t_all.removeTargetsFrom("ElMMo");
+      if (!TargetScan.isSelected()) t_all.removeTargetsFrom("TargetScan");
+      
+      log.info(StatusBar.defaultText);
+      return new ValuePair<miRNAtargets, Species>(t_all, species);
+    }
+    return null;
+  }
     
 }
+
+
+
+
+
+
+
+
+
+
+
+

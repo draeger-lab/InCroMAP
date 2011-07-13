@@ -52,6 +52,7 @@ import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.Utils;
+import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 import de.zbit.util.logging.LogUtil;
 import de.zbit.util.prefs.KeyProvider;
@@ -262,13 +263,13 @@ public class IntegratorUI extends BaseFrame {
         GUITools.hideSplashScreen();
         ui.toFront();
         
-        try {
+        /*try {
           mRNAReader r = mRNAReader.getExampleReader();
           Collection<mRNA> c = r.read("mRNA_data_new.txt");
           ui.addTab(new NameAndSignalsTab(ui, c, IntegratorGUITools.organisms.get(1)), "Example");
         } catch (Exception e) {
           e.printStackTrace();
-        }
+        }*/
       }
     });
     
@@ -379,6 +380,36 @@ public class IntegratorUI extends BaseFrame {
           };
   }
   
+  @Override
+  protected JMenu[] additionalMenus() {
+    
+    JMenu tab = new JMenu("Import data");
+    
+    JMenuItem lmRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMRNAfile"),
+        Action.LOAD_MRNA, UIManager.getIcon("ICON_OPEN_16"));
+      
+    JMenuItem lmiRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMiRNAfile"),
+        Action.LOAD_MICRO_RNA, UIManager.getIcon("ICON_OPEN_16"));
+      
+    JMenuItem genelist = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "showInputGenelistDialog"),
+        Action.INPUT_GENELIST, UIManager.getIcon("ICON_OPEN_16"));
+
+    JMenuItem miRNAtargets = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "showMicroRNAtargets"),
+        Action.SHOW_MICRO_RNA_TARGETS, UIManager.getIcon("ICON_GEAR_16"));
+
+    JMenuItem newPathway = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openPathwayTab"),
+        Action.NEW_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
+
+    tab.add(lmRNA);
+    tab.add(lmiRNA);
+    tab.addSeparator();
+    tab.add(genelist);
+    tab.add(miRNAtargets);
+    tab.add(newPathway);
+    
+    return new JMenu[]{tab};
+  }
+  
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#createJToolBar()
    */
@@ -434,8 +465,6 @@ public class IntegratorUI extends BaseFrame {
       
       JButton newPathway = GUITools.createJButton(EventHandler.create(ActionListener.class, this, "openPathwayTab"),
         Action.NEW_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
-      
-      // TODO: Add these options also as additionalFileMenuEntries.
       
       r.add(loadDataButton);
       r.add(genelist);
@@ -493,40 +522,10 @@ public class IntegratorUI extends BaseFrame {
    * for this organism.
    */
   public void showMicroRNAtargets() {
-    /* TODO: 
-     * - Implement a central loadTargets method
-     * - With Filter for
-     *   - EXperimental?
-     *     - DIANA - microT v3.0
-     *     - ElMMo v4
-     *     - TargetScan v5.1
-     *     
-     *     - miRecords_v3
-     *     - miRTarBase (SE)
-     *       - miRTarBase (WE)
-     *     - TarBase V5.0
-     */
-    final Species species = IntegratorGUITools.showOrganismSelectorDialog(this);
-    if (species!=null) {
-      SwingWorker<Collection<? extends NameAndSignals>, Void> worker = new SwingWorker<Collection<? extends NameAndSignals>, Void>() {
-        @Override
-        protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
-          miRNAtargets t_all;
-          try {
-            t_all = (miRNAtargets) Utils.loadGZippedObject(
-              OpenFile.searchFileAndGetInputStream("miRNA_targets/" + species.getNCBITaxonID() + "_HC.dat"));
-            if (t_all==null) throw new IOException("Could not read miRNA target file.");
-            return miRNAandTarget.getList(t_all);
-          } catch (IOException e) {
-            GUITools.showErrorMessage(instance, e);
-            return null;
-          }
-        }
-      };
-      
-      // Add as tab
-      addTab(new NameAndSignalsTab(this, worker, "Loading miRNA targets.", species), "miRNA targets (" + species.getCommonName() + ")");
-    }
+    ValuePair<miRNAtargets, Species> vp = IntegratorGUITools.loadMicroRNAtargets(null);
+
+    // Add as tab
+    addTab(new NameAndSignalsTab(this, vp.getA(), vp.getB()), "miRNA targets (" + vp.getB().getCommonName() + ")");
   }
   
   public void openPathwayTab() {
@@ -563,6 +562,11 @@ public class IntegratorUI extends BaseFrame {
     GUITools.setEnabled(false, getJMenuBar(), BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
     BaseFrameTab o = getCurrentlySelectedPanel();
     if (o != null) {
+      if (o instanceof TranslatorPanel) {
+        TranslatorTabActions actions = new TranslatorTabActions((TranslatorPanel)o);
+        actions.createJToolBarItems(toolBar);
+        actions.updateToolbarButtons(toolBar);
+      }
       o.updateButtons(getJMenuBar(), getJToolBar());
     } else {
       // Reset toolbar

@@ -126,7 +126,11 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
   @Override
   protected miRNA createObject(String name, String[] line) {
     String probeName = probeNameCol>=0?line[probeNameCol]:null;
-    miRNA m = new miRNA(name, probeName);
+    miRNA m;
+    if (probeName!=null)
+      m = new miRNA(name, probeName);
+    else
+      m = new miRNA(name);
     return m;
   }
   

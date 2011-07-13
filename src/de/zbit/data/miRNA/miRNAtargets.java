@@ -25,7 +25,7 @@ import de.zbit.util.SortedArrayList;
  * A class to hold miRNA and collections of targets.
  * @author Clemens Wrzodek
  */
-public class miRNAtargets implements Serializable, CSVwriteable {
+public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRNAtargets> {
   private static final long serialVersionUID = -7099618219166758343L;
   
   /**
@@ -372,6 +372,39 @@ public class miRNAtargets implements Serializable, CSVwriteable {
    */
   public void printSummary() {
     System.out.println("miRNAs:" + size() + " targets:"+ sizeOfTargets() + " unique_targets:"+ sizeOfUniqueTargets() + " unique_experimental_targets:"+ sizeOfUniqueTargets(true));
+  }
+
+
+  /**
+   * Removes all targets from a specific source
+   * @param sourceNameStartingWith remove all targets whose source-string
+   * is starting with this string.
+   */
+  public void removeTargetsFrom(String sourceNameStartingWith) {
+    // Filter all miRNAs
+    Iterator<Map.Entry<String, Collection<miRNAtarget>>> tit = targets.entrySet().iterator();
+    while (tit.hasNext()) {
+      Map.Entry<String, Collection<miRNAtarget>> e = tit.next();
+      Collection<miRNAtarget> targetList = e.getValue();
+      
+      // Filter list of targets
+      Iterator<miRNAtarget> it = targetList.iterator();
+      while (it.hasNext()) {
+        miRNAtarget t = it.next();
+        if (t.getSource()!=null && t.getSource().startsWith(sourceNameStartingWith)) {
+          it.remove();
+        }
+      }
+      
+      // Remove miRNAs without targets
+      if (targetList.size()<1) tit.remove();
+    }
+  }
+
+
+  @Override
+  public int compareTo(miRNAtargets o) {
+    return toString().compareTo(o.toString());
   }
   
 }

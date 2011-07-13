@@ -175,6 +175,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    */
   public Collection<ValuePair<String, SignalType>> getSignalNames() {
     Set<ValuePair<String, SignalType>> sn = new HashSet<ValuePair<String, SignalType>>();
+    if (signals==null) return sn;
     for (Signal sig : signals) {
       sn.add(new ValuePair<String, SignalType>(sig.getName(), sig.getType()));
     }
@@ -340,10 +341,11 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @param m {@link MergeType} that defines how to merge numbers.
    * @return
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static Object mergeAbstract(Collection c, MergeType m) {
     if (c==null ||c.size()<1) return null;
     Object o = c.iterator().next();
+    if (o==null) return null;
     
     if (NameAndSignals.class.isAssignableFrom(o.getClass()) || o instanceof NameAndSignals) {
       // Case 1: Mergeable NameAndSignals
@@ -470,7 +472,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @param col
    * @return
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   protected static <T> Collection<T> cloneCollection(Collection<T> col) {
     if (col==null) return null;
     Object clone = Reflect.invokeIfContains(col, "clone");
@@ -719,7 +721,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     } else if (o instanceof miRNA) {
       miRNA mi = ((miRNA)o);
       if (!mi.hasTargets()) {
-        log.warning("miRNA " +o+ " has no annotated targets.");
+        //log.warning("miRNA " +o+ " has no annotated targets.");
       } else {
         for (miRNAtarget t: mi.getTargets()) {
           geneIds.add(t.getTarget());
