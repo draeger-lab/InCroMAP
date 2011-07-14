@@ -21,24 +21,27 @@ public interface PathwayVisualizationOptions extends KeyProvider {
    * color. Higher fold changes have the same color, towards zero, the color is
    * getting lighter.
    */
-  public static Option<Float> FC_FOR_MAX_COLOR = new Option<Float>("FC_FOR_MAX_COLOR", Float.class,
+  public static Option<Float> FOLD_CHANGE_FOR_MAXIMUM_COLOR = new Option<Float>("FOLD_CHANGE_FOR_MAXIMUM_COLOR", Float.class,
       "Min/Max (symmetric) fold change that is being assigned the full color.",
-      new Range<Float>(Float.class, "{[1.0,100.0]}"),2.0f);
+      new Range<Float>(Float.class, "{[1.0,1000.0]}"),1.5f);
   
-  public static Option<Color> COLOR_FOR_MIN_FC = new Option<Color>("COLOR_FOR_MIN_FC", Color.class,
-      "Color for minimum fold change.", Color.BLUE);
+  public static Option<Color> COLOR_FOR_MINIMUM_FOLD_CHANGE = new Option<Color>("COLOR_FOR_MINIMUM_FOLD_CHANGE", Color.class,
+      "Color for minimum fold change.", new Color(0,153,255)); // Color.BLUE.brighter() is too dark to read black captions
   
-  public static Option<Color> COLOR_FOR_NO_FC = new Option<Color>("COLOR_FOR_NO_FC", Color.class,
-      "Color for no fold change.", Color.WHITE);
+  public static Option<Color> COLOR_FOR_NO_FOLD_CHANGE = new Option<Color>("COLOR_FOR_NO_FOLD_CHANGE", Color.class,
+      "Color for no fold change (log(fc)=0 or rawFC=1).", Color.WHITE);
   
-  public static Option<Color> COLOR_FOR_MAX_FC = new Option<Color>("COLOR_FOR_MAX_FC", Color.class,
+  public static Option<Color> COLOR_FOR_MAXIMUM_FOLD_CHANGE = new Option<Color>("COLOR_FOR_MAXIMUM_FOLD_CHANGE", Color.class,
       "Color for maximum fold change.", Color.RED);
+
+  public static Option<Color> COLOR_FOR_NO_VALUE = new Option<Color>("COLOR_FOR_NO_VALUE", Color.class,
+      "Color for nodes, with no fold change in the input dataset (unaffected nodes).", Color.LIGHT_GRAY);
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static final OptionGroup PATHWAY_COLORING_OPTIONS = new OptionGroup(
       "Pathway coloring options",
       "Define various options that control the fold-change dependent coloring of pathway nodes.",
-      FC_FOR_MAX_COLOR, COLOR_FOR_MIN_FC, COLOR_FOR_NO_FC, COLOR_FOR_MAX_FC);
+      FOLD_CHANGE_FOR_MAXIMUM_COLOR, COLOR_FOR_MINIMUM_FOLD_CHANGE, COLOR_FOR_NO_FOLD_CHANGE, COLOR_FOR_MAXIMUM_FOLD_CHANGE, COLOR_FOR_NO_VALUE);
   
   
   

@@ -4,6 +4,7 @@
 package de.zbit.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,6 +27,7 @@ import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.TranslatorTabActions.TPAction;
+import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.PathwaySelector;
@@ -35,6 +37,7 @@ import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
+import de.zbit.util.prefs.SBPreferences;
 
 /**
  * An {@link ActionListener} that can visualize KEGG Pathways
@@ -105,9 +108,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       if (source.getData()!=null && (source.getData() instanceof EnrichmentObject<?>) ) {
         // Highlight source genes
         Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData()).getGeneIDsFromGenesInClass();
-        TranslatorTools tools = new TranslatorTools(source);
-        tools.highlightGenes(geneIDs);
-        source.repaint();
+        hightlightGenes(source, geneIDs);
       }
       
     } else if (e.getActionCommand().equals(TranslatorUI.Action.OPEN_PATHWAY.toString())) {
@@ -158,8 +159,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         } if (r!=0 && source.getData()!=null && (source.getData() instanceof EnrichmentObject<?>) ) {
           // Highlight source genes
           Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData()).getGeneIDsFromGenesInClass();
-          TranslatorTools tools = new TranslatorTools(source);
-          tools.highlightGenes(geneIDs);
+          hightlightGenes(source, geneIDs);
         }
       }
       
@@ -192,6 +192,20 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     tp.repaint();
   }
   
+  
+  /**
+   * Highlight nodes with given geneIDs.
+   * @param source
+   * @param geneIDs
+   */
+  private void hightlightGenes(TranslatorPanel source, Iterable<Integer> geneIDs) {
+    SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
+    Color colorForUnaffectedNodes = PathwayVisualizationOptions.COLOR_FOR_NO_VALUE.getValue(prefs);
+    Color affectedColor = PathwayVisualizationOptions.COLOR_FOR_MAXIMUM_FOLD_CHANGE.getValue(prefs);
+    TranslatorTools tools = new TranslatorTools(source);
+    tools.highlightGenes(geneIDs,affectedColor, colorForUnaffectedNodes, true);
+    source.repaint();
+  }
   
   /**
    * Download the pathways, selected in the source {@link JTable} and

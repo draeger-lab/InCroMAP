@@ -11,7 +11,6 @@ import java.beans.EventHandler;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -28,7 +27,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -41,7 +39,6 @@ import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.io.NameAndSignalReader;
-import de.zbit.io.OpenFile;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.kegg.KEGGtranslatorOptions;
@@ -51,7 +48,6 @@ import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
-import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 import de.zbit.util.logging.LogUtil;
@@ -142,7 +138,11 @@ public class IntegratorUI extends BaseFrame {
     /**
      * {@link Action} to show a pathway selection dialog. 
      */
-    NEW_PATHWAY;
+    NEW_PATHWAY,
+    /**
+     * Creates pictures for many observations and pathways.
+     */
+    BATCH_PATHWAY_VISUALIZATION;
     
     /*
      * (non-Javadoc)
@@ -192,6 +192,8 @@ public class IntegratorUI extends BaseFrame {
           return "Show raw microRNA targets for an organism.";
         case NEW_PATHWAY:
           return "Download and visualize a KEGG pathway.";
+        case BATCH_PATHWAY_VISUALIZATION:
+          return "Batch color nodes in various pathways according to observations and save these pictures as images.";  
           
         default:
           return "";
@@ -263,13 +265,10 @@ public class IntegratorUI extends BaseFrame {
         GUITools.hideSplashScreen();
         ui.toFront();
         
-        /*try {
+        try {
           mRNAReader r = mRNAReader.getExampleReader();
-          Collection<mRNA> c = r.read("mRNA_data_new.txt");
-          ui.addTab(new NameAndSignalsTab(ui, c, IntegratorGUITools.organisms.get(1)), "Example");
-        } catch (Exception e) {
-          e.printStackTrace();
-        }*/
+          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example");
+        } catch (Exception e) {e.printStackTrace();}
       }
     });
     
@@ -383,7 +382,10 @@ public class IntegratorUI extends BaseFrame {
   @Override
   protected JMenu[] additionalMenus() {
     
-    JMenu tab = new JMenu("Import data");
+    /*
+     * Import data tab.
+     */
+    JMenu importData = new JMenu("Import data");
     
     JMenuItem lmRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMRNAfile"),
         Action.LOAD_MRNA, UIManager.getIcon("ICON_OPEN_16"));
@@ -400,14 +402,21 @@ public class IntegratorUI extends BaseFrame {
     JMenuItem newPathway = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openPathwayTab"),
         Action.NEW_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
 
-    tab.add(lmRNA);
-    tab.add(lmiRNA);
-    tab.addSeparator();
-    tab.add(genelist);
-    tab.add(miRNAtargets);
-    tab.add(newPathway);
+    importData.add(lmRNA);
+    importData.add(lmiRNA);
+    importData.addSeparator();
+    importData.add(genelist);
+    importData.add(miRNAtargets);
+    importData.add(newPathway);
     
-    return new JMenu[]{tab};
+    /*
+     * Tools tab.
+     */
+    JMenu tools = new JMenu("Tools");
+    tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorGUITools(), "showBatchPathwayDialog"),
+      Action.BATCH_PATHWAY_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
+    
+    return new JMenu[]{importData, tools};
   }
   
   /* (non-Javadoc)

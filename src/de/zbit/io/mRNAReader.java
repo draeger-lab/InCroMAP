@@ -10,8 +10,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import de.zbit.data.NameAndSignals;
@@ -72,6 +74,11 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
    * to the primary identifier (which is the most machine readable id).
    */
   private int preferredNameColumn=-1;
+  
+  /**
+   * Remember already issued warnings to not issue it multiple times.
+   */
+  private Set<String> issuedWarnings = new HashSet<String>();
   
   /**
    * @return  This method returns all {@link ExpectedColumn}s required
@@ -272,7 +279,12 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
         geneID = Integer.parseInt(name);
         if (geneID<=0) geneID=null;
       } catch (NumberFormatException e) {
-        log.warning("Could not parse GeneID from String '" + name + "'.");
+        String warning = String.format("Could not parse GeneID from String '%s'.", name);
+        if (!issuedWarnings.contains(warning)) {
+          log.warning(warning);
+          issuedWarnings.add(warning);
+        }
+        
         geneID=null;
       }
       

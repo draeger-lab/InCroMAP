@@ -66,17 +66,23 @@ public class LinearRescale {
     // Interval 0 = from first element in targetminMax to the second, and so on
     int interval = (int) (r/newIntervalThreshold);
     
+    // Ensure furthermore an interval from 0<=interval<=targetMinMax.size()
+    interval = Math.min(interval, targetMinMax.size()-1);
+    int upperInterval = Math.min(interval+1, targetMinMax.size()-1);
+    interval = Math.max(interval, 0);
+    upperInterval = Math.max(upperInterval, 0);
+    
     double oldMin = min+interval*newIntervalThreshold;
     double oldMax = oldMin+newIntervalThreshold;
     
     Double newMin=targetMinMax.get(interval);
-    Double newMax=targetMinMax.get(interval+1<targetMinMax.size()?interval+1:interval);
+    Double newMax=targetMinMax.get(upperInterval);
     
     return Utils.normalize(n.doubleValue(),oldMin,oldMax,newMin,newMax);
   }
   
   public static void main(String[] args) {
-    LinearRescale lr = new LinearRescale(-5,5,0,50,255);
+    LinearRescale lr = new LinearRescale(-5,5,2,50,255);
     for (int i=-5; i<6; i++) {
       System.out.print(i+ ": ");
       System.out.println(lr.rescale(i));

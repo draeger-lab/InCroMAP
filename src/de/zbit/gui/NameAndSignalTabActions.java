@@ -140,7 +140,6 @@ public class NameAndSignalTabActions implements ActionListener {
     bar.setName(uniqueName);
     
     
- // TODO: Create a temporary batch button.
     
     // Search
     JButton search = GUITools.createJButton(this,

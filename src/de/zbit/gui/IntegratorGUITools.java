@@ -7,6 +7,7 @@ package de.zbit.gui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dialog;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
@@ -17,18 +18,24 @@ import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.AbstractListModel;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -36,6 +43,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
@@ -49,6 +57,10 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.CSVImporterV2.CSVImporterV2;
 import de.zbit.io.OpenFile;
+import de.zbit.io.SBFileFilter;
+import de.zbit.kegg.Translator;
+import de.zbit.kegg.gui.PathwaySelector;
+import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
@@ -330,6 +342,28 @@ public class IntegratorGUITools {
   
 
   /**
+   * @return a list with tab names and actual tabs for every {@link NameAndSignalsTab} that contains
+   * {@link NameAndSignals} objects with signals.
+   */
+  public static List<LabeledObject<NameAndSignalsTab>> getNameAndSignalTabsWithSignals() {
+    IntegratorUI ui = IntegratorUI.getInstance();
+    List<LabeledObject<NameAndSignalsTab>> datasets = new LinkedList<LabeledObject<NameAndSignalsTab>>();
+    for (int i=0; i<ui.getTabbedPane().getTabCount(); i++) {
+      Component c = ui.getTabbedPane().getComponentAt(i);
+      if (c instanceof NameAndSignalsTab) {
+        //Class<?> cl = ((NameAndSignalsTab)c).getDataContentType(); 
+        //if (cl.equals(mRNA.class) || cl.equals(miRNA.class)) {
+        if (((NameAndSignalsTab)c).getSourceTab()==null && // Data has not been derived, but read from disk!
+            ((NameAndSignals)((NameAndSignalsTab)c).getExampleData()).hasSignals()) {
+          datasets.add(new LabeledObject<NameAndSignalsTab>(
+              ui.getTabbedPane().getTitleAt(i), (NameAndSignalsTab) c));
+        }
+      }
+    }
+    return datasets;
+  }
+  
+  /**
    * Shows a signal selection box.
    * @param <T>
    * @param ui
@@ -342,22 +376,17 @@ public class IntegratorGUITools {
     final JPanel jp = new JPanel(new BorderLayout());
     int initialSelIdx=0;
     
-    // Create a list of available datasets
-    List<LabeledObject> datasets = new LinkedList<LabeledObject>();
-    for (int i=0; i<ui.getTabbedPane().getTabCount(); i++) {
-      Component c = ui.getTabbedPane().getComponentAt(i);
-      if (c instanceof NameAndSignalsTab) {
-        //Class<?> cl = ((NameAndSignalsTab)c).getDataContentType(); 
-        //if (cl.equals(mRNA.class) || cl.equals(miRNA.class)) {
-        if (((NameAndSignalsTab)c).getSourceTab()==null && // Data has not been derived, but read from disk!
-            ((NameAndSignals)((NameAndSignalsTab)c).getExampleData()).hasSignals()) {
-          if (initialSelection!=null && c.equals(initialSelection)) initialSelIdx=datasets.size();
-          datasets.add(new LabeledObject(ui.getTabbedPane().getTitleAt(i), c));
-        }
+    // Create a list of available datasets and get initial selection.
+    List<LabeledObject<NameAndSignalsTab>> datasets = getNameAndSignalTabsWithSignals();
+    for (int i=0; i<datasets.size(); i++) {
+      Component c = datasets.get(i).getObject();
+      if (initialSelection!=null && c.equals(initialSelection)) {
+        initialSelIdx=i;
+        break;
       }
     }
     if (datasets.size()<1) {
-      GUITools.showMessage("Could not find any input datasets.", ui.getApplicationName());
+      GUITools.showMessage("Could not find any input datasets with observations.", ui.getApplicationName());
       return null;
     } else {
       final JLabeledComponent dataSelect = new JLabeledComponent("Select a dataset",true,datasets);
@@ -561,6 +590,129 @@ public class IntegratorGUITools {
       return new ValuePair<miRNAtargets, Species>(t_all, species);
     }
     return null;
+  }
+
+  /**
+   * Lets the user choose pathways and observations and a output format. Batch creates a 
+   * picture for every pathway and observation.
+   */
+  public static void showBatchPathwayDialog() {
+
+    // Create a list of available datasets and signals.
+    List<LabeledObject<NameAndSignalsTab>> datasets = getNameAndSignalTabsWithSignals();
+    if (datasets.size()<1) {
+      GUITools.showMessage("Could not find any input datasets with observations.", IntegratorUI.appName);
+      return;
+    }
+    List<LabeledObject<ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>>>> labeledSignals
+      = new ArrayList<LabeledObject<ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>>>>();
+    
+    // Looks complicated but isn't. Create a list with labels and pair of NSTab and Signal in nsTab.
+    for (LabeledObject<NameAndSignalsTab> l: datasets) {
+      for (ValuePair<String, SignalType> sigVp: ((NameAndSignals)l.getObject().getExampleData()).getSignalNames() ) {
+        String label = String.format("%s: %s [%s]", l.getLabel(), sigVp.getA(), sigVp.getB());
+        labeledSignals.add(new LabeledObject<ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>>>(
+            label, new ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>>(l.getObject(), sigVp)));
+      }
+    }
+      
+      
+      
+    // Initialize panel and place organism selector on top.
+    JPanel p = new JPanel();
+    LayoutHelper lh = new LayoutHelper(p);
+    
+    // Create experiments list
+    final JList experiments = new JList(labeledSignals.toArray());
+    experiments.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+    JScrollPane expScroll = new JScrollPane(experiments);
+    expScroll.setMaximumSize(new Dimension(320,240));
+    expScroll.setBorder(BorderFactory.createTitledBorder("Select observation(s)"));
+    lh.add(expScroll);
+    
+    // Create pathway list
+    final JList pathways = new JList(new String[]{"Please wait, loading list of pathways."});
+    pathways.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+    pathways.setEnabled(false);
+    
+    JScrollPane pwScroll = new JScrollPane(pathways);
+    pwScroll.setMaximumSize(new Dimension(320,240));
+    pwScroll.setBorder(BorderFactory.createTitledBorder("Select pathways(s)"));
+    lh.add(pwScroll);
+    
+    final List<LabeledObject<String>> pwName = new ArrayList<LabeledObject<String>>();
+    Thread loadPathways = new Thread() {
+      @Override
+      public void run() {
+        // Get reference pathway list
+        Map<String, String> temp=null;
+        try {
+          temp = PathwaySelector.getPathways(null, Translator.getFunctionManager());
+        } catch (IOException e) {
+          GUITools.showErrorMessage(null, e, "Could not get list of available KEGG pathways.");
+        }
+        
+        // Create list, put pathway name on front and sort list
+        if (temp!=null) {
+          for (Map.Entry<String, String> pw : temp.entrySet()) {
+            pwName.add(new LabeledObject<String>(pw.getValue(), pw.getKey()));
+          }
+          Collections.sort(pwName);
+          
+          // Clear existing list
+          pathways.removeAll();
+          
+          // Set to model
+          pathways.setModel(new AbstractListModel() {
+            private static final long serialVersionUID = 1L;
+            public int getSize() { return pwName.size(); }
+            public Object getElementAt(int i) { return pwName.get(i); }
+          });
+        }
+        
+        pathways.setEnabled(pwName.size()>0);
+        GUITools.packParentWindow(pathways);
+      }
+      
+    };
+    loadPathways.start();
+    
+    // Output Format
+    final JComboBox fileFormat = new JComboBox(TranslatorPanel.getGraphMLfilefilter().toArray());
+    fileFormat.setBorder(BorderFactory.createTitledBorder("Select output file format"));
+    lh.add(fileFormat);
+    
+    
+    // Ask user
+    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), p, 
+        "Please select the data to visualize", JOptionPane.OK_CANCEL_OPTION);
+    if (ret==JOptionPane.OK_OPTION) {
+      if (pathways.isEnabled() && pathways.getSelectedIndices().length>0 &&
+        experiments.getSelectedIndices().length>0 && fileFormat.getSelectedIndex()>=0) {
+      File outputDir = GUITools.saveFileDialog(IntegratorUI.getInstance(), IntegratorUI.saveDir, false, false, true, 
+        JFileChooser.DIRECTORIES_ONLY, (FileFilter[])null);
+      if (outputDir!=null) {
+        // Create result arrays
+        ValuePair<?, ?>[] exps = new ValuePair<?, ?>[experiments.getSelectedIndices().length];
+        for (int i=0; i<exps.length; i++)
+          exps[i] = labeledSignals.get(experiments.getSelectedIndices()[i]).getObject();
+        
+        String[] refPWids = new String[pathways.getSelectedIndices().length];
+        for (int i=0; i<refPWids.length; i++)
+          refPWids[i] = pwName.get(pathways.getSelectedIndices()[i]).getObject();
+        
+        Signal2PathwayTools.batchCreatePictures(
+          (ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>>[]) exps,
+          refPWids,
+          ((SBFileFilter)fileFormat.getSelectedItem()).getExtension(),
+          outputDir);
+        
+      }
+      } else {
+        GUITools.showMessage("Could not continue: invalid selection.", IntegratorUI.appName);
+      }
+    }
+    return; 
   }
     
 }
