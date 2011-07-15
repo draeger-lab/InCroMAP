@@ -354,6 +354,7 @@ public class IntegratorGUITools {
         //Class<?> cl = ((NameAndSignalsTab)c).getDataContentType(); 
         //if (cl.equals(mRNA.class) || cl.equals(miRNA.class)) {
         if (((NameAndSignalsTab)c).getSourceTab()==null && // Data has not been derived, but read from disk!
+            ((NameAndSignals)((NameAndSignalsTab)c).getExampleData())!=null &&
             ((NameAndSignals)((NameAndSignalsTab)c).getExampleData()).hasSignals()) {
           datasets.add(new LabeledObject<NameAndSignalsTab>(
               ui.getTabbedPane().getTitleAt(i), (NameAndSignalsTab) c));

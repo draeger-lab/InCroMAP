@@ -123,7 +123,7 @@ public class TranslatorTabActions implements ActionListener{
   }
 
 
-  public synchronized void updateToolbarButtons(JToolBar toolBar) {
+  public void updateToolbarButtons(JToolBar toolBar) {
     boolean state = parent.getDocument()!=null;
     for (Component c: toolBar.getComponents()) {
       c.setEnabled(state);

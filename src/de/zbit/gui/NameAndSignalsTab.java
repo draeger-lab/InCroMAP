@@ -161,7 +161,10 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
       parent.closeTab(this);
     } else {
       setData(data);
-      updateButtons(parent.getJMenuBar(), parent.getJToolBar());
+      // This would couse to place buttons for this tab on the bar,
+      // even if this tab is not currently visible!
+      //updateButtons(parent.getJMenuBar(), parent.getJToolBar());
+      parent.updateButtons();
     }
   }
   
