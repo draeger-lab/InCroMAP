@@ -58,6 +58,23 @@ public class LinearRescale {
     newIntervalThreshold = ((this.max-this.min) / (this.targetMinMax.size()-1));
   }
   
+  /**
+   * Special constructor that let's the user define, at which value to return the number
+   * in the middle of the targetMinMax list.
+   * @param <T>
+   * @param min
+   * @param max
+   * @param targetMinMax
+   * @param middleValue
+   */
+  public <T extends Number> LinearRescale (Number min, Number max, List<T> targetMinMax, double middleValue) {
+    this(min, max, targetMinMax);
+    if (!Double.isNaN(middleValue)) {
+      newIntervalThreshold = (middleValue - min.doubleValue())/
+        (((double)this.targetMinMax.size()-1.0)*1.0/2.0 );
+    }
+  }
+  
   
   public Number rescale(Number n) {
     double r = n.doubleValue()-min;
@@ -82,6 +99,20 @@ public class LinearRescale {
   }
   
   public static void main(String[] args) {
+    List<Integer> l = Arrays.asList(new Integer[]{2,50,175,255});
+    LinearRescale lt = new LinearRescale(-2,2,l,0);
+    System.out.println(lt.newIntervalThreshold + "\t" + lt.rescale(0));
+    
+    lt = new LinearRescale(0.5,2,l,1);
+    System.out.println(lt.newIntervalThreshold + "\t" + lt.rescale(1));
+    
+    lt = new LinearRescale(0.05,20,l,1);
+    System.out.println(lt.newIntervalThreshold + "\t" + lt.rescale(1));
+    
+    lt = new LinearRescale(4,8,l,6);
+    System.out.println(lt.newIntervalThreshold + "\t" + lt.rescale(6));
+    
+    
     LinearRescale lr = new LinearRescale(-5,5,2,50,255);
     for (int i=-5; i<6; i++) {
       System.out.print(i+ ": ");

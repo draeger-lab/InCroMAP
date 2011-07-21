@@ -328,7 +328,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
     if (NameAndSignals.isNameAndSignals(geneList2)) {
       log.info("Gene centering input list...");
       // Remark: Converts miRNAandTargets to miRNAs.
-      Collection newList = NameAndSignals.geneCentered((Collection<? extends NameAndSignals>)geneList2, MergeType.Mean);
+      Collection newList = NameAndSignals.geneCentered((Collection<? extends NameAndSignals>)geneList2, MergeType.AskUser);
       if (newList!=null && newList.size()>0) {
         geneList2 = newList;
       }

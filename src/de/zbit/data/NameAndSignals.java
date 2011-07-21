@@ -24,6 +24,7 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.exception.CorruptInputStreamException;
+import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.miRNAandTarget;
 import de.zbit.io.CSVwriteable;
 import de.zbit.util.ArrayUtils;
@@ -248,15 +249,27 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
 
   
-  
   /**
    * Returns a CLONED, gene-centered collection of the given {@link NameAndSignals}s.
    * <p>Gene centering is performed by name, thus, {@link miRNA}s are centered by the
    * miRNA, and not by the target.
    * @param nameAndSignals
    * @return
+   */  
+  public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals) {
+    return geneCentered(nameAndSignals, MergeType.AskUser);
+  }
+  
+  /**
+   * Returns a CLONED, gene-centered collection of the given {@link NameAndSignals}s.
+   * <p>Gene centering is performed by name, thus, {@link miRNA}s are centered by the
+   * miRNA, and not by the target.
+   * @param nameAndSignals
+   * @param m {@link MergeType}
+   * @return
    */
   public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals, MergeType m) {
+    if (m.equals(MergeType.AskUser)) m = IntegratorGUITools.getMergeType();
     
     // Group data by name
     Map<String, Collection<T>> group = group_by_name(nameAndSignals);
@@ -827,6 +840,21 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     if (!it.hasNext()) return false; // Empty list
     
     if (it.next() instanceof NameAndSignals) return true;
+    
+    return false;
+  }
+  
+  /**
+   * @param col any iterable.
+   * @return true if and only if this iterable contains {@link miRNA} OR EXTENDED objects.
+   * Thus, it is also true for {@link miRNAandTarget}s.
+   */
+  public static boolean isMicroRNA(Iterable<?> col) {
+    if (col==null) return false; // Empty list
+    Iterator<?> it = col.iterator();
+    if (!it.hasNext()) return false; // Empty list
+    
+    if (it.next() instanceof miRNA) return true;
     
     return false;
   }

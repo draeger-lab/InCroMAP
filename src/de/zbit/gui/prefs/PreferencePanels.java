@@ -16,7 +16,8 @@ public class PreferencePanels {
         de.zbit.gui.prefs.GeneralOptionPanel.class,
         de.zbit.gui.prefs.MultiplePreferencesPanel.class, 
         de.zbit.gui.prefs.PreferencesPanelForKeyProvider.class, 
-        de.zbit.gui.prefs.PathwayVisualizationOptionPanel.class
+        de.zbit.gui.prefs.PathwayVisualizationOptionPanel.class,
+        de.zbit.gui.prefs.SignalOptionPanel.class
     };
   }
   

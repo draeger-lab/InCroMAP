@@ -52,6 +52,7 @@ public class Signal implements Serializable, Comparable<Object>  {
    */
   public static enum SignalType {
     Unknown, Raw, Processed, FoldChange, pValue, qValue, ratio, log_ratio;
+    // XXX: Is it possible to overwrite toString() and return "p-value", which would be correct language?
   }
   
   /**
@@ -60,7 +61,7 @@ public class Signal implements Serializable, Comparable<Object>  {
    * @author Clemens Wrzodek
    */
   public static enum MergeType {
-    Mean, Median;
+    Mean, Median, Minimum, Maximum, MaximumDistanceToZero, AskUser;
   }
 
   
@@ -219,10 +220,19 @@ public class Signal implements Serializable, Comparable<Object>  {
    * @return
    */
   public static double calculate(MergeType m, Collection<? extends Number> values) {
+    if (values==null || values.size()<1) return Double.NaN;
+    else if (values.size()==1) return values.iterator().next().doubleValue();
+    
     if (m.equals(MergeType.Mean)) {
       return Utils.average(values);
     } else if (m.equals(MergeType.Median)) {
       return Utils.median(values);
+    } else if (m.equals(MergeType.Minimum)) {
+      return Utils.min(values);
+    } else if (m.equals(MergeType.Maximum)) {
+      return Utils.max(values);
+    } else if (m.equals(MergeType.MaximumDistanceToZero)) {
+      return Utils.max(values);
     } else {
       log.severe("Please implement calculation for " + m.toString() + "!");
       return 0;
@@ -236,10 +246,30 @@ public class Signal implements Serializable, Comparable<Object>  {
    * @return
    */
   public static double calculate(MergeType m, double... values) {
+    if (values==null || values.length<1) return Double.NaN;
+    else if (values.length==1) return values[0];
+    
     if (m.equals(MergeType.Mean)) {
       return Utils.average(values);
     } else if (m.equals(MergeType.Median)) {
       return Utils.median(values);
+    } else if (m.equals(MergeType.Minimum)) {
+      if (values==null||values.length<1) return Double.NaN;
+      double min = values[0];
+      for (double value:values)
+        min = Math.min(min, value);
+      return min;
+    } else if (m.equals(MergeType.Maximum)) {
+      double max = values[0];
+      for (double value:values)
+        max = Math.max(max, value);
+      return max;
+    } else if (m.equals(MergeType.MaximumDistanceToZero)) {
+      double max = values[0];
+      for (double value:values)
+        if (Math.abs(value)>Math.abs(max))
+          max = value;
+      return max;
     } else {
       log.severe("Please implement calculation for " + m.toString() + "!");
       return 0;

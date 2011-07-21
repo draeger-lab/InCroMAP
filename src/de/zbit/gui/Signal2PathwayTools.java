@@ -130,6 +130,7 @@ public class Signal2PathwayTools {
     GenericDataMap<DataMap, String> mapDescriptionMap = (GenericDataMap<DataMap, String>) graph.getDataProvider(KEGG2yGraph.mapDescription);
     for (Entry<ValuePair<String, SignalType>, NodeMap> signalSet : signalMaps.entrySet()) {
       String v = "["+signalSet.getKey().getB().toString() + "] " + signalSet.getKey().getA();
+      mapDescriptionMap.removeMap(v, graph); // eventually remove old maps.
       mapDescriptionMap.set(signalSet.getValue(), v);
     }
   }
@@ -170,6 +171,22 @@ public class Signal2PathwayTools {
     return node;
   }
 
+  
+  
+  
+
+  /**
+   * @param <T>
+   * @param nsList list of {@link NameAndSignals}
+   * @param experimentName for selecting the signal.
+   * @param type of signal (e.g., fold change).
+   * @param gradientColors OPTIONAL - set to null to read from preferences. Else:
+   * list of colors for a gradient. Will be distributed equally, linear on the signal sample range.
+   */
+  public <T extends NameAndSignals> void colorNodesAccordingToSignals(Iterable<T> nsList, String experimentName, SignalType type, Color... gradientColors) {
+    colorNodesAccordingToSignals(nsList, IntegratorGUITools.getMergeType(), experimentName, type, gradientColors);
+  }
+ 
   /**
    * 
    * @param <T>
@@ -180,10 +197,12 @@ public class Signal2PathwayTools {
    * @param gradientColors OPTIONAL - set to null to read from preferences. Else:
    * list of colors for a gradient. Will be distributed equally, linear on the signal sample range.
    */
-  public <T extends NameAndSignals> void colorNodesAccordingToSignals(Iterable<T> nsList, MergeType sigMerge, String experimentName, SignalType type, Color... gradientColors) {
-    Color colorForUnaffectedNodes = PathwayVisualizationOptions.COLOR_FOR_NO_VALUE.getValue(prefs);
+  public <T extends NameAndSignals> void colorNodesAccordingToSignals(Iterable<T> nsList, MergeType sigMerge, 
+    String experimentName, SignalType type, Color... gradientColors) {
+    if (sigMerge.equals(MergeType.AskUser)) sigMerge = IntegratorGUITools.getMergeType();
     
     // Get defaults
+    Color colorForUnaffectedNodes = PathwayVisualizationOptions.COLOR_FOR_NO_VALUE.getValue(prefs);
     if (gradientColors==null || gradientColors.length<1) {
       // Load default from config (e.g., blue-white-red).
       gradientColors = new Color[]{PathwayVisualizationOptions.COLOR_FOR_MINIMUM_FOLD_CHANGE.getValue(prefs),
@@ -200,12 +219,26 @@ public class Signal2PathwayTools {
     // Make a symmetric min and max (-3 to +3) instead of -2.9 to + 3.2 because of better coloring then.
     Float maxFC = PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR.getValue(prefs);
     double minFCthreshold = minMax[0]<0?(maxFC*-1):1/maxFC.doubleValue();
+    if (maxFC<minFCthreshold) {
+      double temp = minFCthreshold;
+      minFCthreshold = maxFC;
+      maxFC = (float) temp;
+    }
     minMax = new double[]{minFCthreshold,maxFC.doubleValue()};
     
+    // Infere value for "nothing happend", (i.e. no fold change observed)
+    Double middleValue=Double.NaN; //NaN means "auto infere"
+    if (minFCthreshold<0) {
+      middleValue = 0d; // log FCs
+    } else if (minFCthreshold<1) {
+      // >0 & <1 => non-logarithmmized FCs
+      middleValue = 1d;
+    }
+    
     // Initiate color rescaler
-    LinearRescale lred = new LinearRescale(minMax[0], minMax[1], getColorChannel(0, gradientColors));
-    LinearRescale lgreen = new LinearRescale(minMax[0], minMax[1], getColorChannel(1, gradientColors));
-    LinearRescale lblue = new LinearRescale(minMax[0], minMax[1], getColorChannel(2, gradientColors));
+    LinearRescale lred = new LinearRescale(minMax[0], minMax[1], getColorChannel(0, gradientColors), middleValue);
+    LinearRescale lgreen = new LinearRescale(minMax[0], minMax[1], getColorChannel(1, gradientColors), middleValue);
+    LinearRescale lblue = new LinearRescale(minMax[0], minMax[1], getColorChannel(2, gradientColors), middleValue);
     
     Set<Node> allNodes = new HashSet<Node>(Arrays.asList(graph.getNodeArray()));
     for (NameAndSignals ns : nsList) {
@@ -235,7 +268,9 @@ public class Signal2PathwayTools {
     
     // Set unaffected color for all other nodes but reference nodes.
     for (Node n: allNodes) {
-      if (TranslatorTools.getKeggIDs(n).toLowerCase().trim().startsWith("path:")) continue;
+      Object kgId = TranslatorTools.getKeggIDs(n);
+      // Colors without Kegg ids are also miRNA. Skip them too (kgId==null).
+      if (kgId==null || kgId.toString().toLowerCase().trim().startsWith("path:")) continue;
       graph.getRealizer(n).setFillColor(colorForUnaffectedNodes);
     }
   }
@@ -339,7 +374,7 @@ public class Signal2PathwayTools {
               SignalType obsExpType = observation.getB().getB();
               Signal2PathwayTools instance = new Signal2PathwayTools(graph);
               instance.colorNodesAccordingToSignals((Iterable<? extends NameAndSignals>)observation.getA().getData(),
-                MergeType.Mean, obsExpName, obsExpType, (Color[]) null);
+                obsExpName, obsExpType, (Color[]) null);
               
               // Adjust title node
               Node n = TranslatorTools.getTitleNode(graph, pathwayID);

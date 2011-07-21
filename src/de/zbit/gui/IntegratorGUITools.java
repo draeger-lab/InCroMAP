@@ -53,9 +53,12 @@ import javax.swing.filechooser.FileFilter;
 import de.zbit.analysis.enrichment.AbstractEnrichment;
 import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.CSVImporterV2.CSVImporterV2;
+import de.zbit.gui.prefs.SignalOptionPanel;
+import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.io.OpenFile;
 import de.zbit.io.SBFileFilter;
 import de.zbit.kegg.Translator;
@@ -68,6 +71,7 @@ import de.zbit.util.StringUtil;
 import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
+import de.zbit.util.prefs.SBPreferences;
 
 /**
  * @author Clemens Wrzodek
@@ -358,6 +362,53 @@ public class IntegratorGUITools {
             ((NameAndSignals)((NameAndSignalsTab)c).getExampleData()).hasSignals()) {
           datasets.add(new LabeledObject<NameAndSignalsTab>(
               ui.getTabbedPane().getTitleAt(i), (NameAndSignalsTab) c));
+        }
+      }
+    }
+    return datasets;
+  }
+  
+  public static List<LabeledObject<IntegratorTab<?>>> getNameAndSignalTabs(boolean excludeCurrentlySelected, 
+    Collection<Class<?>> excludeDatatypes, Collection<Class<?>> includeDatatypes) {
+    
+    ArrayList<Class<?>> ns = new ArrayList<Class<?>>(1);
+    ns.add(NameAndSignalsTab.class);
+    if (excludeDatatypes==null) excludeDatatypes = new ArrayList<Class<?>>();
+    excludeDatatypes.add(Object.class);
+    
+    return getTabs(excludeCurrentlySelected, ns, excludeDatatypes, includeDatatypes);
+  }
+  
+  /**
+   * Get defined tabs from the current {@link IntegratorUI#instance}.
+   * @param excludeCurrentlySelected if true, excludes the currently selected tab.
+   * @param filterForTabType only include tabs from the given classes (the class of
+   * the tab component is compared to this list), if null, all <code>IntegratorTab</code>
+   * tabs are included.
+   * @param excludeDatatypes the {@link IntegratorTab#getDataContentType()} is compared and
+   * if it is contained in this list, this tab is excluded. If null, all are included.
+   * @param includeDatatypes the {@link IntegratorTab#getDataContentType()} is compared and
+   * only if it is in this list, it is included, if null, all tabs are included.
+   * @return list with tab names and actual tabs.
+   */
+  public static List<LabeledObject<IntegratorTab<?>>> getTabs(boolean excludeCurrentlySelected, Collection<Class<?>> filterForTabType, 
+    Collection<Class<?>> excludeDatatypes, Collection<Class<?>> includeDatatypes) {
+    
+    IntegratorUI ui = IntegratorUI.getInstance();
+    List<LabeledObject<IntegratorTab<?>>> datasets = new LinkedList<LabeledObject<IntegratorTab<?>>>();
+    for (int i=0; i<ui.getTabbedPane().getTabCount(); i++) {
+      Component c = ui.getTabbedPane().getComponentAt(i);
+      if (excludeCurrentlySelected && ui.getTabbedPane().getSelectedIndex()==i) continue;
+      if (c instanceof IntegratorTab<?>) {
+        if (filterForTabType==null || filterForTabType.contains(c.getClass())) {
+          // Reading / processing in progress. Tab is not ready!
+          if (((IntegratorTab<?>)c).getExampleData()==null) continue;
+          Class<?> dt = ((IntegratorTab<?>)c).getDataContentType();
+          if (excludeDatatypes!=null && excludeDatatypes.contains(dt)) continue;
+          if (includeDatatypes==null || includeDatatypes.contains(dt)) {
+            datasets.add(new LabeledObject<IntegratorTab<?>>(
+                ui.getTabbedPane().getTitleAt(i), (IntegratorTab<?>) c));
+          }
         }
       }
     }
@@ -714,6 +765,45 @@ public class IntegratorGUITools {
       }
     }
     return; 
+  }
+
+  /**
+   * @return the user-approved {@link MergeType}.
+   */
+  public static MergeType getMergeType() {
+    MergeType m = SignalOptions.GENE_CENTER_SIGNALS_BY.getDefaultValue();
+    
+    // Look if "remember my decision" is set and take it without asking
+    SBPreferences prefs = SBPreferences.getPreferencesFor(SignalOptions.class);
+    if (SignalOptions.REMEMBER_GENE_CENTER_DECISION.getValue(prefs)) {
+      try {
+        m = SignalOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
+        if (!m.equals(MergeType.AskUser)) return m;
+      } catch (Throwable t) {}
+    }
+    
+    // Show asking dialog and force user to press ok!
+    try {
+      int ok = JOptionPane.CANCEL_OPTION;
+      SignalOptionPanel sop = new SignalOptionPanel();
+      while (ok != JOptionPane.OK_OPTION ||
+          SignalOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs).equals(MergeType.AskUser)) {
+        ok = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), sop, 
+          "Please choose how to merge multiple probes", JOptionPane.OK_CANCEL_OPTION);
+      }
+      sop.persist();
+      m = SignalOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
+    } catch (Exception e) {
+      GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
+    }
+    
+    // Ensure a valid return value
+    if (m.equals(MergeType.AskUser)) {
+      log.warning("For some reason, MergeType was still AskUser. Changed to Mean.");
+      m = MergeType.Mean;
+    }
+    
+    return m;
   }
     
 }

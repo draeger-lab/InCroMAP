@@ -134,6 +134,7 @@ public class miRNA extends NameAndSignals {
   }
 
   /**
+   * @see #getUniqueTargets()
    * @return list of targets for this miRNA
    */
   public List<miRNAtarget> getTargets() {
@@ -184,6 +185,7 @@ public class miRNA extends NameAndSignals {
         // Same algorithms sometimes contain duplicate targets
         if (!et.getSource().contains(target.getSource()))
           et.setSource(et.getSource() + "; " + target.getSource());
+        // Score is not further processed...
       }
     }
     

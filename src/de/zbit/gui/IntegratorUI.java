@@ -4,6 +4,7 @@
  */
 package de.zbit.gui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
@@ -55,6 +56,7 @@ import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.SBPreferences;
 import de.zbit.util.prefs.SBProperties;
+import de.zbit.visualization.VisualizeMicroRNAdata;
 
 /**
  * A GUI for the Integrator application
@@ -73,6 +75,12 @@ public class IntegratorUI extends BaseFrame {
    * The version of {@link #appName}
    */
   public final static String appVersion = "0.0.1";
+  
+  /**
+   * A simple light blue color. Used e.g. in {@link PathwayVisualizationOptions}
+   * and in {@link VisualizeMicroRNAdata}.
+   */
+  public static final Color LIGHT_BLUE = new Color(0,153,255);
   
   /**
    * Since only one instance is allowed to show at a time,
@@ -264,7 +272,6 @@ public class IntegratorUI extends BaseFrame {
         ui.setVisible(true);
         GUITools.hideSplashScreen();
         ui.toFront();
-        
         try {
           mRNAReader r = mRNAReader.getExampleReader();
           ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example");

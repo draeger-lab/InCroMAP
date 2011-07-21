@@ -23,8 +23,8 @@ import javax.swing.UIManager;
 import y.view.Graph2D;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
-import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.TranslatorTabActions.TPAction;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
@@ -38,6 +38,7 @@ import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
+import de.zbit.visualization.VisualizeMicroRNAdata;
 
 /**
  * An {@link ActionListener} that can visualize KEGG Pathways
@@ -100,7 +101,6 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
        if (vt!=null) {
          colorPathway((TranslatorPanel) source,(Iterable)vt.getA().getData(),vt.getB(), vt.getC());
        }
-       // TODO: Color all no-data-nodes in a defined color!
        
     } else if (e.getActionCommand().equals(TPAction.HIGHLIGHT_ENRICHED_GENES.toString()) &&
         source instanceof TranslatorPanel) {
@@ -181,14 +181,26 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param experimentName name of the observation to color
    * @param signalType signal type of the observation (usually fold change)
    */
+  @SuppressWarnings("unchecked")
   private void colorPathway(TranslatorPanel tp, Iterable<? extends NameAndSignals> dataSource, String experimentName, SignalType signalType) {
     Signal2PathwayTools tools2 = new Signal2PathwayTools(tp);
     
+    // TODO: What happens here with miRNA data??? Maybe better after adding the miRNA nodes!!
     tools2.writeSignalsToNodes(dataSource);
     
-    // Color nodes
-    tools2.colorNodesAccordingToSignals(dataSource, 
-        MergeType.Mean, experimentName, signalType);
+    if (NameAndSignals.isMicroRNA(dataSource)) {
+      if (tp.getDocument()==null) {
+        GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");
+        return;
+      }
+      // TODO: Ask user to annotate with targets first.
+      VisualizeMicroRNAdata vis = new VisualizeMicroRNAdata((Graph2D) tp.getDocument());
+      vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource);
+      // TODO: Color nodes accordingly.
+    } else {
+      // Color nodes
+      tools2.colorNodesAccordingToSignals(dataSource, experimentName, signalType);
+    }
     tp.repaint();
   }
   

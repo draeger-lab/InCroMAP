@@ -97,29 +97,12 @@ public class miRNA2mRNA_pair {
    */
   private void link(Collection<miRNA> mirna, Collection<mRNA> mrna, String experimentName) {
     // Reset local min/max holders
-    mRNA_maxFC = Float.MIN_VALUE; miRNA_maxFC = Float.MIN_VALUE;
-    mRNA_minFC = Float.MAX_VALUE; miRNA_minFC = Float.MAX_VALUE;
+    miRNA_maxFC = Float.MIN_VALUE;
+    miRNA_minFC = Float.MAX_VALUE;
     link.clear();
     
     // Process mRNA to a more efficient data structure
-    Map<Integer, Collection<mRNA>> geneIDmap = new HashMap<Integer, Collection<mRNA>>();
-    for (mRNA mr: mrna) {
-      // Remember min and max fold change
-      Number fc = mr.getSignalValue(SignalType.FoldChange, experimentName);
-      if (fc!=null && !Double.isNaN(fc.doubleValue())) {
-        mRNA_maxFC = Math.max(mRNA_maxFC, fc.doubleValue());
-        mRNA_minFC = Math.min(mRNA_minFC, fc.doubleValue());
-      }
-      if (mr.getGeneID()<=0) continue;
-      
-      Collection<mRNA> mr_targets = geneIDmap.get(mr.getGeneID());
-      if (mr_targets==null) {
-        mr_targets = initializeTargetCollection();
-        geneIDmap.put(mr.getGeneID(), mr_targets);
-      }
-      
-      mr_targets.add(mr);
-    }
+    Map<Integer, Collection<mRNA>> geneIDmap = getGeneID2mRNAMappingAndTrackMinMax(mrna, experimentName);
     
     // Process miRNA's targets
     Set<Integer> processedTargets = new HashSet<Integer>();
@@ -132,7 +115,7 @@ public class miRNA2mRNA_pair {
       }
       
       // Iterate through all targets
-      if (mir.getTargets()==null) continue;
+      if (!mir.hasTargets()) continue;
       for (miRNAtarget target: mir.getTargets()) {
         // Avoid duplicate targets
         if (!processedTargets.add(target.getTarget())) continue;
@@ -146,7 +129,52 @@ public class miRNA2mRNA_pair {
     }
   }
 
-  private Collection<mRNA> initializeTargetCollection() {
+  /**
+   * A static variant of {@link #getGeneID2mRNAMappingAndTrackMinMax(Collection, String)} that creates
+   * a new instance if {@link miRNA2mRNA_pair} and returns the resulting map. Min and max FC is not
+   * tracked.
+   * @param mrna list of all mRNAs
+   * @return a map from geneID to a collection of corresponding {@link mRNA}s.
+   */
+  public static Map<Integer, Collection<mRNA>> getGeneID2mRNAMapping(Collection<mRNA> mrna) {
+    return new miRNA2mRNA_pair().getGeneID2mRNAMappingAndTrackMinMax(mrna, null);
+  }
+  
+  /**
+   * @param mrna list of all mRNAs
+   * @param experimentName if you want to track minimum and maximum FC, give the experiment name to track
+   * those values for. Else, simply set this to <code>null</code>.
+   * @return a map from geneID to a collection of corresponding {@link mRNA}s.
+   */
+  public Map<Integer, Collection<mRNA>> getGeneID2mRNAMappingAndTrackMinMax(Collection<mRNA> mrna, String experimentName) {
+    // Reset local min/max holders
+    mRNA_maxFC = Float.MIN_VALUE;
+    mRNA_minFC = Float.MAX_VALUE;
+    
+    Map<Integer, Collection<mRNA>> geneIDmap = new HashMap<Integer, Collection<mRNA>>();
+    for (mRNA mr: mrna) {
+      // Remember min and max fold change
+      if (experimentName!=null) {
+        Number fc = mr.getSignalValue(SignalType.FoldChange, experimentName);
+        if (fc!=null && !Double.isNaN(fc.doubleValue())) {
+          mRNA_maxFC = Math.max(mRNA_maxFC, fc.doubleValue());
+          mRNA_minFC = Math.min(mRNA_minFC, fc.doubleValue());
+        }
+      }
+      if (mr.getGeneID()<=0) continue;
+      
+      Collection<mRNA> mr_targets = geneIDmap.get(mr.getGeneID());
+      if (mr_targets==null) {
+        mr_targets = initializeTargetCollection();
+        geneIDmap.put(mr.getGeneID(), mr_targets);
+      }
+      
+      mr_targets.add(mr);
+    }
+    return geneIDmap;
+  }
+
+  private static Collection<mRNA> initializeTargetCollection() {
     return new LinkedList<mRNA>();
   }
 
@@ -276,9 +304,9 @@ public class miRNA2mRNA_pair {
     }
     
     // Add header
-    String[] header = new String[]{"miRNA_probe", "miRNA", "pValue", "FC",
+    String[] header = new String[]{"miRNA_probe", "miRNA", "p-value", "FC",
         "Source", "Relationship", "Combined_FC",
-        "mRNA_probe", "mRNA", "pValue", "FC", "Description", "GeneID", "Pathways"};
+        "mRNA_probe", "mRNA", "p-value", "FC", "Description", "GeneID", "Pathways"};
     ret.add(header);
     
     // TODO: Make more dynamic (Iterate over all objects and scores, defined in the first of each elements).
@@ -358,6 +386,7 @@ public class miRNA2mRNA_pair {
   }
   
   
+  @SuppressWarnings("unused")
   public static void main(String[] args) throws Exception {
     String experimentName = "Ctnnb1";
     int offset = 0; // Offset for experiment: 0=Cat/1=Ras/2=Cat_vs_Ras/3=Cat_vs_Ras_KONTROLLEN

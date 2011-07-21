@@ -5,6 +5,7 @@ package de.zbit.gui.prefs;
 
 import java.awt.Color;
 
+import de.zbit.gui.IntegratorUI;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.OptionGroup;
@@ -23,10 +24,10 @@ public interface PathwayVisualizationOptions extends KeyProvider {
    */
   public static Option<Float> FOLD_CHANGE_FOR_MAXIMUM_COLOR = new Option<Float>("FOLD_CHANGE_FOR_MAXIMUM_COLOR", Float.class,
       "Min/Max (symmetric) fold change that is being assigned the full color.",
-      new Range<Float>(Float.class, "{[1.0,1000.0]}"),1.5f);
+      new Range<Float>(Float.class, "{[0.0,1000.0]}"),1.5f);
   
   public static Option<Color> COLOR_FOR_MINIMUM_FOLD_CHANGE = new Option<Color>("COLOR_FOR_MINIMUM_FOLD_CHANGE", Color.class,
-      "Color for minimum fold change.", new Color(0,153,255)); // Color.BLUE.brighter() is too dark to read black captions
+      "Color for minimum fold change.", IntegratorUI.LIGHT_BLUE); // Color.BLUE.brighter() is too dark to read black captions
   
   public static Option<Color> COLOR_FOR_NO_FOLD_CHANGE = new Option<Color>("COLOR_FOR_NO_FOLD_CHANGE", Color.class,
       "Color for no fold change (log(fc)=0 or rawFC=1).", Color.WHITE);
