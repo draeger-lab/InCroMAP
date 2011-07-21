@@ -57,6 +57,7 @@ import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.CSVImporterV2.CSVImporterV2;
+import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.prefs.SignalOptionPanel;
 import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.io.OpenFile;
@@ -195,6 +196,26 @@ public class IntegratorGUITools {
     jm.setActionCommand(EnrichmentActionListener.GO_ENRICHMENT);
     append.add(jm);
     jm.addActionListener(l);
+    
+    return append;
+  }
+  
+  /**
+   * Creates or appends microRNA target annotation and removal options.
+   * @param l an {@link ActionListener} that performs those actions
+   * @param append null to create a new {@link JPopupMenu} or any existing
+   * menu, for appending to it.
+   * @return append
+   */
+  public static JPopupMenu createMiRNAtargetPopup(ActionListener l, JPopupMenu append) {
+    // Eventually create a new PopUpMenu
+    if (append==null) {
+      append = new JPopupMenu("Targets");
+    }
+    
+    // Annotate targets
+    append.add(GUITools.createJMenuItem(l, NSAction.ANNOTATE_TARGETS, UIManager.getIcon("ICON_GEAR_16")));
+    append.add(GUITools.createJMenuItem(l, NSAction.REMOVE_TARGETS, UIManager.getIcon("ICON_GEAR_16")));
     
     return append;
   }
@@ -609,6 +630,7 @@ public class IntegratorGUITools {
         TargetScan.setEnabled(state);
       }
     });
+    onlyExperimental.setSelected(true);
     
     // Ask user
     int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), p, 

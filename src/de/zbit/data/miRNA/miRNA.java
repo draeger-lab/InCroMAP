@@ -191,6 +191,16 @@ public class miRNA extends NameAndSignals {
     
     return id2target.values();
   }
+  
+  /**
+   * Removes all targets from this {@link miRNA}.
+   */
+  public void removeTargets() {
+    if (targets!=null) {
+      targets.clear();
+    }
+  }
+  
 
   /* (non-Javadoc)
    * @see de.zbit.data.NameAndSignal#merge(java.util.Collection, de.zbit.data.NameAndSignal, de.zbit.data.Signal.MergeType)

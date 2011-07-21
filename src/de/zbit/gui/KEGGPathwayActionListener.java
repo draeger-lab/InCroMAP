@@ -23,6 +23,7 @@ import javax.swing.UIManager;
 import y.view.Graph2D;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
@@ -99,7 +100,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         = IntegratorGUITools.showSelectExperimentBox(IntegratorUI.getInstance(), null,
             "Please select an observation to color nodes accordingly.");
        if (vt!=null) {
-         colorPathway((TranslatorPanel) source,(Iterable)vt.getA().getData(),vt.getB(), vt.getC());
+         colorPathway((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
        }
        
     } else if (e.getActionCommand().equals(TPAction.HIGHLIGHT_ENRICHED_GENES.toString()) &&
@@ -152,7 +153,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
           }
           
           if (vt!=null) {
-            colorPathway(source,(Iterable)vt.getA().getData(),vt.getB(), vt.getC());
+            colorPathway(source,vt.getA(),vt.getB(), vt.getC());
           } else {
             r = -1; // At least highlight source gene nodes
           }
@@ -176,32 +177,97 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * described by <code>experimentName</code> and <code>signalType</code>
    * contained in <code>dataSource</code>.
    * 
+   * <p>Taking this method instead of {@link #colorPathway(TranslatorPanel, Iterable, String, SignalType)}
+   * allows asking the user to annotate miRNA data with targets, if it has not yet been done. 
+   * 
+   * @param tp pathway to color
+   * @param dataSource to take from the given {@link NameAndSignalsTab}
+   * @param experimentName name of the observation to color
+   * @param signalType signal type of the observation (usually fold change)
+   * @return number of nodes, colored according to the signal, or -1 if an error occured.
+   */
+  @SuppressWarnings("unchecked")
+  private int colorPathway(TranslatorPanel tp, NameAndSignalsTab dataSource, String experimentName, SignalType signalType) {
+    /* This method has the advantage to
+     * - Ask the mergeType only once!
+     * - Add nodes for miRNAs to visualize
+     * And thus should always be preferred to the other colorPathway method.
+     */
+    MergeType mt = IntegratorGUITools.getMergeType();
+    
+    if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
+      addMicroRNAs(tp, dataSource);
+    }
+    
+    int coloredNodes = colorPathway(tp, (Collection<? extends NameAndSignals>)dataSource.getData(), experimentName, signalType, mt);
+    return coloredNodes;
+  }
+  
+  /**
+   * Adds microRNAs to the given graph
+   * @param tp panel with graph
+   * @param dataSource microRNA datasource
+   * @param mt
+   */
+  @SuppressWarnings("unchecked")
+  public static void addMicroRNAs(TranslatorPanel tp, NameAndSignalsTab dataSource) {
+    if (!miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
+      log.severe("Can not add miRNA targets when source is " + dataSource.getDataContentType());
+      return;
+    }
+    
+    VisualizeMicroRNAdata vis = new VisualizeMicroRNAdata((Graph2D) tp.getDocument());
+    int addedNodes = vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource);
+    if (addedNodes>0) {
+      // The "Remove miRNA-nodes" button must be enabled.
+      IntegratorUI.getInstance().updateButtons();
+    } else if (addedNodes==0) {
+      // if no nodes have been colored, look if it was due to missing miRNA target annotations
+      int a = GUITools.showQuestionMessage(IntegratorUI.getInstance(), "No microRNA had an annotated target within this graph. " +
+        "Do you want to (re-)annotate your microRNA data with targets?", IntegratorUI.appName, JOptionPane.YES_NO_OPTION);
+      if (a==JOptionPane.YES_OPTION) {
+        dataSource.getActions().annotateMiRNAtargets();
+        vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource);
+      }
+      
+    }
+  }
+  
+  /**
+   * Color the pathway in <code>tp</code> accoring to the experiment
+   * described by <code>experimentName</code> and <code>signalType</code>
+   * contained in <code>dataSource</code>.
+   * 
+   * <p>Note: the other method with {@link NameAndSignalsTab} (see reference below)
+   * should be preferred. This method does not add any nodes (e.g. for miRNAs!).
+   * @see #colorPathway(TranslatorPanel, NameAndSignalsTab, String, SignalType)
    * @param tp pathway to color
    * @param dataSource list with {@link NameAndSignals}
    * @param experimentName name of the observation to color
    * @param signalType signal type of the observation (usually fold change)
+   * @return number of nodes, colored according to the signal, or -1 if an error occured.
    */
-  @SuppressWarnings("unchecked")
-  private void colorPathway(TranslatorPanel tp, Iterable<? extends NameAndSignals> dataSource, String experimentName, SignalType signalType) {
+  private int colorPathway(TranslatorPanel tp, Collection<? extends NameAndSignals> dataSource, String experimentName, SignalType signalType, MergeType mt) {
     Signal2PathwayTools tools2 = new Signal2PathwayTools(tp);
+    // Gene center before coloring!!!
+    dataSource = NameAndSignals.geneCentered(dataSource, mt);
     
-    // TODO: What happens here with miRNA data??? Maybe better after adding the miRNA nodes!!
-    tools2.writeSignalsToNodes(dataSource);
-    
-    if (NameAndSignals.isMicroRNA(dataSource)) {
-      if (tp.getDocument()==null) {
-        GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");
-        return;
-      }
-      // TODO: Ask user to annotate with targets first.
-      VisualizeMicroRNAdata vis = new VisualizeMicroRNAdata((Graph2D) tp.getDocument());
-      vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource);
-      // TODO: Color nodes accordingly.
-    } else {
-      // Color nodes
-      tools2.colorNodesAccordingToSignals(dataSource, experimentName, signalType);
+    if (tp.getDocument()==null) {
+      GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");
+      return -1;
     }
+    
+    // Color nodes
+    int coloredNodes = 0;
+    if (experimentName!=null && signalType!=null) {
+      coloredNodes = tools2.colorNodesAccordingToSignals(dataSource, mt, experimentName, signalType);
+      
+      // Write the signals to the nodes
+      tools2.writeSignalsToNodes(dataSource, experimentName, signalType);
+    }
+    
     tp.repaint();
+    return coloredNodes;
   }
   
   
@@ -300,10 +366,15 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     // Create pathway and experiment selectors
     final PathwaySelector selector = new PathwaySelector(Translator.getFunctionManager(),null, organism);
     final JLabeledComponent expSel;
+    boolean setA=false;
     if (source instanceof NameAndSignalsTab) {
       NameAndSignals ns = (NameAndSignals)((NameAndSignalsTab)source).getExampleData();
       if (ns.hasSignals()) {
         expSel = IntegratorGUITools.createSelectExperimentBox(ns);
+      } else if (ns instanceof miRNA) {
+        // Targets can still be visualized (even without signals).
+        setA = true;
+        expSel = null;
       } else {
         expSel = null;
       }
@@ -330,8 +401,10 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>((NameAndSignalsTab) source,
             expSignal.getA(), expSignal.getB());
       } else {
+        NameAndSignalsTab a = null;
+        if (setA) a = (NameAndSignalsTab) source;
         // Will show the selector later (in TranslationDone).
-        dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>(null, null, null);
+        dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>(a, null, null);
       }
 
       // Open pathway and set experiment to visualize.

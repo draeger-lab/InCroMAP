@@ -29,6 +29,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.TranslatorTools;
@@ -92,13 +93,23 @@ public class Signal2PathwayTools {
     
     // Get GeneID 2 Node map
     TranslatorTools tools = new TranslatorTools(graph);
-    Map<Integer, List<Node>> map = tools.getGeneID2NodeMap();
+    Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
+    Map<String, Node> mi2n_map = tools.getRNA2NodeMap();
     
     // Write signals to nodes
     Map<ValuePair<String, SignalType>, NodeMap> signalMaps = new HashMap<ValuePair<String, SignalType>, NodeMap>();
     for (NameAndSignals ns : nsList) {
-      // Get Node(s) for mRNA
-      List<Node> node = getNodesForNameAndSignal(map, ns);
+      // Get Node(s) for current NameAndSignals
+      List<Node> node;
+      if (ns instanceof miRNA) {
+        if (ns.getName()==null) continue;
+        Node miNode = mi2n_map.get(ns.getName().toUpperCase().trim());
+        if (miNode==null) continue; // Contains no node in the current graph 
+        node = Arrays.asList(new Node[]{miNode});
+      } else {
+        // Get Node(s) for mRNA
+        node = getNodesForNameAndSignal(gi2n_map, ns);
+      }
       
       // Get Signals
       if (node!=null && node.size()>0) {
@@ -170,8 +181,6 @@ public class Signal2PathwayTools {
     }
     return node;
   }
-
-  
   
   
 
@@ -182,9 +191,10 @@ public class Signal2PathwayTools {
    * @param type of signal (e.g., fold change).
    * @param gradientColors OPTIONAL - set to null to read from preferences. Else:
    * list of colors for a gradient. Will be distributed equally, linear on the signal sample range.
+   * @return number of nodes, colored according to the signal, or -1 if an error occured.
    */
-  public <T extends NameAndSignals> void colorNodesAccordingToSignals(Iterable<T> nsList, String experimentName, SignalType type, Color... gradientColors) {
-    colorNodesAccordingToSignals(nsList, IntegratorGUITools.getMergeType(), experimentName, type, gradientColors);
+  public <T extends NameAndSignals> int colorNodesAccordingToSignals(Iterable<T> nsList, String experimentName, SignalType type, Color... gradientColors) {
+    return colorNodesAccordingToSignals(nsList, IntegratorGUITools.getMergeType(), experimentName, type, gradientColors);
   }
  
   /**
@@ -196,8 +206,9 @@ public class Signal2PathwayTools {
    * @param type of signal (e.g., fold change).
    * @param gradientColors OPTIONAL - set to null to read from preferences. Else:
    * list of colors for a gradient. Will be distributed equally, linear on the signal sample range.
+   * @return number of nodes, colored according to the signal, or -1 if an error occured.
    */
-  public <T extends NameAndSignals> void colorNodesAccordingToSignals(Iterable<T> nsList, MergeType sigMerge, 
+  public <T extends NameAndSignals> int colorNodesAccordingToSignals(Iterable<T> nsList, MergeType sigMerge, 
     String experimentName, SignalType type, Color... gradientColors) {
     if (sigMerge.equals(MergeType.AskUser)) sigMerge = IntegratorGUITools.getMergeType();
     
@@ -210,10 +221,6 @@ public class Signal2PathwayTools {
           PathwayVisualizationOptions.COLOR_FOR_MAXIMUM_FOLD_CHANGE.getValue(prefs)};
     }
 
-    // Get GeneID 2 Node map
-    TranslatorTools tools = new TranslatorTools(graph);
-    Map<Integer, List<Node>> map = tools.getGeneID2NodeMap();
-    
     // Get min max signals for determin logarithmized (negative) fcs or not.
     double[] minMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
     // Make a symmetric min and max (-3 to +3) instead of -2.9 to + 3.2 because of better coloring then.
@@ -240,10 +247,25 @@ public class Signal2PathwayTools {
     LinearRescale lgreen = new LinearRescale(minMax[0], minMax[1], getColorChannel(1, gradientColors), middleValue);
     LinearRescale lblue = new LinearRescale(minMax[0], minMax[1], getColorChannel(2, gradientColors), middleValue);
     
+    // Get GeneID 2 Node map
+    TranslatorTools tools = new TranslatorTools(graph);
+    Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
+    Map<String, Node> mi2n_map = tools.getRNA2NodeMap();
+    
+    
     Set<Node> allNodes = new HashSet<Node>(Arrays.asList(graph.getNodeArray()));
     for (NameAndSignals ns : nsList) {
-      // Get Node(s) for mRNA
-      List<Node> node = getNodesForNameAndSignal(map, ns);
+      // Get Node(s) for current NameAndSignals
+      List<Node> node;
+      if (ns instanceof miRNA) {
+        if (ns.getName()==null) continue;
+        Node miNode = mi2n_map.get(ns.getName().toUpperCase().trim());
+        if (miNode==null) continue; // Contains no node in the current graph 
+        node = Arrays.asList(new Node[]{miNode});
+      } else {
+        // Get Node(s) for mRNA
+        node = getNodesForNameAndSignal(gi2n_map, ns);
+      }
       
       // Get Signals
       if (node!=null && node.size()>0) {
@@ -267,12 +289,19 @@ public class Signal2PathwayTools {
     }
     
     // Set unaffected color for all other nodes but reference nodes.
+    boolean isMiRNAlist = NameAndSignals.isMicroRNA(nsList);
     for (Node n: allNodes) {
       Object kgId = TranslatorTools.getKeggIDs(n);
-      // Colors without Kegg ids are also miRNA. Skip them too (kgId==null).
-      if (kgId==null || kgId.toString().toLowerCase().trim().startsWith("path:")) continue;
+      // Skip nodes, not belonging to this collection type and the title node
+      if (isMiRNAlist&&kgId!=null) continue; // miRNA nodes are always kgId=null!
+      else if (!isMiRNAlist) {
+        if (kgId==null) continue; // Skip miRNA nodes
+        if (kgId.toString().toLowerCase().trim().startsWith("path:")) continue; // Title node
+      }
       graph.getRealizer(n).setFillColor(colorForUnaffectedNodes);
     }
+    
+    return graph.getNodeArray().length-allNodes.size();
   }
   
   /**
@@ -350,8 +379,12 @@ public class Signal2PathwayTools {
               String pathwayID = keggAbbr+pwNumber;
               Graph2D graph = pathwayCache.get(pathwayID);
               if (graph==null) {
-                String inputFile = KGMLSelectAndDownload.downloadPathway(pathwayID, false);
-                if (inputFile==null) {
+                String inputFile;
+                try {
+                  inputFile = KGMLSelectAndDownload.downloadPathway(pathwayID, false);
+                  if (inputFile==null) throw new Exception("Failed to download pathway.");
+                } catch (Throwable t) {
+                  GUITools.showErrorMessage(null, t);
                   // Do not display error again for every observation.
                   bar.setCallNr(bar.getCallNumber()+(observations.length-1));
                   break;

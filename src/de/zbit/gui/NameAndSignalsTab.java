@@ -227,6 +227,13 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     actions.updateToolbarButtons(toolbar);
   }
   
+  /**
+   * @return {@link NameAndSignalTabActions}.
+   */
+  public NameAndSignalTabActions getActions() {
+    return actions;
+  }
+  
 
   /* (non-Javadoc)
    * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)

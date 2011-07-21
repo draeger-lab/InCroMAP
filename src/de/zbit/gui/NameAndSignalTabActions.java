@@ -19,6 +19,7 @@ import javax.swing.UIManager;
 
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
@@ -72,6 +73,7 @@ public class NameAndSignalTabActions implements ActionListener {
     INTEGRATE,
     ADD_GENE_SYMBOLS,
     ANNOTATE_TARGETS,
+    REMOVE_TARGETS,
     FDR_CORRECTION_BH,
     FDR_CORRECTION_BFH,
     FDR_CORRECTION_BO;
@@ -113,7 +115,7 @@ public class NameAndSignalTabActions implements ActionListener {
         case VISUALIZE_IN_PATHWAY:
           return "Show a KEGG pathway and color nodes accoring to fold changes.";
         case ADD_GENE_SYMBOLS:
-          return "Show Gene symbols as names, using a GeneID to gene symbol converter.";
+          return "Show gene symbols as names, using a NCBI gene id to gene symbol converter.";
           
         case FDR_CORRECTION_BH:
           return "Correct p-values with the Benjamini and Hochberg method and save as q-values.";
@@ -174,14 +176,17 @@ public class NameAndSignalTabActions implements ActionListener {
     }
     
     // Datatype specific buttons:
-    if (tableContent.equals(mRNA.class) || tableContent.equals(miRNAandTarget.class)
-        || tableContent.equals(miRNA.class)) {
+    if (tableContent.equals(mRNA.class)) {
+      // Removed fir miRNA, is done every time after annotating targets!
+      //|| tableContent.equals(miRNAandTarget.class) || tableContent.equals(miRNA.class)) {
       bar.add(GUITools.createJButton(this,
           NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_GEAR_16")));
       
     } if (tableContent.equals(miRNA.class)) {
-      bar.add(GUITools.createJButton(this,
-          NSAction.ANNOTATE_TARGETS, UIManager.getIcon("ICON_GEAR_16")));
+      // Annotate and Remove targets
+      JPopupMenu targets = IntegratorGUITools.createMiRNAtargetPopup(this, null);
+      JDropDownButton targetsButton = new JDropDownButton(targets.getLabel(), UIManager.getIcon("ICON_GEAR_16"), targets);
+      bar.add(targetsButton);
     
     } if (tableContent.equals(EnrichmentObject.class)) {
       
@@ -224,7 +229,7 @@ public class NameAndSignalTabActions implements ActionListener {
 
 
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings({ "unchecked" })
   @Override
   public void actionPerformed(ActionEvent e) {
     String command = e.getActionCommand();
@@ -245,31 +250,13 @@ public class NameAndSignalTabActions implements ActionListener {
       GUITools.showMessage("Not yet implemented.", "");
       
     } else if (command.equals(NSAction.ADD_GENE_SYMBOLS.toString())) {
-      IntegratorTab parent = this.parent;
-      if (parent.getDataContentType().equals(EnrichmentObject.class)) {
-        while (parent.getSourceTab()!=null) {
-          parent = parent.getSourceTab();
-        }
-      }
-      /*List<? extends mRNA> list=null;
-      if (parent.getDataContentType().equals(mRNA.class)) {
-        list = (List<? extends mRNA>) parent.getData();
-      } else if (pa)
-      }*/
-      try {
-        mRNA.convertNamesToGeneSymbols((List<? extends NameAndSignals>) parent.getData(), parent.getSpecies());
-      } catch (Exception e1) {
-        GUITools.showErrorMessage(parent, e1);
-      }
-      parent.getVisualization().repaint();
+      showGeneSymbols();
       
     } else if (command.equals(NSAction.ANNOTATE_TARGETS.toString())) {
-      ValuePair<miRNAtargets, Species> t_all = IntegratorGUITools.loadMicroRNAtargets(parent.getSpecies(false));
-      if (t_all==null || t_all.getA()==null) return;
-      int annot = miRNA.link_miRNA_and_targets(t_all.getA(), (Collection<miRNA>) parent.getData());
-      log.info(String.format("Annotated %s/%s microRNAs with targets.", annot, parent.getData().size()));
-      parent.rebuildTable();
-      parent.repaint();
+      annotateMiRNAtargets();
+      
+    } else if (command.equals(NSAction.REMOVE_TARGETS.toString())) {
+      removeMiRNAtargets();
 
     } else if (command.equals(NSAction.FDR_CORRECTION_BH.toString())) {
       BFH_cor.setSelected(false); BO_cor.setSelected(false); BH_cor.setSelected(true);
@@ -286,6 +273,67 @@ public class NameAndSignalTabActions implements ActionListener {
       new Bonferroni().setQvalue((List<EnrichmentObject<Object>>) parent.getData());
       parent.getVisualization().repaint();
     }
+  }
+
+
+  /**
+   * Converts geneIDs to gene symbols. For {@link mRNA}s, the name will be changed
+   * from whatever it is now to a gene symbol. For {@link miRNA}s, the target
+   * geneIDs will be displayed as gene symbols.
+   */
+  @SuppressWarnings("unchecked")
+  public void showGeneSymbols() {
+    IntegratorTab<?> parent = this.parent;
+    if (parent.getDataContentType().equals(EnrichmentObject.class)) {
+      while (parent.getSourceTab()!=null) {
+        parent = parent.getSourceTab();
+      }
+    }
+    /*List<? extends mRNA> list=null;
+    if (parent.getDataContentType().equals(mRNA.class)) {
+      list = (List<? extends mRNA>) parent.getData();
+    } else if (pa)
+    }*/
+    try {
+      mRNA.convertNamesToGeneSymbols((List<? extends NameAndSignals>) parent.getData(), parent.getSpecies());
+    } catch (Exception e1) {
+      GUITools.showErrorMessage(parent, e1);
+    }
+    parent.getVisualization().repaint();
+  }
+
+
+  /**
+   * Shows a dialog and performs annotation of {@link miRNA}s with {@link miRNAtargets}.
+   * Will result in an exception if the underlying tab is no collection of miRNAs. 
+   */
+  @SuppressWarnings("unchecked")
+  public void annotateMiRNAtargets() {
+    ValuePair<miRNAtargets, Species> t_all = IntegratorGUITools.loadMicroRNAtargets(parent.getSpecies(false));
+    if (t_all==null || t_all.getA()==null) return;
+    int annot = miRNA.link_miRNA_and_targets(t_all.getA(), (Collection<miRNA>) parent.getData());
+    log.info(String.format("Annotated %s/%s microRNAs with targets.", annot, parent.getData().size()));
+    
+    // Convert geneIDs to gene symbols.
+    showGeneSymbols();
+    
+    parent.rebuildTable();
+    parent.repaint();
+  }
+  
+  /**
+   * Removes all {@link miRNAtargets} from {@link miRNA} contained in the data in {@link #parent}.
+   */
+  public void removeMiRNAtargets() {
+    List<? extends TableResult> data = parent.getData();
+    for (TableResult tr: data) {
+      if (tr instanceof miRNA) {
+        ((miRNA)tr).removeTargets();
+      }
+    }
+    
+    parent.rebuildTable();
+    parent.repaint();
   }
   
   

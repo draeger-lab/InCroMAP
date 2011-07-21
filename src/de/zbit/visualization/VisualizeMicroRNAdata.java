@@ -7,7 +7,6 @@ import java.awt.Color;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,7 @@ import y.view.NodeRealizer;
 import y.view.Selections;
 import y.view.ShapeNodeRealizer;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal.MergeType;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.IntegratorUI;
@@ -33,17 +33,12 @@ import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.util.StringUtil;
 
 /**
+ * A special class to visualize lists of {@link miRNA}s in {@link Graph2D}s.
  * @author Clemens Wrzodek
  */
 public class VisualizeMicroRNAdata {
   public static final transient Logger log = Logger.getLogger(VisualizeMicroRNAdata.class.getName());
   
-  /**
-   * Static String for the <code>type</code> {@link NodeMap} of the {@link #graph}
-   * to be used for microRNAs,
-   */
-  private final static String RNA_TYPE = "RNA";
-
   /**
    * Interaction type for edges from miRNA nodes to mRNA(/Gene) nodes.
    */
@@ -69,28 +64,37 @@ public class VisualizeMicroRNAdata {
   /**
    * Adds microRNAs and target relationships to graph.
    * @param data
+   * @return number of created (or already existing) microRNA nodes in the {@link #graph},
+   * corresponding to the <code>data</code>.
    */
-  public void addMicroRNAsToGraph(Collection<? extends miRNA> data) {
-    data = NameAndSignals.geneCentered(data);
+  public int addMicroRNAsToGraph(Collection<? extends miRNA> data) {
+    // MergeType does NOT make any difference, because input data has NO SIGNALS!
+    data = NameAndSignals.geneCentered(data, MergeType.Mean);
     
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
-    Map<String, Node> mi2n_map = getRNA2NodeMap();
+    Map<String, Node> mi2n_map = tools.getRNA2NodeMap();
     Set<Node> nodesToLayout = new HashSet<Node>();
     
+    int visualizedMiRNAs = 0;
     for (miRNA m : data) {
       if (!m.hasTargets()) continue;
       for (miRNAtarget t: m.getUniqueTargets()) { // Merges duplicate target gene ids
         List<Node> targetNodes = gi2n_map.get(t.getTarget());
         if (targetNodes!=null && targetNodes.size()>0) {
+          visualizedMiRNAs++;
+          
           // we have a microRNA that has targets that are contained in the current graph.
           Node mi_node = getMicroRNAnode(mi2n_map, m);
           nodesToLayout.add(mi_node);
           
           // Create edges from miRNA node to all targets.
           for (Node target: targetNodes) {
-            Edge e = graph.createEdge(mi_node, target);
-            tools.setInfo(e, "description", t.getSource());
-            tools.setInfo(e, "interactionType", MIRNA_MRNA_INTERACTION_TYPE);
+            if (!graph.containsEdge(mi_node, target)) {
+              Edge e = graph.createEdge(mi_node, target);
+              graph.getRealizer(e).setLineColor(Color.GRAY);
+              tools.setInfo(e, "description", t.getSource());
+              tools.setInfo(e, "interactionType", MIRNA_MRNA_INTERACTION_TYPE);
+            }
           }
         }
       }
@@ -98,7 +102,9 @@ public class VisualizeMicroRNAdata {
     }
     
     // Layout new added nodes.
-    layoutNewNodes(nodesToLayout);
+    layoutNodeSubset(nodesToLayout);
+    
+    return visualizedMiRNAs;
   }
   
   /**
@@ -128,7 +134,10 @@ public class VisualizeMicroRNAdata {
   private Node createMicroRNANode(miRNA mirna) {
     String label = mirna.getName();
     // Trim organism prefix from microRNA.
-    if (StringUtil.countChar(label, '-')==2) {
+    int pos = label.indexOf("miR");
+    if (pos>=0) {
+      label = label.substring(pos);
+    } else if (StringUtil.countChar(label, '-')==2) {
       label = label.substring(label.indexOf('-')+1);
     }
     
@@ -152,12 +161,12 @@ public class VisualizeMicroRNAdata {
       }
     }
     
-    nr.setWidth(10);
-    nr.setHeight(10);
+    nr.setWidth(15);
+    nr.setHeight(15);
     
     Node n = graph.createNode(nr);
     tools.setInfo(n, "nodeLabel", mirna.getName());
-    tools.setInfo(n, "type", RNA_TYPE);
+    tools.setInfo(n, "type", TranslatorTools.RNA_TYPE);
     tools.setInfo(n, "url", link);
     tools.setInfo(n, "nodeColor", KEGG2yGraph.ColorToHTML(nr.getFillColor()) );
     tools.setInfo(n, "nodeName", nl.getText());
@@ -169,7 +178,7 @@ public class VisualizeMicroRNAdata {
    * Layout the freshly added nodes.
    * @param newNodes nodes to layout
    */
-  private void layoutNewNodes(Set<Node> newNodes) {
+  private void layoutNodeSubset(Set<Node> newNodes) {
     if (newNodes==null || newNodes.size()<1) return;
     
     // Create a selection map that contains all new nodes.
@@ -182,6 +191,15 @@ public class VisualizeMicroRNAdata {
     // Create layouter and perform layout
     SmartOrganicLayouter layouter = new SmartOrganicLayouter();
     layouter.setScope(SmartOrganicLayouter.SCOPE_SUBSET);
+    // If SmartComponentLayoutEnabled is true, all new nodes will
+    // simply be put one above the other. If false, they are lyouted
+    // nicely, BUT orphans are being moved, too :-(
+//    layouter.setSmartComponentLayoutEnabled(true);
+    layouter.setNodeOverlapsAllowed(newNodes.size()>30);
+    layouter.setConsiderNodeLabelsEnabled(true);
+    
+//    OrganicLayouter layouter = new OrganicLayouter();
+//    layouter.setSphereOfAction(OrganicLayouter.ONLY_SELECTION);
     
     Graph2DLayoutExecutor l = new Graph2DLayoutExecutor();
     l.doLayout(graph, layouter);
@@ -195,45 +213,9 @@ public class VisualizeMicroRNAdata {
     // remove selection map after layouting.
     graph.removeDataProvider(SmartOrganicLayouter.NODE_SUBSET_DATA);
     
-  }
-  
-
-  /**
-   * @return a map from nodeLabel (microRNA_name Uppercased and trimmed) to the actual node.
-   */
-  private Map<String, Node> getRNA2NodeMap() {
-
-    // Build a map from GeneID 2 Node
-    Map<String, Node> mi2node = new HashMap<String, Node>();
-
-    NodeMap typeMap = (NodeMap) tools.getMap("type");
-    NodeMap labelMap = (NodeMap) tools.getMap("nodeLabel");
-    if (typeMap==null || labelMap==null) {
-      log.severe(String.format("Could not find %s %s mapping.", typeMap==null?"type":"", labelMap==null?"label":""));
-      return null;
-    }
-    
-    // build the resulting map
-    for (Node n : graph.getNodeArray()) {
-      Object type = typeMap.get(n);
-      if (type!=null && type.equals(RNA_TYPE)) {
-        Object label = labelMap.get(n);
-        if (label==null) continue;
-        mi2node.put(label.toString().toUpperCase().trim(), n);
-      }
-    }
-    
-    return mi2node;
+    // Reset layout, because subset scope doesn't work correctly.
+    new TranslatorTools(graph).resetLayout();
   }
 
 
-
-  /**
-   * @param args
-   */
-  public static void main(String[] args) {
-    // TODO Auto-generated method stub
-    
-  }
-  
 }

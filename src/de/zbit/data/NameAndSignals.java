@@ -269,7 +269,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @return
    */
   public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals, MergeType m) {
-    if (m.equals(MergeType.AskUser)) m = IntegratorGUITools.getMergeType();
+    if (m==null || m.equals(MergeType.AskUser)) m = IntegratorGUITools.getMergeType();
     
     // Group data by name
     Map<String, Collection<T>> group = group_by_name(nameAndSignals);
@@ -845,7 +845,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
-   * @param col any iterable.
+   * @param col any iterable of a contant data type (no mixed classes in the Iterable are allowed).
    * @return true if and only if this iterable contains {@link miRNA} OR EXTENDED objects.
    * Thus, it is also true for {@link miRNAandTarget}s.
    */

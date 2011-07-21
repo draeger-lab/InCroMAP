@@ -12,8 +12,10 @@ import java.beans.EventHandler;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
@@ -34,6 +36,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.prefs.IntegratorIOOptions;
@@ -100,6 +103,12 @@ public class IntegratorUI extends BaseFrame {
    * This is the main component
    */
   private JTabbedPane tabbedPane;
+  
+  /**
+   * This map is required, because KEGGtranslator has no dynamic changing
+   * Toolbar!
+   */
+  private Map<TranslatorPanel, TranslatorTabActions> translatorActionMap = new HashMap<TranslatorPanel, TranslatorTabActions>();
   
   /**
    * Holds a duplicate of the list of recently opened files.
@@ -272,9 +281,16 @@ public class IntegratorUI extends BaseFrame {
         ui.setVisible(true);
         GUITools.hideSplashScreen();
         ui.toFront();
+        
         try {
           mRNAReader r = mRNAReader.getExampleReader();
-          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example");
+          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example_mRNA");
+          
+          miRNAReader r2 = new miRNAReader(1,0);
+          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorGUITools.organisms.get(1)), "Example_miRNA");
+          
         } catch (Exception e) {e.printStackTrace();}
       }
     });
@@ -347,7 +363,13 @@ public class IntegratorUI extends BaseFrame {
    */
   public boolean closeTab(int tabIndex) {
     try {
+      // Remove tab-related action
+      if (tabbedPane.getComponentAt(tabIndex) instanceof TranslatorPanel) {
+        translatorActionMap.remove(tabbedPane.getComponentAt(tabIndex));
+      }
+      // Close tab
       tabbedPane.removeTabAt(tabIndex);
+      
       updateButtons();
       return true;
     } catch (Exception e) {
@@ -539,6 +561,7 @@ public class IntegratorUI extends BaseFrame {
    */
   public void showMicroRNAtargets() {
     ValuePair<miRNAtargets, Species> vp = IntegratorGUITools.loadMicroRNAtargets(null);
+    if (vp==null || vp.getA()==null) return; // Cancel pressed
 
     // Add as tab
     addTab(new NameAndSignalsTab(this, vp.getA(), vp.getB()), "miRNA targets (" + vp.getB().getCommonName() + ")");
@@ -579,7 +602,11 @@ public class IntegratorUI extends BaseFrame {
     BaseFrameTab o = getCurrentlySelectedPanel();
     if (o != null) {
       if (o instanceof TranslatorPanel) {
-        TranslatorTabActions actions = new TranslatorTabActions((TranslatorPanel)o);
+        TranslatorTabActions actions = translatorActionMap.get(o);
+        if (actions==null) {
+          actions = new TranslatorTabActions((TranslatorPanel)o);
+          translatorActionMap.put((TranslatorPanel) o, actions);
+        }
         actions.createJToolBarItems(toolBar);
         actions.updateToolbarButtons(toolBar);
       }
