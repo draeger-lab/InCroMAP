@@ -169,5 +169,22 @@ public class mRNA extends NameAndSignals {
     }
     log.info("Converted GeneIDs to Gene symbols.");
   }
+
+  /**
+   * @return
+   */
+  public String getProbeName() {
+    Object probeName = getData(miRNA.probeNameKey);
+    return probeName==null?null:probeName.toString();
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#getUniqueLabel()
+   */
+  @Override
+  public String getUniqueLabel() {
+    String probe = getProbeName();
+    return (probe==null||probe.length()<1)?getName():probe;
+  }
   
 }

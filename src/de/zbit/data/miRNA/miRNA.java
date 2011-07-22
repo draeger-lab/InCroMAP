@@ -260,6 +260,15 @@ public class miRNA extends NameAndSignals {
     }
     
   }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#getUniqueLabel()
+   */
+  @Override
+  public String getUniqueLabel() {
+    String probe = getProbeName();
+    return (probe==null||probe.length()<1)?getName():probe;
+  }
   
 
 

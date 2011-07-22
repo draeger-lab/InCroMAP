@@ -502,5 +502,13 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
     EnrichmentObject o = (EnrichmentObject) it.next();
     return (NameAndSignals.isNameAndSignals(o.getGenesInClass()));
   }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#getUniqueLabel()
+   */
+  @Override
+  public String getUniqueLabel() {
+    return getName();
+  }
   
 }

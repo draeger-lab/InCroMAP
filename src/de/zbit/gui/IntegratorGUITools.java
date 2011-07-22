@@ -827,6 +827,25 @@ public class IntegratorGUITools {
     
     return m;
   }
+
+  /**
+   * This method should NOT be preferred to {@link #getMergeType()}. It returns the
+   * MergeType, stored currently in the settings and does NEVER ask the user.
+   * <p>This method should be used, if the merged signals are not important, i.e.
+   * the whole {@link MergeType} is somehow unimportant.
+   * @return
+   */
+  public static MergeType getMergeTypeSilent() {
+    MergeType m = SignalOptions.GENE_CENTER_SIGNALS_BY.getDefaultValue();
+    
+    SBPreferences prefs = SBPreferences.getPreferencesFor(SignalOptions.class);
+    try {
+      m = SignalOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
+    } catch (Throwable t) {}
+    if (!m.equals(MergeType.AskUser)) return m;
+    
+    return MergeType.Mean;
+  }
     
 }
 

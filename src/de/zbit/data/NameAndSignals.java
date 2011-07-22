@@ -858,5 +858,12 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     
     return false;
   }
+
+  /**
+   * @return a nice {@link String} identifier that can be used, e.g. for nodes
+   * and as uniquely and as short as possible describes this element. E.g. for
+   * mRNAs, the probe name should be included next to the GeneSymbol.
+   */
+  public abstract String getUniqueLabel();
     
 }

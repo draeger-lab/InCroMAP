@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.JLabeledComponent;
@@ -366,7 +367,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     // New dataset
     mRNAReader r = new mRNAReader(3, IdentifierType.NCBI_GeneID, species);
     r.addSecondIdentifier(1, IdentifierType.GeneSymbol);
-    r.addAdditionalData(0, "probe_name");
+    r.addAdditionalData(0, miRNA.probeNameKey);
     r.addAdditionalData(2, "description");
     r.addSignalColumn(27, SignalType.FoldChange, "Ctnnb1"); // 27-30 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
     r.addSignalColumn(31, SignalType.pValue, "Ctnnb1"); // 31-34 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN

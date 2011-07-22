@@ -4,6 +4,9 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
@@ -15,11 +18,12 @@ import javax.swing.UIManager;
 
 import y.base.Node;
 import de.zbit.data.EnrichmentObject;
-import de.zbit.data.Signal.MergeType;
-import de.zbit.gui.prefs.IntegratorIOOptions;
+import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.TranslatorPanel;
+import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
+import de.zbit.util.ValuePair;
 
 /**
  * Actions for a {@link JToolBar} that can be created
@@ -195,11 +199,7 @@ public class TranslatorTabActions implements ActionListener{
       removeMicroRNAnodes();
     
     } else if (command.equals(TPAction.ADD_MIRNAS.toString())) {
-      // MergeType does NOT make any difference, because input data has NO SIGNALS!
-      // TODO:
-      // 1. Remember organism in TranslatorPanel
-      // 2. LoadTargets
-      KEGGPathwayActionListener.addMicroRNAs(parent, dataSource);
+      addMicroRNAnodes();
       
     } else if (command.equals(TPAction.REMOVE_PROTEIN_VARIANT_NODES.toString())) {
       // TODO: Remove protein variants
@@ -210,13 +210,82 @@ public class TranslatorTabActions implements ActionListener{
 
 
   /**
+   * Add microRNA nodes to the graph.
+   * @return true if and only if at least one node has been added to the graph.
+   */
+  public boolean addMicroRNAnodes() {
+    // 1. Get organism from TranslatorPanel
+    if (!parent.isReady()) return false;
+    Species spec = getSpeciesOfPathway(parent, IntegratorGUITools.organisms);
+    // 2. LoadTargets
+    ValuePair<miRNAtargets, Species> vp = IntegratorGUITools.loadMicroRNAtargets(spec);
+    if (vp==null || vp.getA()==null || vp.getA().size()<1) return false;
+    
+    // 3. Visualize targets.
+    int nodesAdded = KEGGPathwayActionListener.addMicroRNAs(parent, miRNAandTarget.getList(vp.getA()));
+    
+    return (nodesAdded>0);
+  }
+
+
+  /**
+   * Get the {@link Species} of a pathway.
+   * @param tp
+   * @param spec a list of species to choose from.
+   * @return {@link Species} of the pathway, currently shown in the {@link TranslatorPanel}.
+   * Or <code>NULL</code> if it is unknown, the panel is not ready or it is a reference pw.
+   */
+  public static Species getSpeciesOfPathway(TranslatorPanel tp, List<Species> spec) {
+    File f = tp.getInputFile();
+    if (f==null) return null;
+    if (spec==null) try {
+      spec = Species.generateSpeciesDataStructure();
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
+    
+    // Return prefix of input file (e.g., "mmu00124.xml" => "mmu").
+    String prefix = getPrefix(f.getName().trim());
+    if (prefix==null || prefix.length()<1 || prefix.equalsIgnoreCase("ko") || 
+        prefix.equalsIgnoreCase("map") || prefix.equalsIgnoreCase("ec") || 
+        prefix.equalsIgnoreCase("rn")) {
+      // Reference, or non-organism-specific pathways.
+      return null;
+    }
+    
+    // Search species of pathway
+    return Species.search(spec, prefix, Species.KEGG_ABBR);
+  }
+
+
+  /**
+   * @param name
+   * @return first letters of the string, until NOT {@link Character#isLetter(char)}.
+   */
+  private static String getPrefix(String name) {
+    StringBuffer prefix = new StringBuffer();
+    if (name!=null) {
+      char[] nameA = name.toCharArray();
+      for (char c: nameA) {
+        if (!Character.isLetter(c)) break;
+        prefix.append(c);
+      }
+    }
+    return prefix.toString();
+  }
+
+
+  /**
    * Removes all nodes with type "RNA" from the parent graph.
    */
   public void removeMicroRNAnodes() {
     TranslatorTools tools = new TranslatorTools(parent);
-    Map<String, Node> mi2node = tools.getRNA2NodeMap();
-    for (Node n: mi2node.values()) {
-      tools.getGraph().removeNode(n);
+    Map<String, List<Node>> mi2node = tools.getRNA2NodeMap();
+    for (List<Node> nl: mi2node.values()) {
+      for (Node n: nl) {
+        tools.getGraph().removeNode(n);
+      }
     }
     
     // Disable the "remove" button now

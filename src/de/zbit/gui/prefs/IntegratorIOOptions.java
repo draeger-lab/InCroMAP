@@ -11,7 +11,7 @@ import de.zbit.util.prefs.Range;
  * IO options for Integrator.
  * @author Clemens Wrzodek
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings("rawtypes")
 public interface IntegratorIOOptions extends de.zbit.util.prefs.KeyProvider {
   static Class[] available_formats = Reflect.getAllClassesInPackage("de.zbit.io", true, true, NameAndSignalReader.class,null,true);
   

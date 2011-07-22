@@ -24,6 +24,7 @@ import y.base.Node;
 import y.base.NodeMap;
 import y.view.Graph2D;
 import y.view.NodeRealizer;
+import y.view.hierarchy.HierarchyManager;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
@@ -46,6 +47,7 @@ import de.zbit.util.StringUtil;
 import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 import de.zbit.util.prefs.SBPreferences;
+import de.zbit.visualization.VisualizeMicroRNAdata;
 
 /**
  * This class is intended to provide tools for connecting {@link Signal}s
@@ -65,6 +67,11 @@ public class Signal2PathwayTools {
    */
   Graph2D graph;
   
+  /**
+   * Common tools.
+   */
+  TranslatorTools tools;
+  
   public Signal2PathwayTools(TranslatorPanel tp){
     this(tp.isGraphML()?(Graph2D) tp.getDocument():null);
   }
@@ -73,6 +80,7 @@ public class Signal2PathwayTools {
     super();
     this.graph=graph;
     if (this.graph==null) log.warning("Graph is null!");
+    tools = new TranslatorTools(graph);
   }
   
   /**
@@ -92,9 +100,8 @@ public class Signal2PathwayTools {
   public <T extends NameAndSignals> void writeSignalsToNodes(Iterable<T> nsList, String experimentName, SignalType type) {
     
     // Get GeneID 2 Node map
-    TranslatorTools tools = new TranslatorTools(graph);
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
-    Map<String, Node> mi2n_map = tools.getRNA2NodeMap();
+    Map<String, List<Node>> mi2n_map = tools.getRNA2NodeMap();
     
     // Write signals to nodes
     Map<ValuePair<String, SignalType>, NodeMap> signalMaps = new HashMap<ValuePair<String, SignalType>, NodeMap>();
@@ -103,7 +110,7 @@ public class Signal2PathwayTools {
       List<Node> node;
       if (ns instanceof miRNA) {
         if (ns.getName()==null) continue;
-        Node miNode = mi2n_map.get(ns.getName().toUpperCase().trim());
+        Node miNode = VisualizeMicroRNAdata.getMicroRNAnode(mi2n_map, (miRNA) ns, graph);
         if (miNode==null) continue; // Contains no node in the current graph 
         node = Arrays.asList(new Node[]{miNode});
       } else {
@@ -193,7 +200,7 @@ public class Signal2PathwayTools {
    * list of colors for a gradient. Will be distributed equally, linear on the signal sample range.
    * @return number of nodes, colored according to the signal, or -1 if an error occured.
    */
-  public <T extends NameAndSignals> int colorNodesAccordingToSignals(Iterable<T> nsList, String experimentName, SignalType type, Color... gradientColors) {
+  public <T extends NameAndSignals> int colorNodesAccordingToSignals(Collection<T> nsList, String experimentName, SignalType type, Color... gradientColors) {
     return colorNodesAccordingToSignals(nsList, IntegratorGUITools.getMergeType(), experimentName, type, gradientColors);
   }
  
@@ -208,9 +215,13 @@ public class Signal2PathwayTools {
    * list of colors for a gradient. Will be distributed equally, linear on the signal sample range.
    * @return number of nodes, colored according to the signal, or -1 if an error occured.
    */
-  public <T extends NameAndSignals> int colorNodesAccordingToSignals(Iterable<T> nsList, MergeType sigMerge, 
+  public <T extends NameAndSignals> int colorNodesAccordingToSignals(Collection<T> nsList, MergeType sigMerge, 
     String experimentName, SignalType type, Color... gradientColors) {
     if (sigMerge.equals(MergeType.AskUser)) sigMerge = IntegratorGUITools.getMergeType();
+    
+    // Gene center before coloring!!!
+    // If enabling, consider also centering before/in writeSignals()
+//    nsList = NameAndSignals.geneCentered(nsList, sigMerge);
     
     // Get defaults
     Color colorForUnaffectedNodes = PathwayVisualizationOptions.COLOR_FOR_NO_VALUE.getValue(prefs);
@@ -248,20 +259,24 @@ public class Signal2PathwayTools {
     LinearRescale lblue = new LinearRescale(minMax[0], minMax[1], getColorChannel(2, gradientColors), middleValue);
     
     // Get GeneID 2 Node map
-    TranslatorTools tools = new TranslatorTools(graph);
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
-    Map<String, Node> mi2n_map = tools.getRNA2NodeMap();
+    Map<String, List<Node>> mi2n_map = tools.getRNA2NodeMap();
     
     
     Set<Node> allNodes = new HashSet<Node>(Arrays.asList(graph.getNodeArray()));
+    Map<Node, NameAndSignals> node2ns = new HashMap<Node, NameAndSignals>();
+    Map<Node, Node> groupNodeRepresentative = new HashMap<Node, Node>(); // GroupNode 2 AnyContentNode-toBeCloned
+    Map<Node, Integer> groupNodeChildCount = new HashMap<Node, Integer>(); // GroupNode 2 GroupNodeChildrenCount
     for (NameAndSignals ns : nsList) {
       // Get Node(s) for current NameAndSignals
       List<Node> node;
       if (ns instanceof miRNA) {
         if (ns.getName()==null) continue;
-        Node miNode = mi2n_map.get(ns.getName().toUpperCase().trim());
+        
+        Node miNode = VisualizeMicroRNAdata.getMicroRNAnode(mi2n_map, (miRNA) ns, graph);
         if (miNode==null) continue; // Contains no node in the current graph 
         node = Arrays.asList(new Node[]{miNode});
+        
       } else {
         // Get Node(s) for mRNA
         node = getNodesForNameAndSignal(gi2n_map, ns);
@@ -278,8 +293,34 @@ public class Signal2PathwayTools {
               double d = v.doubleValue();
               Color newColor = new Color(rescaleColorPart(lred, d),rescaleColorPart(lgreen, d),rescaleColorPart(lblue, d));
               for (Node n: node) {
+                // ---------------------------------
+                
+                if (node2ns.containsKey(n)) {
+                  // Convert to group node and create node, representing the previous NameAndSignals that mapped to the node
+                  if (!graph.getHierarchyManager().isGroupNode(n)) {
+                    Node copy = n.createCopy(graph);
+                    
+                    NodeRealizer nr = KEGG2yGraph.setupGroupNode(graph.getRealizer(n).getLabel(), null);
+                    graph.getHierarchyManager().convertToGroupNode(n);
+                    graph.setRealizer(n, nr);
+                    
+                    prepareChildNode(n, copy, node2ns.get(n), 1);
+                    groupNodeChildCount.put(n, 1);
+                    groupNodeRepresentative.put(n, copy);
+                  } 
+                  
+                  // Create a node in this group node, that corresponds to the current NameAndSignals
+                  Node copy = groupNodeRepresentative.get(n).createCopy(graph);
+                  int childs = groupNodeChildCount.get(n)+1;
+                  groupNodeChildCount.put(n, childs);
+                  prepareChildNode(n, copy, ns, childs);
+                } else {
+                  node2ns.put(n, ns);
+                }
+                // Only the following two lines are required for gene-centric data (no node-splitting).
                 graph.getRealizer(n).setFillColor(newColor);
                 allNodes.remove(n);
+                // ---------------------------------
               }
             }
           }
@@ -301,9 +342,60 @@ public class Signal2PathwayTools {
       graph.getRealizer(n).setFillColor(colorForUnaffectedNodes);
     }
     
+    // TODO: Make a nice layout.
+//    for (Node newGroupNode: groupNodeRepresentative.keySet()) {
+//      
+//    }
+//    tools.layoutNodeSubset(groupNodeRepresentative.keySet());
+    
     return graph.getNodeArray().length-allNodes.size();
   }
   
+  /**
+   * @param groupNode
+   * @param child
+   * @param ns
+   */
+  private void prepareChildNode(Node groupNode, Node child, NameAndSignals ns, int nodesInGroup) {
+    int cols = 2;
+    double inset=5.0;
+    HierarchyManager hm = graph.getHierarchyManager();
+    NodeRealizer cr = graph.getRealizer(child);
+    
+    /* Parent node must not change x and y or width and height!
+     * Child node X and Y determine coordinates of parent group node automatically!
+     */
+    graph.setLabelText(child, ns.getUniqueLabel());
+    hm.setParentNode(child, groupNode);
+    // Doesn't work unfortunately!
+    //int nodesInGroup = hm.getInnerGraph(groupNode).N();
+    
+    double w = Math.max(cr.getWidth(), cr.getLabel().getWidth()-inset);
+    
+    double x = ((nodesInGroup-1) %cols); // column
+    x = cr.getX() + (x*(w+inset));
+    double y = ((nodesInGroup-1) /cols); // row
+    y = cr.getY() + (y*(cr.getHeight()+inset));
+    
+    cr.setX(x);
+    cr.setY(y);
+    
+    // Clone map contents of group node
+    NodeMap[] maps = graph.getRegisteredNodeMaps();
+    for (NodeMap map: maps) {
+      Object o = map.get(groupNode);
+      if (o!=null) {
+        map.set(child, o);
+      }
+    }
+    
+    // Set new coordinates
+    tools.setInfo(child, "nodePosition", (int) cr.getX() + "|" + (int) cr.getY());
+    
+    // Paint above other nodes.
+    graph.moveToLast(child);
+  }
+
   /**
    * Returns a value between 0 and 255.
    * @param lcolor configured rescaler for the color
@@ -406,7 +498,7 @@ public class Signal2PathwayTools {
               String obsExpName = observation.getB().getA();
               SignalType obsExpType = observation.getB().getB();
               Signal2PathwayTools instance = new Signal2PathwayTools(graph);
-              instance.colorNodesAccordingToSignals((Iterable<? extends NameAndSignals>)observation.getA().getData(),
+              instance.colorNodesAccordingToSignals((Collection<? extends NameAndSignals>)observation.getA().getData(),
                 obsExpName, obsExpType, (Color[]) null);
               
               // Adjust title node

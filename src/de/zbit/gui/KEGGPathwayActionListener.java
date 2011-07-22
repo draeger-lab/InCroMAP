@@ -207,7 +207,6 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * Adds microRNAs to the given graph
    * @param tp panel with graph
    * @param dataSource microRNA datasource
-   * @param mt
    */
   @SuppressWarnings("unchecked")
   public static void addMicroRNAs(TranslatorPanel tp, NameAndSignalsTab dataSource) {
@@ -216,25 +215,46 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       return;
     }
     
-    VisualizeMicroRNAdata vis = new VisualizeMicroRNAdata((Graph2D) tp.getDocument());
-    int addedNodes = vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource);
-    if (addedNodes>0) {
-      // The "Remove miRNA-nodes" button must be enabled.
-      IntegratorUI.getInstance().updateButtons();
-    } else if (addedNodes==0) {
+    int addedNodes = addMicroRNAs(tp, (Collection<? extends miRNA>) dataSource.getData());
+    if (addedNodes==0) {
       // if no nodes have been colored, look if it was due to missing miRNA target annotations
       int a = GUITools.showQuestionMessage(IntegratorUI.getInstance(), "No microRNA had an annotated target within this graph. " +
         "Do you want to (re-)annotate your microRNA data with targets?", IntegratorUI.appName, JOptionPane.YES_NO_OPTION);
       if (a==JOptionPane.YES_OPTION) {
         dataSource.getActions().annotateMiRNAtargets();
-        vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource);
+        addedNodes = addMicroRNAs(tp, (Collection<? extends miRNA>) dataSource.getData());
       }
-      
     }
   }
   
   /**
-   * Color the pathway in <code>tp</code> accoring to the experiment
+   * Adds microRNAs to the given graph.
+   * <p> Use preferred {@link #addMicroRNAs(TranslatorPanel, NameAndSignalsTab)}, because it
+   * adds missing target annotations to the list. This method here does NOT add targets,
+   * if they are missing.
+   * @see #addMicroRNAs(TranslatorPanel, NameAndSignalsTab)
+   * @param tp panel with graph
+   * @param dataSource Collection with {@link miRNA}s that MUST HAVE targets!
+   * @return number of nodes created or -1 if an error occurred.
+   */
+  public static int addMicroRNAs(TranslatorPanel tp, Collection<? extends miRNA> dataSource) {
+    if (!NameAndSignals.isMicroRNA(dataSource)) {
+      log.severe("Can not add miRNA targets when source is not miRNA.");
+      return -1;
+    }
+    
+    VisualizeMicroRNAdata vis = new VisualizeMicroRNAdata((Graph2D) tp.getDocument());
+    int addedNodes = vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource);
+    if (addedNodes>0) {
+      // The "Remove miRNA-nodes" button must be enabled.
+      IntegratorUI.getInstance().updateButtons();
+    }
+    return addedNodes;
+  }
+  
+  
+  /**
+   * Color the pathway in <code>tp</code> according to the experiment
    * described by <code>experimentName</code> and <code>signalType</code>
    * contained in <code>dataSource</code>.
    * 
@@ -245,12 +265,10 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param dataSource list with {@link NameAndSignals}
    * @param experimentName name of the observation to color
    * @param signalType signal type of the observation (usually fold change)
-   * @return number of nodes, colored according to the signal, or -1 if an error occured.
+   * @return number of nodes, colored according to the signal, or -1 if an error occurred.
    */
   private int colorPathway(TranslatorPanel tp, Collection<? extends NameAndSignals> dataSource, String experimentName, SignalType signalType, MergeType mt) {
     Signal2PathwayTools tools2 = new Signal2PathwayTools(tp);
-    // Gene center before coloring!!!
-    dataSource = NameAndSignals.geneCentered(dataSource, mt);
     
     if (tp.getDocument()==null) {
       GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");
