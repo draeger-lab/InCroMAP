@@ -25,7 +25,9 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.IntegratorUI;
+import de.zbit.integrator.GraphMLmapsExtended;
 import de.zbit.kegg.TranslatorTools;
+import de.zbit.kegg.ext.GraphMLmaps;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.util.StringUtil;
 
@@ -72,6 +74,7 @@ public class VisualizeMicroRNAdata {
     Map<String, List<Node>> mi2n_map = tools.getRNA2NodeMap();
     Set<Node> nodesToLayout = new HashSet<Node>();
     
+    // Add a node for each miRNA to the graph.
     int visualizedMiRNAs = 0;
     for (miRNA m : data) {
       if (!m.hasTargets()) continue;
@@ -89,8 +92,8 @@ public class VisualizeMicroRNAdata {
             if (!graph.containsEdge(mi_node, target)) {
               Edge e = graph.createEdge(mi_node, target);
               graph.getRealizer(e).setLineColor(Color.GRAY);
-              tools.setInfo(e, "description", t.getSource());
-              tools.setInfo(e, "interactionType", MIRNA_MRNA_INTERACTION_TYPE);
+              tools.setInfo(e, GraphMLmaps.EDGE_DESCRIPTION, t.getSource());
+              tools.setInfo(e, GraphMLmaps.EDGE_TYPE, MIRNA_MRNA_INTERACTION_TYPE);
             }
           }
         }
@@ -145,6 +148,7 @@ public class VisualizeMicroRNAdata {
     } else if (n.size()==1) {
       return n.get(0);
     } else if (n.size()>1) {
+      
       // Splitted nodes are assigned the "getUniqueLabel()".
       String label = mirna.getUniqueLabel();
       Node parent=n.get(0); // Any node !=null
@@ -205,12 +209,15 @@ public class VisualizeMicroRNAdata {
     nr.setWidth(15);
     nr.setHeight(15);
     
+    // Create node and set annotations
     Node n = graph.createNode(nr);
-    tools.setInfo(n, "nodeLabel", mirna.getName());
-    tools.setInfo(n, "type", TranslatorTools.RNA_TYPE);
-    tools.setInfo(n, "url", link);
-    tools.setInfo(n, "nodeColor", KEGG2yGraph.ColorToHTML(nr.getFillColor()) );
-    tools.setInfo(n, "nodeName", nl.getText());
+    tools.setInfo(n, GraphMLmaps.NODE_LABEL, mirna.getName());
+    tools.setInfo(n, GraphMLmaps.NODE_TYPE, TranslatorTools.RNA_TYPE);
+    tools.setInfo(n, GraphMLmaps.NODE_URL, link);
+    tools.setInfo(n, GraphMLmaps.NODE_COLOR, KEGG2yGraph.ColorToHTML(nr.getFillColor()) );
+    tools.setInfo(n, GraphMLmaps.NODE_NAME, nl.getText());
+    tools.setInfo(n, GraphMLmapsExtended.NODE_IS_MIRNA, true);
+    tools.setInfo(n, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, mirna);
     
     return n;
   }

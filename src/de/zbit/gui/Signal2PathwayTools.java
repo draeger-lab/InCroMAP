@@ -32,9 +32,11 @@ import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
+import de.zbit.integrator.GraphMLmapsExtended;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.ext.GenericDataMap;
+import de.zbit.kegg.ext.GraphMLmaps;
 import de.zbit.kegg.gui.KGMLSelectAndDownload;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.BatchKEGGtranslator;
@@ -294,15 +296,18 @@ public class Signal2PathwayTools {
               Color newColor = new Color(rescaleColorPart(lred, d),rescaleColorPart(lgreen, d),rescaleColorPart(lblue, d));
               for (Node n: node) {
                 // ---------------------------------
-                
+                // Look if the node already has been colored during this run
                 if (node2ns.containsKey(n)) {
                   // Convert to group node and create node, representing the previous NameAndSignals that mapped to the node
                   if (!graph.getHierarchyManager().isGroupNode(n)) {
                     Node copy = n.createCopy(graph);
+                    tools.setInfo(copy, GraphMLmapsExtended.NODE_IS_COPY, true);
+                    tools.setInfo(copy, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, ns);
                     
                     NodeRealizer nr = KEGG2yGraph.setupGroupNode(graph.getRealizer(n).getLabel(), null);
                     graph.getHierarchyManager().convertToGroupNode(n);
                     graph.setRealizer(n, nr);
+                    tools.setInfo(n, GraphMLmapsExtended.NODE_IS_COPY, false);
                     
                     prepareChildNode(n, copy, node2ns.get(n), 1);
                     groupNodeChildCount.put(n, 1);
@@ -311,11 +316,14 @@ public class Signal2PathwayTools {
                   
                   // Create a node in this group node, that corresponds to the current NameAndSignals
                   Node copy = groupNodeRepresentative.get(n).createCopy(graph);
+                  tools.setInfo(copy, GraphMLmapsExtended.NODE_IS_COPY, true);
+                  tools.setInfo(copy, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, ns);
                   int childs = groupNodeChildCount.get(n)+1;
                   groupNodeChildCount.put(n, childs);
                   prepareChildNode(n, copy, ns, childs);
                 } else {
                   node2ns.put(n, ns);
+                  tools.setInfo(n, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, ns);
                 }
                 // Only the following two lines are required for gene-centric data (no node-splitting).
                 graph.getRealizer(n).setFillColor(newColor);
@@ -390,7 +398,7 @@ public class Signal2PathwayTools {
     }
     
     // Set new coordinates
-    tools.setInfo(child, "nodePosition", (int) cr.getX() + "|" + (int) cr.getY());
+    tools.setInfo(child, GraphMLmaps.NODE_POSITION, (int) cr.getX() + "|" + (int) cr.getY());
     
     // Paint above other nodes.
     graph.moveToLast(child);
