@@ -33,7 +33,7 @@ import de.zbit.util.AbstractProgressBar;
  * @author Clemens Wrzodek
  * @param <T> type of the data that is visualized in this tab.
  */
-public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrameTab {
+public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrameTab, Comparable<IntegratorTab<?>> {
   private static final long serialVersionUID = 653444691629282605L;
   public static final transient Logger log = Logger.getLogger(IntegratorTab.class.getName());
   
@@ -309,10 +309,10 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
   }
   
   /**
-   * Returns the actual unterlying UI.
+   * Returns the actual underlying UI.
    */
   public IntegratorUI getIntegratorUI() {
-    return this.parent;
+    return this.parent!=null?this.parent:IntegratorUI.getInstance();
   }
   
   /**
@@ -327,6 +327,15 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
    */
   public boolean isReady() {
     return data!=null;
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+  @Override
+  public int compareTo(IntegratorTab<?> o) {
+    // Just to make this class usable with ValuePair and ValueTriplet.
+    return toString().compareTo(o.toString());
   }
   
 }

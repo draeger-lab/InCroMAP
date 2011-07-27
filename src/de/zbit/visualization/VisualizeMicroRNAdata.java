@@ -73,6 +73,7 @@ public class VisualizeMicroRNAdata {
     data = NameAndSignals.geneCentered(data, IntegratorGUITools.getMergeTypeSilent());
     
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
+    tools.ensureMapExists(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, true);
     Map<Object, List<Node>> mi2n_map = tools.getReverseMap(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
     Set<Node> nodesToLayout = new HashSet<Node>();
     
@@ -126,7 +127,7 @@ public class VisualizeMicroRNAdata {
    * @return {@link Node} for the miRNA.
    */
   @Deprecated
-  private Node getMicroRNAnode(Map<String, List<Node>> mi2n_map, miRNA mirna) {
+  public Node getMicroRNAnode(Map<String, List<Node>> mi2n_map, miRNA mirna) {
     String nameInMap = mirna.getName().toUpperCase().trim();
     List<Node> n = mi2n_map.get(nameInMap);
     
@@ -188,7 +189,7 @@ public class VisualizeMicroRNAdata {
 
   /**
    * @param mirna
-   * @return
+   * @return a {@link Node} corresponding to the given <code>mirna</code>.
    */
   private Node createMicroRNANode(miRNA mirna) {
     String label = mirna.getName();

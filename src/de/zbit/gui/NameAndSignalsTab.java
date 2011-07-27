@@ -67,6 +67,14 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
 
     setData(data);
   }
+  
+  /**
+   * @return the internal data.
+   */
+  @SuppressWarnings("unchecked")
+  public List<? extends NameAndSignals> getData() {
+    return (List<? extends NameAndSignals>) super.getData();
+  }
 
   /**
    * Creates a new {@link SwingWorker} and starts reading the data in background.

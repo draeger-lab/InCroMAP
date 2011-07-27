@@ -23,7 +23,7 @@ import de.zbit.parser.Species;
  * A generic Integrator tab with a table on top.
  * @author Clemens Wrzodek
  */
-public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableResult>> implements Comparable<IntegratorTabWithTable> {
+public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableResult>> {
   private static final long serialVersionUID = -8876183417528573116L;
   public static final transient Logger log = Logger.getLogger(IntegratorTab.class.getName());
   
@@ -42,15 +42,6 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
   
   public IntegratorTabWithTable(IntegratorUI parent, List<? extends TableResult> data, Species species) {
     super(parent, data, species);
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
-   */
-  @Override
-  public int compareTo(IntegratorTabWithTable o) {
-    // Just to make this class useable with ValuePair and ValueTriplet.
-    return toString().compareTo(o.toString());
   }
   
   

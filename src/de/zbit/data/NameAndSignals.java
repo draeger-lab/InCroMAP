@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -198,11 +199,31 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     if (signals==null) return null;
     // Iterating is ok, because usually there are no more than ~5 signals in the list.
     for (Signal signal : signals) {
-      if (signal.getType().equals(type) && signal.getName().equals(experimentName)) {
+      if ((type==null || signal.getType().equals(type)) && 
+          (experimentName==null || signal.getName().equals(experimentName))) {
         return signal;
       }
     }
     return null;
+  }
+  
+  /**
+   * @param type if null, this parameter will be ignored.
+   * @param experimentName if null, this parameter will be ignored.
+   * @param m {@link MergeType}, determine how to merge the signal values.
+   * @return merged value of all signals, matching the input parameters.
+   */
+  public double getSignalMergedValue(SignalType type, String experimentName, MergeType m) {
+    if (signals==null) return Double.NaN;
+    List<Signal> matches = new LinkedList<Signal>();
+    for (Signal signal : signals) {
+      if ((type==null || signal.getType().equals(type)) && 
+          (experimentName==null || signal.getName().equals(experimentName))) {
+        matches.add(signal);
+      }
+    }
+    
+    return Signal.mergeAll(matches, m);
   }
   
   /**

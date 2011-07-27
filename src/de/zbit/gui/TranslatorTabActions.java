@@ -17,7 +17,6 @@ import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
 import y.base.Node;
-import de.zbit.data.EnrichmentObject;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.TranslatorPanel;
@@ -302,7 +301,7 @@ public class TranslatorTabActions implements ActionListener{
     
     // Enable or disable enrichment highlighting
     if (state) {
-      state = (parent.getData()!=null && parent.getData() instanceof EnrichmentObject);
+      state = (parent.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())!=null);
       GUITools.setEnabled(state, toolBar, TPAction.HIGHLIGHT_ENRICHED_GENES);
     }
     

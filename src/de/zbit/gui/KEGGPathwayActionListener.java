@@ -29,6 +29,7 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.TranslatorTabActions.TPAction;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
+import de.zbit.integrator.Signal2PathwayTools;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.PathwaySelector;
@@ -106,9 +107,9 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     } else if (e.getActionCommand().equals(TPAction.HIGHLIGHT_ENRICHED_GENES.toString()) &&
         source instanceof TranslatorPanel) {
       TranslatorPanel source = (TranslatorPanel) this.source;
-      if (source.getData()!=null && (source.getData() instanceof EnrichmentObject<?>) ) {
+      if (source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())!=null) {
         // Highlight source genes
-        Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData()).getGeneIDsFromGenesInClass();
+        Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())).getGeneIDsFromGenesInClass();
         hightlightGenes(source, geneIDs);
       }
       
@@ -129,14 +130,13 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
 //        int r = GUITools.showQuestionMessage(source, "Do you want to color the nodes accoring to an observation?", 
 //          IntegratorUI.appName, new String[]{"Yes", "No"});
         int r=1;
-        if (r==0 || source.getData()!=null && 
-            (source.getData() instanceof ValueTriplet<?, ?, ?>) ) {
+        if (r==0 || source.getData(TPAction.VISUALIZE_DATA.toString())!=null) {
           /* Color Pathway (for fold changes) and write singals to nodes.
            */
           ValueTriplet<NameAndSignalsTab, String, SignalType>  vt=null;
-          if ( source.getData()!=null && (source.getData() instanceof ValueTriplet<?, ?, ?>)) {
+          if ( source.getData(TPAction.VISUALIZE_DATA.toString())!=null) {
             try {
-              vt = (ValueTriplet<NameAndSignalsTab, String, SignalType>) source.getData();
+              vt = (ValueTriplet<NameAndSignalsTab, String, SignalType>) source.getData(TPAction.VISUALIZE_DATA.toString());
             } catch (Exception ex) {}
           }
           if (vt==null || vt.getA()==null) {
@@ -157,9 +157,9 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
           } else {
             r = -1; // At least highlight source gene nodes
           }
-        } if (r!=0 && source.getData()!=null && (source.getData() instanceof EnrichmentObject<?>) ) {
+        } if (r!=0 && source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())!=null) {
           // Highlight source genes
-          Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData()).getGeneIDsFromGenesInClass();
+          Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())).getGeneIDsFromGenesInClass();
           hightlightGenes(source, geneIDs);
         }
       }
@@ -186,20 +186,46 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param signalType signal type of the observation (usually fold change)
    * @return number of nodes, colored according to the signal, or -1 if an error occured.
    */
-  @SuppressWarnings("unchecked")
   private int colorPathway(TranslatorPanel tp, NameAndSignalsTab dataSource, String experimentName, SignalType signalType) {
     /* This method has the advantage to
      * - Ask the mergeType only once!
      * - Add nodes for miRNAs to visualize
      * And thus should always be preferred to the other colorPathway method.
      */
-    MergeType mt = IntegratorGUITools.getMergeType();
     
+    
+    // TODO: Move miRNA node addition BELOW asking VisualizeDataInPathwayDialog!
     if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
       addMicroRNAs(tp, dataSource);
     }
     
-    int coloredNodes = colorPathway(tp, (Collection<? extends NameAndSignals>)dataSource.getData(), experimentName, signalType, mt);
+    { //------------------------------------------------
+      Collection<? extends NameAndSignals> list = dataSource.getData();
+      // TEMPORARY!
+      int answer = GUITools.showQuestionMessage(IntegratorUI.getInstance(), "Do you want to gene-center your data before visualization?", IntegratorUI.appName, JOptionPane.YES_NO_CANCEL_OPTION);
+      if (answer==JOptionPane.CANCEL_OPTION) return 0;
+      else if (answer==JOptionPane.YES_OPTION) {
+        MergeType mt =IntegratorGUITools.getMergeType();
+        
+        list = NameAndSignals.geneCentered(list, mt);
+      }
+      
+      Signal2PathwayTools tools2 = new Signal2PathwayTools(tp);
+      if (tp.getDocument()==null) {
+        GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");
+        return -1;
+      }
+      
+      // Color nodes
+      int coloredNodes = tools2.visualizeData(list, dataSource.getName(),experimentName,signalType);
+      tp.repaint();
+      if (true) return coloredNodes;
+    }//------------------------------------------------
+    
+    MergeType mt = null;//IntegratorGUITools.getMergeType();
+    // TODO: show  VisualizeDataInPathwayDialog
+    
+    int coloredNodes = colorPathway(tp, dataSource, experimentName, signalType, mt);
     return coloredNodes;
   }
   
@@ -267,7 +293,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param signalType signal type of the observation (usually fold change)
    * @return number of nodes, colored according to the signal, or -1 if an error occurred.
    */
-  private int colorPathway(TranslatorPanel tp, Collection<? extends NameAndSignals> dataSource, String experimentName, SignalType signalType, MergeType mt) {
+  private int colorPathway(TranslatorPanel tp, NameAndSignalsTab dataSource, String experimentName, SignalType signalType, MergeType mt) {
     Signal2PathwayTools tools2 = new Signal2PathwayTools(tp);
     
     if (tp.getDocument()==null) {
@@ -278,10 +304,11 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     // Color nodes
     int coloredNodes = 0;
     if (experimentName!=null && signalType!=null) {
-      coloredNodes = tools2.colorNodesAccordingToSignals(dataSource, mt, experimentName, signalType);
-      
+//      coloredNodes = tools2.colorNodesAccordingToSignals(dataSource, mt, experimentName, signalType);
       // Write the signals to the nodes
-      tools2.writeSignalsToNodes(dataSource, experimentName, signalType);
+//    tools2.writeSignalsToNodes(dataSource, experimentName, signalType);
+      
+      coloredNodes = tools2.visualizeData(dataSource, experimentName, signalType);
     }
     
     tp.repaint();
@@ -348,7 +375,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     TranslatorPanel pwTab = new TranslatorPanel(pwId,Format.GraphML, this);
     String name = pwId;
     if (pwo!=null) {
-      pwTab.setData(pwo);
+      pwTab.setData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString(), pwo);
       name = pwo.getName();
     }
     
@@ -427,7 +454,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
 
       // Open pathway and set experiment to visualize.
       TranslatorPanel tp = visualizePathway(selector.getSelectedPathwayID(), null);
-      tp.setData(dataSource);
+      tp.setData(TPAction.VISUALIZE_DATA.toString(), dataSource);
     }
 
   }

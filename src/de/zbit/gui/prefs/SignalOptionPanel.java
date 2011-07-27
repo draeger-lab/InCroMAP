@@ -10,8 +10,6 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 
 import de.zbit.data.Signal.MergeType;
-import de.zbit.util.prefs.KeyProvider;
-import de.zbit.util.prefs.SBPreferences;
 
 /**
  * Enables an option tab for the {@link SignalOptions}.

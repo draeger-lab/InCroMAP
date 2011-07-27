@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -184,7 +185,7 @@ public class Signal implements Serializable, Comparable<Object>  {
   }
   
   /**
-   * Merges all compatible signals.
+   * Merges all <b>compatible</b> signals, i.e., all signals with same experimentName and SignalType.
    * @param c list of signals to merge
    * @param m {@link MergeType} - Either Mean or Median, etc.
    * @return a new list of {@link Signal}s.
@@ -211,6 +212,26 @@ public class Signal implements Serializable, Comparable<Object>  {
     }
     
     return toReturn;
+  }
+  
+  /**
+   * Merges all signals, no matter if they are compatible or not.
+   * @see #merge(Collection, MergeType)
+   * @param c list of signals to merge
+   * @param m {@link MergeType} - Either Mean or Median, etc.
+   * @return a new list of {@link Signal}s.
+   */
+  public static double mergeAll(Collection<Signal> c, MergeType m) {
+    
+    // Collect all signal values
+    double[] values = new double[c.size()];
+    int i=0;
+    Iterator<Signal> it = c.iterator();
+    while (it.hasNext()) {
+      values[i++] = it.next().getSignal().doubleValue();
+    }
+    
+    return calculate(m, values);
   }
   
   /**

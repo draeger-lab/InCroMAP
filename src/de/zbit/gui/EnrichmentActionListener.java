@@ -21,6 +21,7 @@ import de.zbit.analysis.enrichment.KEGGPathwayEnrichment;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.gui.table.JTableFilter;
 
 /**
  * Can handle enrichment actions for {@link IntegratorTab}s.
