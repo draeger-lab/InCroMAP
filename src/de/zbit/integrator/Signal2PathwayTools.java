@@ -678,7 +678,7 @@ public class Signal2PathwayTools {
    * @return number of nodes that changed its color.
    */
   public int visualizeData(NameAndSignalsTab tab, String experimentName, SignalType type) {
-    return visualizeData(tab.getData(), tab.getName(), experimentName, type);
+    return visualizeData(tab.getData(), tab.getName(), experimentName, type, (MergeType)null);
   }
   
   /**
@@ -695,9 +695,12 @@ public class Signal2PathwayTools {
    * @param tabName
    * @param experimentName may not be null.
    * @param type may not be null.
+   * @param mt Only if you want to have just one value per node (!=gene centric,
+   * because one node can stand for multiple genes!). Set to null to split nodes.
    * @return number of nodes that changed its color.
    */
-  public <T extends NameAndSignals> int visualizeData(Collection<T> nsList, String tabName, String experimentName, SignalType type) {
+  public <T extends NameAndSignals> int visualizeData(Collection<T> nsList, String tabName, String experimentName, SignalType type, MergeType mt) {
+    // TODO: use "mt" and create a one-value-per-node question dialog and functionality.
     
     // 0. Remove previous visualizations of the same data.
     if (isDataVisualized(tabName, experimentName, type)) {

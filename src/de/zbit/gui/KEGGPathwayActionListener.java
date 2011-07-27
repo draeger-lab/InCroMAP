@@ -200,12 +200,13 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     }
     
     { //------------------------------------------------
-      Collection<? extends NameAndSignals> list = dataSource.getData();
       // TEMPORARY!
+      Collection<? extends NameAndSignals> list = dataSource.getData();
+      MergeType mt=null;
       int answer = GUITools.showQuestionMessage(IntegratorUI.getInstance(), "Do you want to gene-center your data before visualization?", IntegratorUI.appName, JOptionPane.YES_NO_CANCEL_OPTION);
       if (answer==JOptionPane.CANCEL_OPTION) return 0;
       else if (answer==JOptionPane.YES_OPTION) {
-        MergeType mt =IntegratorGUITools.getMergeType();
+        mt =IntegratorGUITools.getMergeType();
         
         list = NameAndSignals.geneCentered(list, mt);
       }
@@ -217,7 +218,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       }
       
       // Color nodes
-      int coloredNodes = tools2.visualizeData(list, dataSource.getName(),experimentName,signalType);
+      int coloredNodes = tools2.visualizeData(list, dataSource.getName(),experimentName,signalType,mt);
       tp.repaint();
       if (true) return coloredNodes;
     }//------------------------------------------------
