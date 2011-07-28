@@ -949,6 +949,8 @@ public class Signal2PathwayTools {
       // kgId is defined for all KEGG nodes, but NULL for all miRNA nodes.
       if (kgId!=null && kgId.toString().toLowerCase().trim().startsWith("path:")) continue; // Title node
       
+      // TODO: If input is miRNA, remove all non-miRNA nodes from colorForUnaffectedNodes and via versa.
+      
       graph.getRealizer(n).setFillColor(colorForUnaffectedNodes);
     }
     
@@ -975,7 +977,14 @@ public class Signal2PathwayTools {
     
     // Set a uniquely describing label
     if (ns!=null) {
-      graph.setLabelText(child, ns.getUniqueLabel());
+      String unique = ns.getUniqueLabel();
+      if (unique.endsWith("more)")) {
+        int pos = unique.lastIndexOf("(");
+        if (pos>0) {
+          unique = unique.substring(0, pos).trim() + "\n" + unique.substring(pos);
+        }
+      }
+      graph.setLabelText(child, unique);
     }
     
     // Setup hierarchy
@@ -1005,6 +1014,10 @@ public class Signal2PathwayTools {
     
     cr.setX(x);
     cr.setY(y);
+    
+    // Make node as big as the label
+    cr.setWidth(Math.max(cr.getWidth(), cr.getLabel().getWidth()+2));
+    cr.setHeight(Math.max(cr.getHeight(), cr.getLabel().getHeight()+2));
     
     // Clone map contents of group node
     NodeMap[] maps = graph.getRegisteredNodeMaps();

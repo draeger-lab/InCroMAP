@@ -260,7 +260,6 @@ public class IntegratorUI extends BaseFrame {
     SBProperties props = SBPreferences.analyzeCommandLineArguments(
       getStaticCommandLineOptions(), args);
     
-    
     // TODO: Test Class as option type:
     // - Command line help text AND F1 help text for readability
     // - Test if submitting as argument works correctly

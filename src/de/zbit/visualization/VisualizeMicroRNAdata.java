@@ -210,7 +210,7 @@ public class VisualizeMicroRNAdata {
     nr.setLabel(nl);
     
     // Store hyperlinks in the node-label (and later on in the node itself).
-    String link = String.format("http://www.mirbase.org/cgi-bin/mirna_entry.pl?id=%s", mirna.getName().trim());
+    String link = String.format("http://www.mirbase.org/cgi-bin/mirna_entry.pl?id=%s", mirna.getPrecursorName());
     if (link!=null && link.length()!=0) {
       try {
         // Convert to URL, because type is infered of the submitted object

@@ -150,6 +150,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * reading the input data to the desired format impossible.
    */
   public Collection<T> read(CSVReader r) throws IOException, Exception {
+    init();
     r.setProgressBar(getProgressBar());
     r.setDisplayProgress(getProgressBar()!=null);
     r.open();
@@ -165,6 +166,14 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
   
   
   /**
+   * This method can be overwritten to initialize anything,
+   * before starting to actually read an input file.
+   */
+  protected void init() {
+    // Intentionally left blank
+  }
+
+  /**
    * This will set the {@link #nameCol} to zero and simply create a data
    * structure using the given <code>identifiers</code> as names.
    * <p>Very helpful, e.g., when reading a gene list.
@@ -174,6 +183,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * @throws Exception
    */
   public Collection<T> read(String[] identifiers) throws IOException, Exception {
+    init();
     Map<T, T> ret = new HashMap<T, T>();
     
     nameCol = 0;

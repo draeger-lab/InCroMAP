@@ -17,6 +17,7 @@ import de.zbit.gui.IntegratorGUITools;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
+import de.zbit.util.StringUtil;
 
 
 /**
@@ -29,13 +30,13 @@ public class mRNA extends NameAndSignals {
   /**
    * Means gene id has not been set or mRNA has no associated gene id.
    */
-  private final static int default_geneID = -1;
+  public final static int default_geneID = -1;
   
   /**
    * The key to use in the {@link #addData(String, Object)} map to add
    * the corresponding NCBI Gene ID (Entrez).
    */
-  private final static String gene_id_key = "Gene_ID";
+  public final static String gene_id_key = "Gene_ID";
   
   /**
    * Initialize a new mRNA with the given name.
@@ -184,7 +185,35 @@ public class mRNA extends NameAndSignals {
   @Override
   public String getUniqueLabel() {
     String probe = getProbeName();
+    
+    probe = getShortProbeName(probe);
+      
     return (probe==null||probe.length()<1)?getName():probe;
+  }
+
+  /**
+   * if string is longer than 10 character, the <code>implodeString</code>
+   * (usually ", ") is counted and a string like "firstProbe (+3 more)"
+   * is generated. If the <code>implodeString</code> is not contained in the
+   * given string, it is simply cut after 7 chars and "..." is appended.
+   * @param probe actually, any string.
+   * @return short probe string
+   */
+  public static String getShortProbeName(String probe) {
+    // Merged (e.g., gene-centered) probeIds are usually
+    // very long. Trim them to human readable length.
+    if (probe!=null && probe.length()>10) {
+      int probeCount = StringUtil.countString(probe, implodeString);
+      // the actual probeCount is number of implodeStrings +1 !
+      if (probeCount>0) {
+        probe = probe.substring(0, probe.indexOf(implodeString));
+        if (probe.length()>15) probe = probe.substring(0,12)+"...";
+        probe = String.format("%s (+%s more)", probe, (probeCount));
+      } else {
+        probe = probe.substring(0,7)+"...";
+      }
+    }
+    return probe;
   }
   
 }

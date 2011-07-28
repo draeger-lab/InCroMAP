@@ -51,6 +51,11 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    */
   public final static String defaultExperimentName = "default";
   
+  /**
+   * If multiple strings must be merged, this is the separator that
+   * is put between all strings to create one.
+   */
+  public final static String implodeString = ", ";
   
   /**
    * The SystematicName
@@ -352,7 +357,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     
     // Set new name and signal to object
     if (newObject!=null) {
-      newObject.name = ArrayUtils.implode(names.toArray(new String[0]), ", ");
+      newObject.name = ArrayUtils.implode(names.toArray(new String[0]), implodeString);
       newObject.signals = Signal.merge(signals, m);
       
       // Set merged additional data
@@ -404,7 +409,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
        names.add(object) ;
       }
       if (o instanceof String) {
-        return ArrayUtils.implode(names.toArray(new String[0]), ", ");
+        return ArrayUtils.implode(names.toArray(new String[0]), implodeString);
       } else {
         return names.toArray();
       }
@@ -584,7 +589,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       while (it.hasNext()) {
         String key = it.next();
         r.append(key + ":" + additional_data.get(key));
-        if (it.hasNext()) r.append(", ");
+        if (it.hasNext()) r.append(implodeString);
       }
       r.append("] ");
     }

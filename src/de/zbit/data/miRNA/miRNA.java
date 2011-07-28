@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.data.mRNA.mRNA;
 
 /**
  * A generic class to hold miRNAs with Signals and Targets.
@@ -69,6 +70,22 @@ public class miRNA extends NameAndSignals {
     return matched;
   }
   
+  
+  /**
+   * Set the corresponding NCBI Gene ID.
+   * @param geneID
+   */
+  public void setGeneID(int geneID) {
+    super.addData(mRNA.gene_id_key, new Integer(geneID));
+  }
+  
+  /**
+   * @return associated NCBI Gene ID.
+   */
+  public int getGeneID() {
+    Integer i = (Integer) super.getData(mRNA.gene_id_key);
+    return i==null?mRNA.default_geneID:i;
+  }
 
 
   /**
@@ -167,6 +184,25 @@ public class miRNA extends NameAndSignals {
   public String getProbeName() {
     Object probeName = getData(probeNameKey);
     return probeName==null?null:probeName.toString();
+  }
+  
+  /**
+   * Converts the microRNA systematic name to a miRNA precursor name.
+   * <p>E.g. "mmu-miR-30-5p*" => "mmu-mir-30"
+   * 
+   * @return miRNA precursor name
+   */
+  public String getPrecursorName() {
+    // Get systematic name
+    String name = getName();
+    // Systematic name is always -miR- and precursor is -mir-
+    name = name.toLowerCase().trim();
+    // Systematic name has suffix like "*" to annotate a
+    // minor transcript or "-3p", "-5p" to annotate transcript
+    if (name.endsWith("*")) name = name.substring(0, name.length()-1);
+    if (name.endsWith("-3p") || name.endsWith("-5p")) name = name.substring(0, name.length()-3);
+    
+    return name;
   }
 
   /**
@@ -267,6 +303,9 @@ public class miRNA extends NameAndSignals {
   @Override
   public String getUniqueLabel() {
     String probe = getProbeName();
+    
+    probe = mRNA.getShortProbeName(probe);
+    
     return (probe==null||probe.length()<1)?getName():probe;
   }
   

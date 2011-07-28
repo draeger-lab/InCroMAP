@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.GUITools;
@@ -15,6 +17,7 @@ import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
+import de.zbit.mapper.MicroRNAsn2GeneIDMapper;
 import de.zbit.parser.Species;
 import de.zbit.util.Utils;
 import de.zbit.util.ValueTriplet;
@@ -35,6 +38,11 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
    * This is not required! It is an optional information.
    */
   private Species species=null;
+  
+  /**
+   * Annotate miRNAs with an entrez gene id.
+   */
+  private MicroRNAsn2GeneIDMapper miRNA2GeneIdMapper;
   
   /**
    * @return  This method returns all {@link ExpectedColumn}s required
@@ -104,7 +112,7 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
    * This is ONLY for use in combination with {@link #importWithGUI(String)} afterwards.
    */
   public miRNAReader() {
-    super(-1);
+    this(-1);
   }
   
   public miRNAReader(int miRNAnameCol) {
@@ -131,10 +139,44 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
       m = new miRNA(name, probeName);
     else
       m = new miRNA(name);
+    
+    // Set gene ID
+    if (miRNA2GeneIdMapper!=null) {
+      try {
+        Integer geneId = miRNA2GeneIdMapper.map(m.getPrecursorName());
+        if (geneId!=null && !Double.isNaN(geneId) && geneId>0) {
+          m.setGeneID(geneId);
+        } else {
+          m.setGeneID(mRNA.default_geneID);
+        }
+      } catch (Exception e) {
+        // Ignore
+        log.log(Level.FINE, "Could not map miRNA systematic name 2 GeneID.", e);
+        m.setGeneID(mRNA.default_geneID);
+      }
+    }
+    
     return m;
   }
   
+
   
+  /* (non-Javadoc)
+   * @see de.zbit.io.NameAndSignalReader#init()
+   */
+  @Override
+  protected void init() {
+    super.init();
+    // Initialized the miRNAname to gene id mapper.
+    try {
+      miRNA2GeneIdMapper = new MicroRNAsn2GeneIDMapper(getProgressBar());
+    } catch (IOException e) {
+      GUITools.showErrorMessage(null, e);
+      miRNA2GeneIdMapper=null;
+    }
+  }
+
+
   /**
    * @param args
    * @throws Exception 
