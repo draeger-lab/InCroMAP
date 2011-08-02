@@ -232,7 +232,7 @@ public class Signal2PathwayTools {
   @SuppressWarnings("unchecked")
   private Set<Node> getAllNodesForExperiment(String tabName, String experimentName, SignalType type) {
     DataMap isCopyMap = tools.getMap(GraphMLmapsExtended.NODE_IS_COPY);
-    DataMap parent = tools.getMap(GraphMLmapsExtended.NODE_BELONGS_TO); // XXX: Probably won't work! Take .toString() representation.
+    DataMap parent = tools.getMap(GraphMLmapsExtended.NODE_BELONGS_TO);
     Set<Node> nodeList = new HashSet<Node>();
     if (parent==null) return nodeList;
     
@@ -701,6 +701,7 @@ public class Signal2PathwayTools {
    */
   public <T extends NameAndSignals> int visualizeData(Collection<T> nsList, String tabName, String experimentName, SignalType type, MergeType mt) {
     // TODO: use "mt" and create a one-value-per-node question dialog and functionality.
+    // Do this in a simple pre-processing steps. (getSignals(Node) and Merge).
     
     // 0. Remove previous visualizations of the same data.
     if (isDataVisualized(tabName, experimentName, type)) {
@@ -719,7 +720,7 @@ public class Signal2PathwayTools {
     writeSignalsToNodes(nsList, tabName, experimentName, type);
     
     // 4. change shape
-    // TODO: ...
+    // TODO: Similar to writeSignals
     
     // Remember that we have visualized this data.
     getVisualizedData(true).add(new ValueTriplet<String, String, SignalType>(tabName, experimentName, type));

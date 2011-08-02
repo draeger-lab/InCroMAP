@@ -10,6 +10,7 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 
 import de.zbit.data.Signal.MergeType;
+import de.zbit.gui.GUITools;
 
 /**
  * Enables an option tab for the {@link SignalOptions}.
@@ -22,9 +23,8 @@ public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
    * @param provider
    * @throws IOException
    */
-  public SignalOptionPanel()
-    throws IOException {
-    super(SignalOptions.class);
+  public SignalOptionPanel() throws IOException {
+    super(SignalOptionsExtended.class);
   }
   
   
@@ -66,7 +66,14 @@ public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
     
   }
   
-  
+  /**
+   * Removes the {@link JComponent}, corresponding to
+   * {@link SignalOptions#REMEMBER_GENE_CENTER_DECISION}
+   * from this panel.
+   */
+  public void removeRememberSelectionCheckBox() {
+    GUITools.removeAllComponentsWithName(this, SignalOptions.REMEMBER_GENE_CENTER_DECISION.getOptionName());
+  }
   
   
   
