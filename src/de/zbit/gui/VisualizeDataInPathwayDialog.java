@@ -14,6 +14,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -24,8 +25,10 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
+import javax.swing.border.TitledBorder;
 
 import de.zbit.gui.prefs.PathwayVisualizationOptionPanel;
+import de.zbit.gui.prefs.PreferencesPanelForKeyProvider;
 import de.zbit.gui.prefs.SignalOptionPanel;
 
 
@@ -44,7 +47,6 @@ public class VisualizeDataInPathwayDialog extends JPanel {
    * See IntegratorGUITools.getMergeType() for how to start writing this class ;-) 
    */
   
-  protected int buttonPressed;
 
 
   public VisualizeDataInPathwayDialog() {
@@ -73,110 +75,51 @@ public class VisualizeDataInPathwayDialog extends JPanel {
      * 
      */
     
-    JRadioButton[] depth = new JRadioButton[3];
-    depth[0] = new JRadioButton("One value per pathway node (pathway centered)");
-    depth[1] = new JRadioButton("One value per gene (gene centered)", true);
-    depth[2] = new JRadioButton("One node per value (probe centered - not recommended)");
+    SignalOptionPanel mergeDepthAndType = new SignalOptionPanel();
+    PathwayVisualizationOptionPanel colorThresholdAndShape = new PathwayVisualizationOptionPanel();
     
-    final SignalOptionPanel sop = new SignalOptionPanel();
-    sop.removeRememberSelectionCheckBox();
-    
-    ButtonGroup mergeDepth = new ButtonGroup();
-    for (int i=0; i<depth.length; i++) {
-      mergeDepth.add(depth[i]);
-      lh.add(depth[i]);
-      
-      final int final_i = i;
-      depth[i].addItemListener(new ItemListener() {
-        @Override
-        public void itemStateChanged(ItemEvent e) {
-          sop.setEnabled(final_i>=1);
-        }
-      });
-    }
-    lh.add(sop);
-    
-    PathwayVisualizationOptionPanel colors = new PathwayVisualizationOptionPanel();
-    lh.add(colors);
+    lh.add(mergeDepthAndType);
+    lh.add(new ExpandablePanel("Advanced visualization options", colorThresholdAndShape, true, true));
     
     
-    
-    JComboBox box = new NodeShapeSelector();
-    lh.add(box);
+//    
+//    JRadioButton[] depth = new JRadioButton[3];
+//    depth[0] = new JRadioButton("One value per pathway node (pathway centered)");
+//    depth[1] = new JRadioButton("One value per gene (gene centered)", true);
+//    depth[2] = new JRadioButton("One node per value (probe centered - not recommended)");
+//    
+//    final SignalOptionPanel sop = new SignalOptionPanel();
+//    sop.removeRememberSelectionCheckBox();
+//    
+//    ButtonGroup mergeDepth = new ButtonGroup();
+//    for (int i=0; i<depth.length; i++) {
+//      mergeDepth.add(depth[i]);
+//      lh.add(depth[i]);
+//      
+//      final int final_i = i;
+//      depth[i].addItemListener(new ItemListener() {
+//        @Override
+//        public void itemStateChanged(ItemEvent e) {
+//          sop.setEnabled(final_i>=1);
+//        }
+//      });
+//    }
+//    lh.add(sop);
+//    
+//    PathwayVisualizationOptionPanel colors = new PathwayVisualizationOptionPanel();
+//    lh.add(colors);
+//    
+//    
+//    
+//    JComboBox box = new NodeShapeSelector();
+//    lh.add(box);
     
     
 
   }
   
   public static boolean showDialog(final VisualizeDataInPathwayDialog c) {
-
-    // Initialize the dialog
-    final JDialog jd;
-//    if (parent!=null && parent instanceof Frame) {
-//      jd = new JDialog((Frame)parent, title, true);
-//    } else if (parent!=null && parent instanceof Dialog) {
-//      jd = new JDialog((Dialog)parent, title, true);
-//    } else {
-      jd = new JDialog();
-//      jd.setTitle(title);
-      jd.setModal(true);
-//    }
-    
-    // Initialize the panel
-//    c.setName(title);
-    jd.add(c);
-    // Close dialog with ESC button.
-    jd.getRootPane().registerKeyboardAction(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        c.buttonPressed = JOptionPane.CANCEL_OPTION;
-        jd.dispose();
-      }
-    }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
-    // Close dialog with ENTER button.
-    jd.getRootPane().registerKeyboardAction(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-          c.buttonPressed = JOptionPane.OK_OPTION;
-          jd.dispose();
-      }
-    }, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
-    
-    // Set close operations
-    jd.addWindowListener(new WindowAdapter() {
-      public void windowClosing(WindowEvent e) {
-        jd.setVisible(false);
-      }
-    });
-    c.addComponentListener(new ComponentListener() {
-      public void componentHidden(ComponentEvent e) {
-        jd.setVisible(false);
-      }
-      public void componentMoved(ComponentEvent e) {}
-      public void componentResized(ComponentEvent e) {}
-      public void componentShown(ComponentEvent e) {}
-    });
-    
-    // Set size
-    jd.setPreferredSize(c.getPreferredSize());
-    jd.setSize(c.getPreferredSize());
-    //jd.pack();
-//    jd.setLocationRelativeTo(parent);
-    
-    // Set visible and wait until invisible
-    jd.pack();
-    jd.setVisible(true);
-    
-    
-    // Dispose and return if dialog has been confirmed.
-    jd.dispose();
-    
-    return (c.getButtonPressed()==JOptionPane.OK_OPTION);
-  }
-  
-  /**
-   * @return
-   */
-  private int getButtonPressed() {
-    return buttonPressed;
+    return GUITools.showAsDialog(null, c, "Title", true)==JOptionPane.OK_OPTION; 
   }
 
   /**

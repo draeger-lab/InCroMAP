@@ -59,7 +59,7 @@ import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.prefs.SignalOptionPanel;
-import de.zbit.gui.prefs.SignalOptions;
+import de.zbit.gui.prefs.MergeTypeOptions;
 import de.zbit.integrator.Signal2PathwayTools;
 import de.zbit.io.OpenFile;
 import de.zbit.io.SBFileFilter;
@@ -794,13 +794,13 @@ public class IntegratorGUITools {
    * @return the user-approved {@link MergeType}.
    */
   public static MergeType getMergeType() {
-    MergeType m = SignalOptions.GENE_CENTER_SIGNALS_BY.getDefaultValue();
+    MergeType m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getDefaultValue();
     
     // Look if "remember my decision" is set and take it without asking
-    SBPreferences prefs = SBPreferences.getPreferencesFor(SignalOptions.class);
-    if (SignalOptions.REMEMBER_GENE_CENTER_DECISION.getValue(prefs)) {
+    SBPreferences prefs = SBPreferences.getPreferencesFor(MergeTypeOptions.class);
+    if (MergeTypeOptions.REMEMBER_GENE_CENTER_DECISION.getValue(prefs)) {
       try {
-        m = SignalOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
+        m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
         if (!m.equals(MergeType.AskUser)) return m;
       } catch (Throwable t) {}
     }
@@ -810,12 +810,12 @@ public class IntegratorGUITools {
       int ok = JOptionPane.CANCEL_OPTION;
       SignalOptionPanel sop = new SignalOptionPanel();
       while (ok != JOptionPane.OK_OPTION ||
-          SignalOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs).equals(MergeType.AskUser)) {
+          MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs).equals(MergeType.AskUser)) {
         ok = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), sop, 
           "Please choose how to merge multiple probes", JOptionPane.OK_CANCEL_OPTION);
       }
       sop.persist();
-      m = SignalOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
+      m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
     } catch (Exception e) {
       GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
     }
@@ -837,11 +837,11 @@ public class IntegratorGUITools {
    * @return
    */
   public static MergeType getMergeTypeSilent() {
-    MergeType m = SignalOptions.GENE_CENTER_SIGNALS_BY.getDefaultValue();
+    MergeType m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getDefaultValue();
     
-    SBPreferences prefs = SBPreferences.getPreferencesFor(SignalOptions.class);
+    SBPreferences prefs = SBPreferences.getPreferencesFor(MergeTypeOptions.class);
     try {
-      m = SignalOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
+      m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
     } catch (Throwable t) {}
     if (!m.equals(MergeType.AskUser)) return m;
     

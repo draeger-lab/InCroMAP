@@ -13,7 +13,7 @@ import de.zbit.data.Signal.MergeType;
 import de.zbit.gui.GUITools;
 
 /**
- * Enables an option tab for the {@link SignalOptions}.
+ * Enables an option tab for the {@link MergeTypeOptions}.
  * @author Clemens Wrzodek
  */
 public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
@@ -24,7 +24,7 @@ public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
    * @throws IOException
    */
   public SignalOptionPanel() throws IOException {
-    super(SignalOptionsExtended.class);
+    super(SignalOptions.class);
   }
   
   
@@ -68,11 +68,11 @@ public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
   
   /**
    * Removes the {@link JComponent}, corresponding to
-   * {@link SignalOptions#REMEMBER_GENE_CENTER_DECISION}
+   * {@link MergeTypeOptions#REMEMBER_GENE_CENTER_DECISION}
    * from this panel.
    */
   public void removeRememberSelectionCheckBox() {
-    GUITools.removeAllComponentsWithName(this, SignalOptions.REMEMBER_GENE_CENTER_DECISION.getOptionName());
+    GUITools.removeAllComponentsWithName(this, MergeTypeOptions.REMEMBER_GENE_CENTER_DECISION.getOptionName());
   }
   
   
