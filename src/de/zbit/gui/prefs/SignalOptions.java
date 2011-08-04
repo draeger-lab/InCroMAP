@@ -11,7 +11,6 @@ import de.zbit.gui.ActionCommand;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.OptionGroup;
-import de.zbit.util.prefs.Range;
 
 /**
  * Extension for {@link MergeTypeOptions} that includes options to let the
@@ -22,54 +21,54 @@ import de.zbit.util.prefs.Range;
 public interface SignalOptions extends KeyProvider {
   
 
- public static enum DepthChoices implements ActionCommand {
-   PATHWAY, GENE, PROBE;
-   /* (non-Javadoc) 
-    * @see de.zbit.gui.ActionCommand#getName()
-    */
-   public String getName() {
-     switch (this) {
-     case PATHWAY:
-       return "One value per pathway node (pathway centered)";
-     case GENE:
-       return "One value per gene (gene centered)";
-     case PROBE:
-       return "One node per value (probe centered - not recommended)";
-     }
-    return this.toString();
-   }
-
-   /*
-    * (non-Javadoc)
-    * 
-    * @see de.zbit.gui.ActionCommand#getToolTip()
-    */
-   public String getToolTip() {
-     switch (this) {
-       case PATHWAY:
-         return "Merge all probes that belong to one node in a pathway to one value.";
-       case GENE:
-         return "Merge all probes that belong to one gene to one value.";
-       case PROBE:
-         return "Do not merge any probes. This can result in a very confusing graph and is thus not recommended.";
-       default:
-         return this.toString();
-     }
-   }
-   
- }
- 
- 
- public static Option<DepthChoices> MERGE_DEPTH = new Option<DepthChoices>("MERGE_DEPTH", DepthChoices.class,
-   "Select the behaviour if multiple probes should be joined to one.", DepthChoices.GENE,
-   "Select visualization depth");
+// public static enum DepthChoices implements ActionCommand {
+//   PATHWAY, GENE, PROBE;
+//   /* (non-Javadoc) 
+//    * @see de.zbit.gui.ActionCommand#getName()
+//    */
+//   public String getName() {
+//     switch (this) {
+//     case PATHWAY:
+//       return "One value per pathway node (pathway centered)";
+//     case GENE:
+//       return "One value per gene (gene centered)";
+//     case PROBE:
+//       return "One node per value (probe centered - not recommended)";
+//     }
+//    return this.toString();
+//   }
+//
+//   /*
+//    * (non-Javadoc)
+//    * 
+//    * @see de.zbit.gui.ActionCommand#getToolTip()
+//    */
+//   public String getToolTip() {
+//     switch (this) {
+//       case PATHWAY:
+//         return "Merge all probes that belong to one node in a pathway to one value.";
+//       case GENE:
+//         return "Merge all probes that belong to one gene to one value.";
+//       case PROBE:
+//         return "Do not merge any probes. This can result in a very confusing graph and is thus not recommended.";
+//       default:
+//         return this.toString();
+//     }
+//   }
+//   
+// }
+// 
+// 
+// public static Option<DepthChoices> MERGE_DEPTH = new Option<DepthChoices>("MERGE_DEPTH", DepthChoices.class,
+//   "Select the behaviour if multiple probes should be joined to one.", DepthChoices.GENE,
+//   "Select visualization depth");
 
   
   /**
    * All Boolean options belonging to this group will be converted
    * into {@link JRadioButton}s.
    */
-  public static ButtonGroup signalMergeDepth = null;//new ButtonGroup();
+  public static ButtonGroup signalMergeDepth = new ButtonGroup();
   
   public static Option<Boolean> PATHWAY_CENTERED = new Option<Boolean>("PATHWAY_CENTERED", Boolean.class,
       "Merge all probes that belong to one node in a pathway to one value.", Boolean.FALSE,
@@ -103,9 +102,7 @@ public interface SignalOptions extends KeyProvider {
  @SuppressWarnings({ "unchecked", "rawtypes" })
  public static final OptionGroup GENE_CENTER_OPTIONS = new OptionGroup(
      "Signal merge options","Select the behaviour if multiple probes should be joined to one.",
-     true, false,
-     
-     
+     false, false,
 //     MERGE_DEPTH,
      PATHWAY_CENTERED,GENE_CENTERED,PROBE_CENTERED,
      GENE_CENTER_SIGNALS_BY, REMEMBER_GENE_CENTER_DECISION);

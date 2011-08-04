@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JList;
@@ -28,9 +29,20 @@ import y.view.ShapeNodePainter;
 public class NodeShapeSelector extends JComboBox implements ListCellRenderer {
   private static final long serialVersionUID = -6888199259419237517L;
   
+  public final static Byte[] validChoices = new Byte[]{0, 1,2,3,4,5,6,7,8,9,10};
+  
+  /**
+   * Any default renderer for {@link String}s.
+   */
+  private ListCellRenderer defaultListRenderer = null;
+  
+  /**
+   * Text that is displayed for all values <=0.
+   */
+  public static String NO_SELECTION_TEXT = "Keep default shape";
   
   public NodeShapeSelector() {
-    this (new Byte[]{1,2,3,4,5,6,7,8,9,10});
+    this (validChoices);
   }
   
   private NodeShapeSelector(ComboBoxModel aModel) {
@@ -42,6 +54,26 @@ public class NodeShapeSelector extends JComboBox implements ListCellRenderer {
     this (new DefaultComboBoxModel(allowedShapes));
   }
   
+  private ListCellRenderer getDefaultRenderer() {
+    /*
+     * Get the systems default renderer.
+     */
+    if (defaultListRenderer==null) {
+      // new DefaultListCellRenderer(); Is not necessarily the default!
+      // even UIManager.get("List.cellRenderer"); returns a different value!
+      try {
+        defaultListRenderer = new JComboBox().getRenderer();
+        if (defaultListRenderer==null) {
+          defaultListRenderer = (ListCellRenderer) UIManager.get("List.cellRenderer");
+        }
+      } catch (Throwable t){t.printStackTrace();}
+      if (defaultListRenderer==null) {
+        defaultListRenderer = new DefaultListCellRenderer();;
+      }
+    }
+    //-------------------
+    return defaultListRenderer;
+  }
   
   
   /* (non-Javadoc)
@@ -50,12 +82,15 @@ public class NodeShapeSelector extends JComboBox implements ListCellRenderer {
   @Override
   public Component getListCellRendererComponent(JList list, Object value,
     int index, final boolean isSelected, final boolean cellHasFocus) {
-    
-    final int HEIGHT_PREVIEW = Math.max(getHeight()-8, 10);
-    final int WIDTH_PREVIEW = Math.min(getWidth(), HEIGHT_PREVIEW*2);
+    int minimumSize = 15;
+    final int HEIGHT_PREVIEW = Math.max(getHeight()-8, minimumSize);
+    final int WIDTH_PREVIEW = Math.min(Math.max(getWidth(), minimumSize*2), HEIGHT_PREVIEW*2);
     
     // Renderer for Byte values, corresponding to node shapes.
     Byte b = (Byte) value;
+    if (b<1) {
+      return getDefaultRenderer().getListCellRendererComponent(list, NO_SELECTION_TEXT, index, isSelected, cellHasFocus);
+    }
     
     final ShapeNodePainter painter = new ShapeNodePainter(b);
     final GenericNodeRealizer preview = new GenericNodeRealizer();

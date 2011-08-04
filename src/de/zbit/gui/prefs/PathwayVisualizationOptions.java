@@ -6,6 +6,7 @@ package de.zbit.gui.prefs;
 import java.awt.Color;
 
 import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.NodeShapeSelector;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.OptionGroup;
@@ -26,6 +27,7 @@ public interface PathwayVisualizationOptions extends KeyProvider {
       "Min/Max (symmetric) fold change that is being assigned the full color.",
       new Range<Float>(Float.class, "{[0.0,1000.0]}"),1.5f);
   
+  
   public static Option<Color> COLOR_FOR_MINIMUM_FOLD_CHANGE = new Option<Color>("COLOR_FOR_MINIMUM_FOLD_CHANGE", Color.class,
       "Color for minimum fold change.", IntegratorUI.LIGHT_BLUE); // Color.BLUE.brighter() is too dark to read black captions
   
@@ -38,12 +40,16 @@ public interface PathwayVisualizationOptions extends KeyProvider {
   public static Option<Color> COLOR_FOR_NO_VALUE = new Option<Color>("COLOR_FOR_NO_VALUE", Color.class,
       "Color for nodes, with no fold change in the input dataset (unaffected nodes).", Color.LIGHT_GRAY);
   
+  public static Option<Byte> CHANGE_NODE_SHAPE = new Option<Byte>("CHANGE_NODE_SHAPE", Byte.class,
+      "Change the shape of colored nodes to the selected shape.",Option.buildRange(NodeShapeSelector.validChoices),
+      new Byte((byte)0));
+  
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static final OptionGroup PATHWAY_COLORING_OPTIONS = new OptionGroup(
-      "Pathway coloring options",
-      "Define various options that control the fold-change dependent coloring of pathway nodes.",
-      FOLD_CHANGE_FOR_MAXIMUM_COLOR, COLOR_FOR_MINIMUM_FOLD_CHANGE, COLOR_FOR_NO_FOLD_CHANGE, COLOR_FOR_MAXIMUM_FOLD_CHANGE, COLOR_FOR_NO_VALUE);
-  
-  
+    "Pathway coloring options",
+    "Define various options that control the fold-change dependent coloring of pathway nodes.",
+    FOLD_CHANGE_FOR_MAXIMUM_COLOR,
+    COLOR_FOR_MINIMUM_FOLD_CHANGE, COLOR_FOR_NO_FOLD_CHANGE, COLOR_FOR_MAXIMUM_FOLD_CHANGE, COLOR_FOR_NO_VALUE,
+    CHANGE_NODE_SHAPE);
   
 }

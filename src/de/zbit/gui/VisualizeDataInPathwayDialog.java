@@ -28,6 +28,7 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import de.zbit.gui.prefs.PathwayVisualizationOptionPanel;
+import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.PreferencesPanelForKeyProvider;
 import de.zbit.gui.prefs.SignalOptionPanel;
 
