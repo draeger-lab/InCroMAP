@@ -3,124 +3,107 @@
  */
 package de.zbit.gui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.util.prefs.BackingStoreException;
 
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.KeyStroke;
 import javax.swing.UIManager;
-import javax.swing.border.TitledBorder;
 
 import de.zbit.gui.prefs.PathwayVisualizationOptionPanel;
-import de.zbit.gui.prefs.PathwayVisualizationOptions;
-import de.zbit.gui.prefs.PreferencesPanelForKeyProvider;
 import de.zbit.gui.prefs.SignalOptionPanel;
 
 
 /**
+ * A {@link JPanel} that has all required input options to 
+ * Visualize Data in a Pathway. It asks the user for <ul>
+ * <li>MergeDepth:
+ * <ol><li>one value per node (pathway centered)</li>
+ * <li>one value per gene (gene centered - default)</li>
+ * <li>one node per value (probe centered - not recommended)</li></ol></li>
+ * <li>MergeType if 1 or 2 are selected</li>
+ * 
+ * <li> Colors und threshold</li>
+ * 
+ * <li> Change Shape? ONLY IF YES, Shape</li>
+ * </ul>
+ * 
+     
  * @author Clemens Wrzodek
  */
 public class VisualizeDataInPathwayDialog extends JPanel {
-  
-  /*
-   * TODO: Create a dialog, asking for
-   * 1. if user wants to merge data gene-centered (default: true)
-   *   1.1 MergeType
-   * 2. Colors and maxFC
-   * 3. NodeShape
-   * 
-   * See IntegratorGUITools.getMergeType() for how to start writing this class ;-) 
+  private static final long serialVersionUID = 7310214090839244643L;
+
+  /**
+   * Signal and merge depth options
    */
+  private SignalOptionPanel mergeDepthAndType;
   
-
-
+  /**
+   * Pathway visualization options (color, threshold and node shape)
+   */
+  private PathwayVisualizationOptionPanel colorThresholdAndShape;
+  
   public VisualizeDataInPathwayDialog() {
     super ();
     try {
       init(new LayoutHelper(this));
     } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      GUITools.showErrorMessage(getParent(), e);
     }
   }
-  
-
 
   
-  
+  /**
+   * Initializes the components on this panel.
+   * @param lh
+   * @throws IOException
+   */
   public void init(LayoutHelper lh) throws IOException {
-    /* 1 one value per node (pathway centered)
-     * 2 one value per gene (gene centered)
-     * 3 one node per value (probe centered - not recommended)
-     * - MergeType bei 1 und 2
-     * 
-     * o Colors und threshold
-     * 
-     * o Change Shape? ONLY IF YES, Shape
-     * 
-     */
     
-    SignalOptionPanel mergeDepthAndType = new SignalOptionPanel();
-    PathwayVisualizationOptionPanel colorThresholdAndShape = new PathwayVisualizationOptionPanel();
-    
+    // Put the SignalOptionPanel on here
+    mergeDepthAndType = new SignalOptionPanel();
     lh.add(mergeDepthAndType);
+    
+    // Put the PathwayVisualizationOptionPanel on an collapsed, expandable panel.
+    colorThresholdAndShape = new PathwayVisualizationOptionPanel();
     lh.add(new ExpandablePanel("Advanced visualization options", colorThresholdAndShape, true, true));
     
-    
-//    
-//    JRadioButton[] depth = new JRadioButton[3];
-//    depth[0] = new JRadioButton("One value per pathway node (pathway centered)");
-//    depth[1] = new JRadioButton("One value per gene (gene centered)", true);
-//    depth[2] = new JRadioButton("One node per value (probe centered - not recommended)");
-//    
-//    final SignalOptionPanel sop = new SignalOptionPanel();
-//    sop.removeRememberSelectionCheckBox();
-//    
-//    ButtonGroup mergeDepth = new ButtonGroup();
-//    for (int i=0; i<depth.length; i++) {
-//      mergeDepth.add(depth[i]);
-//      lh.add(depth[i]);
-//      
-//      final int final_i = i;
-//      depth[i].addItemListener(new ItemListener() {
-//        @Override
-//        public void itemStateChanged(ItemEvent e) {
-//          sop.setEnabled(final_i>=1);
-//        }
-//      });
-//    }
-//    lh.add(sop);
-//    
-//    PathwayVisualizationOptionPanel colors = new PathwayVisualizationOptionPanel();
-//    lh.add(colors);
-//    
-//    
-//    
-//    JComboBox box = new NodeShapeSelector();
-//    lh.add(box);
-    
-    
-
   }
   
-  public static boolean showDialog(final VisualizeDataInPathwayDialog c) {
-    return GUITools.showAsDialog(null, c, "Title", true)==JOptionPane.OK_OPTION; 
+  /**
+   * Shows the {@link VisualizeDataInPathwayDialog} as Dialog. After pressing
+   * ok, all options are made persistent.
+   * @param c
+   * @param title title for the dialog.
+   * @return true, if the user confirmed the dialog with "ok".
+   */
+  public static boolean showDialog(final VisualizeDataInPathwayDialog c, String title) {
+    if (title==null) title = IntegratorUI.appName;
+    // Show asking dialog
+    boolean confirmed =  GUITools.showAsDialog(IntegratorUI.getInstance(), c, title, true)==JOptionPane.OK_OPTION;
+    if (confirmed) {
+      // Make options persistent.
+      try {
+        c.persist();
+      } catch (Exception e) {
+        GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
+      }
+    }
+    return confirmed;
+  }
+
+  /**
+   * Persistently stores the currently set options, i.e., key-value pairs in the
+   * user's configuration. Depending on the operating system, the way how this
+   * information is actually stored can vary.
+   * 
+   * @throws BackingStoreException
+   */
+  public void persist() throws BackingStoreException {
+    mergeDepthAndType.persist();
+    colorThresholdAndShape.persist();
   }
 
   /**
@@ -132,7 +115,7 @@ public class VisualizeDataInPathwayDialog extends JPanel {
       JFrame parent = new JFrame();
       parent.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
       VisualizeDataInPathwayDialog dialog = new VisualizeDataInPathwayDialog();
-      showDialog(dialog);
+      showDialog(dialog, null);
 
       System.exit(0);
     } catch (Exception e) {

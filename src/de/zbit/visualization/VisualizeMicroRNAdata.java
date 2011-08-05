@@ -231,8 +231,12 @@ public class VisualizeMicroRNAdata {
     tools.setInfo(n, GraphMLmaps.NODE_URL, link);
     tools.setInfo(n, GraphMLmaps.NODE_COLOR, KEGG2yGraph.ColorToHTML(nr.getFillColor()) );
     tools.setInfo(n, GraphMLmaps.NODE_NAME, nl.getText());
+    tools.setInfo(n, GraphMLmaps.NODE_SIZE, String.format("%s|%s", (int)nr.getWidth(), (int)nr.getHeight()));
     tools.setInfo(n, GraphMLmapsExtended.NODE_IS_MIRNA, true);
     tools.setInfo(n, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, mirna);
+    if (mirna.getGeneID()>0) {
+      tools.setInfo(n, GraphMLmaps.NODE_GENE_ID, mirna.getGeneID());
+    }
     
     return n;
   }

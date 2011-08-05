@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
 import y.view.Graph2D;
@@ -29,7 +30,7 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.TranslatorTabActions.TPAction;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
-import de.zbit.integrator.Signal2PathwayTools;
+import de.zbit.integrator.VisualizeDataInPathway;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.PathwaySelector;
@@ -173,7 +174,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
   }
 
   /**
-   * Color the pathway in <code>tp</code> accoring to the experiment
+   * Color the pathway in <code>tp</code> according to the experiment
    * described by <code>experimentName</code> and <code>signalType</code>
    * contained in <code>dataSource</code>.
    * 
@@ -184,50 +185,60 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param dataSource to take from the given {@link NameAndSignalsTab}
    * @param experimentName name of the observation to color
    * @param signalType signal type of the observation (usually fold change)
-   * @return number of nodes, colored according to the signal, or -1 if an error occured.
    */
-  private int colorPathway(TranslatorPanel tp, NameAndSignalsTab dataSource, String experimentName, SignalType signalType) {
+  private void colorPathway(final TranslatorPanel tp, final NameAndSignalsTab dataSource, final String experimentName, final SignalType signalType) {
+    // @return number of nodes, colored according to the signal, or -1 if an error occured.
     /* This method has the advantage to
      * - Ask the mergeType only once!
      * - Add nodes for miRNAs to visualize
      * And thus should always be preferred to the other colorPathway method.
      */
     
+    // Ask the user to set all required options
+    if (!VisualizeDataInPathwayDialog.showDialog(new VisualizeDataInPathwayDialog(), "Visualize data in pathway")) return;// 0;
+    // (All options are automatically processed in the VisualizeData method)
     
-    // TODO: Move miRNA node addition BELOW asking VisualizeDataInPathwayDialog!
-    if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
-      addMicroRNAs(tp, dataSource);
+    // Ensure that graph is available
+    if (tp.getDocument()==null) {
+      GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");
+      return;// -1;
     }
     
-    { //------------------------------------------------
-      // TEMPORARY!
-      Collection<? extends NameAndSignals> list = dataSource.getData();
-      MergeType mt=null;
-      int answer = GUITools.showQuestionMessage(IntegratorUI.getInstance(), "Do you want to gene-center your data before visualization?", IntegratorUI.appName, JOptionPane.YES_NO_CANCEL_OPTION);
-      if (answer==JOptionPane.CANCEL_OPTION) return 0;
-      else if (answer==JOptionPane.YES_OPTION) {
-        mt =IntegratorGUITools.getMergeType();
+    // Perform operations in another thread
+    SwingWorker<Integer, Void> visData = new SwingWorker<Integer, Void>() {
+      
+      @Override
+      protected Integer doInBackground() throws Exception {
         
-        list = NameAndSignals.geneCentered(list, mt);
+        // Show temporary loading bar
+        tp.showTemporaryLoadingBar("Visualizing data in pathway...");
+        
+        // Adds the microRNA NODES to the graph and automatically asks
+        // the user to annotate targets to his miRNA data if not already done.
+        if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
+          addMicroRNAs(tp, dataSource);
+        }
+        
+        // Perform visualization
+        VisualizeDataInPathway visData = new VisualizeDataInPathway(tp);
+        int coloredNodes = visData.visualizeData(dataSource, experimentName,signalType);
+        
+        // Repaint and hide loading screens
+        //tp.repaint();
+        //tp.hideTemporaryLoadingBar();
+        return coloredNodes;
+        
       }
       
-      Signal2PathwayTools tools2 = new Signal2PathwayTools(tp);
-      if (tp.getDocument()==null) {
-        GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");
-        return -1;
+      @Override
+      protected void done() {
+        tp.repaint();
+        tp.hideTemporaryLoadingBar();
       }
-      
-      // Color nodes
-      int coloredNodes = tools2.visualizeData(list, dataSource.getName(),experimentName,signalType,mt);
-      tp.repaint();
-      if (true) return coloredNodes;
-    }//------------------------------------------------
+    };
+    visData.execute();
     
-    MergeType mt = null;//IntegratorGUITools.getMergeType();
-    // TODO: show  VisualizeDataInPathwayDialog
-    
-    int coloredNodes = colorPathway(tp, dataSource, experimentName, signalType, mt);
-    return coloredNodes;
+    return;
   }
   
   /**
@@ -281,6 +292,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
   
   
   /**
+   * <b>PLEASE USE {@link #colorPathway(TranslatorPanel, NameAndSignalsTab, String, SignalType)}</b><p>
    * Color the pathway in <code>tp</code> according to the experiment
    * described by <code>experimentName</code> and <code>signalType</code>
    * contained in <code>dataSource</code>.
@@ -294,8 +306,9 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param signalType signal type of the observation (usually fold change)
    * @return number of nodes, colored according to the signal, or -1 if an error occurred.
    */
+  @Deprecated
   private int colorPathway(TranslatorPanel tp, NameAndSignalsTab dataSource, String experimentName, SignalType signalType, MergeType mt) {
-    Signal2PathwayTools tools2 = new Signal2PathwayTools(tp);
+    VisualizeDataInPathway tools2 = new VisualizeDataInPathway(tp);
     
     if (tp.getDocument()==null) {
       GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");

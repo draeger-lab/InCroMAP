@@ -210,19 +210,26 @@ public class TranslatorTabActions implements ActionListener{
 
   /**
    * Add microRNA nodes to the graph.
+   * <b>Displayes and hides a temporary progress bar!</b>
    * @return true if and only if at least one node has been added to the graph.
    */
   public boolean addMicroRNAnodes() {
-    // 1. Get organism from TranslatorPanel
     if (!parent.isReady()) return false;
+    parent.showTemporaryLoadingBar("Adding microRNAs to pathway...");
+    
+    // 1. Get organism from TranslatorPanel
     Species spec = getSpeciesOfPathway(parent, IntegratorGUITools.organisms);
+    
     // 2. LoadTargets
     ValuePair<miRNAtargets, Species> vp = IntegratorGUITools.loadMicroRNAtargets(spec);
-    if (vp==null || vp.getA()==null || vp.getA().size()<1) return false;
     
     // 3. Visualize targets.
-    int nodesAdded = KEGGPathwayActionListener.addMicroRNAs(parent, miRNAandTarget.getList(vp.getA()));
+    int nodesAdded = 0;
+    if (vp!=null && vp.getA()!=null && vp.getA().size()>0) {
+      nodesAdded = KEGGPathwayActionListener.addMicroRNAs(parent, miRNAandTarget.getList(vp.getA()));
+    }
     
+    parent.hideTemporaryLoadingBar();
     return (nodesAdded>0);
   }
 

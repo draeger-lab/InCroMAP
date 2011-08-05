@@ -15,6 +15,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JToolBar;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
 import de.zbit.data.EnrichmentObject;
@@ -315,7 +316,19 @@ public class NameAndSignalTabActions implements ActionListener {
     log.info(String.format("Annotated %s/%s microRNAs with targets.", annot, parent.getData().size()));
     
     // Convert geneIDs to gene symbols.
-    showGeneSymbols();
+    SwingWorker<Void, Void> convertToGeneSymbolsInBackground = new SwingWorker<Void, Void>() {
+      @Override
+      protected Void doInBackground() throws Exception {
+        showGeneSymbols();
+        return null;
+      }
+      @Override
+      protected void done() {
+        parent.repaint();
+      }
+    };
+    convertToGeneSymbolsInBackground.execute();
+    
     
     parent.rebuildTable();
     parent.repaint();

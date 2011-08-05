@@ -257,8 +257,7 @@ public class IntegratorUI extends BaseFrame {
     // Set default values for KEGGtranslator
     KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
-    SBProperties props = SBPreferences.analyzeCommandLineArguments(
-      getStaticCommandLineOptions(), args);
+    SBProperties props = SBPreferences.analyzeCommandLineArguments(getStaticCommandLineOptions(), args);
     
     // TODO: Test Class as option type:
     // - Command line help text AND F1 help text for readability
@@ -281,16 +280,16 @@ public class IntegratorUI extends BaseFrame {
         GUITools.hideSplashScreen();
         ui.toFront();
         
-//        try {
-//          mRNAReader r = mRNAReader.getExampleReader();
-//          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example_mRNA");
-//          
-//          miRNAReader r2 = new miRNAReader(1,0);
-//          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-//          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-//          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorGUITools.organisms.get(1)), "Example_miRNA");
-//          
-//        } catch (Exception e) {e.printStackTrace();}
+        try {
+          mRNAReader r = mRNAReader.getExampleReader();
+          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example_mRNA");
+          
+          miRNAReader r2 = new miRNAReader(1,0);
+          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorGUITools.organisms.get(1)), "Example_miRNA");
+          
+        } catch (Exception e) {e.printStackTrace();}
       }
     });
     

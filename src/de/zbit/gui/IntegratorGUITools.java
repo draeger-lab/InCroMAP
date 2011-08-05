@@ -58,9 +58,9 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.csv.CSVImporterV2;
-import de.zbit.gui.prefs.SignalOptionPanel;
 import de.zbit.gui.prefs.MergeTypeOptions;
-import de.zbit.integrator.Signal2PathwayTools;
+import de.zbit.gui.prefs.SignalOptionPanel;
+import de.zbit.integrator.VisualizeDataInPathway;
 import de.zbit.io.OpenFile;
 import de.zbit.io.SBFileFilter;
 import de.zbit.kegg.Translator;
@@ -776,7 +776,7 @@ public class IntegratorGUITools {
         for (int i=0; i<refPWids.length; i++)
           refPWids[i] = pwName.get(pathways.getSelectedIndices()[i]).getObject();
         
-        Signal2PathwayTools.batchCreatePictures(
+        VisualizeDataInPathway.batchCreatePictures(
           (ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>>[]) exps,
           refPWids,
           ((SBFileFilter)fileFormat.getSelectedItem()).getExtension(),
@@ -834,18 +834,30 @@ public class IntegratorGUITools {
    * MergeType, stored currently in the settings and does NEVER ask the user.
    * <p>This method should be used, if the merged signals are not important, i.e.
    * the whole {@link MergeType} is somehow unimportant.
+   * @param prefs {@link SBPreferences} to the the current value from
    * @return
    */
-  public static MergeType getMergeTypeSilent() {
+  public static MergeType getMergeTypeSilent(SBPreferences prefs) {
     MergeType m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getDefaultValue();
     
-    SBPreferences prefs = SBPreferences.getPreferencesFor(MergeTypeOptions.class);
     try {
       m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
     } catch (Throwable t) {}
     if (!m.equals(MergeType.AskUser)) return m;
     
     return MergeType.Mean;
+  }
+  
+  /**
+   * This method should NOT be preferred to {@link #getMergeType()}. It returns the
+   * MergeType, stored currently in the settings and does NEVER ask the user.
+   * <p>This method should be used, if the merged signals are not important, i.e.
+   * the whole {@link MergeType} is somehow unimportant.
+   * @return
+   */
+  public static MergeType getMergeTypeSilent() {
+    SBPreferences prefs = SBPreferences.getPreferencesFor(MergeTypeOptions.class);
+    return getMergeTypeSilent(prefs);
   }
     
 }

@@ -295,15 +295,72 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @return
    */
   public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals, MergeType m) {
+//    if (m==null || m.equals(MergeType.AskUser)) m = IntegratorGUITools.getMergeType();
+//    
+//    // Group data by name (or gene ID)
+//    Map<String, Collection<T>> group = group_by_name(nameAndSignals);
+//    
+//    Collection<T> toReturn = new ArrayList<T>();
+//    for (String mi : group.keySet()) {
+//      Collection<T> col = group.get(mi);
+//      toReturn.add(merge(col, m));
+//    }
+//      
+//      
+//    return toReturn;
+    return geneCentered(nameAndSignals, null, m);
+  }
+  
+  /**
+   * A special implementation to merge certain objects only.
+   * 
+   * @param <T> any {@link NameAndSignals}
+   * @param nameAndSignals list to merge certain items
+   * @param groupIdentifiersToMerge a collection with arrays of identifiers that should be merged. Identifier Type is at follow:
+   * <ul><li>GeneID (Integer) for {@link mRNA}s</li>
+   * <li>Recursive for genesInClass() for {@link EnrichmentObject}s</li>
+   * <li>{@link #name} for all others (e.g., {@link miRNA}s)</li></ul>
+   * @param m
+   * @return collection with the given items merged (and cloned), <b>and all other items untouched</b>!
+   */
+  public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals, Collection<Object[]> groupIdentifiersToMerge, MergeType m) {
     if (m==null || m.equals(MergeType.AskUser)) m = IntegratorGUITools.getMergeType();
     
-    // Group data by name
+    // Group data by name (or gene ID)
     Map<String, Collection<T>> group = group_by_name(nameAndSignals);
     
     Collection<T> toReturn = new ArrayList<T>();
-    for (String mi : group.keySet()) {
-      Collection<T> col = group.get(mi);
-      toReturn.add(merge(col, m));
+    if (groupIdentifiersToMerge==null) {
+      for (String mi : group.keySet()) {
+        Collection<T> col = group.get(mi);
+        toReturn.add(merge(col, m));
+      }
+      
+    } else {
+      
+      // Only merge geneIDs, as specified by geneIDsToMerge.
+      Set<String> unprocessedItems = new HashSet<String>(group.keySet());
+      for (Object[] merge : groupIdentifiersToMerge) {
+        Collection<T> col = new LinkedList<T>();
+        for (Object mi : merge) {
+          Collection<T> col2 = group.get(mi.toString());
+          if (col2!=null) {
+            col.addAll(col2);
+            unprocessedItems.remove(mi.toString());
+          }
+        }
+        // XXX: Gene IDs are erased when merging probes with different gene ids.
+        if (col.size()>0) toReturn.add(merge(col, m));
+      }
+      
+      // Add all unprocessedItems at the end (items, that should not be merged at all).
+      for (String item: unprocessedItems) {
+        Collection<T> col = group.get(item);
+        // do NOT merge these items.
+        if (col!=null) {
+          toReturn.addAll(col);
+        }
+      }
     }
       
       
@@ -326,7 +383,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     List<Signal> signals = new ArrayList<Signal>();
     Map<String, List<Object>> add_data = new HashMap<String, List<Object>>();
     T newObject=null;
-    
+    // TODO: Double-Signals are being converted to floats here.... try with a collection of size 1 and debug!
     // Collect all Signals, Names and additional data
     for (T ns : c) {
       // Create a new instance of T (if not yet done so)
@@ -373,6 +430,71 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     return newObject;
   }
   
+  /**
+   * @return a list that maps {@link NameAndSignals} identifiers (geneID or name) to the actual {@link NameAndSignals}
+   * @see #getIdentifier(NameAndSignals)
+   */
+  public static <T extends NameAndSignals> Map<Object, List<T>> getNSIdentifierToNSmap(Collection<T> nsList) {
+    Map<Object, List<T>> ret = new HashMap<Object, List<T>>();
+    for (T ns: nsList) {
+      Object id = NameAndSignals.getIdentifier(ns);
+      List<T> list = ret.get(id);
+      if (list==null) {
+        list = new ArrayList<T>();
+        ret.put(id, list);
+      }
+      list.add(ns);
+    }
+    
+    return ret;
+  }
+  
+  /**
+   * @return geneID for {@link mRNA}s and {@link #getName()} for others.
+   * @see #getIdentifierType(NameAndSignals)
+   */
+  public static <T extends NameAndSignals>  Object getIdentifier(T ns) {
+    int idType = getIdentifierType(ns);
+    if (idType==1) {
+      // TODO: Instead of casting to mRNA, make a "geneID" interface
+      // that has a getGeneID() method.
+      return ((mRNA)ns).getGeneID();
+    } else {
+      return ns.getName();
+    }
+  }
+  
+  /**
+   * Get the identifier that should be used to gene-center this
+   * NameAndSignal.
+   * @param <T>
+   * @param ns
+   * @return 1 for GeneID (mRNA).getGeneID() or 0 for {@link #getName()}
+   * @see #getType(Object)
+   */
+  public static <T extends NameAndSignals>  int getIdentifierType(T ns) {
+    return getIdentifierType(getType(ns));
+  }
+
+  /**
+   * Get the identifier that should be used to gene-center this
+   * NameAndSignal.
+   * @param <T>
+   * @param nsClass class of the {@link NameAndSignals}.
+   * @return 1 for GeneID (mRNA).getGeneID() or 0 for {@link #getName()}
+   * @see #getType(Object)
+   */
+  public static int getIdentifierType(Class<? extends NameAndSignals> nsClass) {
+    // TODO: Generalize these isMiRNA, isMRNA methods and make
+    // isGeneID annotated in dataset or similar.
+    
+    if (mRNA.class.isAssignableFrom(nsClass)) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
   /**
    * Abstract merge functionality that can merge strings, numbers
    * and extensions of {@link NameAndSignals}.
@@ -438,18 +560,23 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   protected abstract <T extends NameAndSignals> void merge(Collection<T> source, T target, MergeType m);
 
   /**
-   * Groups the given {@link NameAndSignals}s by name.
-   * @param miRNA collection of {@link NameAndSignals}s.
-   * @return E.g. a map with miRNA names ({@link miRNA#getName()}) as keys and all belonging {@link miRNA}s as values.
+   * Groups the given {@link NameAndSignals}s by <ul>
+   * <li>GeneID for {@link mRNA}s</li>
+   * <li>Recursive for genesInClass() for {@link EnrichmentObject}s</li>
+   * <li>Name for all others (e.g., {@link miRNA}s)</li></ul>
+   * 
+   * @param nsList collection of {@link NameAndSignals}s.
+   * @return A map with group identifier (as described above) to all belonging {@link NameAndSignals}.
+   * E.g., a map with miRNA names ({@link miRNA#getName()}) as keys and all belonging {@link miRNA}s as values.
    * Or anything else extending {@link NameAndSignals}.
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <T extends NameAndSignals> Map<String, Collection<T>> group_by_name(Collection<T> miRNA) {
+  public static <T extends NameAndSignals> Map<String, Collection<T>> group_by_name(Collection<T> nsList) {
     // Group by miRNA name
     Map<String, Collection<T>> ret = new HashMap<String, Collection<T>>();
     
     T mi = null;
-    Iterator<T> it = miRNA.iterator();
+    Iterator<T> it = nsList.iterator();
     while (it.hasNext()) {
       mi = it.next();
       
@@ -762,6 +889,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       if (!mi.hasTargets()) {
         //log.warning("miRNA " +o+ " has no annotated targets.");
       } else {
+        // TODO: We now have also geneIDs for miRNAs... when to use
+        // target and when to use real geneIDs? (e.g., Targets for most enrichments)
         for (miRNAtarget t: mi.getTargets()) {
           geneIds.add(t.getTarget());
         }
@@ -789,7 +918,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
-   * @param o
+   * Get {@link NameAndSignals} from o
+   * @param o any iterable, array or combinations of both over {@link NameAndSignals} or derived classes.
    * @return
    */
   public static Collection<NameAndSignals> getGenes(Object o) {
@@ -876,6 +1006,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * Thus, it is also true for {@link miRNAandTarget}s.
    */
   public static boolean isMicroRNA(Iterable<?> col) {
+    // TODO: Generalize these isMiRNA methods and make
+    // isGeneID annotated in dataset or similar.
     if (col==null) return false; // Empty list
     Iterator<?> it = col.iterator();
     if (!it.hasNext()) return false; // Empty list
@@ -884,6 +1016,43 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     
     return false;
   }
+  
+  /**
+   * Get the class for o. In case of {@link EnrichmentObject}s the type of enriched objects
+   * (<code>getGenesInClass()</code>) is returned.
+   * @param o any iterable, array or combinations of both over {@link NameAndSignals} or derived classes.
+   * @return any {@link NameAndSignals} derived class or {@link NameAndSignals#getClass()} if unknown.
+   */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  public static Class<? extends NameAndSignals> getType(Object o) {
+    
+    if (o==null) {
+      return NameAndSignals.class;
+      
+    } else if (o instanceof Iterable) {
+      for (Object o2 : ((Iterable<?>)o)) {
+        return (getType(o2));
+      }
+      
+    } else if (o.getClass().isArray()) {
+      if (Array.getLength(o)>0) {
+        return (getType(Array.get(o, 0)));
+      }
+      
+    } else if (o instanceof EnrichmentObject || EnrichmentObject.class.isAssignableFrom(o.getClass())) {
+      // Recurse into enriched objects
+      return getType(((EnrichmentObject)o).getGenesInClass());
+      
+    } else if (o instanceof NameAndSignals || NameAndSignals.class.isAssignableFrom(o.getClass())) {
+      return (Class<? extends NameAndSignals>) o.getClass();
+      
+    } else {
+      log.severe("Cannot get NameAndSignals Class for " + o.getClass());
+    }
+    
+    return NameAndSignals.class;
+  }
+  
 
   /**
    * @return a nice {@link String} identifier that can be used, e.g. for nodes
