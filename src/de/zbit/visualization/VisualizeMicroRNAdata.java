@@ -26,10 +26,10 @@ import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.integrator.GraphMLmapsExtended;
-import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.ext.GraphMLmaps;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.util.StringUtil;
+import de.zbit.util.TranslatorTools;
 
 /**
  * A special class to visualize lists of {@link miRNA}s in {@link Graph2D}s.
@@ -75,6 +75,7 @@ public class VisualizeMicroRNAdata {
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
     tools.ensureMapExists(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, true);
     Map<Object, List<Node>> mi2n_map = tools.getReverseMap(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
+    Map<String, List<Node>> mi2n_mapNameBased = tools.getRNA2NodeMap();
     Set<Node> nodesToLayout = new HashSet<Node>();
     
     // Add a node for each miRNA to the graph.
@@ -89,13 +90,15 @@ public class VisualizeMicroRNAdata {
           // we have a microRNA that has targets that are contained in the current graph.
           //Node mi_node = getMicroRNAnode(mi2n_map, m);
           List<Node> list = mi2n_map.get(m);
-          if (list==null) {
+          // FallBack on Name-based list
+          if (list==null || list.size()<1) list = mi2n_mapNameBased.get(m.getName().toUpperCase().trim());
+          if (list==null || list.size()<1) {
             Node n2 = createMicroRNANode(m);
             list = new LinkedList<Node>();
             list.add(n2);
             mi2n_map.put(m, list);
+            nodesToLayout.addAll(list);
           }
-          nodesToLayout.addAll(list);
           
           // Create edges from miRNA node to all targets.
           for (Node target: targetNodes) {
@@ -213,7 +216,7 @@ public class VisualizeMicroRNAdata {
     String link = String.format("http://www.mirbase.org/cgi-bin/mirna_entry.pl?id=%s", mirna.getPrecursorName());
     if (link!=null && link.length()!=0) {
       try {
-        // Convert to URL, because type is infered of the submitted object
+        // Convert to URL, because type is inferred of the submitted object
         // and URL is better than STRING.
         nl.setUserData(new URL(link));
       } catch (MalformedURLException e1) {
@@ -233,7 +236,8 @@ public class VisualizeMicroRNAdata {
     tools.setInfo(n, GraphMLmaps.NODE_NAME, nl.getText());
     tools.setInfo(n, GraphMLmaps.NODE_SIZE, String.format("%s|%s", (int)nr.getWidth(), (int)nr.getHeight()));
     tools.setInfo(n, GraphMLmapsExtended.NODE_IS_MIRNA, true);
-    tools.setInfo(n, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, mirna);
+    // Do only set NS for colored/visualized signals.
+    //tools.setInfo(n, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, mirna);
     if (mirna.getGeneID()>0) {
       tools.setInfo(n, GraphMLmaps.NODE_GENE_ID, mirna.getGeneID());
     }

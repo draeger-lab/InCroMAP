@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,9 +32,9 @@ import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.IntegratorGUITools;
-import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.ext.GraphMLmaps;
 import de.zbit.kegg.io.KEGG2yGraph;
+import de.zbit.util.TranslatorTools;
 import de.zbit.util.ValuePairUncomparable;
 import de.zbit.util.ValueTriplet;
 import de.zbit.visualization.VisualizeMicroRNAdata;
@@ -71,6 +72,11 @@ public class NameAndSignal2PWTools {
   protected Graph2D graph;
   
   /**
+   * The Hierarchy Manager of the {@link #graph}.
+   */
+  protected HierarchyManager hm;
+  
+  /**
    * Common tools.
    */
   protected TranslatorTools tools;
@@ -86,6 +92,7 @@ public class NameAndSignal2PWTools {
     super();
     this.graph=graph;
     if (this.graph==null) log.warning("Graph is null!");
+    this.hm = graph.getHierarchyManager();
     tools = new TranslatorTools(graph);
   }
   
@@ -113,7 +120,7 @@ public class NameAndSignal2PWTools {
         nodeList.add(n);
         // If it is a replicated copy node, also add parent to return set
         if (isCopyMap!=null && isCopyMap.get(n)!=null && isCopyMap.getBool(n)) {
-          nodeList.add(graph.getHierarchyManager().getParentNode(n));
+          nodeList.add(hm.getParentNode(n));
         }
       }
     }
@@ -138,7 +145,7 @@ public class NameAndSignal2PWTools {
         Node n = it.next();
         Object isCopy = isCopyMap.get(n);
         if (isCopy!=null && ((Boolean)isCopy)) {
-          it.add(graph.getHierarchyManager().getParentNode(n));
+          it.add(hm.getParentNode(n));
         }
       }
     }
@@ -164,10 +171,11 @@ public class NameAndSignal2PWTools {
   public Node removeNode(Node n) {
     // remove node and if it is a cloned node, eventually un-group parent.
     Node parent = null;
+    log.finest("--Retrieving parent of "+ n + " from HM and removing node.");
     
     Object isCopy = tools.getInfo(n, GraphMLmapsExtended.NODE_IS_COPY);
     if (isCopy!=null && ((Boolean)isCopy) ) {
-      parent = graph.getHierarchyManager().getParentNode(n);
+      parent = hm.getParentNode(n);
     }
     
     // Remove Node
@@ -180,11 +188,15 @@ public class NameAndSignal2PWTools {
         Integer childs = ((Integer) children)-1;
         tools.setInfo(parent, GraphMLmapsExtended.NODE_NUMBER_OF_CHILDREN, childs);
         if (childs==1) {
+          log.finest("  Merging parent group node to first child.");
           // Group is not required to be a group node now. Merge with only child.
           mergeGroupNodeToFirstChild(parent);
+        } else {
+          log.finest("  Updating parent child count to " + childs);
         }
       }
     }
+    
     return parent;
   }
   
@@ -194,7 +206,7 @@ public class NameAndSignal2PWTools {
    */
   private void mergeGroupNodeToFirstChild(Node group) {
     // - Get (first) child of node
-    Node child = graph.getHierarchyManager().getChildren(group).node();
+    Node child = hm.getChildren(group).node();
     NodeRealizer cr = graph.getRealizer(child);
     NodeRealizer gr = graph.getRealizer(group);
     
@@ -218,16 +230,17 @@ public class NameAndSignal2PWTools {
     // Remember original x and y, ungroup node.
     cr.setX(gr.getX());
     cr.setY(gr.getY());
-    graph.getHierarchyManager().convertToNormalNode(group);
+    hm.convertToNormalNode(group);
     
     // Remove child and Set realizer of child to parent group node.
     graph.removeNode(child);
     graph.setRealizer(group, cr);
     
     // Reset node look and feel to original one
-    tools.resetWidthAndHeight(group);
-    tools.resetColorAndLabel(group);
-    // TODO: Also reset shape in resetWidthAndHeight()
+    // NOPE! With setting realizer to "cr", this is allright!
+    // Could still be a visualization from another signal!
+//    tools.resetWidthAndHeight(group);
+//    tools.resetColorAndLabel(group);
     
   }
   
@@ -367,22 +380,29 @@ public class NameAndSignal2PWTools {
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
     Map<String, List<Node>> mi2n_map = tools.getRNA2NodeMap();
     
-    // If pathway-centered, preprocess
+    // If pathway-centered, preprocess data
+    Map<T, Node> ns2n = null;
     if (pathwayCentered) {
-      Map<Node, Set<T>> n2ns = getNodeToNameAndSignalMapping(nsList);
-      /* TODO: 
-       * 1. Merge all lists accoring to mergeType to get one NS for each node
-       * 2. Remember map and change nsList pointer. Use map for "Get Node(s) for current NameAndSignals"
-       * 
-       */
+      // 1. Merge all lists according to mergeType to get one NS for each node
+      ns2n = new HashMap<T, Node>();
+      Map<Node, Set<T>> n2ns_raw = getNodeToNameAndSignalMapping(nsList);
+      for ( Entry<Node, Set<T>> e : n2ns_raw.entrySet()) {
+        ns2n.put(NameAndSignals.merge(e.getValue(), sigMerge), e.getKey());
+      }
+      // 2. Remember map and change nsList pointer. Use map for "Get Node(s) for current NameAndSignals"
+      nsList = ns2n.keySet();
     }
+    
     
     // Map each NameAndSignal to a list of nodes
     Set<ValuePairUncomparable<Node, T>> alreadyTreated = new HashSet<ValuePairUncomparable<Node, T>>();
+    Set<Node> nodesToLayout = new HashSet<Node>();
     for (T ns : nsList) {
       // Get Node(s) for current NameAndSignals
       List<Node> node;
-      if (ns instanceof miRNA) {
+      if (ns2n!=null) {
+        node = Arrays.asList(new Node[]{ns2n.get(ns)});
+      } else if (ns instanceof miRNA) {
         if (ns.getName()==null) continue;
         Node miNode = VisualizeMicroRNAdata.getMicroRNAnode(mi2n_map, (miRNA) ns, graph);
         if (miNode==null) continue; // Contains no node in the current graph 
@@ -412,7 +432,7 @@ public class NameAndSignal2PWTools {
                   Node groupNode = n;
                   if (nIsCopy!=null && ((Boolean)nIsCopy) ) {
                     // If node is a child, get the parent node that represents this gene.
-                    groupNode = graph.getHierarchyManager().getParentNode(n);
+                    groupNode = hm.getParentNode(n);
                   }
                   
                   // Avoid splitting the same node for all already splitted instances.
@@ -422,13 +442,16 @@ public class NameAndSignal2PWTools {
                   else alreadyTreated.add(id);
                   
                   // Convert to group node and create node, representing the previous NameAndSignals that mapped to the node
-                  if (!graph.getHierarchyManager().isGroupNode(groupNode)) {
-                    convertToGroupNode(groupNode);
+                  if (!hm.isGroupNode(groupNode)) {
+                    Node previous = convertToGroupNode(groupNode);
+                    nodesToLayout.add(previous);
+                    nodesToLayout.add(groupNode);
                   }
                   
                   // Create a node in this group node, that corresponds to the current NameAndSignals
                   // First, create a virgin child node copy.
-                  Node copy = graph.getHierarchyManager().getChildren(groupNode).node().createCopy(graph);
+                  Node copy = hm.getChildren(groupNode).node().createCopy(graph);
+                  nodesToLayout.add(copy);
                   
                   tools.resetWidthAndHeight(copy);
                   removeAllUnregisteredMaps(copy);
@@ -454,6 +477,7 @@ public class NameAndSignal2PWTools {
     
 
     // TODO: Make a nice layout (e.g. by layouting novel group nodes only).
+    tools.layoutChildsAndGroupNodes(nodesToLayout);
     // And layouting internals of novel group nodes.
 //    for (Node newGroupNode: groupNodeRepresentative.keySet()) {
 //      
@@ -513,7 +537,9 @@ public class NameAndSignal2PWTools {
           nsListForNode.addAll(list);
         }
       }
-      n2ns.put(n, nsListForNode);
+      if (nsListForNode.size()>0) {
+        n2ns.put(n, nsListForNode);
+      }
       
     }
       
@@ -560,7 +586,7 @@ public class NameAndSignal2PWTools {
     Object parent = tools.getInfo(groupNode, GraphMLmapsExtended.NODE_BELONGS_TO);
     
     NodeRealizer nr = KEGG2yGraph.setupGroupNode(graph.getRealizer(groupNode).getLabel(), graph.getLabelText(copy));
-    graph.getHierarchyManager().convertToGroupNode(groupNode);
+    hm.convertToGroupNode(groupNode);
     graph.setRealizer(groupNode, nr);
     tools.setInfo(groupNode, GraphMLmapsExtended.NODE_IS_COPY, false);
     tools.setInfo(groupNode, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, null); // May belong to multiples => iterate childs.
@@ -628,9 +654,6 @@ public class NameAndSignal2PWTools {
    * @param ns
    */
   private void prepareChildNode(Node groupNode, Node child, NameAndSignals ns) {
-    int cols = 2;
-    double inset=5.0;
-    HierarchyManager hm = graph.getHierarchyManager();
     NodeRealizer cr = graph.getRealizer(child);
     
     // Set a uniquely describing label
@@ -663,16 +686,7 @@ public class NameAndSignal2PWTools {
      * Child node X and Y determine coordinates of parent group node automatically!
      * => Only set child x and y.
      */
-    // TODO: Not for miRNA nodes.
-    double w = Math.max(cr.getWidth(), cr.getLabel().getWidth()-inset);
-    
-    double x = ((nodesInGroup-1) %cols); // column
-    x = cr.getX() + (x*(w+inset));
-    double y = ((nodesInGroup-1) /cols); // row
-    y = cr.getY() + (y*(cr.getHeight()+inset));
-    
-    cr.setX(x);
-    cr.setY(y);
+    TranslatorTools.setStackingChildNodePosition(cr, cr, nodesInGroup);   
     
     // Make node as big as the label, don't change size of miRNAs.
     if (!tools.getBoolInfo(groupNode, GraphMLmapsExtended.NODE_IS_MIRNA)) {
@@ -698,6 +712,8 @@ public class NameAndSignal2PWTools {
     // Paint above other nodes.
     graph.moveToLast(child);
   }
+
+
 
   /**
    * @return current {@link TranslatorTools} instance.

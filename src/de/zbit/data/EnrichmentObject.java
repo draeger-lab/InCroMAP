@@ -377,7 +377,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
     
     // Remark: pValue will be dynamically re-calculated.
     // QValue is LOST and has to be re-calculated!
-    // XXX: One could also check if this eqals (or is close to) the mean!
+    // XXX: One could also check if this equals (or is close to) the mean!
     // In this case, this section could be removed.
     t.unsetPValue();
     t.unsetQValue();

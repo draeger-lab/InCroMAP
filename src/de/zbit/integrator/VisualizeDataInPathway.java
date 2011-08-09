@@ -24,11 +24,14 @@ import y.base.DataMap;
 import y.base.Node;
 import y.base.NodeMap;
 import y.view.Graph2D;
+import y.view.Graph2DView;
+import y.view.Graph2DViewActions;
 import y.view.NodeRealizer;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.IntegratorTab;
@@ -37,7 +40,6 @@ import de.zbit.gui.NameAndSignalsTab;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.kegg.Translator;
-import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.KGMLSelectAndDownload;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.BatchKEGGtranslator;
@@ -46,6 +48,7 @@ import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.StringUtil;
+import de.zbit.util.TranslatorTools;
 import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
@@ -214,13 +217,23 @@ public class VisualizeDataInPathway {
    */
   public void removeVisualization(String tabName, String experimentName, SignalType type) {
     // 1. Get all nodes for experiment
+    log.finer("Getting all nodes for given experiment and NODE_IS_COPY map.");
     Collection<Node> nodes = nsTools.getAllNodesForExperiment(tabName, experimentName, type);
     if (nodes.size()<1) return;
     DataMap isCopyMap = tools.getMap(GraphMLmapsExtended.NODE_IS_COPY);
     
     // 2. Remove cloned nodes and ungroup parents (if group size = 1)
+    log.finer("Removing cloned nodes and ungrouping parent nodes.");
+    Set<Node> toLayout = new HashSet<Node>();
     if (isCopyMap!=null) {
       for (Node n: nodes) {
+        if (n==null)continue;
+        
+        // 2.0 remember groups to re-layout
+        try {
+          Node parent = graph.getHierarchyManager().getParentNode(n);
+          if (parent!=null) toLayout.add(parent);
+        } catch (Throwable t) {}
         
         // 2.1 If it's a clone, remove it and if parent is empty group, un-group parent.
         Object o = isCopyMap.get(n);
@@ -228,7 +241,6 @@ public class VisualizeDataInPathway {
           if ((Boolean)o) {
             //  is a copy node
             nsTools.removeNode(n);
-            continue;
           } // Group and simple nodes will be treated later.
         }
       }
@@ -236,19 +248,32 @@ public class VisualizeDataInPathway {
     
     // 3. Iterate again over nodes and reset visualized data.
     // old group nodes may not be group nodes anymore after removing childs
+    log.finer("Re-getting all nodes for given experiment and resetting visualization");
     nodes = nsTools.getAllNodesForExperiment(tabName, experimentName, type);
     for (Node n: nodes) {
       //3.2 Reset Color, Label and remove Signal annotation
+      //if (!graph.getHierarchyManager().isGroupNode(n)) {
       if (!graph.getHierarchyManager().isGroupNode(n)) {
         tools.resetColorAndLabel(n);
+        tools.resetWidthAndHeight(n);
+     // TODO: Also reset shape in resetWidthAndHeight()
       } else {
-        // TODO: Re-layout content of node.
+        toLayout.add(n);
       }
       tools.setInfo(n, GraphMLmapsExtended.NODE_BELONGS_TO, null);
       tools.setInfo(n, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, null);
     }
     
+    // 3.5 layout group node contents. Does not move the group node,
+    // but only stacks the inner nodes.
+    for (Node node : toLayout) {
+      if (graph.contains(node)) {
+        tools.layoutGroupNode(node);
+      }
+    }
+    
     // 4. Remove signal from all nodes and also remove signal map
+    log.finer("Removing signals and annotation keys.");
     removeSignal(tabName, experimentName, type);
     
     // 5. Remove from list of visualized datasets.
@@ -448,7 +473,6 @@ public class VisualizeDataInPathway {
     // 0. Remove previous visualizations of the same data.
     if (isDataVisualized(tabName, experimentName, type)) {
       removeVisualization(tabName, experimentName, type);
-      //return 0;
     }
     
     // 0.5 Preprocessing: GENE-CENTER data if requested.
@@ -491,7 +515,8 @@ public class VisualizeDataInPathway {
   @SuppressWarnings("unchecked")
   public int colorNodesAccordingToSignals(SignalColor recolorer, String tabName, String experimentName, SignalType type) {
 //    ValueTriplet<String, String, SignalType> signalKey = new ValueTriplet<String, String, SignalType>(tabName, experimentName, type);
-    
+    boolean inputContainedMicroRNAnodes=false;
+    boolean inputContainedmRNAnodes=false;
     MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();
     
     DataMap nsMapper     = tools.getMap(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
@@ -499,7 +524,7 @@ public class VisualizeDataInPathway {
     Set<Node> nodesToResetColor = new HashSet<Node>(Arrays.asList(graph.getNodeArray()));
     for (Node n: graph.getNodeArray()) {
       // Decide if we want to re-color this node
-      ValueTriplet<String, String, SignalType> parent = (ValueTriplet<String, String, SignalType>) parentMapper.get(n);
+      ValueTriplet<String, String, SignalType> parent = parentMapper==null?null:(ValueTriplet<String, String, SignalType>) parentMapper.get(n);
       if (parent==null) {
         continue; // not belonging to any parent...
       } else if ((tabName==null || parent.getA().equals(tabName)) &&
@@ -509,6 +534,8 @@ public class VisualizeDataInPathway {
         // Get the actual signal to consider when recoloring
         NameAndSignals ns = (NameAndSignals) nsMapper.get(n);
         if (ns==null) continue;
+        if (ns instanceof miRNA) inputContainedMicroRNAnodes=true;
+        else inputContainedmRNAnodes=true;
         double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
         if (Double.isNaN(signalValue)) continue;
         Color newColor = recolorer.getColor(signalValue);
@@ -519,7 +546,7 @@ public class VisualizeDataInPathway {
         // ---------------------------------
         
       } else if (parent!=null) {
-        // Node has been crreated for a specific parent, but it is
+        // Node has been created for a specific parent, but it is
         // not this one => don't recolor it, simply skip it.
         nodesToResetColor.remove(n);
       }
@@ -533,7 +560,12 @@ public class VisualizeDataInPathway {
       // kgId is defined for all KEGG nodes, but NULL for all miRNA nodes.
       if (kgId!=null && kgId.toString().toLowerCase().trim().startsWith("path:")) continue; // Title node
       
-      // TODO: If input is miRNA, remove all non-miRNA nodes from colorForUnaffectedNodes and via versa.
+      // If input is miRNA, remove all non-miRNA nodes from colorForUnaffectedNodes and via versa.
+      if (!inputContainedMicroRNAnodes && tools.getBoolInfo(n, GraphMLmapsExtended.NODE_IS_MIRNA)) {
+        continue;
+      } if (!inputContainedmRNAnodes && !tools.getBoolInfo(n, GraphMLmapsExtended.NODE_IS_MIRNA)) {
+        continue;
+      }
       
       graph.getRealizer(n).setFillColor(colorForUnaffectedNodes);
     }

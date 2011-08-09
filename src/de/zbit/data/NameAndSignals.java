@@ -331,9 +331,14 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     
     Collection<T> toReturn = new ArrayList<T>();
     if (groupIdentifiersToMerge==null) {
+      // => Merge data gene-centered
       for (String mi : group.keySet()) {
         Collection<T> col = group.get(mi);
-        toReturn.add(merge(col, m));
+        T merged = merge(col, m);
+        if (merged instanceof NSwithProbes) {
+          ((NSwithProbes) merged).setGeneCentered(true);
+        }
+        toReturn.add(merged);
       }
       
     } else {
@@ -366,7 +371,6 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       
     return toReturn;
   }
-  
   
   /**
    * Merge a collection of objects to one, e.g., by concatenating strings
@@ -458,7 +462,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     if (idType==1) {
       // TODO: Instead of casting to mRNA, make a "geneID" interface
       // that has a getGeneID() method.
-      return ((mRNA)ns).getGeneID();
+      return ((NSwithProbes)ns).getGeneID();
     } else {
       return ns.getName();
     }
@@ -620,7 +624,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @throws CloneNotSupportedException
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  protected <T extends NameAndSignals> void cloneAbstractFields(T target, T source) throws CloneNotSupportedException {
+  protected <T extends NameAndSignals> void cloneAbstractFields(T target, T source) {
     target.name = new String(source.name);
     target.signals = (List<Signal>) cloneCollection(source.signals);
     if (additional_data==null) {
@@ -815,7 +819,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       while (it.hasNext()) {
         if (columnIndex==i++) {
           String key = it.next();
-          return additional_data.get(key);
+          Object add =  additional_data.get(key);
+          // Do not return null. Number of cols must be solid and thus,
+          // must not be null for unset additional data.
+          return (add!=null?add:"");
         } else it.next();
       }
     }

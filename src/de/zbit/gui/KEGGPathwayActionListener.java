@@ -13,6 +13,7 @@ import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
@@ -30,14 +31,15 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.TranslatorTabActions.TPAction;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
+import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.integrator.VisualizeDataInPathway;
 import de.zbit.kegg.Translator;
-import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.gui.TranslatorUI;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.util.AbstractProgressBar;
+import de.zbit.util.TranslatorTools;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
@@ -195,13 +197,18 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
      */
     
     // Ask the user to set all required options
-    if (!VisualizeDataInPathwayDialog.showDialog(new VisualizeDataInPathwayDialog(), "Visualize data in pathway")) return;// 0;
-    // (All options are automatically processed in the VisualizeData method)
+    if (!SignalOptions.REMEMBER_GENE_CENTER_DECISION.getValue(SBPreferences.getPreferencesFor(SignalOptions.class))) {
+      if (!VisualizeDataInPathwayDialog.showDialog(new VisualizeDataInPathwayDialog(), "Visualize data in pathway")) return;// 0;
+      // (All options are automatically processed in the VisualizeData method)
+    }
     
     // Ensure that graph is available
     if (tp.getDocument()==null) {
       GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");
       return;// -1;
+    } else {
+      // Show temporary loading bar
+      tp.showTemporaryLoadingBar("Visualizing data in pathway...");
     }
     
     // Perform operations in another thread
@@ -209,9 +216,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       
       @Override
       protected Integer doInBackground() throws Exception {
-        
-        // Show temporary loading bar
-        tp.showTemporaryLoadingBar("Visualizing data in pathway...");
+        try {
         
         // Adds the microRNA NODES to the graph and automatically asks
         // the user to annotate targets to his miRNA data if not already done.
@@ -227,13 +232,27 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         //tp.repaint();
         //tp.hideTemporaryLoadingBar();
         return coloredNodes;
+        } catch (Throwable t) {
+          t.printStackTrace();
+        }
         
+        return -1;
       }
       
       @Override
       protected void done() {
-        tp.repaint();
-        tp.hideTemporaryLoadingBar();
+        try {
+          // Check for execution errors
+          get();
+        } catch (InterruptedException e) {
+        } catch (ExecutionException e) {
+          e.printStackTrace();
+          GUITools.showErrorMessage(null, e);
+        } finally {
+          tp.hideTemporaryLoadingBar();
+          tp.repaint();
+          IntegratorUI.getInstance().updateButtons();
+        }
       }
     };
     visData.execute();

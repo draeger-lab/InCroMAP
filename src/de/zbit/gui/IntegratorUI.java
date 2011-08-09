@@ -42,6 +42,7 @@ import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.PreferencesPanel;
+import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;

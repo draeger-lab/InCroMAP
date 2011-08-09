@@ -82,7 +82,7 @@ public class VisualizeDataInPathwayDialog extends JPanel {
   public static boolean showDialog(final VisualizeDataInPathwayDialog c, String title) {
     if (title==null) title = IntegratorUI.appName;
     // Show asking dialog
-    boolean confirmed =  GUITools.showAsDialog(IntegratorUI.getInstance(), c, title, true)==JOptionPane.OK_OPTION;
+    boolean confirmed = GUITools.showAsDialog(IntegratorUI.getInstance(), c, title, true)==JOptionPane.OK_OPTION;
     if (confirmed) {
       // Make options persistent.
       try {

@@ -14,15 +14,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
-import de.zbit.data.mRNA.mRNA;
 
 /**
  * A generic class to hold miRNAs with Signals and Targets.
  * @author Clemens Wrzodek
  */
-public class miRNA extends NameAndSignals {
+public class miRNA extends NSwithProbes {
   private static final long serialVersionUID = -6645485135779082585L;
   public static final transient Logger log = Logger.getLogger(miRNA.class.getName());
   
@@ -33,20 +33,23 @@ public class miRNA extends NameAndSignals {
   private List<miRNAtarget> targets=null;
   
   /**
-   * Probe names are added to {@link #addData(String, Object)} with this key.
-   */
-  public final static String probeNameKey = "probe_name";
-  
-  /**
-   * @param name - The SystematicName (e.g. "mmu-miR-384-3p")
+   * @param name The SystematicName (e.g. "mmu-miR-384-3p")
    */
   public miRNA(String name) {
-    super(name);
+    this (name, null);
   }
   
   public miRNA(String name, String probeName) {
-    this(name);
-    addData(probeNameKey, probeName);
+    this (probeName, name, default_geneID);
+  }
+  
+  /**
+   * @param probeName name of the probe
+   * @param geneName the gene name
+   * @param geneID Corresponding NCBI Gene ID (Entrez).
+   */
+  public miRNA(String probeName, String geneName, int geneID) {
+    super (probeName, geneName, geneID);
   }
 
   /**
@@ -70,23 +73,6 @@ public class miRNA extends NameAndSignals {
     return matched;
   }
   
-  
-  /**
-   * Set the corresponding NCBI Gene ID.
-   * @param geneID
-   */
-  public void setGeneID(int geneID) {
-    super.addData(mRNA.gene_id_key, new Integer(geneID));
-  }
-  
-  /**
-   * @return associated NCBI Gene ID.
-   */
-  public int getGeneID() {
-    Integer i = (Integer) super.getData(mRNA.gene_id_key);
-    return i==null?mRNA.default_geneID:i;
-  }
-
 
   /**
    * Set the targets of this miRNA. Ensures that this is always a
@@ -102,37 +88,6 @@ public class miRNA extends NameAndSignals {
       Collections.sort((List<miRNAtarget>)targets);
     }
     this.targets = (List<miRNAtarget>) targets;
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
-   */
-  public int compareTo(Object o) {
-    if (o==null) return -1;
-    int r = super.compareTo(o); // Compare miRNA name
-    if (o instanceof miRNA || miRNA.class.isAssignableFrom(o.getClass())) {
-      miRNA ot = (miRNA) o;
-      if (r==0) {
-        Object probe_name1 = getProbeName();
-        Object probe_name2 = ot.getProbeName();
-        if (probe_name1==null && probe_name2==null) r = 0;
-        else if (probe_name1==null || probe_name2==null) r = -1;
-        else r = probe_name1.toString().compareTo(probe_name2.toString());
-      }
-    /*} else {
-      if (r==0) r=-1; // do not accept other superclasses*/
-    }
-    
-    return r;
-  }
-  
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
-  @Override
-  public int hashCode() {
-    Object probeName = getProbeName();
-    return super.hashCode() + (probeName!=null?probeName.hashCode():0);
   }
   
   /* (non-Javadoc)
@@ -176,14 +131,6 @@ public class miRNA extends NameAndSignals {
    */
   public boolean hasTargets() {
     return targets!=null&&targets.size()>0;
-  }
-
-  /**
-   * @return
-   */
-  public String getProbeName() {
-    Object probeName = getData(probeNameKey);
-    return probeName==null?null:probeName.toString();
   }
   
   /**
@@ -242,9 +189,11 @@ public class miRNA extends NameAndSignals {
    * @see de.zbit.data.NameAndSignal#merge(java.util.Collection, de.zbit.data.NameAndSignal, de.zbit.data.Signal.MergeType)
    */
   @Override
-  protected <T extends NameAndSignals> void merge(Collection<T> source,
-    T target, MergeType m) {
+  protected <T extends NameAndSignals> void merge(Collection<T> source,T target, MergeType m) {
+    // Merge geneID, probeName, etc.
+    super.merge(source, target, m);
     
+    // Add targets
     Set<miRNAtarget> unique_targets = new HashSet<miRNAtarget>();
     for (T o :source) {
       miRNA mi = (miRNA)o;
@@ -262,7 +211,7 @@ public class miRNA extends NameAndSignals {
   @Override
   protected Object clone() throws CloneNotSupportedException {
     miRNA nm = new miRNA(name, getProbeName());
-    super.cloneAbstractFields(nm, this); // Copies also the probeName
+    super.clone(nm); // Copies also the probeName
     nm.targets = (List<miRNAtarget>) NameAndSignals.cloneCollection(targets);
     return nm;
   }
@@ -296,19 +245,6 @@ public class miRNA extends NameAndSignals {
     }
     
   }
-
-  /* (non-Javadoc)
-   * @see de.zbit.data.NameAndSignals#getUniqueLabel()
-   */
-  @Override
-  public String getUniqueLabel() {
-    String probe = getProbeName();
-    
-    probe = mRNA.getShortProbeName(probe);
-    
-    return (probe==null||probe.length()<1)?getName():probe;
-  }
-  
 
 
 }

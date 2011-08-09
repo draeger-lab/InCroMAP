@@ -18,10 +18,10 @@ import javax.swing.UIManager;
 
 import y.base.Node;
 import de.zbit.data.miRNA.miRNAtargets;
-import de.zbit.kegg.TranslatorTools;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
+import de.zbit.util.TranslatorTools;
 import de.zbit.util.ValuePair;
 
 /**

@@ -7,7 +7,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
 
 import de.zbit.data.Signal.MergeType;
-import de.zbit.gui.ActionCommand;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.OptionGroup;
@@ -71,12 +70,12 @@ public interface SignalOptions extends KeyProvider {
   public static ButtonGroup signalMergeDepth = new ButtonGroup();
   
   public static Option<Boolean> PATHWAY_CENTERED = new Option<Boolean>("PATHWAY_CENTERED", Boolean.class,
-      "Merge all probes that belong to one node in a pathway to one value.", Boolean.FALSE,
+      "Merge all probes that belong to one node in a pathway to one value.", Boolean.TRUE,
       "One value per pathway node (pathway centered)", signalMergeDepth);
   
   public static Option<Boolean> GENE_CENTERED = new Option<Boolean>("GENE_CENTERED", Boolean.class,
-      "Merge all probes that belong to one gene to one value.", Boolean.TRUE,
-      "One value per gene (gene centered)", signalMergeDepth);
+      "Merge all probes that belong to one gene to one value. This can result in a very confusing graph and is thus not recommended.", Boolean.FALSE,
+      "One value per gene (gene centered - not recommended)", signalMergeDepth);
   
   public static Option<Boolean> PROBE_CENTERED = new Option<Boolean>("PROBE_CENTERED", Boolean.class,
       "Do not merge any probes. This can result in a very confusing graph and is thus not recommended.", Boolean.FALSE,
@@ -87,13 +86,13 @@ public interface SignalOptions extends KeyProvider {
   * Select how to merge multiple probes to one.
   */
  public static Option<MergeType> GENE_CENTER_SIGNALS_BY = new Option<MergeType>("GENE_CENTER_SIGNALS_BY", MergeType.class,
-     "Select how to merge multiple probes to a gene centric dataset.", MergeType.Mean,
+     "Select how to merge multiple probes to a gene centric dataset.", MergeType.MaximumDistanceToZero,
      PROBE_CENTERED, Option.buildRange(Boolean.FALSE));
 //     MERGE_DEPTH, Option.buildRange(DepthChoices.PATHWAY, DepthChoices.GENE));
 
  
  public static Option<Boolean> REMEMBER_GENE_CENTER_DECISION = new Option<Boolean>("REMEMBER_GENE_CENTER_DECISION", Boolean.class,
-     "Remember my decision of how to merge multiple probes and don't ask again.", Boolean.FALSE,
+     "Remember my decision of how to merge multiple probes and don't ask again.", Boolean.TRUE,
      GENE_CENTER_SIGNALS_BY.getDependencies());
  
  

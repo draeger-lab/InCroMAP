@@ -90,6 +90,7 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
    */
   public static String format_miRNA(String miRNA) {
     // Standard formatting: Uppercase and trim
+    // XXX: Not good. "miR" is precursor of "MIR".
     miRNA = miRNA.toUpperCase().trim();
     
     // Remove brackets
