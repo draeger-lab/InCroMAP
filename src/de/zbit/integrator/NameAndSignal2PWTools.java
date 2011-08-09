@@ -275,55 +275,6 @@ public class NameAndSignal2PWTools {
     }
     return map;
   }
-    
-    /* Old idea:
-     * 
-     *  Map by
-     *  a) NS map -> break if found, also add parent node if isVariant.
-     * 
-     *  b) - if miRNA then map by
-     *    1) unique name (may come from another table with same probes)
-     *       if (isVariant) also addToParent
-     *    2) Name
-     *     
-     *     - if NOT miRNA then map by GENE-ID
-     *      Bei mehreren, suche ob ein knoten isVariant=true ist und
-     *      uniqueName().equals(ns).
-     *      As always, also add to parent.
-     * 
-     * New decision: only make a).
-     *  Ein Knoten darf nur für einen Tab stehen.
-     *  Dieser muss entweder überschrieben (re-color) oder gesplitted werden).
-     */
-        
-    // XXX: Is this still required here?
-
-    
-    // It seems this is the first time, these NameAnsSignals are processed.
-    // 2nd Protority => Map by GeneID and miRNA name.
-  /*  Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
-    Map<String, List<Node>> mi2n_map = tools.getRNA2NodeMap();
-    
-    // Get Node(s) for current NameAndSignals
-    Iterator<T> it = nsList.iterator();
-    while (it.hasNext()) {
-      T ns = it.next();
-      
-      List<Node> node;
-      if (ns instanceof miRNA) {
-        if (ns.getName()==null) continue;
-        Node miNode = VisualizeMicroRNAdata.getMicroRNAnode(mi2n_map, (miRNA) ns, graph);
-        if (miNode==null) continue; // Contains no node in the current graph 
-        node = Arrays.asList(new Node[]{miNode});
-      } else {
-        // Get Node(s) for mRNA
-        node = getNodesForNameAndSignal(gi2n_map, ns);
-      }
-    }
-    
-    
-  }*/
-  
 
   /**
    * Get nodes, corresponding to the given <code>ns</code>. Uses the annotated
@@ -476,13 +427,12 @@ public class NameAndSignal2PWTools {
     }
     
 
-    // TODO: Make a nice layout (e.g. by layouting novel group nodes only).
-    tools.layoutChildsAndGroupNodes(nodesToLayout);
+    // Make a nice layout (e.g. by layouting novel group nodes only).
+    if (nodesToLayout!=null && nodesToLayout.size()>0) {
+      tools.layoutChildsAndGroupNodes(nodesToLayout);
+    }
     // And layouting internals of novel group nodes.
-//    for (Node newGroupNode: groupNodeRepresentative.keySet()) {
-//      
-//    }
-//    tools.layoutNodeSubset(groupNodeRepresentative.keySet());
+    // => Is performed ad stacked layout in layoutChildsAndGroupNodes().
     
   }
 
