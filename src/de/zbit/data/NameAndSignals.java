@@ -435,6 +435,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
+   * Creates a list that maps {@link NameAndSignals} identifiers (geneID or name) to the actual {@link NameAndSignals}
+   * <p>Note: If the identifier is a String, it will be <b>UPPERCASED AND TRIMMED</b>!.
    * @return a list that maps {@link NameAndSignals} identifiers (geneID or name) to the actual {@link NameAndSignals}
    * @see #getIdentifier(NameAndSignals)
    */
@@ -445,6 +447,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       List<T> list = ret.get(id);
       if (list==null) {
         list = new ArrayList<T>();
+        if (id instanceof String) id=id.toString().toUpperCase().trim();
         ret.put(id, list);
       }
       list.add(ns);
@@ -462,7 +465,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     if (idType==1) {
       // TODO: Instead of casting to mRNA, make a "geneID" interface
       // that has a getGeneID() method.
-      return ((NSwithProbes)ns).getGeneID();
+      return ((GeneID)ns).getGeneID();
     } else {
       return ns.getName();
     }

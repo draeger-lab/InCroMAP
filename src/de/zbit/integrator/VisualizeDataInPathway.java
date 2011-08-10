@@ -24,8 +24,6 @@ import y.base.DataMap;
 import y.base.Node;
 import y.base.NodeMap;
 import y.view.Graph2D;
-import y.view.Graph2DView;
-import y.view.Graph2DViewActions;
 import y.view.NodeRealizer;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
@@ -161,6 +159,7 @@ public class VisualizeDataInPathway {
    */
   @SuppressWarnings("unchecked")
   private List<ValueTriplet<String, String, SignalType>> getVisualizedData(boolean createIfNotExists) {
+    if (panelContainingGraph==null) return createIfNotExists?new ArrayList<ValueTriplet<String, String, SignalType>>():null;
     List<ValueTriplet<String, String, SignalType>> myList = 
       (List<ValueTriplet<String, String, SignalType>>) panelContainingGraph.getData(VISUALIZED_DATA_KEY);
     if (myList==null && createIfNotExists) {
@@ -183,6 +182,7 @@ public class VisualizeDataInPathway {
    */
   @SuppressWarnings("unchecked")
   private Map<ValueTriplet<String, String, SignalType>, NodeMap> getAnnotatedSignals(boolean createIfNotExists) {
+    if (panelContainingGraph==null) return createIfNotExists?new HashMap<ValueTriplet<String, String, SignalType>, NodeMap>():null;
     Map<ValueTriplet<String, String, SignalType>, NodeMap> myMap = 
       (Map<ValueTriplet<String, String, SignalType>, NodeMap>) panelContainingGraph.getData(ANNOTATED_DATA_KEY);
     if (myMap==null && createIfNotExists) {
@@ -469,6 +469,9 @@ public class VisualizeDataInPathway {
    */
   public <T extends NameAndSignals> int visualizeData(Collection<T> nsList, String tabName, String experimentName, SignalType type) {
     SBPreferences prefs = SBPreferences.getPreferencesFor(SignalOptions.class);
+    // If explicitly PATHWAY_CENTERED is set or nothing is set
+    boolean pwCentered = SignalOptions.PATHWAY_CENTERED.getValue(prefs) ||
+      (!SignalOptions.PROBE_CENTERED.getValue(prefs) && !SignalOptions.GENE_CENTERED.getValue(prefs));
     
     // 0. Remove previous visualizations of the same data.
     if (isDataVisualized(tabName, experimentName, type)) {
@@ -476,12 +479,12 @@ public class VisualizeDataInPathway {
     }
     
     // 0.5 Preprocessing: GENE-CENTER data if requested.
-    if (SignalOptions.GENE_CENTERED.getValue(prefs)) {
+    if (!SignalOptions.PROBE_CENTERED.getValue(prefs)) {
       nsList = NameAndSignals.geneCentered(nsList, IntegratorGUITools.getMergeTypeSilent(prefs));
     }
     
     // 1. Add NS to nodes and perform splits
-    nsTools.prepareGraph(nsList, tabName, experimentName, type, SignalOptions.PATHWAY_CENTERED.getValue(prefs));
+    nsList = nsTools.prepareGraph(nsList, tabName, experimentName, type, pwCentered);
     
     // 2. color nodes
     SignalColor recolorer = new SignalColor(nsList, experimentName, type);

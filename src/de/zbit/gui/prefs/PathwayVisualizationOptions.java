@@ -42,7 +42,7 @@ public interface PathwayVisualizationOptions extends KeyProvider {
   
   public static Option<Byte> CHANGE_NODE_SHAPE = new Option<Byte>("CHANGE_NODE_SHAPE", Byte.class,
       "Change the shape of colored nodes to the selected shape.",Option.buildRange(NodeShapeSelector.validChoices),
-      new Byte((byte)0));
+      new Byte((byte)0), false);
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static final OptionGroup PATHWAY_COLORING_OPTIONS = new OptionGroup(

@@ -319,8 +319,12 @@ public class NameAndSignal2PWTools {
    * the tab or the filename or anything else.
    * @param experimentName to describe the signal
    * @param type to describe the signal
+   * @param pathwayCentered if true, the method calculates one value for each pathway 
+   * node and merges multiples {@link NameAndSignals} belonging to one node
+   * @return <code>nsList</code> is returned. This list is modified only when
+   * <code>pathwayCentered</code> is true. 
    */
-  public <T extends NameAndSignals> void prepareGraph(Collection<T> nsList, String tabName, String experimentName, SignalType type, boolean pathwayCentered) {
+  public <T extends NameAndSignals> Collection<T> prepareGraph(Collection<T> nsList, String tabName, String experimentName, SignalType type, boolean pathwayCentered) {
     // Only if multiple times the same signal is available, which is actually impossible...
     MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();
     
@@ -434,6 +438,7 @@ public class NameAndSignal2PWTools {
     // And layouting internals of novel group nodes.
     // => Is performed ad stacked layout in layoutChildsAndGroupNodes().
     
+    return nsList;
   }
 
 
@@ -481,8 +486,9 @@ public class NameAndSignal2PWTools {
       
       // Get all NS for identifiers
       Set<T> nsListForNode = new HashSet<T>();
-      for (Object object : identifiers) {
-        List<T> list = id2NSmapper.get(object);
+      for (Object id : identifiers) {
+        if (id instanceof String) id=id.toString().toUpperCase().trim();
+        List<T> list = id2NSmapper.get(id);
         if (list!=null && list.size()>0) {
           nsListForNode.addAll(list);
         }

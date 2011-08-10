@@ -13,10 +13,10 @@ import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.StringUtil;
 
 /**
- * An interface for probe-based {@link NameAndSignals}.
+ * An abstract implementation for probe-based {@link NameAndSignals}.
  * @author Clemens Wrzodek
  */
-public abstract class NSwithProbes extends NameAndSignals {
+public abstract class NSwithProbes extends NameAndSignals implements GeneID {
   private static final long serialVersionUID = 7380203443487769632L;
   public static final transient Logger log = Logger.getLogger(NSwithProbes.class.getName());
   
@@ -25,17 +25,6 @@ public abstract class NSwithProbes extends NameAndSignals {
    * Probe names are added to {@link #addData(String, Object)} with this key.
    */
   public final static String probeNameKey = "Probe_name";
-
-  /**
-   * Means gene id has not been set or mRNA has no associated gene id.
-   */
-  public final static Integer default_geneID = -1;
-  
-  /**
-   * The key to use in the {@link #addData(String, Object)} map to add
-   * the corresponding NCBI Gene ID (Entrez).
-   */
-  public final static String gene_id_key = "Gene_ID";
   
   /**
    * The key to use in the {@link #addData(String, Object)} map to add
@@ -51,7 +40,8 @@ public abstract class NSwithProbes extends NameAndSignals {
    */
   public NSwithProbes(String probeName, String geneName, Integer geneID) {
     super(geneName);
-    // Always set attributes.
+    // Always or never set attributes. Else, super class might get confused
+    // with column indices.
     //if (probeName!=null)
     setProbeName(probeName);
     //if (geneID!=null && geneID!=default_geneID && geneID>0)
@@ -59,17 +49,18 @@ public abstract class NSwithProbes extends NameAndSignals {
   }
   
   
-  /**
-   * Set the corresponding NCBI Gene ID.
-   * @param geneID
+  /* (non-Javadoc)
+   * @see de.zbit.data.GeneID#setGeneID(int)
    */
+  @Override
   public void setGeneID(int geneID) {
     super.addData(gene_id_key, new Integer(geneID));
   }
   
-  /**
-   * @return associated NCBI Gene ID.
+  /* (non-Javadoc)
+   * @see de.zbit.data.GeneID#getGeneID()
    */
+  @Override
   public int getGeneID() {
     Integer i = (Integer) super.getData(gene_id_key);
     return i==null?default_geneID:i;
@@ -81,7 +72,7 @@ public abstract class NSwithProbes extends NameAndSignals {
    * @param bool
    */
   public void setGeneCentered(boolean bool) {
-    super.addData(gene_centered_key, new Boolean(bool));
+    super.addData(gene_centered_key, bool);
   }
   
   /**
@@ -89,8 +80,10 @@ public abstract class NSwithProbes extends NameAndSignals {
    * it is unknown or not the case.
    */
   public Boolean isGeneCentered() {
-    Boolean i = (Boolean) super.getData(gene_centered_key);
-    return i==null?false:i;
+    Object o = super.getData(gene_centered_key);
+    if (o==null) return false;
+    if (o instanceof Boolean) return (Boolean)o;
+    else return Boolean.valueOf(o.toString());
   }
   
   
@@ -185,12 +178,12 @@ public abstract class NSwithProbes extends NameAndSignals {
      // probeName is in superMethod merged.
      Set<Integer> geneIDs = new HashSet<Integer>();
      for (T o :source) {
-       NSwithProbes mi = (NSwithProbes)o;
+       GeneID mi = (GeneID)o;
        geneIDs.add(mi.getGeneID());
      }
      
      // Set gene id, if same or unset if they differ
-     ((NSwithProbes)target).setGeneID(geneIDs.size()==1?geneIDs.iterator().next():default_geneID);
+     ((GeneID)target).setGeneID(geneIDs.size()==1?geneIDs.iterator().next():default_geneID);
      if (((NSwithProbes)target).isGeneCentered()) {
        // Cannot ensure that gene is centered. Better unset flag!
        ((NSwithProbes)target).setGeneCentered(false);

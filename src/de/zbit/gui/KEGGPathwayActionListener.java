@@ -197,7 +197,8 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
      */
     
     // Ask the user to set all required options
-    if (!SignalOptions.REMEMBER_GENE_CENTER_DECISION.getValue(SBPreferences.getPreferencesFor(SignalOptions.class))) {
+    SBPreferences prefs = SBPreferences.getPreferencesFor(SignalOptions.class);
+    if (!SignalOptions.REMEMBER_GENE_CENTER_DECISION.getValue(prefs)) {
       if (!VisualizeDataInPathwayDialog.showDialog(new VisualizeDataInPathwayDialog(), "Visualize data in pathway")) return;// 0;
       // (All options are automatically processed in the VisualizeData method)
     }
@@ -221,7 +222,10 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         // Adds the microRNA NODES to the graph and automatically asks
         // the user to annotate targets to his miRNA data if not already done.
         if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
-          addMicroRNAs(tp, dataSource);
+          if (!addMicroRNAs(tp, dataSource)) {
+            log.warning("Could not detect any miRNA targets in the graph.");
+            return 0;
+          }
         }
         
         // Perform visualization
@@ -232,11 +236,10 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         //tp.repaint();
         //tp.hideTemporaryLoadingBar();
         return coloredNodes;
-        } catch (Throwable t) {
-          t.printStackTrace();
+        } catch (Exception e) {
+          throw e;
         }
-        
-        return -1;
+        //return -1;
       }
       
       @Override
@@ -264,12 +267,14 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * Adds microRNAs to the given graph
    * @param tp panel with graph
    * @param dataSource microRNA datasource
+   * @return true if the graph should contain at least one miRNA that belongs
+   * to the given input data
    */
   @SuppressWarnings("unchecked")
-  public static void addMicroRNAs(TranslatorPanel tp, NameAndSignalsTab dataSource) {
+  public static boolean addMicroRNAs(TranslatorPanel tp, NameAndSignalsTab dataSource) {
     if (!miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
       log.severe("Can not add miRNA targets when source is " + dataSource.getDataContentType());
-      return;
+      return false;
     }
     
     int addedNodes = addMicroRNAs(tp, (Collection<? extends miRNA>) dataSource.getData());
@@ -280,8 +285,11 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       if (a==JOptionPane.YES_OPTION) {
         dataSource.getActions().annotateMiRNAtargets();
         addedNodes = addMicroRNAs(tp, (Collection<? extends miRNA>) dataSource.getData());
+      } else {
+        return false;
       }
     }
+    return addedNodes>0;
   }
   
   /**

@@ -71,15 +71,15 @@ public interface SignalOptions extends KeyProvider {
   
   public static Option<Boolean> PATHWAY_CENTERED = new Option<Boolean>("PATHWAY_CENTERED", Boolean.class,
       "Merge all probes that belong to one node in a pathway to one value.", Boolean.TRUE,
-      "One value per pathway node (pathway centered)", signalMergeDepth);
+      "One value per pathway node (pathway centered)", signalMergeDepth, false);
   
   public static Option<Boolean> GENE_CENTERED = new Option<Boolean>("GENE_CENTERED", Boolean.class,
       "Merge all probes that belong to one gene to one value. This can result in a very confusing graph and is thus not recommended.", Boolean.FALSE,
-      "One value per gene (gene centered - not recommended)", signalMergeDepth);
+      "One value per gene (gene centered - not recommended)", signalMergeDepth, false);
   
   public static Option<Boolean> PROBE_CENTERED = new Option<Boolean>("PROBE_CENTERED", Boolean.class,
       "Do not merge any probes. This can result in a very confusing graph and is thus not recommended.", Boolean.FALSE,
-      "One node per value (probe centered - not recommended)", signalMergeDepth);
+      "One node per value (probe centered - not recommended)", signalMergeDepth, false);
   
   
  /**

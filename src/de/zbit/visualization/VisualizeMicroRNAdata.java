@@ -83,6 +83,7 @@ public class VisualizeMicroRNAdata {
     for (miRNA m : data) {
       if (!m.hasTargets()) continue;
       for (miRNAtarget t: m.getUniqueTargets()) { // Merges duplicate target gene ids
+        // Look if we have targets in the current graph
         List<Node> targetNodes = gi2n_map.get(t.getTarget());
         if (targetNodes!=null && targetNodes.size()>0) {
           visualizedMiRNAs++;
