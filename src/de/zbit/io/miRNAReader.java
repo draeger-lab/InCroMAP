@@ -17,6 +17,8 @@ import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
+import de.zbit.integrator.ReaderCache;
+import de.zbit.integrator.ReaderCacheElement;
 import de.zbit.mapper.MicroRNAsn2GeneIDMapper;
 import de.zbit.parser.Species;
 import de.zbit.util.Utils;
@@ -52,7 +54,7 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
   public static ExpectedColumn[] getExpectedColumns() {
     List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
     
-    list.add(new ExpectedColumn("miRNA identifier",null,true,false,false,false,miRNATargetReader.miRNAidentifierRegEx));
+    list.add(new ExpectedColumn("miRNA systematic name",null,true,false,false,false,miRNATargetReader.miRNAidentifierRegEx));
     list.add(new ExpectedColumn("Probe name",false));
     
     list.addAll(NameAndSignalReader.getExpectedSignalColumns(10));
@@ -61,28 +63,32 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
   
 
   /* (non-Javadoc)
-   * @see de.zbit.io.NameAndSignalReader#importWithGUI(java.awt.Component, java.lang.String)
+   * @see de.zbit.io.NameAndSignalReader#importWithGUI(java.awt.Component, java.lang.String, de.zbit.integrator.ReaderCache)
    */
   @Override
-  public Collection<miRNA> importWithGUI(Component parent, String file) {
+  public Collection<miRNA> importWithGUI(Component parent, String file, ReaderCache cache) {
     
     // Create a new panel that allows selection of species (Not required! Optional)
     JLabeledComponent spec = IntegratorGUITools.getOrganismSelector();
     
     // Create and show the import dialog
     try {
+      ExpectedColumn[] exCol = getExpectedColumns();
+      CSVReader inputReader = loadConfigurationFromCache(cache, file, exCol, spec);
       
       // Show the CSV Import dialog
-      ExpectedColumn[] exCol = getExpectedColumns();
-      final CSVImporterV2 c = new CSVImporterV2(file, exCol);
+      final CSVImporterV2 c = new CSVImporterV2(inputReader, exCol);
       boolean dialogConfirmed = IntegratorGUITools.showCSVImportDialog(parent, c, spec);
       
       // Process user input and read data
       if (dialogConfirmed) {
+        // Store in cache
+        this.species = (Species) spec.getSelectedItem();
+        if (cache!=null) cache.add(ReaderCacheElement.createInstance(c, species));
+        
         // Read all columns and types
         nameCol = exCol[0].getAssignedColumn();
         probeNameCol = exCol[1].getAssignedColumn();
-        this.species = (Species) spec.getSelectedItem();
         for (int i=2; i<exCol.length; i++) {
           if (exCol[i].hasAssignedColumns()) {
             for (int j=0; j<exCol[i].getAssignedColumns().size(); i++) {

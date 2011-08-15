@@ -25,6 +25,8 @@ import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
+import de.zbit.integrator.ReaderCache;
+import de.zbit.integrator.ReaderCacheElement;
 import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
@@ -98,28 +100,34 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     return list.toArray(new ExpectedColumn[0]);
   }
   
+
   /* (non-Javadoc)
-   * @see de.zbit.io.NameAndSignalReader#importWithGUI(java.awt.Component, java.lang.String)
+   * @see de.zbit.io.NameAndSignalReader#importWithGUI(java.awt.Component, java.lang.String, de.zbit.integrator.ReaderCache)
    */
   @Override
-  public Collection<mRNA> importWithGUI(Component parent, String file) {
-    
+  public Collection<mRNA> importWithGUI(Component parent, String file, ReaderCache cache) {
+
     // Create a new panel that allows selection of species
     JLabeledComponent spec = IntegratorGUITools.getOrganismSelector();
     
     // Create and show the import dialog
     try {
+      // Definitions of required and optional columns
+      ExpectedColumn[] exCol = getExpectedColumns();
+      CSVReader inputReader = loadConfigurationFromCache(cache, file, exCol, spec);
       
       // Show the CSV Import dialog
-      ExpectedColumn[] exCol = getExpectedColumns();
-      final CSVImporterV2 c = new CSVImporterV2(file, exCol);
+      final CSVImporterV2 c = new CSVImporterV2(inputReader, exCol);
       boolean dialogConfirmed = IntegratorGUITools.showCSVImportDialog(parent, c, spec);
       
       // Process user input and read data
       if (dialogConfirmed) {
+        // Store in cache
+        this.species = (Species) spec.getSelectedItem();
+        if (cache!=null) cache.add(ReaderCacheElement.createInstance(c, species));
+        
         // Read all columns and types
         setNameAndIdentifierTypes(exCol[0]);        
-        this.species = (Species) spec.getSelectedItem();
         for (int i=1; i<exCol.length; i++) {
           if (exCol[i].hasAssignedColumns()) {
             for (int j=0; j<exCol[i].getAssignedColumns().size(); j++) {
@@ -144,6 +152,7 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
     // Only errors or canceled
     return null;
   }
+
   
   /**
    * Evaluates the selected identifiers and builds the reader according
@@ -382,5 +391,8 @@ public class mRNAReader extends NameAndSignalReader<mRNA> {
   public Species getSpecies() {
     return species;
   }
+
+
+
   
 }

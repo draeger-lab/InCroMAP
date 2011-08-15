@@ -19,8 +19,12 @@ import java.util.logging.Logger;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
+import de.zbit.integrator.ReaderCache;
+import de.zbit.integrator.ReaderCacheElement;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.ValuePair;
@@ -56,6 +60,11 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
   private Collection<ValuePair<Integer, String>> additionalDataToRead=null;
   
   /**
+   * This can also be used by extending classes.
+   */
+  protected AbstractProgressBar progress;
+  
+  /**
    * Import a file with a GUI. There are many helper methods that allow to quickly
    * implement this method:<ol><li>Create {@link ExpectedColumn}s by using
    * {@link #getExpectedSignalColumns(int)} and adding you own columns (especially
@@ -69,12 +78,53 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * @param file
    * @return
    */
-  public abstract Collection<T> importWithGUI(Component parent, String file);
+  public Collection<T> importWithGUI(Component parent, String file) {
+    return importWithGUI(parent, file, null);
+  }
   
   /**
-   * This can also be used by extending classes.
+   * Import a file with a GUI. There are many helper methods that allow to quickly
+   * implement this method:<ol><li>Create {@link ExpectedColumn}s by using
+   * {@link #getExpectedSignalColumns(int)} and adding you own columns (especially
+   * for {@link #nameCol}!
+   * <li>Use {@link CSVImporterV2} to get the {@link CSVReader} and columns assignments
+   * and build the reader. 
+   * <li>Afterwards, return {@link #read(CSVReader)} using the
+   * {@link CSVImporterV2#getApprovedCSVReader()}.
+   * </ol>
+   * @param parent the parent {@link Frame} or {@link Dialog}
+   * @param file
+   * @param cache Might be null! If not, try to read file input configuration from this cache
+   * and put your configuration into this cache.
+   * @return
    */
-  protected AbstractProgressBar progress;
+  public abstract Collection<T> importWithGUI(Component parent, String file, ReaderCache cache);
+  
+  /**
+   * Can be used by extending classes to handle cache load queries.
+   * @param cache current {@link ReaderCache} instance
+   * @param file input file to read
+   * @param exCol array of expected columns. May be null if none.
+   * @param spec an Organism Selector (See
+   * {@link IntegratorGUITools#getOrganismSelector()}). May be null if not required.
+   * @return a CSVReader, either initialized from scratch
+   * (if cache was empty) or configured from the cache.
+   * The selections of <code>exCol</code> and
+   * <code>spec</code> are changed automatically in their instances.
+   */
+  protected CSVReader loadConfigurationFromCache(ReaderCache cache, String file,
+    ExpectedColumn[] exCol, JLabeledComponent spec) {
+    // Evaluate and load data from cache.
+    File inputFile = new File(file);
+    CSVReader inputReader = new CSVReader(file);
+    if (cache!=null && cache.contains(inputFile)) {
+      ReaderCacheElement ci = cache.get(inputFile);
+      ci.configureReader(inputReader);
+      if (exCol!=null) ci.configureExpectedColumns(exCol);
+      if (spec !=null) ci.configureOrganismSelector(spec);
+    }
+    return inputReader;
+  }
   
   public NameAndSignalReader(int nameCol) {
     super();
@@ -309,4 +359,6 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
   public AbstractProgressBar getProgressBar() {
     return this.progress;
   }
+
+
 }

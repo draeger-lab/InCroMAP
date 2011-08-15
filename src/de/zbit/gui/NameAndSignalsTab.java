@@ -22,6 +22,7 @@ import javax.swing.SwingWorker.StateValue;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.integrator.ReaderCache;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
@@ -94,7 +95,7 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     SwingWorker<Collection<? extends NameAndSignals>, Void> worker = new SwingWorker<Collection<? extends NameAndSignals>, Void>() {
       @Override
       protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
-        Collection<? extends NameAndSignals> col = nsreader.importWithGUI(parent, inFile);
+        Collection<? extends NameAndSignals> col = nsreader.importWithGUI(parent, inFile, ReaderCache.getCache());
         thiss.species = nsreader.getSpecies();
         return col; // col==null if cancel button pressed
       }

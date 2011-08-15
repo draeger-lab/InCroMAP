@@ -52,6 +52,11 @@ public class ReaderCache implements Serializable {
    */
   private Thread cleaningCache=null;
   
+  /**
+   * A boolean flag to determine if the cache has changed.
+   */
+  private transient boolean cacheChangedSinceLoading=false;
+  
   
   /**
    * @return current instance of the cache.
@@ -119,6 +124,7 @@ public class ReaderCache implements Serializable {
     fileDescriptor.resetTime();
     fileDescriptor.setDescribingFile(file);
     
+    cacheChangedSinceLoading = true;
     stopCleaningCache();
     cache.put(file, fileDescriptor);
     ensureCacheSize();
@@ -207,6 +213,25 @@ public class ReaderCache implements Serializable {
    */
   public static synchronized boolean saveToFilesystem(String filepath, ReaderCache m) {
     return Utils.saveGZippedObject(filepath, m);
+  }
+  
+  /**
+   * Automatically determines if the cache has been initialized and changed.
+   * If yes, it will be saved to {@value #cacheFileName}.
+   * @return true if something needed and has been saved.
+   */
+  public static synchronized boolean saveIfRequired() {
+    if (instance==null || !instance.cacheChangedSinceLoading) return false;
+    else return saveToFilesystem(cacheFileName, instance);
+  }
+  
+  
+  /**
+   * Add or replace an element to the cache.
+   * @param c any configured and confirmed {@link CSVImporterV2}.
+   */
+  public void add(CSVImporterV2 c) {
+    this.add(ReaderCacheElement.createInstance(c));
   }
   
 }

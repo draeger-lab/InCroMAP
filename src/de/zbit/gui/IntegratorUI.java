@@ -42,6 +42,7 @@ import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.PreferencesPanel;
+import de.zbit.integrator.ReaderCache;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
@@ -281,13 +282,13 @@ public class IntegratorUI extends BaseFrame {
         ui.toFront();
         
         try {
-          mRNAReader r = mRNAReader.getExampleReader();
-          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example_mRNA");
-          
-          miRNAReader r2 = new miRNAReader(1,0);
-          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorGUITools.organisms.get(1)), "Example_miRNA");
+//          mRNAReader r = mRNAReader.getExampleReader();
+//          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example_mRNA");
+//          
+//          miRNAReader r2 = new miRNAReader(1,0);
+//          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+//          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+//          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorGUITools.organisms.get(1)), "Example_miRNA");
           
         } catch (Exception e) {e.printStackTrace();}
       }
@@ -301,6 +302,8 @@ public class IntegratorUI extends BaseFrame {
     // init preferences
     initPreferences();
     
+    // Load reader cache
+    ReaderCache.getCache();
     
     // TODO: Icons and preferences
     /*File file = new File(prefsIO.get(KEGGtranslatorIOOptions.INPUT));
@@ -646,6 +649,8 @@ public class IntegratorUI extends BaseFrame {
     setVisible(false);
     try {
       Translator.saveCache();
+      ReaderCache.saveIfRequired();
+      
       SBProperties props = new SBProperties();
       /*
        * TODO: Save properties
