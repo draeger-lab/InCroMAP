@@ -56,37 +56,5 @@ public class mRNA extends NSwithProbes {
     return super.clone(nm);
   }
 
-  /**
-   * Convert {@link #getGeneID()}s to gene symbols and set names
-   * to the symbol.
-   * @param data
-   * @param species
-   * @throws Exception
-   */
-  public static void convertNamesToGeneSymbols(List<? extends NameAndSignals> data, Species species) throws Exception {
-    log.info("Loading GeneSymbol mapping...");
-    GeneID2GeneSymbolMapper mapper = IntegratorGUITools.get2GeneSymbolMapping(species);
-    for (NameAndSignals m: data) {
-      if (m instanceof mRNA) {
-        if (((mRNA) m).getGeneID()>0) {
-          String symbol = mapper.map(((mRNA) m).getGeneID());
-          if (symbol!=null && symbol.length()>0) {
-            ((mRNA) m).name = symbol;
-          }
-        }
-      } else if (m instanceof miRNA) {
-        if (((miRNA)m).hasTargets()) {
-          for (miRNAtarget t: ((miRNA)m).getTargets()) {
-            t.setTargetSymbol(mapper.map(t.getTarget()));
-          }
-        }
-      } else {
-        log.warning("Can not annotate gene symbols for " + m.getClass());
-        return;
-      }
-    }
-    log.info("Converted GeneIDs to Gene symbols.");
-  }
-
 
 }

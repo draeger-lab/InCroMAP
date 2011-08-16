@@ -132,8 +132,8 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     this.nameCol = nameCol;
   }
   
-  public NameAndSignalReader(int miRNAnameCol, Collection<ValueTriplet<Integer, SignalType, String>> signalColumns) {
-    this(miRNAnameCol);
+  public NameAndSignalReader(int nameCol, Collection<ValueTriplet<Integer, SignalType, String>> signalColumns) {
+    this(nameCol);
     this.signalColumns=signalColumns;
   }
   
@@ -298,7 +298,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * <pre>
    * return new MyClass(name);
    * </pre> 
-   * @throws Exception - only critical exceptions should be thrown that really
+   * @throws Exception only critical exceptions should be thrown that really
    * make reading the data impossible.
    */
   protected abstract T createObject(String name, String[] line) throws Exception;

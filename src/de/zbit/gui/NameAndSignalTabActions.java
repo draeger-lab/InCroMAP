@@ -19,6 +19,7 @@ import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
 import de.zbit.data.EnrichmentObject;
+import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNA;
@@ -296,7 +297,7 @@ public class NameAndSignalTabActions implements ActionListener {
     } else if (pa)
     }*/
     try {
-      mRNA.convertNamesToGeneSymbols((List<? extends NameAndSignals>) parent.getData(), parent.getSpecies());
+      NSwithProbes.convertNamesToGeneSymbols((List<? extends NameAndSignals>) parent.getData(), parent.getSpecies());
     } catch (Exception e1) {
       GUITools.showErrorMessage(parent, e1);
     }
