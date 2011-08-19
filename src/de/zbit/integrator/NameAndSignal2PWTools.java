@@ -302,7 +302,7 @@ public class NameAndSignal2PWTools {
   /**
    * Prepares a graph for later processing with the given dataset. This means,
    * it maps all {@link NameAndSignals} from the list on the graph. For all nodes,
-   * it annotated all Keys in {@link GraphMLmapsExtended} (especially the
+   * it annotates all Keys in {@link GraphMLmapsExtended} (especially the
    * {@link GraphMLmapsExtended#NODE_NAME_AND_SIGNALS} key) to the nodes.
    * <p>If the signals are not gene-centered OR the graph contains already
    * visualized data, the nodes are being either split and a group node is

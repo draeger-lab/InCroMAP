@@ -8,6 +8,8 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,6 +26,7 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
+import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.exception.CorruptInputStreamException;
 import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.miRNAandTarget;
@@ -288,8 +291,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   
   /**
    * Returns a CLONED, gene-centered collection of the given {@link NameAndSignals}s.
-   * <p>Gene centering is performed by name, thus, {@link miRNA}s are centered by the
-   * miRNA, and not by the target.
+   * <p>Gene centering is performed by GeneID or name. Thus, {@link miRNA}s are centered by the
+   * miRNA name, and not by the target. mRNAs and other {@link GeneID}s are centered by geneID and
+   * {@link ProteinModificationExpression} are centered by their {@link #getUniqueLabel()}, i.e.
+   * a mixture of protein name and modification name.
    * @param nameAndSignals
    * @param m {@link MergeType}
    * @return
@@ -319,6 +324,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @param groupIdentifiersToMerge a collection with arrays of identifiers that should be merged. Identifier Type is at follow:
    * <ul><li>GeneID (Integer) for {@link mRNA}s</li>
    * <li>Recursive for genesInClass() for {@link EnrichmentObject}s</li>
+   * <li>{@link #getUniqueLabel()} for {@link ProteinModificationExpression}</li>
    * <li>{@link #name} for all others (e.g., {@link miRNA}s)</li></ul>
    * @param m
    * @return collection with the given items merged (and cloned), <b>and all other items untouched</b>!
@@ -387,7 +393,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     List<Signal> signals = new ArrayList<Signal>();
     Map<String, List<Object>> add_data = new HashMap<String, List<Object>>();
     T newObject=null;
-    // TODO: Double-Signals are being converted to floats here.... try with a collection of size 1 and debug!
+    // FIXME: Double-Signals are being converted to floats here.... try with a collection of size 1 and debug!
     // Collect all Signals, Names and additional data
     for (T ns : c) {
       // Create a new instance of T (if not yet done so)
@@ -460,11 +466,9 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @return geneID for {@link mRNA}s and {@link #getName()} for others.
    * @see #getIdentifierType(NameAndSignals)
    */
-  public static <T extends NameAndSignals>  Object getIdentifier(T ns) {
+  public static <T extends NameAndSignals> Object getIdentifier(T ns) {
     int idType = getIdentifierType(ns);
     if (idType==1) {
-      // TODO: Instead of casting to mRNA, make a "geneID" interface
-      // that has a getGeneID() method.
       return ((GeneID)ns).getGeneID();
     } else {
       return ns.getName();
@@ -488,20 +492,49 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * NameAndSignal.
    * @param <T>
    * @param nsClass class of the {@link NameAndSignals}.
-   * @return 1 for GeneID (mRNA).getGeneID() or 0 for {@link #getName()}
+   * @return 1 for GeneID ({@link GeneID#getGeneID()}) or 0 for {@link #getName()}
    * @see #getType(Object)
    */
   public static int getIdentifierType(Class<? extends NameAndSignals> nsClass) {
-    // TODO: Generalize these isMiRNA, isMRNA methods and make
-    // isGeneID annotated in dataset or similar.
-    
-    if (mRNA.class.isAssignableFrom(nsClass)) {
+    if (GeneID.class.isAssignableFrom(nsClass) &&
+        !miRNA.class.isAssignableFrom(nsClass)) {
       return 1;
+      // Method is called to identify corresponding genes in a pathway
+      // => We need the geneID for ProteinModificationExpression
+//    } else if (ProteinModificationExpression.class.isAssignableFrom(nsClass)) {
+//      return 2;
     } else {
       return 0;
     }
   }
-
+  
+  /**
+   * Sorts and returns the given {@link NameAndSignals} by {@link #getUniqueLabel()}.
+   * @param <T>
+   * @param nsList
+   * @return
+   */
+  public static <T extends NameAndSignals> List<T> sortByUniqueLabel(Collection<T> nsList) {
+    List<T> l;
+    if (nsList instanceof List) {
+      l = (List<T>) nsList;
+    } else {
+      l = new ArrayList<T>(nsList);
+    }
+    
+    // Create comparator that does the desired sorting
+    Comparator<T> sortByUniqueLabel = new Comparator<T>() {
+      @Override
+      public int compare(T o1, T o2) {
+        return o1.getUniqueLabel().compareTo(o2.getUniqueLabel());
+      }
+    };
+    
+    // Sort and return list
+    Collections.sort(l,sortByUniqueLabel);
+    return l;
+  }
+  
   /**
    * Abstract merge functionality that can merge strings, numbers
    * and extensions of {@link NameAndSignals}.
@@ -568,8 +601,9 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
 
   /**
    * Groups the given {@link NameAndSignals}s by <ul>
-   * <li>GeneID for {@link mRNA}s</li>
+   * <li>GeneID for {@link mRNA}s (or {@link GeneID}s)</li>
    * <li>Recursive for genesInClass() for {@link EnrichmentObject}s</li>
+   * <li>{@link ProteinModificationExpression#getUniqueLabel()}</li>
    * <li>Name for all others (e.g., {@link miRNA}s)</li></ul>
    * 
    * @param nsList collection of {@link NameAndSignals}s.
@@ -589,10 +623,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       
       // Center objects by name and mRNAs be geneId.
       String name = mi.getName();
-      if (mi instanceof mRNA) {
-        name = Integer.toString(((mRNA)mi).getGeneID());
-      
-      } else if (mi instanceof EnrichmentObject) {
+//      if (!(mi instanceof miRNA) && mi instanceof GeneID) {
+//        name = Integer.toString(((GeneID)mi).getGeneID());
+//      } else 
+      if (mi instanceof EnrichmentObject) {
         // A little bit more complicated for EnrichmentObjects,
         // return a list of genes in the class here!
         Iterator gic = ((EnrichmentObject)mi).getGenesInClass().iterator();
@@ -604,6 +638,11 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
           log.severe("Cannot gene center list of: " + listType.getClass());
         }
         continue;
+      } else if (mi instanceof ProteinModificationExpression){
+        name = mi.getUniqueLabel();
+        
+      } else {
+        name = getIdentifier(mi).toString();
       }
       
       Collection<T> col = ret.get(name);
@@ -891,9 +930,6 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         geneIds.addAll(getGeneIds(Array.get(o, i)));
       }
       
-    } else if (o instanceof mRNA) {
-      geneIds.add(((mRNA)o).getGeneID());
-      
     } else if (o instanceof miRNA) {
       miRNA mi = ((miRNA)o);
       if (!mi.hasTargets()) {
@@ -919,6 +955,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       for (Object o2: ((EnrichmentObject)o).getGenesInClass()) {
         geneIds.addAll(getGeneIds(o2));
       }
+      
+    } else if (o instanceof GeneID) {
+      // This must be below miRNAs !
+      geneIds.add(((GeneID)o).getGeneID());
       
     } else {
       log.severe("Please implement 2GeneID for " + o.getClass());

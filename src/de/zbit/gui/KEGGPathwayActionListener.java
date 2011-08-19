@@ -102,9 +102,9 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         source instanceof TranslatorPanel) {
       ValueTriplet<NameAndSignalsTab, String, SignalType>  vt
         = IntegratorGUITools.showSelectExperimentBox(IntegratorUI.getInstance(), null,
-            "Please select an observation to color nodes accordingly.");
+            "Please select an observation to visualize in this pathway.");
        if (vt!=null) {
-         colorPathway((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
+         visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
        }
        
     } else if (e.getActionCommand().equals(TPAction.HIGHLIGHT_ENRICHED_GENES.toString()) &&
@@ -119,7 +119,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     } else if (e.getActionCommand().equals(TranslatorUI.Action.OPEN_PATHWAY.toString())) {
       visualizePathway(e.getSource().toString(), null);
       
-    } else if (e.getActionCommand().equals(TranslatorUI.Action.TRANSLATION_DONE.toString())) {
+    } else if (e.getActionCommand().equals(TranslatorUI.Action.TRANSLATION_DONE.toString())) { 
       TranslatorPanel source = (TranslatorPanel) e.getSource();
       IntegratorUI.getInstance().updateButtons();
       
@@ -152,11 +152,11 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
               }
             }
             vt = IntegratorGUITools.showSelectExperimentBox(IntegratorUI.getInstance(), st,
-                "Please select an observation to color nodes accordingly.");
+              "Please select an observation to visualize in this pathway.");
           }
           
           if (vt!=null) {
-            colorPathway(source,vt.getA(),vt.getB(), vt.getC());
+            visualizeData(source,vt.getA(),vt.getB(), vt.getC());
           } else {
             r = -1; // At least highlight source gene nodes
           }
@@ -180,7 +180,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * described by <code>experimentName</code> and <code>signalType</code>
    * contained in <code>dataSource</code>.
    * 
-   * <p>Taking this method instead of {@link #colorPathway(TranslatorPanel, Iterable, String, SignalType)}
+   * <p>Taking this method instead of {@link #visualizeData(TranslatorPanel, Iterable, String, SignalType)}
    * allows asking the user to annotate miRNA data with targets, if it has not yet been done. 
    * 
    * @param tp pathway to color
@@ -188,7 +188,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param experimentName name of the observation to color
    * @param signalType signal type of the observation (usually fold change)
    */
-  private void colorPathway(final TranslatorPanel tp, final NameAndSignalsTab dataSource, final String experimentName, final SignalType signalType) {
+  private void visualizeData(final TranslatorPanel tp, final NameAndSignalsTab dataSource, final String experimentName, final SignalType signalType) {
     // @return number of nodes, colored according to the signal, or -1 if an error occured.
     /* This method has the advantage to
      * - Ask the mergeType only once!
@@ -319,14 +319,14 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
   
   
   /**
-   * <b>PLEASE USE {@link #colorPathway(TranslatorPanel, NameAndSignalsTab, String, SignalType)}</b><p>
+   * <b>PLEASE USE {@link #visualizeData(TranslatorPanel, NameAndSignalsTab, String, SignalType)}</b><p>
    * Color the pathway in <code>tp</code> according to the experiment
    * described by <code>experimentName</code> and <code>signalType</code>
    * contained in <code>dataSource</code>.
    * 
    * <p>Note: the other method with {@link NameAndSignalsTab} (see reference below)
    * should be preferred. This method does not add any nodes (e.g. for miRNAs!).
-   * @see #colorPathway(TranslatorPanel, NameAndSignalsTab, String, SignalType)
+   * @see #visualizeData(TranslatorPanel, NameAndSignalsTab, String, SignalType)
    * @param tp pathway to color
    * @param dataSource list with {@link NameAndSignals}
    * @param experimentName name of the observation to color

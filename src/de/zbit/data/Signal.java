@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import de.zbit.util.ScientificNumberRenderer;
 import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 
@@ -104,6 +105,15 @@ public class Signal implements Serializable, Comparable<Object>  {
     if (signal==null) return Double.NaN;
     return signal;
   }
+  
+  /**
+   * @return {@link #getSignal()} as human-readable
+   * text string.
+   */
+  public String getNiceSignalString() {
+    return ScientificNumberRenderer.getNiceString(signal, null, 100);
+  }
+  
   /**
    * @param signal - Type of the signal value. See {@link SignalType}.
    */

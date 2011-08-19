@@ -17,7 +17,10 @@ import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
 import y.base.Node;
+import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.data.protein.ProteinModificationExpression;
+import de.zbit.integrator.VisualizeDataInPathway;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
@@ -63,8 +66,11 @@ public class TranslatorTabActions implements ActionListener{
     ADD_MIRNAS,
     HIGHLIGHT_ENRICHED_GENES,
     SEARCH_GRAPH,
+    
     REMOVE_MIRNA_NODES,
-    REMOVE_PROTEIN_VARIANT_NODES;
+    REMOVE_PROTEIN_MODIFICATION_BOXES,
+    REMOVE_MRNA_VISUALIZATION,
+    REMOVE_DNA_METHYLATION_BOXES;
     
     /*
      * (non-Javadoc)
@@ -75,12 +81,17 @@ public class TranslatorTabActions implements ActionListener{
       switch (this) {
       case SEARCH_GRAPH:
         return "Search";
-      case REMOVE_MIRNA_NODES:
-        return "Remove miRNA nodes";
-      case REMOVE_PROTEIN_VARIANT_NODES:
-        return "Remove protein variant nodes";
       case ADD_MIRNAS:
         return "Add miRNAs";
+        
+      case REMOVE_MIRNA_NODES:
+        return "Remove miRNA nodes";
+      case REMOVE_PROTEIN_MODIFICATION_BOXES:
+        return "Remove protein modification boxes";
+      case REMOVE_MRNA_VISUALIZATION:
+        return "Remove mRNA visualization";
+      case REMOVE_DNA_METHYLATION_BOXES:
+        return "Remove DNA methylation boxes";
         
       default:
         return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
@@ -100,12 +111,17 @@ public class TranslatorTabActions implements ActionListener{
           return "Highlight genes from source enrichment.";
         case SEARCH_GRAPH:
           return "Search for a string in gene names of all nodes";
-        case REMOVE_MIRNA_NODES:
-          return "Removes all nodes and edges that have been inserted for microRNAs.";
-        case REMOVE_PROTEIN_VARIANT_NODES:
-          return "Removes all nodes that have been inserted for protein or gene variants.";
         case ADD_MIRNAS:
           return "Add microRNAs with targets in the pathway to the graph.";
+          
+        case REMOVE_MIRNA_NODES:
+          return "Removes all nodes and edges that have been inserted for microRNAs.";
+        case REMOVE_PROTEIN_MODIFICATION_BOXES:
+          return "Removes all boxes that have been inserted for protein or gene modifications.";
+        case REMOVE_MRNA_VISUALIZATION:
+          return "Resets the background color of all nodes.";
+        case REMOVE_DNA_METHYLATION_BOXES:
+          return "Remove all boxes from nodes that represent DNA methylation values.";
           
         default:
           return null; // Deactivate
@@ -147,9 +163,14 @@ public class TranslatorTabActions implements ActionListener{
     
     // Remove nodes
     JPopupMenu remove = new JPopupMenu("Remove");
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MRNA_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MIRNA_NODES, UIManager.getIcon("ICON_GEAR_16")));
-    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_PROTEIN_VARIANT_NODES, UIManager.getIcon("ICON_GEAR_16")));
-    GUITools.setEnabled(false, remove, TPAction.REMOVE_MIRNA_NODES, TPAction.REMOVE_PROTEIN_VARIANT_NODES);
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES, UIManager.getIcon("ICON_GEAR_16")));
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_DNA_METHYLATION_BOXES, UIManager.getIcon("ICON_GEAR_16")));
+    // Set by default all to disabled. enableRemoveButtonsAsRequired() does the enabling job.
+    GUITools.setEnabled(false, remove, TPAction.REMOVE_MIRNA_NODES, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES,
+      TPAction.REMOVE_MRNA_VISUALIZATION,TPAction.REMOVE_DNA_METHYLATION_BOXES);
+    
     removeButton = new JDropDownButton(remove.getLabel(), UIManager.getIcon("ICON_GEAR_16"), remove);
     bar.add(removeButton);
     
@@ -168,13 +189,20 @@ public class TranslatorTabActions implements ActionListener{
       protected Void doInBackground() throws Exception {
         if (removeButton==null || parent==null || parent.getDocument()==null) return null;
         
+        // Test for various visualizations
+        boolean[] visData = new VisualizeDataInPathway(parent).getVisualizedDataTypes();
+        GUITools.setEnabled(visData[0], removeButton.getPopUpMenu(), TPAction.REMOVE_MRNA_VISUALIZATION);
+        GUITools.setEnabled(visData[2], removeButton.getPopUpMenu(), TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES);
+        GUITools.setEnabled(visData[3], removeButton.getPopUpMenu(), TPAction.REMOVE_DNA_METHYLATION_BOXES);
+        
+        
+        // Test for RNA nodes
         TranslatorTools tools = new TranslatorTools(parent);
         boolean containsMiRNA = tools.containsRNAnodes();
         GUITools.setEnabled(containsMiRNA, removeButton.getPopUpMenu(), TPAction.REMOVE_MIRNA_NODES);
-        // TODO: Enabler for phosphoprotein nodes.
         
         // Eventually disable the whole DropDownButton.
-        removeButton.setEnabled(containsMiRNA); // || containsPhospho
+        removeButton.setEnabled(containsMiRNA || visData[0] || visData[2] || visData[3]);
         return null;
       }
     };
@@ -200,10 +228,20 @@ public class TranslatorTabActions implements ActionListener{
     } else if (command.equals(TPAction.ADD_MIRNAS.toString())) {
       addMicroRNAnodes();
       
-    } else if (command.equals(TPAction.REMOVE_PROTEIN_VARIANT_NODES.toString())) {
-      // TODO: Remove protein variants
-      GUITools.showErrorMessage(null, "Not yet implemented!");
+    } else if (command.equals(TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES.toString())) {
+      new VisualizeDataInPathway(parent).removeVisualization(ProteinModificationExpression.class);
+      enableRemoveButtonsAsRequired(removeButton);
+      parent.repaint();
       
+    } else if (command.equals(TPAction.REMOVE_MRNA_VISUALIZATION.toString())) {
+      new VisualizeDataInPathway(parent).removeVisualization(mRNA.class);
+      enableRemoveButtonsAsRequired(removeButton);
+      parent.repaint();
+
+    } else if (command.equals(TPAction.REMOVE_DNA_METHYLATION_BOXES.toString())) {
+      // TODO: Remove DNA Methylation boxes
+      GUITools.showErrorMessage(null, "Not yet implemented!");
+
     }
   }
 

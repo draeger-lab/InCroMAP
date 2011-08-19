@@ -4,6 +4,7 @@
 package de.zbit.integrator;
 
 import java.awt.Color;
+import java.awt.Insets;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,14 +23,19 @@ import javax.swing.SwingWorker;
 
 import y.base.DataMap;
 import y.base.Node;
+import y.base.NodeCursor;
 import y.base.NodeMap;
 import y.view.Graph2D;
+import y.view.NodeLabel;
 import y.view.NodeRealizer;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.VisualizedData;
+import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.IntegratorTab;
@@ -109,7 +115,7 @@ public class VisualizeDataInPathway {
    * Create a new instance of this class to visualize/ perform various
    * {@link Signal} related visualization and annotation operations
    * on the {@link Graph2D} of the given {@link TranslatorPanel}.
-   * @param tp
+   * @param tp any {@link TranslatorPanel}
    */
   public VisualizeDataInPathway(TranslatorPanel tp){
     this(tp.isGraphML()?(Graph2D) tp.getDocument():null);
@@ -133,24 +139,57 @@ public class VisualizeDataInPathway {
   }
   
   /**
-   * @param tabName any unique identifier for the input dataset. E.g., 
-   * the tab or the filename or anything else.
-   * @param experimentName to describe the signal
-   * @param type to describe the signal
+   * @param visData class, containing various properties to
+   * re-identify visualized data
    * @return true if and only if the data described by these three attributes 
    * is currently visualized within the given {@link TranslatorPanel}.
    */
-  public boolean isDataVisualized(String tabName, String experimentName, SignalType type) {
-    List<ValueTriplet<String, String, SignalType>> visualizedData = getVisualizedData();
+  public boolean isDataVisualized(VisualizedData visData) {
+    List<VisualizedData> visualizedData = getVisualizedData();
     if (visualizedData==null) return false;
-    else return visualizedData.contains(new ValueTriplet<String, String, SignalType>(tabName, experimentName, type));
+    else return visualizedData.contains(visData);
   }
 
   /**
    * @return list with currently visualized data. Or null if none.
    */
-  private List<ValueTriplet<String, String, SignalType>> getVisualizedData() {
+  private List<VisualizedData> getVisualizedData() {
     return getVisualizedData(false);
+  }
+  
+  /**
+   * Get information which data types are currently visualized in the graph
+   * @return boolean array of size 4:
+   * <ol><li>mRNA</li>
+   * <li>miRNA</li>
+   * <li>ProteinModificationExpression</li>
+   * <li>DNA methylation</li></ol>
+   */
+  public boolean[] getVisualizedDataTypes() {
+    // Init array with default values
+    boolean[] visualizedDataTypes = new boolean[4];
+    Arrays.fill(visualizedDataTypes, Boolean.FALSE);
+    
+    // Get list of visualized data
+    List<VisualizedData> visData = getVisualizedData(false);
+    if (visData==null || visData.size()<1) return visualizedDataTypes;
+    
+    for (VisualizedData visualizedData : visData) {
+      Class<?> t = visualizedData.getNsType();
+      if (t==null) continue;
+      else if (mRNA.class.isAssignableFrom(t)) {
+        visualizedDataTypes[0]=true;
+      } else if (miRNA.class.isAssignableFrom(t)) {
+          visualizedDataTypes[1]=true;
+      } else if (ProteinModificationExpression.class.isAssignableFrom(t)) {
+        visualizedDataTypes[2]=true;
+        // XXX: Not yet implemented
+//      } else if (DNAmethylation.class.isAssignableFrom(t)) {
+//        visualizedDataTypes[3]=true;
+      }
+    }
+    return visualizedDataTypes;
+    
   }
   
   /**
@@ -158,12 +197,12 @@ public class VisualizeDataInPathway {
    * @return list with currently visualized data. Or null if none.
    */
   @SuppressWarnings("unchecked")
-  private List<ValueTriplet<String, String, SignalType>> getVisualizedData(boolean createIfNotExists) {
-    if (panelContainingGraph==null) return createIfNotExists?new ArrayList<ValueTriplet<String, String, SignalType>>():null;
-    List<ValueTriplet<String, String, SignalType>> myList = 
-      (List<ValueTriplet<String, String, SignalType>>) panelContainingGraph.getData(VISUALIZED_DATA_KEY);
+  private List<VisualizedData> getVisualizedData(boolean createIfNotExists) {
+    if (panelContainingGraph==null) return createIfNotExists?new ArrayList<VisualizedData>():null;
+    List<VisualizedData> myList = 
+      (List<VisualizedData>) panelContainingGraph.getData(VISUALIZED_DATA_KEY);
     if (myList==null && createIfNotExists) {
-      myList = new ArrayList<ValueTriplet<String, String, SignalType>>();
+      myList = new ArrayList<VisualizedData>();
       panelContainingGraph.setData(VISUALIZED_DATA_KEY, myList);
     }
     return myList;
@@ -172,7 +211,7 @@ public class VisualizeDataInPathway {
   /**
    * @return list with currently annotated signals. Or null if none.
    */
-  private Map<ValueTriplet<String, String, SignalType>, NodeMap> getAnnotatedSignals() {
+  private Map<VisualizedData, NodeMap> getAnnotatedSignals() {
     return getAnnotatedSignals(false);
   }
   
@@ -181,12 +220,12 @@ public class VisualizeDataInPathway {
    * @return list with currently annotated signals. Or null if none.
    */
   @SuppressWarnings("unchecked")
-  private Map<ValueTriplet<String, String, SignalType>, NodeMap> getAnnotatedSignals(boolean createIfNotExists) {
-    if (panelContainingGraph==null) return createIfNotExists?new HashMap<ValueTriplet<String, String, SignalType>, NodeMap>():null;
-    Map<ValueTriplet<String, String, SignalType>, NodeMap> myMap = 
-      (Map<ValueTriplet<String, String, SignalType>, NodeMap>) panelContainingGraph.getData(ANNOTATED_DATA_KEY);
+  private Map<VisualizedData, NodeMap> getAnnotatedSignals(boolean createIfNotExists) {
+    if (panelContainingGraph==null) return createIfNotExists?new HashMap<VisualizedData, NodeMap>():null;
+    Map<VisualizedData, NodeMap> myMap = 
+      (Map<VisualizedData, NodeMap>) panelContainingGraph.getData(ANNOTATED_DATA_KEY);
     if (myMap==null && createIfNotExists) {
-      myMap = new HashMap<ValueTriplet<String, String, SignalType>, NodeMap>();
+      myMap = new HashMap<VisualizedData, NodeMap>();
       panelContainingGraph.setData(ANNOTATED_DATA_KEY, myMap);
     }
     return myMap;
@@ -194,26 +233,136 @@ public class VisualizeDataInPathway {
   
   
   /**
-   * @param tabName any unique identifier for the input dataset. E.g., 
-   * the tab or the filename or anything else.
-   * @param experimentName to describe the signal
-   * @param type to describe the signal
+   * @param visData class, containing various properties to
+   * re-identify visualized data
    * @return true if and only if the data described by these three attributes 
    * is currently annotated to the nodes within the given {@link TranslatorPanel}.
    */
-  public boolean isSignalAnnotated(String tabName, String experimentName, SignalType type) {
-    Map<ValueTriplet<String, String, SignalType>, NodeMap> annotatedSignals = getAnnotatedSignals();
+  public boolean isSignalAnnotated(VisualizedData visData) {
+    Map<VisualizedData, NodeMap> annotatedSignals = getAnnotatedSignals();
     if (annotatedSignals==null) return false;
-    else return annotatedSignals.containsKey(new ValueTriplet<String, String, SignalType>(tabName, experimentName, type));
+    else return annotatedSignals.containsKey(visData);
   }
   
+  /**
+   * Removes all visualizations for a certain data type.
+   * @param toRemove may be {@link mRNA}, {@link miRNA},
+   * {@link ProteinModificationExpression}, DNA methylation or
+   * any other {@link NameAndSignals} derived datatype.
+   * @return true if at least one visualized dataset has been
+   * removed from the current visualization.
+   */
+  public <T extends NameAndSignals> boolean removeVisualization(Class<T> toRemove) {
+    List<VisualizedData> visData = getVisualizedData(false);
+    if (visData==null || visData.size()<1) return false;
+    
+    // We have to put them in a separate list to avoid ConcurrentModificationException s.
+    List<VisualizedData> dataToRemove = new ArrayList<VisualizedData>();
+    
+    // Collect everthing to remove
+    for (VisualizedData visualizedData : visData) {
+      Class<?> vdc = visualizedData.getNsType();
+      if (vdc==null) continue;
+      if (toRemove.isAssignableFrom(vdc)) {
+        dataToRemove.add(visualizedData);
+      }
+    }
+    
+    // Now remove it
+    for (VisualizedData visualizedData : dataToRemove) {
+      if (ProteinModificationExpression.class.isAssignableFrom(toRemove)) {
+        // TODO: || dna methylation
+        removeVisualizedLabels(visualizedData.getTabName().toString(), 
+          visualizedData.getExperimentName(), visualizedData.getSigType());          
+      } else {
+        removeVisualization(visualizedData.getTabName().toString(), 
+          visualizedData.getExperimentName(), visualizedData.getSigType());
+      }
+    }
+    
+    return dataToRemove.size()>0;
+  }
   
   /**
-   * Remove a visualized dataset from the graph. (Un-visualize dataset).
+   * Remove data that has been visualized as additional node label. I.e.
+   * {@link ProteinModificationExpression} or DNA methylation data.
+   * <p>See {@link #removeVisualization(String, String, SignalType)}
+   * for, e.g, {@link mRNA} or {@link miRNA} data.
    * @param tabName any unique identifier for the input dataset. E.g., 
    * the tab or the filename or anything else.
    * @param experimentName to describe the signal
    * @param type to describe the signal
+   * @see #removeVisualization(String, String, SignalType)
+   */
+  @SuppressWarnings("rawtypes")
+  public void removeVisualizedLabels(String tabName, String experimentName, SignalType type) {
+    log.finer("Removing node labels for a given visualization.");
+    
+    // Inspect all labels of all nodes
+    int removedCounter=0;
+    for (NodeCursor nc = graph.nodes(); nc.ok(); nc.next()) {  
+      Node n = nc.node();  
+      NodeRealizer nr = graph.getRealizer(n);
+      
+      double shiftSideLabelsBy = 0;
+      for (int i=0; i<nr.labelCount(); i++) {        
+        NodeLabel label = nr.getLabel(i);
+        if (shiftSideLabelsBy>0 && label.getModel()==NodeLabel.SIDES) {
+          // If we remove those stacking protein boxes, we might need to shift exising ones
+          label.setDistance(Math.max(label.getDistance() - shiftSideLabelsBy, 0));
+        }
+        Object userData = label.getUserData();
+        if (userData==null) continue;
+        
+        // Try to get the information, what has been visualized here
+        VisualizedData vd = null;
+        if (userData instanceof VisualizedData) {
+          vd = (VisualizedData) userData;
+        } else if (userData instanceof ValuePair) {
+          // Try to get it out of a value pair
+          if (((ValuePair)userData).getA() instanceof VisualizedData) {
+            vd = (VisualizedData) ((ValuePair)userData).getA();
+          } else if (((ValuePair)userData).getB() instanceof VisualizedData) {
+            vd = (VisualizedData) ((ValuePair)userData).getB();
+          }
+        }
+        
+        // Look if we should remove this
+        if (vd!=null && (tabName==null || vd.getTabName().equals(tabName))
+            && (experimentName==null || vd.getExperimentName().equals(experimentName))
+            && (type==null || vd.getSigType().equals(type))) {
+          if (label.getModel()==NodeLabel.SIDES) {
+            shiftSideLabelsBy+=label.getHeight();
+          }
+          nr.removeLabel(label);
+          i--;
+          removedCounter++;
+        }
+      }
+    }
+    log.finer("Removed " + removedCounter + " node labels.");
+    
+    // Remove signal from all nodes and also remove signal map
+    log.finer("Removing signals and annotation keys.");
+    removeSignal(tabName, experimentName, type);
+    
+    // Remove from list of visualized datasets.
+    VisualizedData dataID = new VisualizedData(tabName, experimentName, type);
+    List<VisualizedData> visualizedData = getVisualizedData();
+    if (visualizedData!=null) visualizedData.remove(dataID);
+  }
+  
+  /**
+   * Remove a visualized dataset from the graph. (Un-visualize dataset).
+   * <p>Only for data, visualized as background in main-node (mRNA).
+   * Not for additional node labels!
+   * <p>See {@link #removeVisualizedLabels(String, String, SignalType)}
+   * for, e.g., {@link ProteinModificationExpression} or DNA methylation data.
+   * @param tabName any unique identifier for the input dataset. E.g., 
+   * the tab or the filename or anything else.
+   * @param experimentName to describe the signal
+   * @param type to describe the signal
+   * @see #removeVisualizedLabels(String, String, SignalType)
    */
   public void removeVisualization(String tabName, String experimentName, SignalType type) {
     // 1. Get all nodes for experiment
@@ -277,8 +426,8 @@ public class VisualizeDataInPathway {
     removeSignal(tabName, experimentName, type);
     
     // 5. Remove from list of visualized datasets.
-    ValueTriplet<String, String, SignalType> dataID = new ValueTriplet<String, String, SignalType>(tabName, experimentName, type);
-    List<ValueTriplet<String, String, SignalType>> visualizedData = getVisualizedData();
+    VisualizedData dataID = new VisualizedData(tabName, experimentName, type);
+    List<VisualizedData> visualizedData = getVisualizedData();
     if (visualizedData!=null) visualizedData.remove(dataID);
     
   }
@@ -319,59 +468,83 @@ public class VisualizeDataInPathway {
     removeSignal(tabName, experimentName, type);
     
     // Write signals to nodes
-    Map<ValueTriplet<String, String, SignalType>, NodeMap> signalMaps = getAnnotatedSignals(true);
+    //Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals(true);
     for (Node n : graph.getNodeArray()) {
       Set<T> n_nsList = node2nsMap.get(n);
       
       // Do we have associated signals?
       if (n_nsList!=null && n_nsList.size()>0) {
-        
-        // Concatenate signals of all NameAndSignals associated with this node.
-        Map <ValueTriplet<String, String, SignalType>, StringBuffer> signalIdentifier2text = 
-          new HashMap <ValueTriplet<String, String, SignalType>, StringBuffer>();
-        
-        for (T ns : n_nsList) {
-          List<Signal> signals = NameAndSignal2PWTools.getSignals(ns);
-          for (Signal sig: signals) {
-            // Filter signals
-            if ((experimentName==null || sig.getName().equals(experimentName)) &&
-                (type==null || sig.getType().equals(type))) {
-              // Get existing NodeMap for signal
-              ValueTriplet<String, String, SignalType> key = new ValueTriplet<String, String, SignalType>(tabName, sig.getName(), sig.getType());
-              
-              // Write signal to textBuffer
-              StringBuffer buff = signalIdentifier2text.get(key);
-              if (buff==null) {
-                buff = new StringBuffer();
-                signalIdentifier2text.put(key, buff);
-              }
-              if (buff.length()>0) buff.append(StringUtil.newLine());
-              buff.append(String.format("%s: %s", ns.getUniqueLabel(), sig.getSignal().toString()));
-            }
-          }
-        }
-        
-        // Now we have a text for each signal we want to write to the node.
-        for (ValueTriplet<String, String, SignalType> key : signalIdentifier2text.keySet()) {
-          NodeMap sigMap = signalMaps.get(key);
-          if (sigMap==null) {
-            // Create new
-            sigMap = graph.createNodeMap();
-            signalMaps.put(key, sigMap);
-          }
-          // Set signal annotation
-          sigMap.set(n, signalIdentifier2text.get(key).toString());
-        }
+        writeSignalsToNode(n, n_nsList, tabName, experimentName, type);
         //----------
       }
     }
     
 
     // Register signalMaps in graph
-    for (Entry<ValueTriplet<String, String, SignalType>, NodeMap> signalSet : signalMaps.entrySet()) {
-      String v = getSignalMapIdentifier(signalSet.getKey());
-      tools.addMap(v, signalSet.getValue());
+    // Is already done by writeSignalsToNode() !
+//    for (Entry<VisualizedData, NodeMap> signalSet : signalMaps.entrySet()) {
+//      String v = getSignalMapIdentifier(signalSet.getKey());
+//      tools.addMap(v, signalSet.getValue());
+//    }
+  }
+
+  /**
+   * Write signal to ONE node.
+   * @param <T>
+   * @param n the node for all given {@link NameAndSignals}
+   * @param nsList NameAndSignal(s) to write to the node
+   * @param tabName any unique identifier for the input dataset. E.g., 
+   * the tab or the filename or anything else.
+   * @param experimentName
+   * @param type
+   */
+  private <T extends NameAndSignals> void writeSignalsToNode(Node n, Iterable<T> nsList,
+    String tabName, String experimentName, SignalType type) {
+    if (nsList==null) return;
+    
+    // Get internal annotation map
+    Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals(true);
+    
+    // Concatenate signals of all NameAndSignals associated with this node.
+    Map <ValueTriplet<String, String, SignalType>, StringBuffer> signalIdentifier2text = 
+      new HashMap <ValueTriplet<String, String, SignalType>, StringBuffer>();
+    
+    // Summarize all signals for all experiment and type combinations in one string
+    for (T ns : nsList) {
+      List<Signal> signals = NameAndSignal2PWTools.getSignals(ns);
+      for (Signal sig: signals) {
+        // Filter signals
+        if ((experimentName==null || sig.getName().equals(experimentName)) &&
+            (type==null || sig.getType().equals(type))) {
+          // Get existing NodeMap for signal
+          ValueTriplet<String, String, SignalType> key = new ValueTriplet<String, String, SignalType>(tabName, sig.getName(), sig.getType());
+          
+          // Write signal to textBuffer
+          StringBuffer buff = signalIdentifier2text.get(key);
+          if (buff==null) {
+            buff = new StringBuffer();
+            signalIdentifier2text.put(key, buff);
+          }
+          if (buff.length()>0) buff.append(StringUtil.newLine());
+          buff.append(String.format("%s: %s", ns.getUniqueLabel(), sig.getNiceSignalString() ));
+        }
+      }
     }
+    
+    // Now we have a text for each signal we want to write to the node.
+    for (ValueTriplet<String, String, SignalType> key : signalIdentifier2text.keySet()) {
+      NodeMap sigMap = signalMaps.get(key);
+      if (sigMap==null) {
+        // Create new map for this signal
+        sigMap = graph.createNodeMap();
+        // Register this map also in internal map-lists
+        signalMaps.put(new VisualizedData(key), sigMap);
+        tools.addMap(getSignalMapIdentifier(key), sigMap);
+      }
+      // Set signal annotation
+      sigMap.set(n, signalIdentifier2text.get(key).toString());
+    }
+    
   }
   
   
@@ -380,6 +553,7 @@ public class VisualizeDataInPathway {
    * Generates an identifier for a SignalTriplet (file/tabname, experimentName, SignalType).
    * @param identifier
    * @return generated key to identify the map.
+   * @see #getSignalMapIdentifier(VisualizedData)
    */
   private String getSignalMapIdentifier(
     ValueTriplet<String, String, SignalType> identifier) {
@@ -389,6 +563,20 @@ public class VisualizeDataInPathway {
   }
   
   /**
+   * Generates an identifier for a SignalTriplet (file/tabname, experimentName, SignalType).
+   * @param identifier
+   * @return generated key to identify the map.
+   * @see #getSignalMapIdentifier(ValueTriplet)
+   */
+  private String getSignalMapIdentifier(VisualizedData identifier) {
+    String key = String.format("[%s] %s (from \"%s\")", 
+      identifier.getSigType().toString(), identifier.getExperimentName(), identifier.getTabName().toString());
+    return key;
+  }
+  
+  
+  
+  /**
    * Remove annotated signals from the nodes
    * @param tabName any unique identifier for the input dataset. E.g., 
    * the tab or the filename or anything else.
@@ -396,14 +584,14 @@ public class VisualizeDataInPathway {
    * @param type to describe the signal
    */
   private void removeSignal(String tabName, String experimentName, SignalType type) {
-    Map<ValueTriplet<String, String, SignalType>, NodeMap> signalMaps = getAnnotatedSignals();
+    Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals();
     if (signalMaps==null) return;
-    Iterator<Entry<ValueTriplet<String, String, SignalType>, NodeMap>> it = signalMaps.entrySet().iterator();
+    Iterator<Entry<VisualizedData, NodeMap>> it = signalMaps.entrySet().iterator();
     while (it.hasNext()) {
-      Entry<ValueTriplet<String, String, SignalType>, NodeMap> signalSet = it.next();
-      if (signalSet.getKey().getA().equals(tabName)) {
-        if ((experimentName==null || signalSet.getKey().getB().equals(experimentName)) &&
-            (type==null || signalSet.getKey().getC().equals(type))) {
+      Entry<VisualizedData, NodeMap> signalSet = it.next();
+      if (signalSet.getKey().getTabName().equals(tabName)) {
+        if ((experimentName==null || signalSet.getKey().getExperimentName().equals(experimentName)) &&
+            (type==null || signalSet.getKey().getSigType().equals(type))) {
           // Remove map from all data providers
           tools.removeMap(getSignalMapIdentifier(signalSet.getKey()));
           // Remove from internal listing
@@ -419,11 +607,11 @@ public class VisualizeDataInPathway {
    */
   @SuppressWarnings("unused")
   private void removeSignals(Node node) {
-    Map<ValueTriplet<String, String, SignalType>, NodeMap> signalMaps = getAnnotatedSignals();
+    Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals();
     if (signalMaps==null) return;
-    Iterator<Entry<ValueTriplet<String, String, SignalType>, NodeMap>> it = signalMaps.entrySet().iterator();
+    Iterator<Entry<VisualizedData, NodeMap>> it = signalMaps.entrySet().iterator();
     while (it.hasNext()) {
-      Entry<ValueTriplet<String, String, SignalType>, NodeMap> signalSet = it.next();
+      Entry<VisualizedData, NodeMap> signalSet = it.next();
       if (signalSet.getValue().get(node)!=null) {
         signalSet.getValue().set(node, null);
       }
@@ -474,7 +662,8 @@ public class VisualizeDataInPathway {
       (!SignalOptions.PROBE_CENTERED.getValue(prefs) && !SignalOptions.GENE_CENTERED.getValue(prefs));
     
     // 0. Remove previous visualizations of the same data.
-    if (isDataVisualized(tabName, experimentName, type)) {
+    VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
+    if (isDataVisualized(visData)) {
       removeVisualization(tabName, experimentName, type);
     }
     
@@ -483,23 +672,154 @@ public class VisualizeDataInPathway {
       nsList = NameAndSignals.geneCentered(nsList, IntegratorGUITools.getMergeTypeSilent(prefs));
     }
     
-    // 1. Add NS to nodes and perform splits
-    nsList = nsTools.prepareGraph(nsList, tabName, experimentName, type, pwCentered);
-    
-    // 2. color nodes
-    SignalColor recolorer = new SignalColor(nsList, experimentName, type);
-    int nodesColored = colorNodesAccordingToSignals(recolorer, tabName, experimentName, type);
-    
-    // 3. write signals to nodes
-    writeSignalsToNodes(nsList, tabName, experimentName, type);
-    
-    // 4. change shape
-    // TODO: Similar to writeSignals
+    // Branch between mRNA and miRNA (=> Node color) and other types
+    int nodesColored = 0;
+    Class<? extends NameAndSignals> inputType = NameAndSignals.getType(nsList);
+    if (mRNA.class.isAssignableFrom(inputType) || miRNA.class.isAssignableFrom(inputType)) {
+      
+      // 1. Add NS to nodes and perform splits
+      nsList = nsTools.prepareGraph(nsList, tabName, experimentName, type, pwCentered);
+      
+      // 2. color nodes
+      SignalColor recolorer = new SignalColor(nsList, experimentName, type);
+      nodesColored = colorNodesAccordingToSignals(recolorer, tabName, experimentName, type);
+      
+      
+      // 3. write signals to nodes
+      writeSignalsToNodes(nsList, tabName, experimentName, type);
+      
+      // 4. change shape
+      // TODO: Similar to writeSignals
+      
+    } else if (ProteinModificationExpression.class.isAssignableFrom(inputType)) {
+      // Protein modifications as boxes (node labels) below nodes
+      addBoxedLabelsBelowNodes(nsList, tabName, experimentName, type);
+      
+    } else {
+      log.warning("No visualization method implemented for " + inputType.getSimpleName());
+    }
     
     // Remember that we have visualized this data.
-    getVisualizedData(true).add(new ValueTriplet<String, String, SignalType>(tabName, experimentName, type));
+    getVisualizedData(true).add(visData);
+    
     
     return nodesColored;
+  }
+  
+  /**
+   * Add boxes below nodes that match any of the given {@link NameAndSignals}
+   * that are colored according to given signal and contain the unique label
+   * of the {@link NameAndSignals}.
+   * <p>This method is intended for {@link ProteinModificationExpression} data.
+   * @param <T>
+   * @param nsList list of {@link NameAndSignals} for which boxes should be added
+   * @param tabName unique identifier to re-identify the given <code>nsList</code>
+   * @param experimentName filter for certain signals from <code>nsList</code>
+   * @param type filter for certain signals from <code>nsList</code>
+   */
+  public <T extends NameAndSignals> void addBoxedLabelsBelowNodes(Collection<T> nsList, 
+    String tabName, String experimentName, SignalType type) {
+    // Read box height from preferences (Default:8)
+    SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
+    int boxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
+    
+    // Prepare maps and required classes
+    MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();
+    Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
+    SignalColor recolorer = new SignalColor(nsList, experimentName, type);
+    VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
+    
+    for (Node n: n2ns.keySet()) {
+      Set<T> nsForNode = n2ns.get(n);
+      if (nsForNode==null) continue;
+      
+      int i=tools.getNumberOfLabels(n, NodeLabel.SIDES); // Calc offset for further labels
+      NodeRealizer nr = graph.getRealizer(n);
+      double maxW = nr.getWidth();
+      List<T> sorted = NameAndSignals.sortByUniqueLabel(nsForNode);
+      for (T ns: sorted) {
+        double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
+        if (Double.isNaN(signalValue)) continue;
+        
+        NodeLabel nl = nr.createNodeLabel();
+        nl.setText(ns.getUniqueLabel());
+        nr.addLabel(nl);
+        
+        // Remember what we visualized
+        nl.setUserData(new ValuePair<VisualizedData, NameAndSignals>(visData, ns));
+        
+        nl.setModel(NodeLabel.SIDES);
+        nl.setPosition(NodeLabel.S);
+        nl.setBackgroundColor(recolorer.getColor(signalValue));
+        nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NODE_WIDTH);
+        nl.setContentHeight(boxHeight);
+        nl.setContentWidth(nr.getWidth());
+        nl.setLineColor(Color.BLACK);
+        nl.setFontSize(boxHeight);
+        nl.setInsets(new Insets(-1,0,0,0));
+        nl.setDistance(i++ * boxHeight);
+        nl.calculateSize();
+        maxW = Math.max(maxW, nl.getWidth());
+      }
+      // Make node at least as big as biggest label
+      nr.setWidth(maxW);
+      
+      // Write all those signals to node annotations
+      writeSignalsToNode(n, sorted, tabName, experimentName, type);
+    }
+    // TODO: Change eventual DNA methylation visualizations.
+  }
+  
+  public <T extends NameAndSignals> void addBlackBoxLeftOfNodes(Collection<T> nsList, 
+    String tabName, String experimentName, SignalType type) {
+    // Read max. box width from preferences (Default:10)
+    SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
+    int maxWidth = PathwayVisualizationOptions.DNA_METHYLATION_MAXIMUM_BOX_WIDTH.getValue(prefs);
+    
+    // Prepare maps and required classes
+    MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();
+    Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
+    double[] minMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
+    double maxSignalValue = minMax[1]+minMax[0];
+    VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
+    
+    // TODO: Ensure Gene/Modification centric data!
+    
+    // TODO: If fold change, always maxWidth and change color.
+    
+    for (Node n: n2ns.keySet()) {
+      Set<T> nsForNode = n2ns.get(n);
+      if (nsForNode==null) continue;
+      for (T ns: nsForNode) {
+        double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
+        if (Double.isNaN(signalValue)) continue;
+        else signalValue+=+minMax[0];
+        
+        NodeRealizer nr = graph.getRealizer(n);
+        NodeLabel nl = nr.createNodeLabel();
+        nl.setText(ns.getUniqueLabel());
+        nr.addLabel(nl);
+        
+        // Remember what we visualized
+        nl.setUserData(new ValuePair<VisualizedData, NameAndSignals>(visData, ns));
+
+        // XXX: Methylation labels
+        
+          nl.setModel(NodeLabel.FREE);
+          nl.setPosition(NodeLabel.W);
+          nl.setBackgroundColor(nr.getLineColor());
+          nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
+          nl.setContentHeight(nr.getHeight());
+          nl.setContentHeight(nr.getHeight() + 1*8); // TODO: Account for prot. modf. labels
+          
+          nl.setContentWidth(signalValue/maxSignalValue*maxWidth);
+          
+          nl.setFreeOffset(-nl.getContentWidth(), 0);
+          nl.setLineColor(nl.getBackgroundColor());
+          nl.setDistance(0);
+      }
+      // TODO: Add something to track and allow to remove this visualization.
+    }
   }
 
   /**
@@ -517,7 +837,6 @@ public class VisualizeDataInPathway {
    */
   @SuppressWarnings("unchecked")
   public int colorNodesAccordingToSignals(SignalColor recolorer, String tabName, String experimentName, SignalType type) {
-//    ValueTriplet<String, String, SignalType> signalKey = new ValueTriplet<String, String, SignalType>(tabName, experimentName, type);
     boolean inputContainedMicroRNAnodes=false;
     boolean inputContainedmRNAnodes=false;
     MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();

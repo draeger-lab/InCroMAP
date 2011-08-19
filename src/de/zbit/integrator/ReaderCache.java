@@ -124,7 +124,18 @@ public class ReaderCache implements Serializable {
     fileDescriptor.resetTime();
     fileDescriptor.setDescribingFile(file);
     
-    cacheChangedSinceLoading = true;
+    // Check if cache changes with this addition
+    ReaderCacheElement old = cache.get(file);
+    if (old!=null) {
+      // Not so easy to implement equals() method in
+      // fileDescriptor AND expectedColumn.
+      //if (old.equals(fileDescriptor)) return;
+      cacheChangedSinceLoading = true;
+    } else {
+      cacheChangedSinceLoading = true;
+    }
+    
+    // Put in cache and watch cache size
     stopCleaningCache();
     cache.put(file, fileDescriptor);
     ensureCacheSize();

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import de.zbit.data.GeneID;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.csv.ExpectedColumn;
 
@@ -59,7 +60,7 @@ public class ProteinModificationReader extends AbstractGeneBasedNSreader<Protein
     String modification = null;
     if (modificationCol>=0 && modificationCol<line.length) modification = line[modificationCol];
     
-    
+    if (geneID==null) geneID = GeneID.default_geneID;
     return new ProteinModificationExpression(name, analyteShortName, modification, geneID);
   }
 

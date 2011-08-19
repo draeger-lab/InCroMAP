@@ -14,6 +14,8 @@ import de.zbit.util.prefs.Range;
 
 /**
  * Any options for interactions with KEGGtranslator or pathway maps.
+ * These options should control how to visualize various data in pathways.
+ * 
  * @author Clemens Wrzodek
  */
 public interface PathwayVisualizationOptions extends KeyProvider {
@@ -40,9 +42,18 @@ public interface PathwayVisualizationOptions extends KeyProvider {
   public static Option<Color> COLOR_FOR_NO_VALUE = new Option<Color>("COLOR_FOR_NO_VALUE", Color.class,
       "Color for nodes, with no fold change in the input dataset (unaffected nodes).", Color.LIGHT_GRAY);
   
+  
   public static Option<Byte> CHANGE_NODE_SHAPE = new Option<Byte>("CHANGE_NODE_SHAPE", Byte.class,
       "Change the shape of colored nodes to the selected shape.",Option.buildRange(NodeShapeSelector.validChoices),
       new Byte((byte)0), false);
+  
+  public static Option<Byte> PROTEIN_MODIFICATION_BOX_HEIGHT = new Option<Byte>("PROTEIN_MODIFICATION_BOX_HEIGHT", Byte.class,
+      "Define a height (in pixel) of boxes that are added below nodes for various protein modifications.",
+      new Range<Byte>(Byte.class, "{[5,100]}"), new Byte((byte) 8));
+  
+  public static Option<Byte> DNA_METHYLATION_MAXIMUM_BOX_WIDTH = new Option<Byte>("DNA_METHYLATION_MAXIMUM_BOX_WIDTH", Byte.class,
+      "Define a maximum width (in pixel) of boxes that are added left of nodes to represent DNA methylation changes.",
+      new Range<Byte>(Byte.class, "{[5,100]}"), new Byte((byte) 10));
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static final OptionGroup PATHWAY_COLORING_OPTIONS = new OptionGroup(

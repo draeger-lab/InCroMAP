@@ -4,6 +4,8 @@
 package de.zbit.data.protein;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import de.zbit.data.GeneID;
@@ -21,18 +23,14 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
   private static final long serialVersionUID = -574351682526309872L;
   public static final transient Logger log = Logger.getLogger(ProteinModificationExpression.class.getName());
   
-  /*TODO: Required attributes:
-   * - Analyte Short Name (Save as probe and override getHeader()).
-   * - Modification
-   * 
-   * - Signals
-   * - And anyID 2 GenID identifier
-   * 
-   * TODO: Try to extend the mRNAReader and
-   * simply change createObject or such.
+  /**
+   * Key to store the analyte short name as {@link #addData(String, Object)}
    */
-  
   public final static String analyte_short_key = "ANALYTE_SHORT";
+  
+  /**
+   * Key to store the modification name as {@link #addData(String, Object)}
+   */
   public final static String modification_key = "MODIFICATION";
   
   /**
@@ -94,13 +92,19 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
   }
   
   /* (non-Javadoc)
-   * @see de.zbit.data.NameAndSignals#merge(java.util.Collection, de.zbit.data.NameAndSignals, de.zbit.data.Signal.MergeType)
+   * @see de.zbit.data.NameAndSignal#merge(java.util.Collection, de.zbit.data.NameAndSignal, de.zbit.data.Signal.MergeType)
    */
   @Override
-  protected <T extends NameAndSignals> void merge(Collection<T> source,
-    T target, MergeType m) {
-    // TODO Auto-generated method stub
+  protected <T extends NameAndSignals> void merge(Collection<T> source, T target, MergeType m) {
+    // Merge private variables to target (=> GeneID)
+    Set<Integer> geneIDs = new HashSet<Integer>();
+    for (T o :source) {
+      GeneID mi = (GeneID)o;
+      geneIDs.add(mi.getGeneID());
+    }
     
+    // Set gene id, if same or unset if they differ
+    ((GeneID)target).setGeneID(geneIDs.size()==1?geneIDs.iterator().next():default_geneID);
   }
   
   /* (non-Javadoc)
@@ -110,9 +114,20 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
   public String getUniqueLabel() {
     String a = getAnalyteShortName();
     // If data is gene-centered, symbol should be unique.
-    if (a!=null) return NSwithProbes.getShortProbeName(a);
+    // do NOT use getShortProbeName() here. Others merge signals
+    // by this return value!
+    if (a!=null) return a;
+    
+    // Maybe the modification is set. A unique label would then be
+    // Protein name + modification name
+    if (getModification()!=null) {
+      a = String.format("%s_%s", getName(), getModification());
+    }
+    
     
     return getName();
   }
+  
+  
   
 }
