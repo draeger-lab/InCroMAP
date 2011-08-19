@@ -25,7 +25,6 @@ import javax.swing.UIManager;
 import y.view.Graph2D;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
-import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
@@ -222,7 +221,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         // Adds the microRNA NODES to the graph and automatically asks
         // the user to annotate targets to his miRNA data if not already done.
         if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
-          if (!addMicroRNAs(tp, dataSource)) {
+          if (!addMicroRNAs((Graph2D)tp.getDocument(), dataSource)) {
             log.warning("Could not detect any miRNA targets in the graph.");
             return 0;
           }
@@ -230,6 +229,15 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         
         // Perform visualization
         VisualizeDataInPathway visData = new VisualizeDataInPathway(tp);
+        Class<? extends NameAndSignals> dataType = NameAndSignals.getType(dataSource.getData());
+        // Check if there is already this data type visualized and remove old visualization first.
+        if (visData.isDataTypeVisualized(dataType)) {
+          int answer = GUITools.showQuestionMessage(tp, "The pathway already contains visualized data of the same type (" + 
+            dataType.getSimpleName() + "). Do you want to replace the currently visualized data with the given one?", "Visualize data", JOptionPane.YES_NO_OPTION);
+          if (answer==JOptionPane.NO_OPTION) return 0;
+          visData.removeVisualization(dataType);
+        }
+        
         int coloredNodes = visData.visualizeData(dataSource, experimentName,signalType);
         
         // Repaint and hide loading screens
@@ -265,26 +273,26 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
   
   /**
    * Adds microRNAs to the given graph
-   * @param tp panel with graph
+   * @param graph
    * @param dataSource microRNA datasource
    * @return true if the graph should contain at least one miRNA that belongs
    * to the given input data
    */
   @SuppressWarnings("unchecked")
-  public static boolean addMicroRNAs(TranslatorPanel tp, NameAndSignalsTab dataSource) {
+  public static boolean addMicroRNAs(Graph2D graph, NameAndSignalsTab dataSource) {
     if (!miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
       log.severe("Can not add miRNA targets when source is " + dataSource.getDataContentType());
       return false;
     }
     
-    int addedNodes = addMicroRNAs(tp, (Collection<? extends miRNA>) dataSource.getData());
+    int addedNodes = addMicroRNAs(graph, (Collection<? extends miRNA>) dataSource.getData());
     if (addedNodes==0) {
       // if no nodes have been colored, look if it was due to missing miRNA target annotations
       int a = GUITools.showQuestionMessage(IntegratorUI.getInstance(), "No microRNA had an annotated target within this graph. " +
         "Do you want to (re-)annotate your microRNA data with targets?", IntegratorUI.appName, JOptionPane.YES_NO_OPTION);
       if (a==JOptionPane.YES_OPTION) {
         dataSource.getActions().annotateMiRNAtargets();
-        addedNodes = addMicroRNAs(tp, (Collection<? extends miRNA>) dataSource.getData());
+        addedNodes = addMicroRNAs(graph, (Collection<? extends miRNA>) dataSource.getData());
       } else {
         return false;
       }
@@ -298,62 +306,26 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * adds missing target annotations to the list. This method here does NOT add targets,
    * if they are missing.
    * @see #addMicroRNAs(TranslatorPanel, NameAndSignalsTab)
-   * @param tp panel with graph
+   * @param graph
    * @param dataSource Collection with {@link miRNA}s that MUST HAVE targets!
    * @return number of nodes created or -1 if an error occurred.
    */
-  public static int addMicroRNAs(TranslatorPanel tp, Collection<? extends miRNA> dataSource) {
+  public static int addMicroRNAs(Graph2D graph, Collection<? extends miRNA> dataSource) {
     if (!NameAndSignals.isMicroRNA(dataSource)) {
       log.severe("Can not add miRNA targets when source is not miRNA.");
       return -1;
+    } if (graph==null) {
+      log.severe("Graph is not ready (null).");
+      return -1;      
     }
     
-    VisualizeMicroRNAdata vis = new VisualizeMicroRNAdata((Graph2D) tp.getDocument());
+    VisualizeMicroRNAdata vis = new VisualizeMicroRNAdata(graph);
     int addedNodes = vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource);
     if (addedNodes>0) {
       // The "Remove miRNA-nodes" button must be enabled.
       IntegratorUI.getInstance().updateButtons();
     }
     return addedNodes;
-  }
-  
-  
-  /**
-   * <b>PLEASE USE {@link #visualizeData(TranslatorPanel, NameAndSignalsTab, String, SignalType)}</b><p>
-   * Color the pathway in <code>tp</code> according to the experiment
-   * described by <code>experimentName</code> and <code>signalType</code>
-   * contained in <code>dataSource</code>.
-   * 
-   * <p>Note: the other method with {@link NameAndSignalsTab} (see reference below)
-   * should be preferred. This method does not add any nodes (e.g. for miRNAs!).
-   * @see #visualizeData(TranslatorPanel, NameAndSignalsTab, String, SignalType)
-   * @param tp pathway to color
-   * @param dataSource list with {@link NameAndSignals}
-   * @param experimentName name of the observation to color
-   * @param signalType signal type of the observation (usually fold change)
-   * @return number of nodes, colored according to the signal, or -1 if an error occurred.
-   */
-  @Deprecated
-  private int colorPathway(TranslatorPanel tp, NameAndSignalsTab dataSource, String experimentName, SignalType signalType, MergeType mt) {
-    VisualizeDataInPathway tools2 = new VisualizeDataInPathway(tp);
-    
-    if (tp.getDocument()==null) {
-      GUITools.showErrorMessage(null, "Please wait for the graph to load completely.");
-      return -1;
-    }
-    
-    // Color nodes
-    int coloredNodes = 0;
-    if (experimentName!=null && signalType!=null) {
-//      coloredNodes = tools2.colorNodesAccordingToSignals(dataSource, mt, experimentName, signalType);
-      // Write the signals to the nodes
-//    tools2.writeSignalsToNodes(dataSource, experimentName, signalType);
-      
-      coloredNodes = tools2.visualizeData(dataSource, experimentName, signalType);
-    }
-    
-    tp.repaint();
-    return coloredNodes;
   }
   
   

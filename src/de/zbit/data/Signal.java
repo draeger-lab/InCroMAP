@@ -225,6 +225,35 @@ public class Signal implements Serializable, Comparable<Object>  {
   }
   
   /**
+   * Merges all signals from the given <code>nsList</code>, matching the given
+   * <code>experimentName</code> and <code>type</code> to one {@link Signal}.
+   * @param <T>
+   * @param nsList
+   * @param m
+   * @param experimentName
+   * @param type
+   * @return merged signal.
+   */
+  public static <T extends NameAndSignals> Signal merge(Collection<T> nsList, MergeType m, String experimentName, final SignalType type) {
+    List<Number> list = new ArrayList<Number>();
+    
+    // Collect all compatible signals
+    for (T ns : nsList) {
+      if (!ns.hasSignals()) continue;
+      for (Signal signal: ns.getSignals()) {
+        if ((experimentName==null || signal.getName().equals(experimentName)) &&
+          (type==null || signal.getType().equals(type)) && signal.signal!=null) {
+          list.add(signal.signal);
+        }
+      }
+    }
+    
+    // Merge the signals (e.g., taking the mean)
+    double sig = calculate(m, list);
+    return new Signal(sig, experimentName, type);
+  }
+  
+  /**
    * Merges all signals, no matter if they are compatible or not.
    * @see #merge(Collection, MergeType)
    * @param c list of signals to merge

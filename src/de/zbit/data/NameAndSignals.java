@@ -548,6 +548,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     Object o = c.iterator().next();
     if (o==null) return null;
     
+    // TODO: Add File, Character and Color (Not that important)
     if (NameAndSignals.class.isAssignableFrom(o.getClass()) || o instanceof NameAndSignals) {
       // Case 1: Mergeable NameAndSignals
       return NameAndSignals.merge(c, m);
@@ -559,10 +560,16 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     } else if (Ratio.class.isAssignableFrom(o.getClass()) || o instanceof Ratio) {
       // Case 3: Numeric values
       return Ratio.merge(c,m);
-      
+    
     } else if (Number.class.isAssignableFrom(o.getClass()) || o instanceof Number) {
       // Case 4: Numeric values
       return Signal.calculate(m, c);
+      
+    } else if (Boolean.class.isAssignableFrom(o.getClass()) || o instanceof Boolean) {
+      boolean ret = true;
+      for (Object o2: c)
+        ret &= NSwithProbes.getBooleanValue(o2);
+      return ret;
       
     } else {
       // Case 5: Strings or anything else.
@@ -570,11 +577,16 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       for (Object object : c) {
        names.add(object) ;
       }
+      Object toReturn = null;
       if (o instanceof String) {
-        return ArrayUtils.implode(names.toArray(new String[0]), implodeString);
+        toReturn = ArrayUtils.implode(names.toArray(new String[0]), implodeString);
       } else {
-        return names.toArray();
+        toReturn = names.toArray();
       }
+      if (!toReturn.getClass().equals(o.getClass())) {
+        log.warning("Merged " + o.getClass().getSimpleName() + " to " + toReturn.getClass().getSimpleName());
+      }
+      return toReturn;
     }
   }
   

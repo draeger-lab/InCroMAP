@@ -606,9 +606,9 @@ public class IntegratorGUITools {
     final JCheckBox miRTarBase = new JCheckBox("miRTarBase", true);
     final JCheckBox tarBase = new JCheckBox("TarBase V5.0", true);
     
-    final JCheckBox DIANA = new JCheckBox("DIANA - microT v3.0", true);
-    final JCheckBox ElMMo = new JCheckBox("ElMMo v4", true);
-    final JCheckBox TargetScan = new JCheckBox("TargetScan v5.1", true);
+    final JCheckBox DIANA = new JCheckBox("DIANA - microT v3.0", false);
+    final JCheckBox ElMMo = new JCheckBox("ElMMo v4", false);
+    final JCheckBox TargetScan = new JCheckBox("TargetScan v5.1", false);
     DIANA.setToolTipText("Predicted \"" + DIANA.getText() + "\" targets. Only high confidence targets are included.");
     ElMMo.setToolTipText("Predicted \"" + ElMMo.getText() + "\" targets. Only high confidence targets are included.");
     TargetScan.setToolTipText("Predicted \"" + TargetScan.getText() + "\" targets. Only high confidence targets are included.");

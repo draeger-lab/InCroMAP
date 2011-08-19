@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import de.zbit.data.Signal.MergeType;
-import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.IntegratorGUITools;
@@ -39,6 +38,12 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
    */
   public final static String gene_centered_key = "Gene_centered";
   
+  /**
+   * A key to determine if at any stage this {@link NameAndSignals} was gene-centered.
+   * If this was the case, it is irreversible and we never need to display probe
+   * names!
+   */
+  private boolean wasGeneCentered = false;
   
   /**
    * @param probeName
@@ -80,6 +85,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
    */
   public void setGeneCentered(boolean bool) {
     super.addData(gene_centered_key, bool);
+    wasGeneCentered|=bool;
   }
   
   /**
@@ -88,8 +94,19 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
    */
   public Boolean isGeneCentered() {
     Object o = super.getData(gene_centered_key);
+    return getBooleanValue(o);
+  }
+
+
+  /**
+   * Get the boolean value of an object
+   * @param o
+   * @return
+   */
+  public static Boolean getBooleanValue(Object o) {
     if (o==null) return false;
-    if (o instanceof Boolean) return (Boolean)o;
+    if (o instanceof Boolean || Boolean.class.isAssignableFrom(o.getClass()))
+      return (Boolean)o;
     else return Boolean.valueOf(o.toString());
   }
   
@@ -184,16 +201,28 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
      // Merge private variables to target (=> GeneID)
      // probeName is in superMethod merged.
      Set<Integer> geneIDs = new HashSet<Integer>();
+     Set<Boolean> wasGeneCentered = new HashSet<Boolean>();
      for (T o :source) {
-       GeneID mi = (GeneID)o;
+       NSwithProbes mi = (NSwithProbes)o;
        geneIDs.add(mi.getGeneID());
+       wasGeneCentered.add(mi.wasGeneCentered);
      }
      
+     // Set the "wasGeneCentered" variable
+     ((NSwithProbes)target).wasGeneCentered = ((NSwithProbes)target).isGeneCentered() || 
+       (wasGeneCentered.size()==1 && wasGeneCentered.contains(Boolean.TRUE));
+     
      // Set gene id, if same or unset if they differ
-     ((GeneID)target).setGeneID(geneIDs.size()==1?geneIDs.iterator().next():default_geneID);
-     if (((NSwithProbes)target).isGeneCentered()) {
-       // Cannot ensure that gene is centered. Better unset flag!
-       ((NSwithProbes)target).setGeneCentered(false);
+     if (geneIDs.size()==1) {
+       ((GeneID)target).setGeneID(geneIDs.iterator().next());
+     } else {
+       // Reset gene-id
+       ((GeneID)target).setGeneID(default_geneID);
+       if (((NSwithProbes)target).isGeneCentered()) {
+         ((NSwithProbes)target).wasGeneCentered = true;
+         // Cannot ensure that gene is centered. Better unset flag!
+         ((NSwithProbes)target).setGeneCentered(false);
+       }
      }
    }
    
@@ -217,6 +246,12 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
    public String getUniqueLabel() {
      // If data is gene-centered, symbol should be unique.
      if (isGeneCentered()) return getGeneSymbol();
+     else if (wasGeneCentered) {
+       // we do not need to fallback on probes.
+       String s = getGeneSymbol();
+       if (s==null || s.length()<1) s = getName();
+       return getShortProbeName(s);
+     }
      
      // Get probe name(s)
      String probe = getProbeName();
@@ -263,17 +298,17 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
      log.info("Loading GeneSymbol mapping...");
      GeneID2GeneSymbolMapper mapper = IntegratorGUITools.get2GeneSymbolMapping(species);
      for (NameAndSignals m: data) {
-       if (m instanceof mRNA) {
-         if (((mRNA) m).getGeneID()>0) {
-           String symbol = mapper.map(((mRNA) m).getGeneID());
-           if (symbol!=null && symbol.length()>0) {
-             ((mRNA) m).name = symbol;
-           }
-         }
-       } else if (m instanceof miRNA) {
+       if (m instanceof miRNA) {
          if (((miRNA)m).hasTargets()) {
            for (miRNAtarget t: ((miRNA)m).getTargets()) {
              t.setTargetSymbol(mapper.map(t.getTarget()));
+           }
+         }
+       } else if (m instanceof GeneID) {
+         if (((GeneID) m).getGeneID()>0) {
+           String symbol = mapper.map(((GeneID) m).getGeneID());
+           if (symbol!=null && symbol.length()>0) {
+             m.name = symbol;
            }
          }
        } else {
@@ -283,5 +318,5 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
      }
      log.info("Converted GeneIDs to Gene symbols.");
    }
-
+   
 }

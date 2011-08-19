@@ -34,13 +34,16 @@ import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.VisualizedData;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.IntegratorTab;
 import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.KEGGPathwayActionListener;
 import de.zbit.gui.NameAndSignalsTab;
+import de.zbit.gui.TranslatorTabActions;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.kegg.Translator;
@@ -51,6 +54,7 @@ import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
+import de.zbit.util.FileTools;
 import de.zbit.util.StringUtil;
 import de.zbit.util.TranslatorTools;
 import de.zbit.util.Utils;
@@ -183,12 +187,48 @@ public class VisualizeDataInPathway {
           visualizedDataTypes[1]=true;
       } else if (ProteinModificationExpression.class.isAssignableFrom(t)) {
         visualizedDataTypes[2]=true;
-        // XXX: Not yet implemented
-//      } else if (DNAmethylation.class.isAssignableFrom(t)) {
-//        visualizedDataTypes[3]=true;
+      } else if (DNAmethylation.class.isAssignableFrom(t)) {
+        visualizedDataTypes[3]=true;
       }
     }
+    
     return visualizedDataTypes;
+  }
+  
+  /**
+   * Test if a certain data type is already visualized in the pathway.
+   * @param tab
+   * @return true if and only if already any dataset of the same
+   * type as in the given tab is currently visualized in the pathway.
+   */
+  public boolean isDataTypeVisualized(NameAndSignalsTab tab) {
+    Class<? extends NameAndSignals> dt = NameAndSignals.getType(tab.getData());
+    return isDataTypeVisualized(dt);
+  }
+  
+  /**
+   * Test if a certain data type is already visualized in the pathway.
+   * @param <T>
+   * @param dt e.g., mRNA or miRNA, etc.
+   * @return true if and only if already any dataset of this type is
+   * currently visualized in the pathway.
+   */
+  public <T extends NameAndSignals> boolean isDataTypeVisualized(Class<T> dt) {
+    boolean[] visualizedDataTypes = getVisualizedDataTypes();
+    if (dt==null || visualizedDataTypes==null) return false;
+    
+    if (mRNA.class.isAssignableFrom(dt)) {
+      return visualizedDataTypes[0];
+    } else if (miRNA.class.isAssignableFrom(dt)) {
+      return visualizedDataTypes[1];
+    } else if (ProteinModificationExpression.class.isAssignableFrom(dt)) {
+      return visualizedDataTypes[2];
+    } else if (DNAmethylation.class.isAssignableFrom(dt)) {
+      return visualizedDataTypes[3];
+    } else {
+      // In doubt, return false.
+      return false;
+    }
     
   }
   
@@ -270,8 +310,8 @@ public class VisualizeDataInPathway {
     
     // Now remove it
     for (VisualizedData visualizedData : dataToRemove) {
-      if (ProteinModificationExpression.class.isAssignableFrom(toRemove)) {
-        // TODO: || dna methylation
+      if (ProteinModificationExpression.class.isAssignableFrom(toRemove)
+          || DNAmethylation.class.isAssignableFrom(toRemove)) {
         removeVisualizedLabels(visualizedData.getTabName().toString(), 
           visualizedData.getExperimentName(), visualizedData.getSigType());          
       } else {
@@ -357,7 +397,8 @@ public class VisualizeDataInPathway {
    * <p>Only for data, visualized as background in main-node (mRNA).
    * Not for additional node labels!
    * <p>See {@link #removeVisualizedLabels(String, String, SignalType)}
-   * for, e.g., {@link ProteinModificationExpression} or DNA methylation data.
+   * for, e.g., {@link ProteinModificationExpression} or
+   * {@link DNAmethylation} data.
    * @param tabName any unique identifier for the input dataset. E.g., 
    * the tab or the filename or anything else.
    * @param experimentName to describe the signal
@@ -404,8 +445,11 @@ public class VisualizeDataInPathway {
       //if (!graph.getHierarchyManager().isGroupNode(n)) {
       if (!graph.getHierarchyManager().isGroupNode(n)) {
         tools.resetColorAndLabel(n);
-        tools.resetWidthAndHeight(n);
-     // TODO: Also reset shape in resetWidthAndHeight()
+        /* Next line is disabled, because pathway-based is default
+         * and it is annoying to have the node size resetted all
+         * the time. */
+        //tools.resetWidthAndHeight(n);
+        // TODO: Also reset shape in resetWidthAndHeight()
       } else {
         toLayout.add(n);
       }
@@ -435,14 +479,12 @@ public class VisualizeDataInPathway {
   
   /**
    * Write all signals into the node annotation list.
-   * <p><b>This method only works for visualized datasets, i.e 
-   * {@link #prepareGraph(Collection, String, String, SignalType)} must have been called before.
    * @param nsList
    * @param tabName any unique identifier for the input dataset. E.g., 
    * the tab or the filename or anything else.
    */
   @SuppressWarnings("unused")
-  private <T extends NameAndSignals> void writeSignalsToNodes(Iterable<T> nsList, String tabName) {
+  private <T extends NameAndSignals> void writeSignalsToNodes(Collection<T> nsList, String tabName) {
     writeSignalsToNodes(nsList, tabName, null, null);
   }
   
@@ -455,7 +497,7 @@ public class VisualizeDataInPathway {
    * @param experimentName
    * @param type
    */
-  private <T extends NameAndSignals> void writeSignalsToNodes(Iterable<T> nsList, String tabName, String experimentName, SignalType type) {
+  private <T extends NameAndSignals> void writeAnnotatedSignalsToNodes(Iterable<T> nsList, String tabName, String experimentName, SignalType type) {
     Map<Node, Set<T>> node2nsMap = nsTools.getAnnotatedNodes(nsList);
     // Q:Add a public writeSignalstoNodes method AND a public removeSignalsFrom Nodes method that uses names and GENE IDs.
     // overwrite geneID field of splitted node with ns.GeneId(). && check uniqueLabel() for splitted=true.
@@ -470,8 +512,7 @@ public class VisualizeDataInPathway {
     // Write signals to nodes
     //Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals(true);
     for (Node n : graph.getNodeArray()) {
-      Set<T> n_nsList = node2nsMap.get(n);
-      
+      Collection<T> n_nsList = node2nsMap.get(n);
       // Do we have associated signals?
       if (n_nsList!=null && n_nsList.size()>0) {
         writeSignalsToNode(n, n_nsList, tabName, experimentName, type);
@@ -486,6 +527,45 @@ public class VisualizeDataInPathway {
 //      String v = getSignalMapIdentifier(signalSet.getKey());
 //      tools.addMap(v, signalSet.getValue());
 //    }
+  }
+  
+  /**
+   * Write all signals into the node annotation list.
+   * @param <T>
+   * @param nsList any {@link NameAndSignals} list that will be mapped on nodes
+   * @param tabName any unique identifier for the input dataset. E.g., 
+   * the tab or the filename or anything else.
+   * @param experimentName
+   * @param type
+   */
+  @SuppressWarnings("unchecked")
+  private <T extends NameAndSignals> void writeSignalsToNodes(Collection<T> nsList, String tabName, String experimentName, SignalType type) {
+    Map<Node, Set<T>> node2nsMap = nsTools.getNodeToNameAndSignalMapping(nsList);
+    
+    // Remove previous signals
+    removeSignal(tabName, experimentName, type);
+    
+    // Write signals to nodes
+    //Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals(true);
+    boolean isMRNAlist = NameAndSignals.getType(nsList).equals(mRNA.class);
+    MergeType mt = IntegratorGUITools.getMergeTypeSilent();
+    for (Node n : graph.getNodeArray()) {
+      Collection<T> n_nsList = node2nsMap.get(n);
+      // Do we have associated signals?
+      if (n_nsList!=null && n_nsList.size()>0) {
+        
+        // Build a merged-fake ns to show the merged signal
+        if (isMRNAlist && n_nsList.size()>1) {
+          n_nsList = new ArrayList<T>(n_nsList);
+          mRNA fake = new mRNA("#"+ mt.toString());
+          fake.addSignal(Signal.merge(n_nsList, mt, experimentName, type));
+          ((List<T>)n_nsList).add(0, (T) fake); // add to beginning
+        }
+
+        writeSignalsToNode(n, n_nsList, tabName, experimentName, type);
+        //----------
+      }
+    }
   }
 
   /**
@@ -672,12 +752,13 @@ public class VisualizeDataInPathway {
       nsList = NameAndSignals.geneCentered(nsList, IntegratorGUITools.getMergeTypeSilent(prefs));
     }
     
-    // Branch between mRNA and miRNA (=> Node color) and other types
+    // Branch between mRNA and miRNA (=> Node color) and other types (=> labels)
     int nodesColored = 0;
     Class<? extends NameAndSignals> inputType = NameAndSignals.getType(nsList);
     if (mRNA.class.isAssignableFrom(inputType) || miRNA.class.isAssignableFrom(inputType)) {
       
       // 1. Add NS to nodes and perform splits
+      Collection<T> oldNsList = nsList;
       nsList = nsTools.prepareGraph(nsList, tabName, experimentName, type, pwCentered);
       
       // 2. color nodes
@@ -686,7 +767,7 @@ public class VisualizeDataInPathway {
       
       
       // 3. write signals to nodes
-      writeSignalsToNodes(nsList, tabName, experimentName, type);
+      writeSignalsToNodes(oldNsList, tabName, experimentName, type);
       
       // 4. change shape
       // TODO: Similar to writeSignals
@@ -694,6 +775,10 @@ public class VisualizeDataInPathway {
     } else if (ProteinModificationExpression.class.isAssignableFrom(inputType)) {
       // Protein modifications as boxes (node labels) below nodes
       addBoxedLabelsBelowNodes(nsList, tabName, experimentName, type);
+      
+    } else if (DNAmethylation.class.isAssignableFrom(inputType)) {
+      // DNA methylation as black box with varied width (node labels) left of nodes
+      addBlackBoxLeftOfNodes(nsList, tabName, experimentName, type);
       
     } else {
       log.warning("No visualization method implemented for " + inputType.getSimpleName());
@@ -767,14 +852,27 @@ public class VisualizeDataInPathway {
       // Write all those signals to node annotations
       writeSignalsToNode(n, sorted, tabName, experimentName, type);
     }
-    // TODO: Change eventual DNA methylation visualizations.
+    // TODO: Change eventual DNA methylation box-heights
   }
   
+  /**
+   * Adds a black box left of the node, that changes it size, i.e.,
+   * scales from minSignalValue to maxSignalValue.
+   * <p>This isintended to represent changes in {@link DNAmethylation}
+   * in promoter regions.
+   * @param <T>
+   * @param nsList list of {@link NameAndSignals} for which boxes should be added
+   * @param tabName unique identifier to re-identify the given <code>nsList</code>
+   * @param experimentName filter for certain signals from <code>nsList</code>
+   * @param type filter for certain signals from <code>nsList</code>
+   */
   public <T extends NameAndSignals> void addBlackBoxLeftOfNodes(Collection<T> nsList, 
     String tabName, String experimentName, SignalType type) {
     // Read max. box width from preferences (Default:10)
     SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
     int maxWidth = PathwayVisualizationOptions.DNA_METHYLATION_MAXIMUM_BOX_WIDTH.getValue(prefs);
+    // The protein mod. box height is required to calc. the dna methylation bar height
+    int boxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     
     // Prepare maps and required classes
     MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();
@@ -790,38 +888,34 @@ public class VisualizeDataInPathway {
     for (Node n: n2ns.keySet()) {
       Set<T> nsForNode = n2ns.get(n);
       if (nsForNode==null) continue;
+      
+      NodeRealizer nr = graph.getRealizer(n);
+      double barHeight = nr.getHeight() + tools.getNumberOfLabels(n, NodeLabel.SIDES) * boxHeight;
       for (T ns: nsForNode) {
         double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
         if (Double.isNaN(signalValue)) continue;
-        else signalValue+=+minMax[0];
+        else signalValue+=minMax[0];
         
-        NodeRealizer nr = graph.getRealizer(n);
         NodeLabel nl = nr.createNodeLabel();
-        nl.setText(ns.getUniqueLabel());
         nr.addLabel(nl);
         
         // Remember what we visualized
         nl.setUserData(new ValuePair<VisualizedData, NameAndSignals>(visData, ns));
-
-        // XXX: Methylation labels
         
-          nl.setModel(NodeLabel.FREE);
-          nl.setPosition(NodeLabel.W);
-          nl.setBackgroundColor(nr.getLineColor());
-          nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
-          nl.setContentHeight(nr.getHeight());
-          nl.setContentHeight(nr.getHeight() + 1*8); // TODO: Account for prot. modf. labels
-          
-          nl.setContentWidth(signalValue/maxSignalValue*maxWidth);
-          
-          nl.setFreeOffset(-nl.getContentWidth(), 0);
-          nl.setLineColor(nl.getBackgroundColor());
-          nl.setDistance(0);
+        nl.setModel(NodeLabel.FREE);
+        nl.setPosition(NodeLabel.W);
+        nl.setBackgroundColor(nr.getLineColor());
+        nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
+        nl.setContentHeight(barHeight);
+        nl.setContentWidth(signalValue/maxSignalValue*maxWidth);
+        
+        nl.setFreeOffset(-nl.getContentWidth(), 0);
+        nl.setLineColor(nl.getBackgroundColor());
+        nl.setDistance(0);
       }
-      // TODO: Add something to track and allow to remove this visualization.
     }
   }
-
+  
   /**
    * Color nodes according to signals.
    * 
@@ -967,9 +1061,15 @@ public class VisualizeDataInPathway {
               }
               
               // Color nodes
+              String inputFileName = FileTools.trimExtension(observation.getA().getName());
               String obsExpName = observation.getB().getA();
               SignalType obsExpType = observation.getB().getB();
               VisualizeDataInPathway instance = new VisualizeDataInPathway(graph);
+              boolean addedMiRNAnode = false;
+              if (NameAndSignals.isMicroRNA(observation.getA().getData())) {
+                KEGGPathwayActionListener.addMicroRNAs(graph, observation.getA());
+                addedMiRNAnode = true;
+              }
 //              instance.colorNodesAccordingToSignals((Collection<? extends NameAndSignals>)observation.getA().getData(),
 //                obsExpName, obsExpType, (Color[]) null);
               instance.visualizeData(observation.getA(), obsExpName, obsExpType);
@@ -986,12 +1086,13 @@ public class VisualizeDataInPathway {
                 oldText = graph.getLabelText(n);
                 graph.setLabelText(n, String.format("%s\n%s [%s]", oldText, obsExpName, obsExpType));
               }
+              graph.unselectAll();
               
               // Save graph.
               try {
                 String outFile = Utils.ensureSlash(outputDir.getPath()) +
                 StringUtil.removeAllNonFileSystemCharacters(
-                  pathwayID + '.' + obsExpName + '.' + obsExpType + '.' + outputFormat);
+                  pathwayID + '.' + obsExpName + '.' + obsExpType  + '.' + inputFileName + '.' + outputFormat);
                 translator.writeToFile(graph, outFile, outputFormat);
                 success++;
               } catch (Throwable e) {
@@ -1005,7 +1106,15 @@ public class VisualizeDataInPathway {
                 nr.setY(nr.getY()+oldHeight);
                 graph.setLabelText(n, oldText);
               }
+              // Only works for mRNA
               instance.removeVisualization(observation.getA().getName(), obsExpName, obsExpType);
+              // Only works for Phospho or DNA methylation
+              instance.removeVisualizedLabels(observation.getA().getName(), obsExpName, obsExpType);
+              // Doesn't work if we don't initialize with TranslatorPanel
+              //instance.removeVisualization(NameAndSignals.getType(observation.getA().getData()));
+              if (addedMiRNAnode) {
+                TranslatorTabActions.removeMicroRNAnodes(instance.tools);
+              }
             } catch (Throwable t) {
               t.printStackTrace();
               GUITools.showErrorMessage(null, t);

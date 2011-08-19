@@ -17,7 +17,10 @@ import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
 import y.base.Node;
+import y.view.Graph2D;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.methylation.DNAmethylation;
+import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.integrator.VisualizeDataInPathway;
@@ -239,8 +242,9 @@ public class TranslatorTabActions implements ActionListener{
       parent.repaint();
 
     } else if (command.equals(TPAction.REMOVE_DNA_METHYLATION_BOXES.toString())) {
-      // TODO: Remove DNA Methylation boxes
-      GUITools.showErrorMessage(null, "Not yet implemented!");
+      new VisualizeDataInPathway(parent).removeVisualization(DNAmethylation.class);
+      enableRemoveButtonsAsRequired(removeButton);
+      parent.repaint();
 
     }
   }
@@ -264,7 +268,7 @@ public class TranslatorTabActions implements ActionListener{
     // 3. Visualize targets.
     int nodesAdded = 0;
     if (vp!=null && vp.getA()!=null && vp.getA().size()>0) {
-      nodesAdded = KEGGPathwayActionListener.addMicroRNAs(parent, miRNAandTarget.getList(vp.getA()));
+      nodesAdded = KEGGPathwayActionListener.addMicroRNAs((Graph2D)parent.getDocument(), miRNAandTarget.getList(vp.getA()));
     }
     
     parent.hideTemporaryLoadingBar();
@@ -324,17 +328,32 @@ public class TranslatorTabActions implements ActionListener{
    * Removes all nodes with type "RNA" from the parent graph.
    */
   public void removeMicroRNAnodes() {
+    // Ensure to notify the graph first, that we can not have any
+    // visualized miRNA now.
+    new VisualizeDataInPathway(parent).removeVisualization(miRNA.class);
+    
+    // Remove miRNA nodes
     TranslatorTools tools = new TranslatorTools(parent);
+    removeMicroRNAnodes(tools);
+    
+    // Disable the "remove" button now
+    enableRemoveButtonsAsRequired(removeButton);
+    parent.repaint();
+  }
+
+
+  /**
+   * Retrieves the {@link TranslatorTools#getRNA2NodeMap()} and
+   * removed all nodes in this maps values.
+   * @param tools
+   */
+  public static void removeMicroRNAnodes(TranslatorTools tools) {
     Map<String, List<Node>> mi2node = tools.getRNA2NodeMap();
     for (List<Node> nl: mi2node.values()) {
       for (Node n: nl) {
         tools.getGraph().removeNode(n);
       }
     }
-    
-    // Disable the "remove" button now
-    enableRemoveButtonsAsRequired(removeButton);
-    parent.repaint();
   }
 
 
