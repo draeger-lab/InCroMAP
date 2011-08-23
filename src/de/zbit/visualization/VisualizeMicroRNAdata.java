@@ -239,8 +239,8 @@ public class VisualizeMicroRNAdata {
     tools.setInfo(n, GraphMLmapsExtended.NODE_IS_MIRNA, true);
     // Do only set NS for colored/visualized signals.
     //tools.setInfo(n, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, mirna);
-    if (mirna.getGeneID()>0) {
-      tools.setInfo(n, GraphMLmaps.NODE_GENE_ID, mirna.getGeneID());
+    if (mirna.getGeneID()>0) { // GraphMLmaps MUST ALWAYS be strings! 
+      tools.setInfo(n, GraphMLmaps.NODE_GENE_ID, Integer.toString(mirna.getGeneID()));
     }
     
     return n;

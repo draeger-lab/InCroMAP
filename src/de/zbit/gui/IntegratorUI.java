@@ -44,6 +44,7 @@ import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.NameAndSignalReader;
+import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.kegg.KEGGtranslatorOptions;
@@ -146,7 +147,15 @@ public class IntegratorUI extends BaseFrame {
      */
     LOAD_MICRO_RNA,
     /**
-     * {@link Action} to let the user enter a cusom genelist.
+     * {@link Action} to load data with the {@link ProteinModificationReader}.
+     */
+    LOAD_PROTEIN_MODIFICATION,
+    /**
+     * {@link Action} to load data with the // TODO: Reader
+     */
+    LOAD_DNA_METHYLATION,
+    /**
+     * {@link Action} to let the user enter a custom gene list.
      */
     INPUT_GENELIST,
     /**
@@ -177,6 +186,10 @@ public class IntegratorUI extends BaseFrame {
         return "Load mRNA data";
       case LOAD_MICRO_RNA:
         return "Load microRNA data";
+      case LOAD_PROTEIN_MODIFICATION:
+        return "Load protein modification data";
+      case LOAD_DNA_METHYLATION:
+        return "Load DNA methylation data";
       case INPUT_GENELIST:
         return "Manually enter a genelist";
       case SHOW_MICRO_RNA_TARGETS:
@@ -204,6 +217,10 @@ public class IntegratorUI extends BaseFrame {
           return "Load processed mRNA data from file.";
         case LOAD_MICRO_RNA:
           return "Load processed microRNA data from file.";
+        case LOAD_PROTEIN_MODIFICATION:
+          return "Load processed protein modification expression data from a file";
+        case LOAD_DNA_METHYLATION:
+          return "Load processed and gene-centered DNA methylation data from a file"; // TODO: stimmt das?
         case INPUT_GENELIST:
           return "Manually enter a list of genes.";
         case SHOW_MICRO_RNA_TARGETS:
@@ -236,25 +253,7 @@ public class IntegratorUI extends BaseFrame {
    * @throws IOException 
    */
   public static void main(String[] args) throws IOException {
-    /* TODO: Put in (SysBio?) resources folder (because no more KEGG FTP):
-     * KeggID2PathwayMapper.java
-     * GeneID2KeggIDMapper.java
-     * KeggPathwayID2PathwayName.java <= implement also webservice here.
-     * 
-     * - updateButtons sobald ein Progress fertig ist.
-     * - Nach Visualize nicht fragen, sondern false und knopf für einfärben nach daten
-     *   - Bei einfärben, alte farben und daten löschen!
-     * - Pathway visualization auch ohne enrichment auswählbar machen
-     * - save und openDir jedesmal merken!
-     * - GraphML default auf JPG beim speichern setzen.
-     * - Rename Observation to Column Headers
-     * 
-     * TODO: Bei GeneList eingabe:
-     * - Show organism selector also
-     * - Show identifier selection
-     * - Init mapper and get geneIDs.
-     */
-    LogUtil.initializeLogging((String[])null);
+    LogUtil.initializeLogging(Level.FINER,(String[])null);
     // Set default values for KEGGtranslator
     KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
@@ -273,6 +272,7 @@ public class IntegratorUI extends BaseFrame {
     
     // Set the often used KeggTranslator methods to use this appName as application name
     Translator.APPLICATION_NAME = appName;
+    Translator.VERSION_NUMBER = appVersion;
     
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -291,6 +291,7 @@ public class IntegratorUI extends BaseFrame {
           ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorGUITools.organisms.get(1)), "Example_miRNA");
           
         } catch (Exception e) {e.printStackTrace();}
+        
       }
     });
     
@@ -422,6 +423,12 @@ public class IntegratorUI extends BaseFrame {
       
     JMenuItem lmiRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMiRNAfile"),
         Action.LOAD_MICRO_RNA, UIManager.getIcon("ICON_OPEN_16"));
+    
+    JMenuItem lprotMod = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openProteinModificationExpressionFile"),
+      Action.LOAD_PROTEIN_MODIFICATION, UIManager.getIcon("ICON_OPEN_16"));
+    
+    JMenuItem ldnaM = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openDNAmethylationFile"),
+      Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_OPEN_16"));
       
     JMenuItem genelist = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "showInputGenelistDialog"),
         Action.INPUT_GENELIST, UIManager.getIcon("ICON_OPEN_16"));
@@ -434,6 +441,8 @@ public class IntegratorUI extends BaseFrame {
 
     importData.add(lmRNA);
     importData.add(lmiRNA);
+    importData.add(lprotMod);
+    importData.add(ldnaM);
     importData.addSeparator();
     importData.add(genelist);
     importData.add(miRNAtargets);
@@ -489,6 +498,12 @@ public class IntegratorUI extends BaseFrame {
       JMenuItem lmiRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMiRNAfile"),
         Action.LOAD_MICRO_RNA, UIManager.getIcon("ICON_OPEN_16"));
       load.add(lmiRNA);
+      JMenuItem lprotMod = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openProteinModificationExpressionFile"),
+        Action.LOAD_PROTEIN_MODIFICATION, UIManager.getIcon("ICON_OPEN_16"));
+      load.add(lprotMod);
+      JMenuItem ldnaM = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openDNAmethylationFile"),
+        Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_OPEN_16"));
+      load.add(ldnaM);
       load.addSeparator();
       if (fileHistoryDuplicate==null) {
         fileHistoryDuplicate = createFileHistory();
@@ -533,6 +548,15 @@ public class IntegratorUI extends BaseFrame {
   public void openMRNAfile() {
     openFile(null, mRNAReader.class);
   }
+
+  public void openProteinModificationExpressionFile() {
+    openFile(null, ProteinModificationReader.class);
+  }
+  
+  public void openDNAmethylationFile() {
+    // TODO: DNA methylation Reader
+    openFile(null, mRNAReader.class);
+  }
   
   public void openMiRNAfile() {
     openFile(null, miRNAReader.class);
@@ -571,10 +595,9 @@ public class IntegratorUI extends BaseFrame {
   public void openPathwayTab() {
     //Create the translator panel
     KEGGPathwayActionListener kpal = new KEGGPathwayActionListener(null);
-    TranslatorPanel pwTab = new TranslatorPanel(Format.GraphML, kpal);
+    TranslatorPanel pwTab = new TranslatorPanel(Format.JPG, kpal);
     pwTab.addPropertyChangeListener(kpal);
-    addTab(pwTab, "Pathway");
-    // TODO: Implement in KEGGPW AL- a done listener and change tab name and tooltip!    
+    addTab(pwTab, "Pathway");    
   }
   
   /* (non-Javadoc)
@@ -624,8 +647,6 @@ public class IntegratorUI extends BaseFrame {
    *         exists.
    */
   private BaseFrameTab getCurrentlySelectedPanel() {
-    // TODO: Implement and return a common interface for all possible tabs.
-    // This interface should also include a "updateButtons(getJMenuBar());" Method.
     if ((tabbedPane == null) || (tabbedPane.getSelectedIndex() < 0)) {
       return null;
     }
@@ -652,17 +673,6 @@ public class IntegratorUI extends BaseFrame {
       ReaderCache.saveIfRequired();
       
       SBProperties props = new SBProperties();
-      /*
-       * TODO: Save properties
-      File f = getInputFile(toolBar);
-      if (f != null && KEGGtranslatorIOOptions.INPUT.getRange().isInRange(f)) {
-        props.put(KEGGtranslatorIOOptions.INPUT, f);
-      }
-      props.put(KEGGtranslatorIOOptions.FORMAT, getOutputFileFormat(toolBar));
-      SBPreferences.saveProperties(KEGGtranslatorIOOptions.class, props);
-      
-      props.clear();
-      */
       if (openDir != null && openDir.length() > 1) {
         props.put(GUIOptions.OPEN_DIR, openDir);
       }

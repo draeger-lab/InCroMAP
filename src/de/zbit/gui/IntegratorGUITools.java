@@ -56,6 +56,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.gui.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.prefs.MergeTypeOptions;
@@ -187,16 +188,27 @@ public class IntegratorGUITools {
    * @return append
    */
   public static JPopupMenu createEnrichmentPopup(EnrichmentActionListener l, JPopupMenu append) {
-    
-    JMenuItem jm = new JMenuItem("Pathway enrichment");
-    jm.setActionCommand(EnrichmentActionListener.KEGG_ENRICHMENT);
-    append.add(jm);
-    jm.addActionListener(l);
-    
-    jm = new JMenuItem("Gene ontology enrichment");
-    jm.setActionCommand(EnrichmentActionListener.GO_ENRICHMENT);
-    append.add(jm);
-    jm.addActionListener(l);
+//    
+//    JMenuItem jm = new JMenuItem("Pathway enrichment");
+//    jm.setActionCommand(EnrichmentActionListener.KEGG_ENRICHMENT);
+//    append.add(jm);
+//    jm.addActionListener(l);
+//    
+//    jm = new JMenuItem("Gene ontology enrichment");
+//    jm.setActionCommand(EnrichmentActionListener.GO_ENRICHMENT);
+//    append.add(jm);
+//    jm.addActionListener(l);
+//    
+//    jm = new JMenuItem("MSigDB enrichments");
+//    jm.setActionCommand(EnrichmentActionListener.MSIGDB_ENRICHMENT);
+//    jm.setToolTipText("<html><body>Perform an enrichment, based on a gene set from "+
+//      "<a href=http://www.broadinstitute.org/gsea/>http://www.broadinstitute.org/gsea/</a>"+
+//      "</body></html>");
+//    append.add(jm);
+//    jm.addActionListener(l);
+    append.add(GUITools.createJMenuItem(l, Enrichments.KEGG_ENRICHMENT));
+    append.add(GUITools.createJMenuItem(l, Enrichments.GO_ENRICHMENT));
+    append.add(GUITools.createJMenuItem(l, Enrichments.MSIGDB_ENRICHMENT));
     
     return append;
   }

@@ -567,8 +567,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       
     } else if (Boolean.class.isAssignableFrom(o.getClass()) || o instanceof Boolean) {
       boolean ret = true;
-      for (Object o2: c)
+      for (Object o2: c) {
         ret &= NSwithProbes.getBooleanValue(o2);
+        if (!ret) break;
+      }
       return ret;
       
     } else {

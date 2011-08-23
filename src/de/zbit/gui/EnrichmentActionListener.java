@@ -18,10 +18,12 @@ import javax.swing.SwingWorker;
 import de.zbit.analysis.enrichment.AbstractEnrichment;
 import de.zbit.analysis.enrichment.GOEnrichment;
 import de.zbit.analysis.enrichment.KEGGPathwayEnrichment;
+import de.zbit.analysis.enrichment.MSigDB_GSEA_Enrichment;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.table.JTableFilter;
+import de.zbit.util.StringUtil;
 
 /**
  * Can handle enrichment actions for {@link IntegratorTab}s.
@@ -43,8 +45,58 @@ public class EnrichmentActionListener implements ActionListener {
    */
   boolean withDialog = false;
   
-  public final static String GO_ENRICHMENT = "GO";
-  public final static String KEGG_ENRICHMENT = "KEGG";
+  /**
+   * All available Enrichments are listed here.
+   * @author Clemens Wrzodek
+   */
+  public static enum Enrichments implements ActionCommand {
+    KEGG_ENRICHMENT,
+    GO_ENRICHMENT,
+    /**
+     * Enrichments from the MSigDB (Molecular Signatures Database)
+     * http://www.broadinstitute.org/gsea/
+     */
+    MSIGDB_ENRICHMENT;
+    
+    /*
+     * (non-Javadoc)
+     * 
+     * @see de.zbit.gui.ActionCommand#getName()
+     */
+    public String getName() {
+      switch (this) {
+      case KEGG_ENRICHMENT:
+        return "KEGG Pathway Enrichment";
+      case GO_ENRICHMENT:
+        return "GO Enrichment";
+      case MSIGDB_ENRICHMENT:
+        return "MSigDB Enrichment";
+        
+      default: // "Enrichment";
+        return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
+      }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see de.zbit.gui.ActionCommand#getToolTip()
+     */
+    public String getToolTip() {
+      switch (this) {
+        case KEGG_ENRICHMENT:
+          return "KEGG Pathway Enrichment";
+        case GO_ENRICHMENT:
+          return "Gene Ontology Enrichment";
+        case MSIGDB_ENRICHMENT:
+          return "Perform an enrichment, based on a gene set from "+
+          "<a href=http://www.broadinstitute.org/gsea/>http://www.broadinstitute.org/gsea/</a>";
+          
+        default:
+          return null; // Deactivate
+      }
+    }
+  }
   
   public EnrichmentActionListener(IntegratorTabWithTable source) {
     this.source = source;
@@ -76,15 +128,16 @@ public class EnrichmentActionListener implements ActionListener {
     SwingWorker<Collection<? extends NameAndSignals>, Void> worker = new ProgressWorker<Collection<? extends NameAndSignals>, Void>() {
       @Override
       protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
-        
         // Get Enrichment class
         final AbstractEnrichment<String> enrich;
         try {
           log.info("Downloading and reading enrichment file.");
-          if (e.getActionCommand().equals(GO_ENRICHMENT)) {
+          if (e.getActionCommand().equals(Enrichments.GO_ENRICHMENT.toString())) {
             enrich = new GOEnrichment(source.getSpecies(), progress);
-          } else if (e.getActionCommand().equals(KEGG_ENRICHMENT)) {
+          } else if (e.getActionCommand().equals(Enrichments.KEGG_ENRICHMENT.toString())) {
             enrich = new KEGGPathwayEnrichment(source.getSpecies(), progress);
+          } else if (e.getActionCommand().equals(Enrichments.MSIGDB_ENRICHMENT.toString())) {
+            enrich = new MSigDB_GSEA_Enrichment(source.getSpecies(), progress);
           } else {
             GUITools.showErrorMessage(source, String.format("Unknown enrichment command: %s", e.getActionCommand()));
             return null;
@@ -128,10 +181,11 @@ public class EnrichmentActionListener implements ActionListener {
     };
     
     // Create tab
+    String eName = Enrichments.valueOf(e.getActionCommand()).getName();
     NameAndSignalsTab tab = new NameAndSignalsTab(source.getIntegratorUI(), worker, loadingString, source.getSpecies());
-    String tip = getEnrichmentName(e.getActionCommand()) + " for " + geneList.size() + " objects";
+    String tip = eName + " for " + geneList.size() + " objects";
     if (source.getName()!=null) tip+= " from \"" + source.getName() + "\".";
-    source.getIntegratorUI().addTab(tab, getEnrichmentName(e.getActionCommand()), tip);
+    source.getIntegratorUI().addTab(tab, eName, tip);
     tab.setSourceTab(this.source);
   }
   
@@ -192,19 +246,4 @@ public class EnrichmentActionListener implements ActionListener {
     return geneList;
   }
   
-  
-  /**
-   * @param actionCommand
-   * @return
-   */
-  protected String getEnrichmentName(String actionCommand) {
-    if (actionCommand.equals(GO_ENRICHMENT)) {
-      return "GO Enrichment";
-    } else if (actionCommand.equals(KEGG_ENRICHMENT)) {
-      return "KEGG Pathway Enrichment";
-    } else {
-      return "Enrichment";
-    }
-  }
-
 }

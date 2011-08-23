@@ -385,7 +385,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    */
   private TranslatorPanel visualizePathway(String pwId, EnrichmentObject<?> pwo) {
     //Create the translator panel
-    TranslatorPanel pwTab = new TranslatorPanel(pwId,Format.GraphML, this);
+    TranslatorPanel pwTab = new TranslatorPanel(pwId,Format.JPG, this);
     String name = pwId;
     if (pwo!=null) {
       pwTab.setData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString(), pwo);

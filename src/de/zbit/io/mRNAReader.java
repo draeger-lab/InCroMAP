@@ -104,8 +104,7 @@ public class mRNAReader extends AbstractGeneBasedNSreader<mRNA> {
   }
 
   public static mRNAReader getExampleReader() throws IOException {
-    @SuppressWarnings("unchecked")
-    Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
+    Species species = new Species("Mus musculus", "_MOUSE", "mouse", "mmu", 10090);
     // New dataset
     mRNAReader r = new mRNAReader(3, IdentifierType.NCBI_GeneID, species);
     r.addSecondIdentifier(1, IdentifierType.GeneSymbol);
