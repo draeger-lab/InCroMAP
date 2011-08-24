@@ -448,6 +448,7 @@ public class miRNATargetReader {
     
     // Filter for HC and save again
     t_all.filterTargets("DIANA - microT v3.0", 7.3, true);
+    t_all.filterTargets("DIANA - microT v4.0", 0.3, true);
     t_all.filterTargets("ElMMo v4", 0.8, true);
     t_all.printSummary();
     

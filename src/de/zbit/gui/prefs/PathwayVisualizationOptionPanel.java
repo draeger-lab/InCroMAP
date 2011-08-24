@@ -17,7 +17,7 @@ import de.zbit.gui.NodeShapeSelector;
  * Enable an option tab for the {@link PathwayVisualizationOptions}.
  * @author Clemens Wrzodek
  */
-public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvider {
+public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProviders {
   private static final long serialVersionUID = 4574493372860651243L;
 
   /**
@@ -26,9 +26,19 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
    */
   public PathwayVisualizationOptionPanel()
     throws IOException {
-    super(PathwayVisualizationOptions.class);
-    changeFCSpinnerStepsize();
-    changeNodeShapeSelector();
+    super("MyTITLE", PathwayVisualizationOptions.class, SignalOptions.class);
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.gui.prefs.PreferencesPanelForKeyProvider#init()
+   */
+  @Override
+  public void init() {
+    super.init();
+    if (getComponentCount()>0) {
+      changeFCSpinnerStepsize();
+      changeNodeShapeSelector();
+    }
   }
 
   /**
@@ -36,7 +46,7 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
    */
   private void changeNodeShapeSelector() {
     Object c = option2component.get(PathwayVisualizationOptions.CHANGE_NODE_SHAPE);
-    if (c instanceof JLabeledComponent) {
+    if (c!=null && c instanceof JLabeledComponent) {
       Object c2 = ((JLabeledComponent)c).getColumnChooser();
       if (c2 instanceof JComboBox) {
         ((JComboBox)c2).setRenderer(new NodeShapeSelector());

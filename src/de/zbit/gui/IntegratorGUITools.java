@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,11 +60,17 @@ import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.csv.CSVImporterV2;
+import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.MergeTypeOptions;
 import de.zbit.gui.prefs.SignalOptionPanel;
 import de.zbit.integrator.VisualizeDataInPathway;
+import de.zbit.io.DNAMethylationReader;
+import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.OpenFile;
+import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.SBFileFilter;
+import de.zbit.io.mRNAReader;
+import de.zbit.io.miRNAReader;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorPanel;
@@ -211,6 +218,46 @@ public class IntegratorGUITools {
     append.add(GUITools.createJMenuItem(l, Enrichments.MSIGDB_ENRICHMENT));
     
     return append;
+  }
+  
+  /**
+   * Lets the user choose a {@link NameAndSignalReader} that should be
+   * used to read his data.
+   * @return any Class, derived from {@link NameAndSignalReader}.
+   */
+  @SuppressWarnings("rawtypes")
+  public static Class<?> createInputDataTypeChooser() {
+    
+    // Build a custom list with LabeledObject
+    Vector<LabeledObject<Class<?>>> itemsForModel = new Vector<LabeledObject<Class<?>>>();
+    List<Class> values = IntegratorIOOptions.READER.getRange().getAllAcceptableValues();
+    for (Class<?> value: values) {
+      if (value.equals(mRNAReader.class)) {
+        itemsForModel.add(0,new LabeledObject<Class<?>>("messenger RNA", value));
+      } else if (value.equals(miRNAReader.class)) {
+        itemsForModel.add(Math.min(itemsForModel.size(), 1), new LabeledObject<Class<?>>("micro RNA", value));
+      } else if (value.equals(ProteinModificationReader.class)) {
+        itemsForModel.add(Math.min(itemsForModel.size(), 2), new LabeledObject<Class<?>>("Protein modification data", value));
+      } else if (value.equals(DNAMethylationReader.class)) {
+        itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("DNA methylation data", value));
+      } else {
+        itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>(value.getSimpleName(), value));
+      }
+    }
+    
+    // Build the actual component
+    JLabeledComponent outputFormat = new JLabeledComponent("Please select the input data type", true, itemsForModel);
+    outputFormat.setSortHeaders(false);
+    outputFormat.setHeaders(itemsForModel);
+    
+    // Let user choose
+    int button = JOptionPane.showOptionDialog(IntegratorUI.getInstance(), outputFormat, IntegratorUI.appName,
+      JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+    
+    // Return chosen class
+    if (button!=JOptionPane.OK_OPTION) return null;
+    LabeledObject<Class<?>> selected = (LabeledObject<Class<?>>) outputFormat.getSelectedItem();
+    return selected.getObject();
   }
   
   /**

@@ -115,6 +115,5 @@ public class mRNAReader extends AbstractGeneBasedNSreader<mRNA> {
     
     return r;
   }
-
   
 }

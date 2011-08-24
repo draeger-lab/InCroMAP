@@ -852,7 +852,8 @@ public class VisualizeDataInPathway {
       // Write all those signals to node annotations
       writeSignalsToNode(n, sorted, tabName, experimentName, type);
     }
-    // TODO: Change eventual DNA methylation box-heights
+    // TODO: Change eventual DNA methylation box-heights. If so,
+    // Change also on REMOVAL of prot mod data.
   }
   
   /**
@@ -882,15 +883,17 @@ public class VisualizeDataInPathway {
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
     
     // TODO: Ensure Gene/Modification centric data!
-    
     // TODO: If fold change, always maxWidth and change color.
+    // TODO: Better show pValue AND fold-change!
+    // (via position: left/right of node OR color).
     
     for (Node n: n2ns.keySet()) {
       Set<T> nsForNode = n2ns.get(n);
       if (nsForNode==null) continue;
       
       NodeRealizer nr = graph.getRealizer(n);
-      double barHeight = nr.getHeight() + tools.getNumberOfLabels(n, NodeLabel.SIDES) * boxHeight;
+      // TODO: Also stretch to prot. mod. labels?
+      double barHeight = nr.getHeight();// + tools.getNumberOfLabels(n, NodeLabel.SIDES) * boxHeight;
       for (T ns: nsForNode) {
         double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
         if (Double.isNaN(signalValue)) continue;

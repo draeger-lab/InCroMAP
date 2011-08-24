@@ -43,6 +43,7 @@ import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.integrator.ReaderCache;
+import de.zbit.io.DNAMethylationReader;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.mRNAReader;
@@ -151,7 +152,7 @@ public class IntegratorUI extends BaseFrame {
      */
     LOAD_PROTEIN_MODIFICATION,
     /**
-     * {@link Action} to load data with the // TODO: Reader
+     * {@link Action} to load data with the {@link DNAMethylationReader}
      */
     LOAD_DNA_METHYLATION,
     /**
@@ -257,18 +258,8 @@ public class IntegratorUI extends BaseFrame {
     // Set default values for KEGGtranslator
     KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
-    SBProperties props = SBPreferences.analyzeCommandLineArguments(getStaticCommandLineOptions(), args);
-    
-    // TODO: Test Class as option type:
-    // - Command line help text AND F1 help text for readability
-    // - Test if submitting as argument works correctly
-    // - Test if default value (if no argument) works correctly
-    // - Test JLabeledComponent and enhance String (toSimpleName()).
-    
-    
-    //    Class t = Option.getClassFromRange(IntegratorIOOptions.READER, miRNAReader.class.getSimpleName());
-    //    System.out.println(t);
-    //    System.out.println(IntegratorIOOptions.READER.getRange().isInRange(miRNAReader.class));
+    // SBProperties props = 
+    SBPreferences.analyzeCommandLineArguments(getStaticCommandLineOptions(), args);
     
     // Set the often used KeggTranslator methods to use this appName as application name
     Translator.APPLICATION_NAME = appName;
@@ -282,13 +273,13 @@ public class IntegratorUI extends BaseFrame {
         ui.toFront();
         
         try {
-          mRNAReader r = mRNAReader.getExampleReader();
-          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example_mRNA");
-          
-          miRNAReader r2 = new miRNAReader(1,0);
-          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorGUITools.organisms.get(1)), "Example_miRNA");
+//          mRNAReader r = mRNAReader.getExampleReader();
+//          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example_mRNA");
+//          
+//          miRNAReader r2 = new miRNAReader(1,0);
+//          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+//          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+//          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorGUITools.organisms.get(1)), "Example_miRNA");
           
         } catch (Exception e) {e.printStackTrace();}
         
@@ -554,8 +545,7 @@ public class IntegratorUI extends BaseFrame {
   }
   
   public void openDNAmethylationFile() {
-    // TODO: DNA methylation Reader
-    openFile(null, mRNAReader.class);
+    openFile(null, DNAMethylationReader.class);
   }
   
   public void openMiRNAfile() {
@@ -792,19 +782,8 @@ public class IntegratorUI extends BaseFrame {
     // Ask file format
     if ( (reader == null) || (reader.length < 1) || (reader.length==1 && reader[0]==null)) {
       reader = new Class[1];
-      JLabeledComponent outputFormat = (JLabeledComponent) PreferencesPanel.getJComponentForOption(IntegratorIOOptions.READER, prefsIO, null);
-      outputFormat.setTitle("Please select the input data type");
-      //JOptionPane.showMessageDialog(this, outputFormat, getApplicationName(), JOptionPane.QUESTION_MESSAGE);
-      // Equals:
-      int button = JOptionPane.showOptionDialog(this, outputFormat, getApplicationName(), JOptionPane.DEFAULT_OPTION, 
-        JOptionPane.QUESTION_MESSAGE, null, null, null);
-      if (button!=JOptionPane.OK_OPTION) return null;
-        
-      if (Class.class.isAssignableFrom(outputFormat.getSelectedItem().getClass())) {
-        reader[0] = (Class<?>) outputFormat.getSelectedItem();
-      } else {
-        reader[0] = Option.getClassFromRange(IntegratorIOOptions.READER, outputFormat.getSelectedItem().toString());
-      }
+      reader[0] = IntegratorGUITools.createInputDataTypeChooser();
+      if (reader[0]==null) return null; // Cancel pressed
     }
     
     // Read all files and add tabs
