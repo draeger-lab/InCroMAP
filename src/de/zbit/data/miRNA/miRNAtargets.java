@@ -12,20 +12,22 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import uk.ac.shef.wit.simmetrics.similaritymetrics.AbstractStringMetric;
-import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 import de.zbit.data.ObjectAndScore;
 import de.zbit.exception.CorruptInputStreamException;
 import de.zbit.io.CSVwriteable;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.SortedArrayList;
+import de.zbit.util.Utils;
 
 /**
  * A class to hold miRNA and collections of targets.
  * @author Clemens Wrzodek
  */
 public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRNAtargets> {
+  public static final transient Logger log = Logger.getLogger(miRNAtargets.class.getName());
   private static final long serialVersionUID = -7099618219166758343L;
   
   /**
@@ -223,8 +225,9 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
      * String distance metric. See
      * http://staffwww.dcs.shef.ac.uk/people/sam.chapman@k-now.co.uk/simmetrics/index.html
      */
-    AbstractStringMetric metric = new Levenshtein();
-    float[] score = metric.batchCompareSet(miRNAs, miRNAsymbol);
+//    AbstractStringMetric metric = new Levenshtein();
+//    float[] score = metric.batchCompareSet(miRNAs, miRNAsymbol);
+    float[] score = new float[miRNAs.length]; // XXX: TEMP because method is unused
     
     // Simple output. TODO: Computationally take best or such...
     ObjectAndScore<String>[] hits = new ObjectAndScore[miRNAs.length];
@@ -322,6 +325,11 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
    * @param removeAllBelow
    */
   public void filterTargets(String predictionAlgorithm, double threshold, boolean removeAllBelow) {
+    if (targets==null) return;
+    int numTargets=0;
+    if (log.isLoggable(Level.FINE)) {
+      numTargets = sizeOfTargets();
+    }
     // Filter all miRNAs
     Iterator<Map.Entry<String, Collection<miRNAtarget>>> tit = targets.entrySet().iterator();
     while (tit.hasNext()) {
@@ -343,12 +351,19 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
       // Remove miRNAs without targets
       if (targetList.size()<1) tit.remove();
     }
+    if (log.isLoggable(Level.FINE)) {
+      int curTargets=sizeOfTargets();
+      log.fine(String.format("Filter results for '%s' all %s %s:", predictionAlgorithm, removeAllBelow?"below":"above", threshold));
+      log.fine(String.format("Removed %s targets (old:%s now:%s => %s%%).",
+        (numTargets-curTargets), numTargets, curTargets, Utils.round(100-(curTargets/(double)numTargets*100.0), 2) ));
+    }
   }
   
   /**
    * Removes all predicted targets.
    */
   public void filterTargetsOnlyExperimental() {
+    if (targets==null) return;
     // Filter all miRNAs
     Iterator<Map.Entry<String, Collection<miRNAtarget>>> tit = targets.entrySet().iterator();
     while (tit.hasNext()) {
@@ -382,6 +397,7 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
    * is starting with this string.
    */
   public void removeTargetsFrom(String sourceNameStartingWith) {
+    if (targets==null) return;
     // Filter all miRNAs
     Iterator<Map.Entry<String, Collection<miRNAtarget>>> tit = targets.entrySet().iterator();
     while (tit.hasNext()) {

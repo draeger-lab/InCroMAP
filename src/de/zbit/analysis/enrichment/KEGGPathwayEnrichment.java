@@ -90,9 +90,9 @@ public class KEGGPathwayEnrichment extends AbstractEnrichment<String> {
    * @param args
    * @throws Exception 
    */
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws Exception {
-    Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
+    //Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
+    Species species = new Species("Mus musculus", "_MOUSE", "Mouse", "mmu", 10090);
     
     KEGGPathwayEnrichment e = new KEGGPathwayEnrichment(species,new ProgressBar(0));
     

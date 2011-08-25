@@ -423,9 +423,9 @@ public class miRNA2mRNA_pair {
    * @param offset
    * @throws Exception
    */
-  @SuppressWarnings("unchecked")
   private static void pairData(String experimentName, int offset) throws Exception {
-    Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
+    //Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
+    Species species = new Species("Mus musculus", "_MOUSE", "Mouse", "mmu", 10090);
     
     // Read mRNA
     System.out.println("Reading mRNA"); Timer t = new Timer();

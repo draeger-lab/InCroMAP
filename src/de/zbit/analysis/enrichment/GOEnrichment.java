@@ -87,9 +87,9 @@ public class GOEnrichment extends AbstractEnrichment<String>  {
    * @param args
    * @throws Exception 
    */
-  @SuppressWarnings("unchecked")
   public static void main(String[] args) throws Exception {
-    Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
+    //Species species = Species.search((List<Species>)Species.loadFromCSV("species.txt"), "mouse", -1);
+    Species species = new Species("Mus musculus", "_MOUSE", "Mouse", "mmu", 10090);
     
     GOEnrichment e = new GOEnrichment(species,new ProgressBar(0));
     System.out.println("Reading file completed.");

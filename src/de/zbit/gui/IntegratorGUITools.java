@@ -94,11 +94,15 @@ public class IntegratorGUITools {
   static {
     // Load list of acceptable species
     List<Species> l=null;
-    try {
-      l =(List<Species>) Utils.loadGZippedObject(OpenFile.searchFileAndGetInputStream("species/hmr_species_list.dat"));
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+//    try {
+//      l =(List<Species>) Utils.loadGZippedObject(OpenFile.searchFileAndGetInputStream("species/hmr_species_list.dat"));
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
+    l = new ArrayList<Species>(3);
+    l.add( new Species("Homo sapiens", "_HUMAN", "Human", "hsa", 9606) );
+    l.add( new Species("Mus musculus", "_MOUSE", "Mouse", "mmu", 10090) );
+    l.add( new Species("Rattus norvegicus", "_RAT", "Rat", "rno", 10116) );
     organisms = l;
   }
   
@@ -654,30 +658,36 @@ public class IntegratorGUITools {
       lh.add(orgSel);
     }
     
+    // For rat, no Diana, Targetscan and no TarBase is available
+    boolean isRat = (species!=null && species.getCommonName().equalsIgnoreCase("Rat"));
+    
     // Create only experimental button
     final JCheckBox onlyExperimental = new JCheckBox("Only experimentally validated targets");
     onlyExperimental.setSelected(false);
     lh.add(onlyExperimental);
     
     // One button per data source
-    JPanel dbs = new JPanel(new GridLayout(6, 1));
+    JPanel dbs = new JPanel(new GridLayout(0,1));
     final JCheckBox miRecords = new JCheckBox("miRecords v3", true);
-    final JCheckBox miRTarBase = new JCheckBox("miRTarBase", true);
-    final JCheckBox tarBase = new JCheckBox("TarBase V5.0", true);
+    final JCheckBox miRTarBase = new JCheckBox("miRTarBase 2.4", true);
+    final JCheckBox tarBase = new JCheckBox("TarBase V5.0c", true);
     
-    final JCheckBox DIANA = new JCheckBox("DIANA - microT v3.0", false);
-    final JCheckBox ElMMo = new JCheckBox("ElMMo v4", false);
-    final JCheckBox TargetScan = new JCheckBox("TargetScan v5.1", false);
+    final JCheckBox DIANA = new JCheckBox("DIANA - microT v4.0", false);
+    final JCheckBox ElMMo = new JCheckBox("ElMMo v5", false);
+    final JCheckBox TargetScan = new JCheckBox("TargetScan v5.2", false);
     DIANA.setToolTipText("Predicted \"" + DIANA.getText() + "\" targets. Only high confidence targets are included.");
     ElMMo.setToolTipText("Predicted \"" + ElMMo.getText() + "\" targets. Only high confidence targets are included.");
     TargetScan.setToolTipText("Predicted \"" + TargetScan.getText() + "\" targets. Only high confidence targets are included.");
     
-    dbs.add(miRecords); dbs.add(miRTarBase); dbs.add(tarBase);
-    dbs.add(DIANA); dbs.add(ElMMo); dbs.add(TargetScan);
+    dbs.add(miRecords); dbs.add(miRTarBase); if (!isRat) dbs.add(tarBase);
+    dbs.add(ElMMo); if (!isRat) {dbs.add(DIANA);  dbs.add(TargetScan);}
     dbs.setBorder(BorderFactory.createTitledBorder("Select databases to load"));
     lh.add(dbs);
     
     // Enable and disable predictions on only-experimental click
+    if (isRat) {
+      tarBase.setSelected(false); DIANA.setSelected(false); TargetScan.setSelected(false);
+    }
     onlyExperimental.addChangeListener(new ChangeListener() {
       @Override
       public void stateChanged(ChangeEvent e) {
@@ -699,26 +709,38 @@ public class IntegratorGUITools {
       if (orgSel!=null) species = (Species) orgSel.getSelectedItem();
       log.info("Loading microRNA target file for " + species + ".");
       
+      boolean isExperimentalSelected = miRecords.isSelected()||miRTarBase.isSelected()||tarBase.isSelected();
+      boolean isPredictedSelected = !onlyExperimental.isSelected() && (DIANA.isSelected()||ElMMo.isSelected()||TargetScan.isSelected());
+      
       // Load targets
-      miRNAtargets t_all;
+      miRNAtargets t_all=null;
       // XXX: Show loading message here.
       try {
-        t_all = (miRNAtargets) Utils.loadGZippedObject(
-          OpenFile.searchFileAndGetInputStream("miRNA_targets/" + species.getNCBITaxonID() + "_HC.dat"));
-        if (t_all==null) throw new IOException("Could not read miRNA target file.");
+        if (isExperimentalSelected) {
+          log.fine("Loading experimental miRNA targets");
+          t_all = (miRNAtargets) Utils.loadGZippedObject(
+            OpenFile.searchFileAndGetInputStream("miRNA_targets/" + species.getNCBITaxonID() + ".dat"));
+        } if (isPredictedSelected) {
+          log.fine("Loading predicted miRNA targets");
+          miRNAtargets t = (miRNAtargets) Utils.loadGZippedObject(
+            OpenFile.searchFileAndGetInputStream("miRNA_targets/" + species.getNCBITaxonID() + "_HC.dat"));
+          if (t_all==null) t_all = t; else t_all.addAll(t);
+        }
+        if (t_all==null) throw new IOException("Could not read miRNA target file or no targets have been selected.");
       } catch (IOException e) {
         GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
         return null;
       }
       
       // Filter targets
-      if (onlyExperimental.isSelected()) t_all.filterTargetsOnlyExperimental();
-      if (!miRecords.isSelected()) t_all.removeTargetsFrom("miRecords");
-      if (!miRTarBase.isSelected()) t_all.removeTargetsFrom("miRTarBase");
-      if (!tarBase.isSelected()) t_all.removeTargetsFrom("TarBase");
-      if (!DIANA.isSelected()) t_all.removeTargetsFrom("DIANA");
-      if (!ElMMo.isSelected()) t_all.removeTargetsFrom("ElMMo");
-      if (!TargetScan.isSelected()) t_all.removeTargetsFrom("TargetScan");
+      if (isPredictedSelected && onlyExperimental.isSelected()) t_all.filterTargetsOnlyExperimental();
+      if (isPredictedSelected && !DIANA.isSelected()) t_all.removeTargetsFrom("DIANA");
+      if (isPredictedSelected && !TargetScan.isSelected()) t_all.removeTargetsFrom("TargetScan");
+      if (isPredictedSelected && !ElMMo.isSelected()) t_all.removeTargetsFrom("ElMMo");
+      if (isExperimentalSelected && !miRecords.isSelected()) t_all.removeTargetsFrom("miRecords");
+      if (isExperimentalSelected && !miRTarBase.isSelected()) t_all.removeTargetsFrom("miRTarBase");
+      if (isExperimentalSelected && !tarBase.isSelected()) t_all.removeTargetsFrom("TarBase");
+
       
       log.info(StatusBar.defaultText);
       return new ValuePair<miRNAtargets, Species>(t_all, species);

@@ -95,6 +95,7 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     SwingWorker<Collection<? extends NameAndSignals>, Void> worker = new SwingWorker<Collection<? extends NameAndSignals>, Void>() {
       @Override
       protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
+        nsreader.setSecondaryProgressBar(IntegratorUI.getInstance().getStatusBar().showProgress());
         Collection<? extends NameAndSignals> col = nsreader.importWithGUI(parent, inFile, ReaderCache.getCache());
         thiss.species = nsreader.getSpecies();
         return col; // col==null if cancel button pressed
@@ -102,7 +103,6 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     };
     worker.addPropertyChangeListener(this);
     worker.execute();
-    
   }
   
   public NameAndSignalsTab(final IntegratorUI parent, final SwingWorker<Collection<? extends NameAndSignals>, Void> nsworker, String loadingMessage) {
@@ -141,6 +141,7 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
       new SwingWorker<Collection<? extends NameAndSignals>, Void>() {
         @Override
         protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
+          nsreader.setSecondaryProgressBar(IntegratorUI.getInstance().getStatusBar().showProgress());
           Collection<? extends NameAndSignals> col = nsreader.read(genes);
           return col; // col==null if cancel button pressed
         }

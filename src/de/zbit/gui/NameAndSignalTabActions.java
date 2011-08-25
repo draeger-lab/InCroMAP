@@ -252,6 +252,7 @@ public class NameAndSignalTabActions implements ActionListener {
       GUITools.showMessage("Not yet implemented.", "");
       
     } else if (command.equals(NSAction.ADD_GENE_SYMBOLS.toString())) {
+      log.info("Converting GeneIDs to Gene symbols.");
       showGeneSymbols();
       
     } else if (command.equals(NSAction.ANNOTATE_TARGETS.toString())) {

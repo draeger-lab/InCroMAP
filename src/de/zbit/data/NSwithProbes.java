@@ -295,7 +295,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
     * @throws Exception
     */
    public static void convertNamesToGeneSymbols(List<? extends NameAndSignals> data, Species species) throws Exception {
-     log.info("Loading GeneSymbol mapping...");
+     log.config("Loading GeneSymbol mapping...");
      GeneID2GeneSymbolMapper mapper = IntegratorGUITools.get2GeneSymbolMapping(species);
      for (NameAndSignals m: data) {
        if (m instanceof miRNA) {
@@ -316,7 +316,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
          return;
        }
      }
-     log.info("Converted GeneIDs to Gene symbols.");
+     log.config("Converted GeneIDs to Gene symbols.");
    }
    
 }

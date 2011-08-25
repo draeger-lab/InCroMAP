@@ -280,11 +280,11 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   public Collection<T> read(CSVReader inputCSV) throws IOException, Exception {
     // Init Mapper (primary for idType)
     if (!idType.equals(IdentifierType.NCBI_GeneID)) {
-      mapper = MappingUtils.initialize2GeneIDMapper(idType, progress, species);
+      mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
     } else if (secondID!=null) {
       // Only if primary identifier does not require a mapper,
       // init one for the secondary identifier
-      mapper = MappingUtils.initialize2GeneIDMapper(secondID.getB(), progress, species);
+      mapper = MappingUtils.initialize2GeneIDMapper(secondID.getB(), getSecondaryProgressBar(), species);
     }
     if (mapper!=null) mapper.readMappingData();
     
@@ -303,7 +303,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   public Collection<T> read(String[] identifiers) throws IOException, Exception {
     // Init Mapper (primary for idType)
     if (!idType.equals(IdentifierType.NCBI_GeneID)) {
-      mapper = MappingUtils.initialize2GeneIDMapper(idType, progress, species);
+      mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
     }
     if (mapper!=null) mapper.readMappingData();
     

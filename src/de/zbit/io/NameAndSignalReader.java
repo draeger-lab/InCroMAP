@@ -65,6 +65,14 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
   protected AbstractProgressBar progress;
   
   /**
+   * This should be used as a secondary progress bar. I.e.
+   * if a temporary mapping file must be read, etc.
+   * {@link #progress} should only be used for the real
+   * input file reading progress, OR if this is null.
+   */
+  protected AbstractProgressBar secondaryProgress;
+  
+  /**
    * Import a file with a GUI. There are many helper methods that allow to quickly
    * implement this method:<ol><li>Create {@link ExpectedColumn}s by using
    * {@link #getExpectedSignalColumns(int)} and adding you own columns (especially
@@ -359,6 +367,28 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
   public AbstractProgressBar getProgressBar() {
     return this.progress;
   }
+
+  /**
+   * @return the secondary progress bar if this is not null.
+   * If the secondary progress bar is null, the primary
+   * {@link #getProgressBar()} will be returned.
+   */
+  public AbstractProgressBar getSecondaryProgressBar() {
+    return secondaryProgress!=null?secondaryProgress:getProgressBar();
+  }
+
+  /**
+   * Set a secondary progress bar.
+   * This is used if a temporary mapping file must be read, etc.
+   * Whereas {@link #progress} is used for the real input file reading progress,
+   * OR if this secondary bar is null.
+   * @param secondaryProgress the secondaryProgress to set
+   */
+  public void setSecondaryProgressBar(AbstractProgressBar secondaryProgress) {
+    this.secondaryProgress = secondaryProgress;
+  }
+  
+  
 
 
 }

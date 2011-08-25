@@ -25,7 +25,6 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
@@ -36,12 +35,10 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
 import de.zbit.data.NameAndSignals;
-import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
-import de.zbit.gui.prefs.PreferencesPanel;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.DNAMethylationReader;
 import de.zbit.io.NameAndSignalReader;
@@ -59,7 +56,6 @@ import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 import de.zbit.util.logging.LogUtil;
 import de.zbit.util.prefs.KeyProvider;
-import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.SBPreferences;
 import de.zbit.util.prefs.SBProperties;
 import de.zbit.visualization.VisualizeMicroRNAdata;
@@ -254,7 +250,7 @@ public class IntegratorUI extends BaseFrame {
    * @throws IOException 
    */
   public static void main(String[] args) throws IOException {
-    LogUtil.initializeLogging(Level.FINER,(String[])null);
+    LogUtil.initializeLogging(Level.INFO,(String[])null);
     // Set default values for KEGGtranslator
     KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);

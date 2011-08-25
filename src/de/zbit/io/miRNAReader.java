@@ -175,7 +175,8 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
     super.init();
     // Initialized the miRNAname to gene id mapper.
     try {
-      miRNA2GeneIdMapper = new MicroRNAsn2GeneIDMapper(getProgressBar());
+      miRNA2GeneIdMapper = new MicroRNAsn2GeneIDMapper(getSecondaryProgressBar());
+      miRNA2GeneIdMapper.initialize();
     } catch (IOException e) {
       GUITools.showErrorMessage(null, e);
       miRNA2GeneIdMapper=null;
