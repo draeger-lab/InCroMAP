@@ -71,6 +71,11 @@ public class NameAndSignalTabActions implements ActionListener {
      * immediately colors nodes according fold changes.
      */
     VISUALIZE_IN_PATHWAY,
+    /**
+     * Same as {@link #VISUALIZE_IN_PATHWAY} but restricts
+     * the data to the current table selection.
+     */
+    VISUALIZE_SELETED_DATA_IN_PATHWAY,
     SEARCH_TABLE,
     INTEGRATE,
     ADD_GENE_SYMBOLS,
@@ -115,7 +120,9 @@ public class NameAndSignalTabActions implements ActionListener {
     public String getToolTip() {
       switch (this) {
         case VISUALIZE_IN_PATHWAY:
-          return "Show a KEGG pathway and color nodes accoring to fold changes.";
+          return "Show a KEGG pathway and visualize the selected data (e.g., color nodes accoring to fold changes).";
+        case VISUALIZE_SELETED_DATA_IN_PATHWAY:
+          return "Show a KEGG pathway and visualize only the selected items in this pathway.";
         case ADD_GENE_SYMBOLS:
           return "Show gene symbols as names, using a NCBI gene id to gene symbol converter.";
           
@@ -317,6 +324,21 @@ public class NameAndSignalTabActions implements ActionListener {
     int annot = miRNA.link_miRNA_and_targets(t_all.getA(), (Collection<miRNA>) parent.getData());
     log.info(String.format("Annotated %s/%s microRNAs with targets.", annot, parent.getData().size()));
     
+    // Convert IN BACKGROUND (new thread) ids to symbols
+    showGeneSymbols_InNewThread();
+    
+    parent.rebuildTable();
+    parent.repaint();
+  }
+
+
+
+
+  /**
+   * Calls the {@link #showGeneSymbols()} method in a new thread and repaints
+   * the parent if this is done.
+   */
+  public void showGeneSymbols_InNewThread() {
     // Convert geneIDs to gene symbols.
     SwingWorker<Void, Void> convertToGeneSymbolsInBackground = new SwingWorker<Void, Void>() {
       @Override
@@ -330,10 +352,6 @@ public class NameAndSignalTabActions implements ActionListener {
       }
     };
     convertToGeneSymbolsInBackground.execute();
-    
-    
-    parent.rebuildTable();
-    parent.repaint();
   }
   
   /**

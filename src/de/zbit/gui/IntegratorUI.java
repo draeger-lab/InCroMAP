@@ -4,8 +4,11 @@
  */
 package de.zbit.gui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
@@ -23,8 +26,10 @@ import java.util.prefs.BackingStoreException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
@@ -34,6 +39,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
+import y.view.Graph2D;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNAtargets;
@@ -52,6 +58,7 @@ import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
+import de.zbit.util.TranslatorTools;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 import de.zbit.util.logging.LogUtil;
@@ -125,6 +132,11 @@ public class IntegratorUI extends BaseFrame {
    * preferences is holding all project specific preferences
    */
   private SBPreferences prefsIO;
+  
+  /**
+   * This label should always display the species of a currently selected tab.
+   */
+  private JLabel speciesLabel;
   
   public static enum Action implements ActionCommand {
     /**
@@ -311,6 +323,8 @@ public class IntegratorUI extends BaseFrame {
     }
     setIconImages(icons);*/
     
+    initStatusBarSpeciesLabel();
+    
     instance = this;
   }
   
@@ -321,6 +335,24 @@ public class IntegratorUI extends BaseFrame {
     if (prefsIO == null) {
       prefsIO = SBPreferences.getPreferencesFor(IntegratorIOOptions.class);
     }
+  }
+  
+  /**
+   * Places a new label on the {@link #getStatusBar()}s right side,
+   * displaying the species of each selected tab.
+   */
+  private void initStatusBarSpeciesLabel() {
+    // Create a smaller panel for the statusBar
+    Dimension panelSize = new Dimension(200, 15);
+    JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    panel.setOpaque(false);
+    panel.setPreferredSize(panelSize);
+    speciesLabel = new JLabel();
+    speciesLabel.setOpaque(false);
+    speciesLabel.setHorizontalTextPosition(JLabel.RIGHT);
+    panel.add(speciesLabel);
+    
+    statusBar.add(panel, BorderLayout.EAST);
   }
   
   
@@ -574,8 +606,10 @@ public class IntegratorUI extends BaseFrame {
     ValuePair<miRNAtargets, Species> vp = IntegratorGUITools.loadMicroRNAtargets(null);
     if (vp==null || vp.getA()==null) return; // Cancel pressed
 
-    // Add as tab
-    addTab(new NameAndSignalsTab(this, vp.getA(), vp.getB()), "miRNA targets (" + vp.getB().getCommonName() + ")");
+    // Add as tab and annotate symbols in background
+    NameAndSignalsTab nsTab = new NameAndSignalsTab(this, vp.getA(), vp.getB());
+    addTab(nsTab, "miRNA targets (" + vp.getB().getCommonName() + ")");
+    nsTab.getActions().showGeneSymbols_InNewThread();
   }
   
   public void openPathwayTab() {
@@ -610,8 +644,17 @@ public class IntegratorUI extends BaseFrame {
   public void updateButtons() {
     GUITools.setEnabled(false, getJMenuBar(), BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
     BaseFrameTab o = getCurrentlySelectedPanel();
+    Species currentSpecies = null;
     if (o != null) {
       if (o instanceof TranslatorPanel) {
+        
+        // Try to get species from graph panel
+        String specKegg = TranslatorTools.getOrganismKeggAbbrFromGraph((Graph2D) ((TranslatorPanel) o).getDocument());
+        if (specKegg!=null) {
+          currentSpecies = Species.search(IntegratorGUITools.organisms, specKegg, Species.KEGG_ABBR);
+        }
+        // ----
+        
         TranslatorTabActions actions = translatorActionMap.get(o);
         if (actions==null) {
           actions = new TranslatorTabActions((TranslatorPanel)o);
@@ -619,12 +662,19 @@ public class IntegratorUI extends BaseFrame {
         }
         actions.createJToolBarItems(toolBar);
         actions.updateToolbarButtons(toolBar);
+      } else if (o instanceof IntegratorTab) {
+        currentSpecies = ((IntegratorTab<?>) o).getSpecies(false);
       }
+      
       o.updateButtons(getJMenuBar(), getJToolBar());
     } else {
       // Reset toolbar
       createJToolBarForNoTabs(toolBar);
     }
+    
+    // Display the current species.
+    String specLabel = currentSpecies!=null?"Species: " + currentSpecies.getName():"";
+    if (speciesLabel!=null) speciesLabel.setText(specLabel);
   }
   
   /**

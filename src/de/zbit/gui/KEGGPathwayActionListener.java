@@ -96,6 +96,18 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       } catch (Exception e1) {
         GUITools.showErrorMessage(null, e1);
       }
+      
+    } else if (e.getActionCommand().equals(NSAction.VISUALIZE_SELETED_DATA_IN_PATHWAY.toString())) {
+      try {
+        if (source instanceof IntegratorTabWithTable) {
+          // TODO: Implement functionality to limit visualization to selected data.
+          @SuppressWarnings("unused")
+          List<?> toVisualize = ((IntegratorTabWithTable) source).getSelectedItems();
+        }
+        visualizeAndColorPathway();
+      } catch (Exception e1) {
+        GUITools.showErrorMessage(null, e1);
+      }
             
     } else if (e.getActionCommand().equals(TPAction.VISUALIZE_DATA.toString()) &&
         source instanceof TranslatorPanel) {
@@ -419,8 +431,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       if (source.getDocument()==null) return; // Is Ready check
       organism = TranslatorTools.getOrganismKeggAbbrFromGraph((Graph2D) source.getDocument());
     }
-
-
+    
     // Create pathway and experiment selectors
     final PathwaySelector selector = new PathwaySelector(Translator.getFunctionManager(),null, organism);
     final JLabeledComponent expSel;
@@ -442,16 +453,34 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
 
     // Make one panel of both selectors
     JPanel ret = new JPanel(new BorderLayout());
-    ret.add(selector, BorderLayout.NORTH);
+    ret.add(selector, BorderLayout.CENTER);
     if (expSel!=null) {
       ret.add(expSel, BorderLayout.SOUTH);
     }
+    
+    // Create a chooser for existing tabs
+    /* If one has time, this could be implemented.
+     * TO-DO then: Pathway-tabs need to be filtered to allow only
+     * same species as data tab.*/
+//    JLabeledComponent tabSelect = IntegratorGUITools.createSelectPathwayTabBox(IntegratorUI.getInstance());
+//    if (tabSelect!=null && tabSelect.getColumnChooser()!=null && (tabSelect.getColumnChooser() instanceof JComboBox)
+//        && ((JComboBox) tabSelect.getColumnChooser()).getItemCount()>0) {
+//      JComboBox box = (JComboBox) tabSelect.getColumnChooser();
+//      box.addItem("<Create a new pathway tab>");
+//      box.addActionListener(new ActionListener() {
+//        @Override
+//        public void actionPerformed(ActionEvent e) {
+//          System.out.println(e);
+//        }
+//      });
+//      ret.add(tabSelect, BorderLayout.NORTH);
+//    }
 
     // Let user chooser
     int val = JOptionPane.showConfirmDialog((Component)source, ret, UIManager.getString("OptionPane.titleText"), JOptionPane.OK_CANCEL_OPTION);
     GUITools.disableOkButton(ret);
 
-    // Evaluate and evetually open new tab.
+    // Evaluate and eventually open new tab.
     if (val==JOptionPane.OK_OPTION && selector.getSelectedPathwayID()!=null) {
       ValueTriplet<NameAndSignalsTab, String, SignalType> dataSource;
       if (expSel!=null) {

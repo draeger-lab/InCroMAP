@@ -57,7 +57,7 @@ public class miRNAandTarget extends miRNA implements TableResult, Serializable {
    */
   @Override
   public int getColumnCount() {
-    return getTarget().getColumnCount()+1;
+    return getTarget().getColumnCount()+1; // +1 for miRNA name
   }
 
   /* (non-Javadoc)

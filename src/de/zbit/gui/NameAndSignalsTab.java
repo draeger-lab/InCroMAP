@@ -65,7 +65,7 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
    */
   public NameAndSignalsTab(IntegratorUI parent, Object data, Species species) {
     super(parent, null, species);
-
+    // Data is intentionally null in constructor.
     setData(data);
   }
   

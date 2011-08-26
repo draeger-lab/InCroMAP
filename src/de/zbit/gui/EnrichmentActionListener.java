@@ -228,14 +228,14 @@ public class EnrichmentActionListener implements ActionListener {
     
     // Eventually ask user
     if (withDialog) {
-      boolean showDialog=true;
+      boolean showFilterDialog=true;
       if (geneList!=null && geneList.size()>1) {
         int ret = GUITools.showQuestionMessage(source, "Do you want to take the selected genes for the enrichment analysis?", "Enrichment analysis", "Yes", "No");
         if (ret==0) {
-          showDialog=false;
+          showFilterDialog=false;
         }
       }
-      if (showDialog) {
+      if (showFilterDialog) {
         JTableFilter filt = JTableFilter.showDialog(source, (JTable) source.getVisualization(),
             "Apply filter to table to select genes for enrichment");
         if (filt==null) return null;

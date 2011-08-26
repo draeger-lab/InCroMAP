@@ -28,6 +28,14 @@ public class DNAmethylation extends NameAndSignals implements GeneID {
     // TODO Auto-generated constructor stub
   }
 
+  /**
+   * @param geneID
+   * @param position
+   */
+  public DNAmethylation(int geneID, int position) {
+    // TODO Auto-generated constructor stub
+  }
+
   /* (non-Javadoc)
    * @see de.zbit.data.GeneID#setGeneID(int)
    */

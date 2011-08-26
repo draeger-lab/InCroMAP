@@ -54,6 +54,7 @@ import javax.swing.filechooser.FileFilter;
 import de.zbit.analysis.enrichment.AbstractEnrichment;
 import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNAtargets;
@@ -387,7 +388,7 @@ public class IntegratorGUITools {
    * Create a new {@link JLabeledComponent} that lets the user choose a signal from
    * the contained signals in the given <code>ns</code>.
    * @param <T>
-   * @param ns
+   * @param ns any {@link NameAndSignals} with {@link Signal}s.
    * @return
    */
   public static <T extends NameAndSignals> JLabeledComponent createSelectExperimentBox(T ns) {
@@ -448,6 +449,24 @@ public class IntegratorGUITools {
           datasets.add(new LabeledObject<NameAndSignalsTab>(
               ui.getTabbedPane().getTitleAt(i), (NameAndSignalsTab) c));
         }
+      }
+    }
+    return datasets;
+  }
+  
+  /**
+   * @return all opened pathway tabs ({@link TranslatorPanel}s).
+   */
+  public static List<LabeledObject<TranslatorPanel>> getTranslatorTabs() {
+    IntegratorUI ui = IntegratorUI.getInstance();
+    List<LabeledObject<TranslatorPanel>> datasets = new LinkedList<LabeledObject<TranslatorPanel>>();
+    for (int i=0; i<ui.getTabbedPane().getTabCount(); i++) {
+      Component c = ui.getTabbedPane().getComponentAt(i);
+      if (c instanceof TranslatorPanel) {
+        // Create a nicer label
+        String name = String.format("%s (tab:\"%s\")", ((TranslatorPanel) c).getTitle(), ui.getTabbedPane().getTitleAt(i));
+        datasets.add(new LabeledObject<TranslatorPanel>(
+            name, (TranslatorPanel) c));
       }
     }
     return datasets;
@@ -555,6 +574,24 @@ public class IntegratorGUITools {
         return null;
       }
       
+    }
+  }
+  
+
+  /**
+   * Creates a box, that lets the user choose one EXISTING pathway tab.
+   * @param ui
+   * @return
+   */
+  public static JLabeledComponent createSelectPathwayTabBox(IntegratorUI ui) {
+    
+    // Create a list of available datasets and get initial selection.
+    List<LabeledObject<TranslatorPanel>> datasets = getTranslatorTabs();
+    if (datasets.size()<1) {
+      return null;
+    } else {
+      final JLabeledComponent dataSelect = new JLabeledComponent("Select a tab",true,datasets);
+      return dataSelect;
     }
   }
   

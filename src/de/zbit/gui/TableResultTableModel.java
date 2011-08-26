@@ -177,7 +177,17 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
           KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
           IntegratorGUITools.addRightMousePopup(jc, IntegratorGUITools.createKeggPathwayPopup(al2, popUp));
         }
+      } else {
+        // Add "Visualize (only) selected data in pathway"
+        // DISABLED, because would be much work:
+        /* Limit vis. on selected data must be implemented in dialogs and
+         * to really make this usefull, one must actually be able to also
+         * select an existing pathway tab.*/
+        // KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
+        // popUp.add(GUITools.createJMenuItem(al2,
+        //   NSAction.VISUALIZE_SELETED_DATA_IN_PATHWAY, UIManager.getIcon("ICON_GEAR_16")));
       }
+      
     }
     
     return jc;

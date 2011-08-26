@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorGUITools;
@@ -102,10 +103,23 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     List<ExpectedColumn> additional = getAdditionalExpectedColumns();
     if (additional!=null) list.addAll(additional);
     
-    list.addAll(NameAndSignalReader.getExpectedSignalColumns(10));
+    Collection<ExpectedColumn> ec = getExpectedSignalColumnsOverridable(10);
+    if (ec!=null) list.addAll(ec);
     return list.toArray(new ExpectedColumn[0]);
   }
   
+  /**
+   * Creates a collection of maxNumberOfObservations optional {@link ExpectedColumn}s
+   * that accepts FoldChanges and pValues of renameable signals. This is optimal for 
+   * importing {@link Signal} using the {@link CSVImporterV2}.
+   * <p>Note: Extending classes can override this method!
+   * @param maxNumberOfObservations number of expected observation columns to create
+   * @return 
+   */
+  protected Collection<ExpectedColumn> getExpectedSignalColumnsOverridable(int maxNumberOfObservations) {
+    // Note: Extending classes can override this method!
+    return NameAndSignalReader.getExpectedSignalColumns(10);
+  }
 
   /**
    * By default, a "Identifier" column and some Signal columns are added
@@ -181,6 +195,8 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   
   /**
    * Process user selected assignments for {@link #getAdditionalExpectedColumns()}.
+   * List should be the same as given by {@link #getAdditionalExpectedColumns()} (signal
+   * and id cols have been removed).
    * @param additional
    */
   protected abstract void processAdditionalExpectedColumns(List<ExpectedColumn> additional);

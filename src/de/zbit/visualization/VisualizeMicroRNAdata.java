@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.swing.JOptionPane;
+
 import y.base.Edge;
 import y.base.Node;
 import y.view.Graph2D;
@@ -23,6 +25,7 @@ import y.view.ShapeNodeRealizer;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
+import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorGUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.integrator.GraphMLmapsExtended;
@@ -78,6 +81,11 @@ public class VisualizeMicroRNAdata {
     Map<String, List<Node>> mi2n_mapNameBased = tools.getRNA2NodeMap();
     Set<Node> nodesToLayout = new HashSet<Node>();
     
+    // Optional step: count number of nodes to add
+    // and warn user if more than 30 nodes!
+    // Return -1, so the parent method does not ask for target annotation
+    if (!countNodesAndIssueWarning(data, gi2n_map, 30)) return -1;
+    
     // Add a node for each miRNA to the graph.
     int visualizedMiRNAs = 0;
     for (miRNA m : data) {
@@ -121,6 +129,43 @@ public class VisualizeMicroRNAdata {
     tools.layoutNodeSubset(nodesToLayout);
     
     return visualizedMiRNAs;
+  }
+
+  /**
+   * Counts the number of nodes that will be added to the graph
+   * and asks the user if he really wants to proceed, if more than
+   * <code>thresholdForWarning</code> nodes will be added.
+   * @param data {@link miRNA}s to create nodes for
+   * @param gi2n_map geneId to node mapping. Can be created with {@link TranslatorTools#getGeneID2NodeMap()}
+   * @param thresholdForWarning threshold, defining when to issue
+   * a warning, representing the minimum number of miRNA nodes
+   * @return true if the user wants to CONTINUE the operation 
+   */
+  public boolean countNodesAndIssueWarning(Collection<? extends miRNA> data,
+      Map<Integer, List<Node>> gi2n_map, int thresholdForWarning) {
+    // Optional step: count number of nodes to add
+    // and warn user if more than 30 nodes!
+    int count=0;
+    for (miRNA m : data) {
+      if (!m.hasTargets()) continue;
+      // Look if we have targets in the current graph
+      for (miRNAtarget t: m.getTargets()) {
+        List<Node> targetNodes = gi2n_map.get(t.getTarget());
+        if (targetNodes!=null && targetNodes.size()>0) {
+          count++;
+          break;
+        }
+      }
+    }
+    if (count>=30) {
+      int a =GUITools.showQuestionMessage(IntegratorUI.getInstance(), 
+        String.format("WARNING: %s nodes will be added for the selected microRNA data.\n" +
+          "This %s result in a confusing graph.\n\nDo you want to continue?", count,
+          count>150?"will":"might"), "Add microRNA nodes", JOptionPane.YES_NO_OPTION);
+      if (a!=JOptionPane.YES_OPTION) return false;
+    }
+    //--------------
+    return true;
   }
 
 
