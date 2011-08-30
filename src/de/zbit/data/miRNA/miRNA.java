@@ -226,6 +226,7 @@ public class miRNA extends NSwithProbes {
   
   @Override
   public String getColumnName(int columnIndex) {
+    // NOTE: We did NOT Override getColumnName(int columnIndex, String[] extensionNames) here!
     if (columnIndex<super.getColumnCount()) {
       return super.getColumnName(columnIndex);
     } else {

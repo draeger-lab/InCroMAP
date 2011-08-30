@@ -19,4 +19,8 @@ public abstract class ProgressWorker<T, V> extends SwingWorker<T, V>{
     this.progress = progress;
   }
   
+  public AbstractProgressBar getProgressBar() {
+    return progress;
+  }
+  
 }

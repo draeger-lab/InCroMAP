@@ -139,11 +139,11 @@ public class EnrichmentActionListener implements ActionListener {
         try {
           log.info("Downloading and reading enrichment file.");
           if (e.getActionCommand().equals(Enrichments.GO_ENRICHMENT.toString())) {
-            enrich = new GOEnrichment(source.getSpecies(), progress);
+            enrich = new GOEnrichment(source.getSpecies(), getProgressBar());
           } else if (e.getActionCommand().equals(Enrichments.KEGG_ENRICHMENT.toString())) {
-            enrich = new KEGGPathwayEnrichment(source.getSpecies(), progress);
+            enrich = new KEGGPathwayEnrichment(source.getSpecies(), getProgressBar());
           } else if (e.getActionCommand().equals(Enrichments.MSIGDB_ENRICHMENT.toString())) {
-            enrich = new MSigDB_GSEA_Enrichment(source.getSpecies(), progress);
+            enrich = new MSigDB_GSEA_Enrichment(source.getSpecies(), getProgressBar());
           } else {
             GUITools.showErrorMessage(source, String.format("Unknown enrichment command: %s", e.getActionCommand()));
             return null;

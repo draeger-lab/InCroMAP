@@ -10,6 +10,13 @@ import de.zbit.util.Utils;
 
 /**
  * Implementation of Welch's t test.
+ * 
+ * Currently only calculates the "t". Does not calculate the
+ * degrees of freedom and does not perform any lookup in a
+ * table, to get a p-value.
+ * 
+ * <P>XXX:THIS CLASS IS CURRENTLY UNUSED!
+ * 
  * @see http://www.socialresearchmethods.net/kb/stat_t.php
  * @see http://en.wikipedia.org/wiki/Welch%27s_t_test
  * @author Clemens Wrzodek

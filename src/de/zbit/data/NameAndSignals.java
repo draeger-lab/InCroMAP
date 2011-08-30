@@ -728,6 +728,15 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     if (additional_data==null) initializeAdditionalData();
     additional_data.put(key, value);
   }
+  
+  /**
+   * Remove any additional data object
+   * @param key
+   */
+  public void removeData(String key) {
+    if (additional_data==null) return;
+    additional_data.remove(key);
+  }
 
   private void initializeAdditionalData() {
     additional_data = new HashMap<String, Object>();

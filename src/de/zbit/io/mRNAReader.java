@@ -65,6 +65,10 @@ public class mRNAReader extends AbstractGeneBasedNSreader<mRNA> {
       m = new mRNA(name);
     }
     
+    // XXX: We, until today, support no probe-operations on mRNAs. => Remove probe annotation.
+    m.unsetProbeName();
+    
+    
     return m;
   }
 

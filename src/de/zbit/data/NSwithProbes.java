@@ -129,6 +129,13 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
    }
    
    /**
+    * Remove the probe name
+    */
+   public void unsetProbeName() {
+     super.removeData(probeNameKey);
+   }
+   
+   /**
     * @return associated gene symbol. Only uses stored symbol,
     * does not call any mapper or such.
     */

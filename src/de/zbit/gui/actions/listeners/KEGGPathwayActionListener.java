@@ -30,8 +30,8 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.ActionCommand;
 import de.zbit.gui.BaseFrameTab;
 import de.zbit.gui.GUITools;
-import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.actions.TranslatorTabActions.TPAction;
@@ -417,7 +417,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     
     String extra = "";
     if (source!=null && (source instanceof IntegratorTab)) {
-      extra = " for " + ((IntegratorTab<?>)source).species.getCommonName();
+      extra = " for " + ((IntegratorTab<?>)source).getSpecies().getCommonName();
     }
     IntegratorUI.getInstance().addTab(pwTab, name, "Pathway: '" + name + "'" + extra + ".");
     return pwTab;

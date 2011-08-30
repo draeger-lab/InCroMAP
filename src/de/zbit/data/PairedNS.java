@@ -3,6 +3,7 @@
  */
 package de.zbit.data;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,6 +16,7 @@ import de.zbit.analysis.miRNA2mRNA_pair;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
+import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.util.ValueTriplet;
 
@@ -136,8 +138,8 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
   public String getColumnName(int columnIndex, String[] extensionNames) {
     int ns1ColCount = ns1.getColumnCount();
     if (columnIndex<ns1ColCount) {
-      String ns1Type = ns1.getClass().getSimpleName();
-      return ns1Type + '\n' + ns1.getColumnName(columnIndex, extensionNames);
+      String ns1Type = getTypeName(ns1.getClass());
+      return ns1Type + '\n' + ns1.getColumnName(columnIndex);
     }
     
     int supColCount = super.getColumnCount();
@@ -145,25 +147,41 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
       return super.getColumnName(columnIndex-ns1ColCount+1, extensionNames);
     
     {
-      String ns2Type = ns2.getClass().getSimpleName();
-      return ns2Type + '\n' + ns2.getColumnName(columnIndex-ns1ColCount+1-supColCount, extensionNames);
+      String ns2Type = getTypeName(ns2.getClass());
+      return ns2Type + '\n' + ns2.getColumnName(columnIndex-ns1ColCount+1-supColCount);
     }
     
   }
-  
+
+  /**
+   * @param class1
+   * @return data type name
+   */
+  public static String getTypeName(Class<? extends NameAndSignals> class1) {
+    if (class1.equals(ProteinModificationExpression.class)) {
+      return "Prot. Mod.";
+    } else if (class1.equals(EnrichmentObject.class)) {
+      return "Enriched";
+    } else if (class1.equals(PairedNS.class)) {
+      return "Other pair";
+    } 
+    
+    return class1.getSimpleName();
+  }
+
   /* (non-Javadoc)
    * @see de.zbit.data.NameAndSignals#getObjectAtColumn(int, java.lang.Object[])
    */
   @Override
   public Object getObjectAtColumn(int columnIndex, Object[] extensions) {
     int ns1ColCount = ns1.getColumnCount();
-    if (columnIndex<ns1ColCount) return ns1.getObjectAtColumn(columnIndex, extensions);
+    if (columnIndex<ns1ColCount) return ns1.getObjectAtColumn(columnIndex);
     
     int supColCount = super.getColumnCount();
     if (columnIndex-ns1ColCount+1<(super.getColumnCount()))
       return super.getObjectAtColumn(columnIndex-ns1ColCount+1, extensions);
     
-    return ns2.getObjectAtColumn(columnIndex-ns1ColCount+1-supColCount, extensions);
+    return ns2.getObjectAtColumn(columnIndex-ns1ColCount+1-supColCount);
   }
 
   /* (non-Javadoc)
@@ -209,26 +227,34 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
    * @param <T2> any {@link NameAndSignals}
    * @param nsOnes first list to pair with
    * @param nsTwos second list
+   * @param geneCenter if true, lists will be gene-centered before pairing
+   * (with {@link IntegratorUITools#getMergeTypeSilent()}).
    * @return if exactly one of <code>nsOnes</code> or <code>nsTwos</code> 
    * is an instance of {@link miRNA}, returns a <code>List&lt;PairedNS&lt;miRNA, Other&gt;&gt;</code>
    * else, a <code>List&lt;PairedNS&lt;T1, T2&gt;&gt;</code> is returned.
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public static <T1 extends NameAndSignals, T2 extends NameAndSignals> List pair(
-    Collection<T1> nsOnes, Collection<T2> nsTwos) {
+    Collection<T1> nsOnes, Collection<T2> nsTwos, boolean geneCenter) {
     
     
     // miRNAs should be paired with OTHERS by target
     // If XOR one of both is miRNA then pair by target.
+    // See also {@link PairData#calculateMergedSignal(List, MergedSignalDialog)}
     if (NameAndSignals.isMicroRNA(nsOnes)) {
       if (!(NameAndSignals.isMicroRNA(nsTwos))) {
-        return pairByTarget((Collection<miRNA>)nsOnes, nsTwos);
+        return pairByTarget((Collection<miRNA>)nsOnes, nsTwos, geneCenter);
       }
     } else if (NameAndSignals.isMicroRNA(nsTwos)) {
-      return pairByTarget((Collection<miRNA>)nsTwos, nsOnes);
+      return pairByTarget((Collection<miRNA>)nsTwos, nsOnes, geneCenter);
     }
     
     // Perform pairing by Identifier (geneID or name, if both are miRNAs).
+    if (geneCenter) {
+      MergeType mt = IntegratorUITools.getMergeTypeSilent();
+      nsOnes = NameAndSignals.geneCentered(nsOnes, mt);
+      nsTwos = NameAndSignals.geneCentered(nsTwos, mt);
+    }
     return pairByGeneID(nsOnes, nsTwos);
   }
   
@@ -258,15 +284,25 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
     return ret;
   }
   
+  /**
+   * 
+   * @param <T1>
+   * @param <T2>
+   * @param nsOnes
+   * @param nsTwos
+   * @param geneCenter if true, lists will be gene-centered before pairing
+   * @return
+   */
+  @SuppressWarnings("unchecked")
   public static <T1 extends miRNA, T2 extends NameAndSignals> List<PairedNS<miRNA, T2>> pairByTarget(
-    Collection<T1> nsOnes, Collection<T2> nsTwos) {
+    Collection<T1> nsOnes, Collection<T2> nsTwos, boolean geneCenter) {
     
     // Create map from gene id to NS
     Map<Integer, Collection<T2>> geneId2NS = miRNA2mRNA_pair.getGeneID2mRNAMapping(nsTwos);
     
 
     // miRNA 2 mRNA pairing
-    List<ValueTriplet<miRNA, miRNAtarget, T2>> pairs = miRNA2mRNA_pair.getExpressionPairedTable((Collection<miRNA>)nsOnes, false, IntegratorUITools.getMergeTypeSilent(), geneId2NS);
+    List<ValueTriplet<miRNA, miRNAtarget, T2>> pairs = miRNA2mRNA_pair.getExpressionPairedTable((Collection<miRNA>)nsOnes, geneCenter, IntegratorUITools.getMergeTypeSilent(), geneId2NS);
 
     // Create PairedNS instances
     List<PairedNS<miRNA, T2>> ret = new ArrayList<PairedNS<miRNA, T2>>(nsOnes.size());
@@ -283,6 +319,72 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
     }
     
     return ret;
+  }
+
+  /**
+   * @return
+   */
+  public T1 getNS1() {
+    return ns1;
+  }
+  
+  /**
+   * @return
+   */
+  public T2 getNS2() {
+    return ns2;
+  }
+  
+  /**
+   * Create a list of all {@link #getNS1()} items.
+   * @param <T>
+   * @param pairs
+   * @return
+   */
+  public static <T extends NameAndSignals> List<T> getNS1AsList(Collection<PairedNS<T, ?>> pairs) {
+    // Ensure that we have a list
+    final List<PairedNS<T,?>> list;
+    if (pairs instanceof List) list = (List<PairedNS<T,?>>) pairs;
+    else list = new ArrayList<PairedNS<T,?>>(pairs);
+    
+    // Create a custom wrapper
+    return new AbstractList<T>() {
+      @Override
+      public T get(int index) {
+        return list.get(index).getNS1();
+      }
+
+      @Override
+      public int size() {
+        return list.size();
+      }
+    };
+  }
+  
+  /**
+   * Create a list of all {@link #getNS2()} items.
+   * @param <T>
+   * @param pairs
+   * @return
+   */
+  public static <T extends NameAndSignals> List<T> getNS2AsList(Collection<PairedNS<?, T>> pairs) {
+    // Ensure that we have a list
+    final List<PairedNS<?, T>> list;
+    if (pairs instanceof List) list = (List<PairedNS<?, T>>) pairs;
+    else list = new ArrayList<PairedNS<?, T>>(pairs);
+    
+    // Create a custom wrapper
+    return new AbstractList<T>() {
+      @Override
+      public T get(int index) {
+        return list.get(index).getNS2();
+      }
+
+      @Override
+      public int size() {
+        return list.size();
+      }
+    };
   }
 
 }

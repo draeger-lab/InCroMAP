@@ -18,20 +18,23 @@ import javax.swing.JToolBar;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
+import de.zbit.analysis.PairData;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.PairedNS;
 import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.ActionCommand;
 import de.zbit.gui.GUITools;
-import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.IntegratorUI.Action;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JDropDownButton;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.gui.dialogs.MergedSignalDialog;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NameAndSignalsTab;
@@ -85,6 +88,7 @@ public class NameAndSignalTabActions implements ActionListener {
      * the data to the current table selection.
      */
     VISUALIZE_SELETED_DATA_IN_PATHWAY,
+    ADD_OBSERVATION,
     SEARCH_TABLE,
     INTEGRATE,
     ADD_GENE_SYMBOLS,
@@ -134,6 +138,8 @@ public class NameAndSignalTabActions implements ActionListener {
           return "Show a KEGG pathway and visualize only the selected items in this pathway.";
         case ADD_GENE_SYMBOLS:
           return "Show gene symbols as names, using a NCBI gene id to gene symbol converter.";
+        case ADD_OBSERVATION:
+          return "Calculate a new observation, based on two other ones.";
           
         case FDR_CORRECTION_BH:
           return "Correct p-values with the Benjamini and Hochberg method and save as q-values.";
@@ -224,7 +230,14 @@ public class NameAndSignalTabActions implements ActionListener {
       
       bar.add(fdrButton);
       BH_cor.setSelected(true);
-    }
+      
+    } if (tableContent.equals(PairedNS.class)) {
+      bar.add(GUITools.createJButton(this, NSAction.ADD_OBSERVATION, UIManager.getIcon("ICON_GEAR_16")));
+     
+      // TODO: let select one signal of each data type.
+      GUITools.setEnabled(false, bar, KEGGPathwayActionListener.VISUALIZE_PATHWAY, NSAction.VISUALIZE_IN_PATHWAY);
+    }      
+    
     
     /* XXX:
      * Eventuell
@@ -255,13 +268,22 @@ public class NameAndSignalTabActions implements ActionListener {
       
       
     } else if (command.equals(NSAction.INTEGRATE.toString())) {
-      // TODO: PAIR DATA.
-//      PairData
-//      
-//      NameAndSignalsTab nsTab = new NameAndSignalsTab(parent.getIntegratorUI(), pairedData, parent.getSpecies(false));
-//      parent.getIntegratorUI().addTab(nsTab, "IntegratedData",
-//        String.format("Integration of '%s' and '%s'.", parent.getTabName(), tab.getTabName()));
-//      nsTab.getActions().showGeneSymbols_InNewThread();
+      PairData pd = new PairData(parent);
+      @SuppressWarnings("rawtypes")
+      List pairedData = pd.showDialogAndPairData();
+      if (pairedData!=null && pairedData.size()>0) {
+        // Add tab
+        NameAndSignalsTab nsTab = new NameAndSignalsTab(parent.getIntegratorUI(), pairedData, parent.getSpecies(false));
+        parent.getIntegratorUI().addTab(nsTab, "IntegratedData",
+          String.format("Integration of '%s' and '%s'.", parent.getTabName(), pd.getLastSelectedOtherTab().getTabName()));
+      }
+      
+    } else if (command.equals(NSAction.ADD_OBSERVATION.toString())) {
+      MergedSignalDialog options = MergedSignalDialog.showDialog(parent, (PairedNS<?, ?>) parent.getExampleData());
+      if (options==null) return;
+      PairData.calculateMergedSignal((List<PairedNS<?, ?>>) parent.getData(), options);
+      parent.rebuildTable();
+      parent.repaint();
       
     } else if (command.equals(NSAction.ADD_GENE_SYMBOLS.toString())) {
       log.info("Converting GeneIDs to Gene symbols.");

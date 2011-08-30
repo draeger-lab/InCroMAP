@@ -246,24 +246,31 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
         Component c = super.prepareRenderer(renderer, row, column);
         
         // Make border bold, if boldBorders contains the index.
+        boolean makeBorder = false;
+        short left=0, right=0;
         if (boldBorders.contains(column-(model.isRowIndexIncluded()?1:0))) { // 1 is offset for "#" column
-          ((JComponent)c).setBorder(new MatteBorder(0, 1, 0, 0, gridColor));
+          makeBorder = true;
+          left+=1;
         }
         if (boldBorders.contains((column+1)-(model.isRowIndexIncluded()?1:0))) {
-          ((JComponent)c).setBorder(new MatteBorder(0, 0, 0, 1, gridColor));
+          makeBorder = true;
+          right+=1;
+        }
+        if (makeBorder) {
+          ((JComponent)c).setBorder(new MatteBorder(0, left, 0, right, gridColor));
         }
         
         return c;
       }
     };
     
-    
+    // Let the header have two rows
+    table.getTableHeader().setDefaultRenderer(new DefaultTableCellTwoRowHeaderRenderer(boldBorders));
     
     // Set/ add some parameters to the table
     buildJTable(model, spec, table);
     
-    // Disallow reordering with paired data and make header a two-lined header
-    table.getTableHeader().setDefaultRenderer(new DefaultTableCellTwoRowHeaderRenderer(boldBorders));
+    // Disallow reordering with paired data
     table.getTableHeader().setReorderingAllowed(false);
     table.getTableHeader().setPreferredSize(new Dimension(table.getTableHeader().getPreferredSize().width,  (int)(table.getRowHeight(0)*2.3)));
     
@@ -304,6 +311,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     
     // Make doubles scientific
     TableCellRenderer rend = new ScientificNumberRenderer(100);
+    table.setDefaultRenderer(Signal.class, rend);
     table.setDefaultRenderer(Double.class, rend);
     table.setDefaultRenderer(Float.class, rend);
     table.setDefaultRenderer(Boolean.class, new BooleanRendererYesNo());

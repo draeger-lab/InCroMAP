@@ -146,6 +146,9 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
     else
       m = new miRNA(name);
     
+    // Eventually unset probe name
+    if (probeNameCol<0) m.unsetProbeName();
+    
     // Set gene ID
     if (miRNA2GeneIdMapper!=null) {
       try {

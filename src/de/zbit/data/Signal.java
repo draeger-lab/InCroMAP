@@ -53,7 +53,7 @@ public class Signal implements Serializable, Comparable<Object>  {
    * @author Clemens Wrzodek
    */
   public static enum SignalType {
-    Unknown, Raw, Processed, FoldChange, pValue, qValue, ratio, log_ratio;
+    Unknown, Raw, Processed, FoldChange, pValue, qValue, ratio, log_ratio, Merged;
     // XXX: Is it possible to overwrite toString() and return "p-value", which would be correct language?
   }
   
