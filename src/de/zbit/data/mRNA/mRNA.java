@@ -10,7 +10,7 @@ import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
-import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.parser.Species;
 

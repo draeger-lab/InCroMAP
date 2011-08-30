@@ -31,7 +31,7 @@ import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
-import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.kegg.ext.GraphMLmaps;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.util.TranslatorTools;
@@ -326,7 +326,7 @@ public class NameAndSignal2PWTools {
    */
   public <T extends NameAndSignals> Collection<T> prepareGraph(Collection<T> nsList, String tabName, String experimentName, SignalType type, boolean pathwayCentered) {
     // Only if multiple times the same signal is available, which is actually impossible...
-    MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();
+    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
     
     // Prepare a key to uniquely describe the visualized data.
     ValueTriplet<String, String, SignalType> key = new ValueTriplet<String, String, SignalType>(tabName, experimentName, type);

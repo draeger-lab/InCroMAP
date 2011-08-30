@@ -19,7 +19,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.GUITools;
-import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
@@ -138,7 +138,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   public Collection<T> importWithGUI(Component parent, String file, ReaderCache cache) {
 
     // Create a new panel that allows selection of species
-    JLabeledComponent spec = IntegratorGUITools.getOrganismSelector();
+    JLabeledComponent spec = IntegratorUITools.getOrganismSelector();
     
     // Create and show the import dialog
     try {
@@ -148,7 +148,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
       
       // Show the CSV Import dialog
       final CSVImporterV2 c = new CSVImporterV2(inputReader, exCol);
-      boolean dialogConfirmed = IntegratorGUITools.showCSVImportDialog(parent, c, spec);
+      boolean dialogConfirmed = IntegratorUITools.showCSVImportDialog(parent, c, spec);
       
       // Process user input and read data
       if (dialogConfirmed) {
@@ -227,7 +227,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
       IdentifierType type = (IdentifierType) idCol.getAssignedType(i);
       
       vp = new ValueTriplet<Integer, IdentifierType, Integer>(
-          idCol.getAssignedColumns().get(i), type, IntegratorGUITools.getPriority(type)); 
+          idCol.getAssignedColumns().get(i), type, IntegratorUITools.getPriority(type)); 
       l.add(vp);
     }
     // Sort by priority

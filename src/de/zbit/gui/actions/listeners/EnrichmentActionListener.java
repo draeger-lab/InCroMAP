@@ -2,7 +2,7 @@
  *
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.actions.listeners;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,7 +22,13 @@ import de.zbit.analysis.enrichment.MSigDB_GSEA_Enrichment;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.gui.ActionCommand;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.customcomponents.ProgressWorker;
 import de.zbit.gui.table.JTableFilter;
+import de.zbit.gui.tabs.IntegratorTab;
+import de.zbit.gui.tabs.IntegratorTabWithTable;
+import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.util.StringUtil;
 
 /**

@@ -1,7 +1,7 @@
 /**
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.actions.listeners;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -27,11 +27,21 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
-import de.zbit.gui.NameAndSignalTabActions.NSAction;
-import de.zbit.gui.TranslatorTabActions.TPAction;
+import de.zbit.gui.ActionCommand;
+import de.zbit.gui.BaseFrameTab;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.JLabeledComponent;
+import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
+import de.zbit.gui.actions.TranslatorTabActions.TPAction;
+import de.zbit.gui.customcomponents.TableResultTableModel;
+import de.zbit.gui.dialogs.VisualizeDataInPathwayDialog;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.SignalOptions;
-import de.zbit.integrator.VisualizeDataInPathway;
+import de.zbit.gui.tabs.IntegratorTab;
+import de.zbit.gui.tabs.IntegratorTabWithTable;
+import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorPanel;
@@ -42,6 +52,7 @@ import de.zbit.util.TranslatorTools;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
+import de.zbit.visualization.VisualizeDataInPathway;
 import de.zbit.visualization.VisualizeMicroRNAdata;
 
 /**
@@ -112,7 +123,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     } else if (e.getActionCommand().equals(TPAction.VISUALIZE_DATA.toString()) &&
         source instanceof TranslatorPanel) {
       ValueTriplet<NameAndSignalsTab, String, SignalType>  vt
-        = IntegratorGUITools.showSelectExperimentBox(IntegratorUI.getInstance(), null,
+        = IntegratorUITools.showSelectExperimentBox(IntegratorUI.getInstance(), null,
             "Please select an observation to visualize in this pathway.");
        if (vt!=null) {
          visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
@@ -162,7 +173,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
                 st = st.getSourceTab();
               }
             }
-            vt = IntegratorGUITools.showSelectExperimentBox(IntegratorUI.getInstance(), st,
+            vt = IntegratorUITools.showSelectExperimentBox(IntegratorUI.getInstance(), st,
               "Please select an observation to visualize in this pathway.");
           }
           
@@ -439,7 +450,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     if (source instanceof NameAndSignalsTab) {
       NameAndSignals ns = (NameAndSignals)((NameAndSignalsTab)source).getExampleData();
       if (ns.hasSignals()) {
-        expSel = IntegratorGUITools.createSelectExperimentBox(ns);
+        expSel = IntegratorUITools.createSelectExperimentBox(ns);
       } else if (ns instanceof miRNA) {
         // Targets can still be visualized (even without signals).
         setA = true;

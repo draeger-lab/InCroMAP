@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
@@ -114,7 +114,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * @param file input file to read
    * @param exCol array of expected columns. May be null if none.
    * @param spec an Organism Selector (See
-   * {@link IntegratorGUITools#getOrganismSelector()}). May be null if not required.
+   * {@link IntegratorUITools#getOrganismSelector()}). May be null if not required.
    * @return a CSVReader, either initialized from scratch
    * (if cache was empty) or configured from the cache.
    * The selections of <code>exCol</code> and

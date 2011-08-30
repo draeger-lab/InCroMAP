@@ -6,7 +6,7 @@ package de.zbit.gui.prefs;
 import java.awt.Color;
 
 import de.zbit.gui.IntegratorUI;
-import de.zbit.gui.NodeShapeSelector;
+import de.zbit.gui.customcomponents.NodeShapeSelector;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.OptionGroup;

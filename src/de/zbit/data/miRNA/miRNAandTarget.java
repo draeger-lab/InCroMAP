@@ -1,7 +1,7 @@
 /**
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.data.miRNA;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,9 +16,6 @@ import javax.swing.table.TableModel;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.TableResult;
-import de.zbit.data.miRNA.miRNA;
-import de.zbit.data.miRNA.miRNAtarget;
-import de.zbit.data.miRNA.miRNAtargets;
 
 /**
  * A {@link TableModel} implementing the {@link TableResult} interface

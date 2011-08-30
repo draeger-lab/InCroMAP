@@ -26,7 +26,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.GUITools;
-import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.integrator.GraphMLmapsExtended;
 import de.zbit.kegg.ext.GraphMLmaps;
@@ -73,7 +73,7 @@ public class VisualizeMicroRNAdata {
    */
   public int addMicroRNAsToGraph(Collection<? extends miRNA> data) {
     // MergeType does NOT make any difference, because signals of input data are not processed
-    data = NameAndSignals.geneCentered(data, IntegratorGUITools.getMergeTypeSilent());
+    data = NameAndSignals.geneCentered(data, IntegratorUITools.getMergeTypeSilent());
     
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
     tools.ensureMapExists(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, true);

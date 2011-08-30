@@ -1,7 +1,7 @@
 /**
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.dialogs;
 
 import java.io.IOException;
 import java.util.prefs.BackingStoreException;
@@ -11,6 +11,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
+import de.zbit.gui.ExpandablePanel;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.prefs.PathwayVisualizationOptionPanel;
 import de.zbit.gui.prefs.SignalOptionPanel;
 

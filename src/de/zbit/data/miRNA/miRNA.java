@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +54,7 @@ public class miRNA extends NSwithProbes {
   }
 
   /**
-   * Link miRNAs to their targets.
+   * Link miRNAs to their targets (annotate the {@link #targets}).
    * @param targets
    * @param col
    * @return number of miRNAs for which targets could be found.
@@ -167,7 +168,7 @@ public class miRNA extends NSwithProbes {
         et.setExperimental(target.isExperimental() || et.isExperimental());
         // Same algorithms sometimes contain duplicate targets
         if (!et.getSource().contains(target.getSource()))
-          et.setSource(et.getSource() + "; " + target.getSource());
+          et.setSource(et.getSource() + implodeString + target.getSource());
         // Score is not further processed...
       }
     }
@@ -244,6 +245,20 @@ public class miRNA extends NSwithProbes {
       }
     }
     
+  }
+
+  /**
+   * @param data any {@link miRNA} {@link Iterable}.
+   * @return true, if and only if there is at least one {@link miRNA} instance
+   * that has annotated targets.
+   */
+  public static boolean hasTargets(Iterable<? extends miRNA> data) {
+    if (data==null) return false;
+    Iterator<? extends miRNA> it = data.iterator();
+    while (it.hasNext()) {
+      if (it.next().hasTargets()) return true;
+    }
+    return false;
   }
 
 

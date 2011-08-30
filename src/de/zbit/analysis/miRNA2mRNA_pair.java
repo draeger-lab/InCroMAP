@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
@@ -136,7 +137,7 @@ public class miRNA2mRNA_pair {
    * @param mrna list of all mRNAs
    * @return a map from geneID to a collection of corresponding {@link mRNA}s.
    */
-  public static Map<Integer, Collection<mRNA>> getGeneID2mRNAMapping(Collection<mRNA> mrna) {
+  public static <T extends NameAndSignals> Map<Integer, Collection<T>> getGeneID2mRNAMapping(Collection<T> mrna) {
     return new miRNA2mRNA_pair().getGeneID2mRNAMappingAndTrackMinMax(mrna, null);
   }
   
@@ -146,13 +147,13 @@ public class miRNA2mRNA_pair {
    * those values for. Else, simply set this to <code>null</code>.
    * @return a map from geneID to a collection of corresponding {@link mRNA}s.
    */
-  public Map<Integer, Collection<mRNA>> getGeneID2mRNAMappingAndTrackMinMax(Collection<mRNA> mrna, String experimentName) {
+  public <T extends NameAndSignals> Map<Integer, Collection<T>> getGeneID2mRNAMappingAndTrackMinMax(Collection<T> mrna, String experimentName) {
     // Reset local min/max holders
     mRNA_maxFC = Float.MIN_VALUE;
     mRNA_minFC = Float.MAX_VALUE;
     
-    Map<Integer, Collection<mRNA>> geneIDmap = new HashMap<Integer, Collection<mRNA>>();
-    for (mRNA mr: mrna) {
+    Map<Integer, Collection<T>> geneIDmap = new HashMap<Integer, Collection<T>>();
+    for (T mr: mrna) {
       // Remember min and max fold change
       if (experimentName!=null) {
         Number fc = mr.getSignalValue(SignalType.FoldChange, experimentName);
@@ -161,12 +162,13 @@ public class miRNA2mRNA_pair {
           mRNA_minFC = Math.min(mRNA_minFC, fc.doubleValue());
         }
       }
-      if (mr.getGeneID()<=0) continue;
+      int geneID = (mr instanceof GeneID)?((GeneID)mr).getGeneID():-1;
+      if (geneID<=0) continue;
       
-      Collection<mRNA> mr_targets = geneIDmap.get(mr.getGeneID());
+      Collection<T> mr_targets = geneIDmap.get(geneID);
       if (mr_targets==null) {
         mr_targets = initializeTargetCollection();
-        geneIDmap.put(mr.getGeneID(), mr_targets);
+        geneIDmap.put(geneID, mr_targets);
       }
       
       mr_targets.add(mr);
@@ -174,8 +176,9 @@ public class miRNA2mRNA_pair {
     return geneIDmap;
   }
 
-  private static Collection<mRNA> initializeTargetCollection() {
-    return new LinkedList<mRNA>();
+  @SuppressWarnings("unchecked")
+  private static <T extends NameAndSignals> Collection<T> initializeTargetCollection() {
+    return (Collection<T>) new LinkedList<mRNA>();
   }
 
   
@@ -241,6 +244,22 @@ public class miRNA2mRNA_pair {
    * @return ValueTriplet<miRNA, miRNAtarget, mRNA>
    */
   public List<ValueTriplet<miRNA, miRNAtarget, mRNA>> getExpressionPairedTable(Collection <miRNA> miRNA, boolean geneCentered, MergeType m) {
+    return getExpressionPairedTable(miRNA, geneCentered, m, link);
+  }
+  
+  
+  /**
+   * Returns the {@link miRNA} - {@link miRNAtarget} - {@link mRNA} table.
+   * @param <T> any {@link NameAndSignals} that should be matched to the {@link miRNAtargets}. Typically this is a {@link mRNA}.
+   * @param miRNA
+   * @param geneCentered  if true, builds the table on a gene centered basis. Else, it should be probe centered.
+   * @param m defines how to deal with the signals (e.g., taking the mean). Only required when geneCentered is true.
+   * Else, this parameter is ignored.
+   * @param mRNA dataset of type T to pair the miRNAs with.
+   * @return List<ValueTriplet<miRNA, miRNAtarget, T>>
+   */
+  public static <T extends NameAndSignals> List<ValueTriplet<miRNA, miRNAtarget, T>> getExpressionPairedTable(Collection <miRNA> miRNA, boolean geneCentered, MergeType m, Map<Integer, ? extends Collection<T>> mRNA) {
+    
     
     // Eventually get gene centered miRNAs
     if (geneCentered) {
@@ -248,7 +267,7 @@ public class miRNA2mRNA_pair {
     }
     
     // Build result list
-    List<ValueTriplet<miRNA, miRNAtarget, mRNA>> ret = new ArrayList<ValueTriplet<miRNA, miRNAtarget, mRNA>>();
+    List<ValueTriplet<miRNA, miRNAtarget, T>> ret = new ArrayList<ValueTriplet<miRNA, miRNAtarget, T>>();
     
     // For all miRNAs, output targets -- A
     miRNA mi = null;
@@ -268,9 +287,8 @@ public class miRNA2mRNA_pair {
       for (miRNAtarget miRNAtarget : targets) {
         
         // Get all target mRNAs -- C
-        Collection<mRNA> target_mRNAs = get_mRNAs(miRNAtarget);
-        if (target_mRNAs==null || target_mRNAs.size()<1)
-          continue; // log message is in get_mRNAs()
+        Collection<T> target_mRNAs = mRNA.get(miRNAtarget.getTarget());
+        if (target_mRNAs==null || target_mRNAs.size()<1) continue;
         
         // Eventually get gene centered mRNAs
         if (geneCentered) {
@@ -278,11 +296,11 @@ public class miRNA2mRNA_pair {
         }
         
         // Output each pair 2 table
-        Iterator<mRNA> it2 = target_mRNAs.iterator();
+        Iterator<T> it2 = target_mRNAs.iterator();
         while (it2.hasNext()) {
-          mRNA mr = it2.next();
+          T mr = it2.next();
           
-          ret.add(new ValueTriplet<miRNA, miRNAtarget, mRNA>(mi, miRNAtarget, mr));
+          ret.add(new ValueTriplet<miRNA, miRNAtarget, T>(mi, miRNAtarget, mr));
         }
       }
     }

@@ -2,16 +2,20 @@
  *
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.customcomponents;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
+import javax.swing.border.MatteBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
@@ -19,8 +23,16 @@ import javax.swing.table.TableRowSorter;
 
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
+import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.actions.listeners.EnrichmentActionListener;
+import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.gui.table.DefaultTableCellTwoRowHeaderRenderer;
+import de.zbit.gui.table.TableRowSorterMixed;
+import de.zbit.gui.tabs.IntegratorTab;
+import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.parser.Species;
 import de.zbit.util.BooleanRendererYesNo;
 import de.zbit.util.JTableTools;
@@ -160,14 +172,20 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
   
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public static <T extends TableResult> JTable buildJTable(IntegratorTab<List<? extends TableResult>> tab) {
+    
     // Build table on scroll pane
-    JTable jc = buildJTable(new TableResultTableModel(tab.getData()), tab.getSpecies());
+    JTable jc;
+    if (tab.getDataContentType().equals(PairedNS.class)) {
+      jc = buildJTableWithBoldBorders(new TableResultTableModel(tab.getData()), tab.getSpecies(), ((PairedNS)tab.getExampleData()).getBoldBorders() );
+    } else {
+      jc = buildJTable(new TableResultTableModel(tab.getData()), tab.getSpecies());
+    }
     
     // Add enrichment capabilities
     if (tab instanceof IntegratorTabWithTable) {
       EnrichmentActionListener al = new EnrichmentActionListener((IntegratorTabWithTable)tab);
-      JPopupMenu popUp = IntegratorGUITools.createEnrichmentPopup(al);
-      IntegratorGUITools.addRightMousePopup(jc, popUp);
+      JPopupMenu popUp = IntegratorUITools.createEnrichmentPopup(al);
+      IntegratorUITools.addRightMousePopup(jc, popUp);
 
 
       // Other data type dependent capabilities
@@ -175,7 +193,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
         if (((EnrichmentObject)tab.getExampleData()).getIdentifier().toString().startsWith("path:")) {
           // It's a KEGG Pathway enrichment.
           KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
-          IntegratorGUITools.addRightMousePopup(jc, IntegratorGUITools.createKeggPathwayPopup(al2, popUp));
+          IntegratorUITools.addRightMousePopup(jc, IntegratorUITools.createKeggPathwayPopup(al2, popUp));
         }
       } else {
         // Add "Visualize (only) selected data in pathway"
@@ -198,44 +216,75 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
   }
   
   public static <T extends TableResult> JTable buildJTable(TableResultTableModel<T> model, Species spec) {
-    // TODO: Implement a filtered table (a model that automatically adds
-    // a JTextField row (similar to online marcar db filter) below headers
     final JTable table = new JTable(model); // new JComponentTableModel()
     
-    // Set an appropriate editor for the expected column and type selectors
-    /*int maxHeadRow = (isATypeSelectorRequired()?2:1);
-    for (int row=0; row<maxHeadRow; row++) {
-      for (int col=0; col<dataNew[row].length; col++) {
-        Object cur = dataNew[row][col];
+    buildJTable(model, spec, table);
+    
+    return table;
+  }
+
+  /**
+   * Pretty much the same as {@link #buildJTable(TableResultTableModel, Species)}, but
+   * has a special treatment to consider
+   * some bold borders within paired data (see, e.g., {@link PairedNS#getBoldBorders()}).
+   * @param <T>
+   * @param model
+   * @param spec
+   * @param boldBorders Column indices, whose left border should be painted bold.
+   * @return
+   */
+  public static <T extends TableResult> JTable buildJTableWithBoldBorders(final TableResultTableModel<T> model, Species spec, final Set<Integer> boldBorders) {
+    
+    final JTable table = new JTable(model) {
+      private static final long serialVersionUID = -868488272311106520L;
+
+      /* (non-Javadoc)
+       * @see javax.swing.JTable#prepareRenderer(javax.swing.table.TableCellRenderer, int, int)
+       */
+      @Override
+      public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+        Component c = super.prepareRenderer(renderer, row, column);
         
-        TableCellEditor cellEditor;
-        if (cur instanceof JCheckBox) {
-          cellEditor = new DefaultCellEditor((JCheckBox)cur);
-        }else if (cur instanceof JComboBox) {
-          cellEditor = new DefaultCellEditor((JComboBox)cur);
-        }else if (cur instanceof JTextField) {
-          cellEditor = new DefaultCellEditor((JTextField)cur);
-        } else {
-          cellEditor = table.getCellEditor(0,col);
+        // Make border bold, if boldBorders contains the index.
+        if (boldBorders.contains(column-(model.isRowIndexIncluded()?1:0))) { // 1 is offset for "#" column
+          ((JComponent)c).setBorder(new MatteBorder(0, 1, 0, 0, gridColor));
+        }
+        if (boldBorders.contains((column+1)-(model.isRowIndexIncluded()?1:0))) {
+          ((JComponent)c).setBorder(new MatteBorder(0, 0, 0, 1, gridColor));
         }
         
-        table.setCellEditor(row, col, cellEditor);      
+        return c;
       }
-    }
+    };
     
-    // Draw JComponents inside the JTable
-    JComponentTableRenderer rend = new JComponentTableRenderer();
-    for (int i=0; i<table.getColumnCount(); i++) {
-      table.getColumnModel().getColumn(i).setCellRenderer(rend);
-    }*/
     
+    
+    // Set/ add some parameters to the table
+    buildJTable(model, spec, table);
+    
+    // Disallow reordering with paired data and make header a two-lined header
+    table.getTableHeader().setDefaultRenderer(new DefaultTableCellTwoRowHeaderRenderer(boldBorders));
+    table.getTableHeader().setReorderingAllowed(false);
+    table.getTableHeader().setPreferredSize(new Dimension(table.getTableHeader().getPreferredSize().width,  (int)(table.getRowHeight(0)*2.3)));
+    
+    
+    return table;
+  }
+  
+  
+  /**
+   * Set some nice attributes on created table.
+   * @param <T>
+   * @param model
+   * @param spec
+   * @param table
+   */
+  public static <T extends TableResult> void buildJTable(TableResultTableModel<T> model, Species spec, final JTable table) {
     // Set additional attributes
     table.setPreferredScrollableViewportSize(new Dimension(500, 100));
     table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-    //for (int i=0; i<maxHeadRow+1;i++)
-      //table.setRowHeight(i, (int) (table.getRowHeight(i)*1.3));
     
-    // Disallow dragging columns
+    // Enable dragging columns
     table.getTableHeader().setReorderingAllowed(true);
     
     // Resize columns to a reasonable, unique width
@@ -250,7 +299,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     }
     
     // Add sorting capabilities
-    TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(model);
+    TableRowSorter<TableModel> sorter = new TableRowSorterMixed<TableModel>(model);
     table.setRowSorter(sorter);
     
     // Make doubles scientific
@@ -271,8 +320,6 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     
     // Allow searching
     JTableTools.setQuickSearch(table);
-    
-    return table;
   }
 
 }

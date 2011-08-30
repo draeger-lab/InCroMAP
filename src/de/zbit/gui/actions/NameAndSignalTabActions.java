@@ -1,4 +1,4 @@
-package de.zbit.gui;
+package de.zbit.gui.actions;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -25,7 +25,16 @@ import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.gui.ActionCommand;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.IntegratorUI.Action;
+import de.zbit.gui.JDropDownButton;
+import de.zbit.gui.actions.listeners.EnrichmentActionListener;
+import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.gui.tabs.IntegratorTab;
+import de.zbit.gui.tabs.IntegratorTabWithTable;
+import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.math.BenjaminiHochberg;
 import de.zbit.math.Bonferroni;
 import de.zbit.math.BonferroniHolm;
@@ -44,7 +53,7 @@ public class NameAndSignalTabActions implements ActionListener {
   /**
    * The actual tab to perform actions on.
    */
-  IntegratorTabWithTable parent;
+  NameAndSignalsTab parent;
   
   /*
    * MenuItems for statistical corrections. They are toggled, thus
@@ -54,7 +63,7 @@ public class NameAndSignalTabActions implements ActionListener {
   JMenuItem BFH_cor;
   JMenuItem BO_cor;
   
-  public NameAndSignalTabActions(IntegratorTabWithTable parent) {
+  public NameAndSignalTabActions(NameAndSignalsTab parent) {
     super();
     this.parent = parent;
   }
@@ -159,7 +168,7 @@ public class NameAndSignalTabActions implements ActionListener {
     bar.add(search);
     
     EnrichmentActionListener al = new EnrichmentActionListener(parent, true);
-    JPopupMenu enrichment = IntegratorGUITools.createEnrichmentPopup(al);
+    JPopupMenu enrichment = IntegratorUITools.createEnrichmentPopup(al);
     JDropDownButton enrichmentButton = new JDropDownButton("Enrichment", 
         UIManager.getIcon("ICON_GEAR_16"), enrichment);
     bar.add(enrichmentButton);
@@ -193,7 +202,7 @@ public class NameAndSignalTabActions implements ActionListener {
       
     } if (tableContent.equals(miRNA.class)) {
       // Annotate and Remove targets
-      JPopupMenu targets = IntegratorGUITools.createMiRNAtargetPopup(this, null);
+      JPopupMenu targets = IntegratorUITools.createMiRNAtargetPopup(this, null);
       JDropDownButton targetsButton = new JDropDownButton(targets.getLabel(), UIManager.getIcon("ICON_GEAR_16"), targets);
       bar.add(targetsButton);
     
@@ -217,18 +226,9 @@ public class NameAndSignalTabActions implements ActionListener {
       BH_cor.setSelected(true);
     }
     
-    /* TODO:
-     * if (mRNA)
-     * - Pair with miRNA
-     * 
-     * if (miRNA)
-     * - Pair with mRNA
-     * 
-     * if (EnrichmentObject)
-     * - Cutoff für > pValue, qValue, list ratio
-     * 
+    /* XXX:
      * Eventuell
-     * [- Add pathways] column with pathways for gene/ target
+     * [- Add pathways] column with pathways for gene/ target (or GO terms, etc.)
      * 
      */
     
@@ -255,8 +255,13 @@ public class NameAndSignalTabActions implements ActionListener {
       
       
     } else if (command.equals(NSAction.INTEGRATE.toString())) {
-      // TODO: ...
-      GUITools.showMessage("Not yet implemented.", "");
+      // TODO: PAIR DATA.
+//      PairData
+//      
+//      NameAndSignalsTab nsTab = new NameAndSignalsTab(parent.getIntegratorUI(), pairedData, parent.getSpecies(false));
+//      parent.getIntegratorUI().addTab(nsTab, "IntegratedData",
+//        String.format("Integration of '%s' and '%s'.", parent.getTabName(), tab.getTabName()));
+//      nsTab.getActions().showGeneSymbols_InNewThread();
       
     } else if (command.equals(NSAction.ADD_GENE_SYMBOLS.toString())) {
       log.info("Converting GeneIDs to Gene symbols.");
@@ -284,6 +289,8 @@ public class NameAndSignalTabActions implements ActionListener {
       parent.getVisualization().repaint();
     }
   }
+
+
 
 
   /**
@@ -319,7 +326,7 @@ public class NameAndSignalTabActions implements ActionListener {
    */
   @SuppressWarnings("unchecked")
   public void annotateMiRNAtargets() {
-    ValuePair<miRNAtargets, Species> t_all = IntegratorGUITools.loadMicroRNAtargets(parent.getSpecies(false));
+    ValuePair<miRNAtargets, Species> t_all = IntegratorUITools.loadMicroRNAtargets(parent.getSpecies(false));
     if (t_all==null || t_all.getA()==null) return;
     int annot = miRNA.link_miRNA_and_targets(t_all.getA(), (Collection<miRNA>) parent.getData());
     log.info(String.format("Annotated %s/%s microRNAs with targets.", annot, parent.getData().size()));

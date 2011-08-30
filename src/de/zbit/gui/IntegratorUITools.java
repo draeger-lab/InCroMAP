@@ -58,13 +58,16 @@ import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNAtargets;
-import de.zbit.gui.EnrichmentActionListener.Enrichments;
-import de.zbit.gui.NameAndSignalTabActions.NSAction;
+import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
+import de.zbit.gui.actions.listeners.EnrichmentActionListener;
+import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.MergeTypeOptions;
 import de.zbit.gui.prefs.SignalOptionPanel;
-import de.zbit.integrator.VisualizeDataInPathway;
+import de.zbit.gui.tabs.IntegratorTab;
+import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.io.DNAMethylationReader;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.OpenFile;
@@ -83,14 +86,15 @@ import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
+import de.zbit.visualization.VisualizeDataInPathway;
 
 /**
  * @author Clemens Wrzodek
  */
 
 @SuppressWarnings("unchecked")
-public class IntegratorGUITools {
-  public static final transient Logger log = Logger.getLogger(IntegratorGUITools.class.getName());
+public class IntegratorUITools {
+  public static final transient Logger log = Logger.getLogger(IntegratorUITools.class.getName());
   
   static {
     // Load list of acceptable species
@@ -138,7 +142,7 @@ public class IntegratorGUITools {
   }
   
   public static Species showOrganismSelectorDialog(Component parent) {
-    JLabeledComponent organismSelector = IntegratorGUITools.getOrganismSelector();
+    JLabeledComponent organismSelector = IntegratorUITools.getOrganismSelector();
     int ret = GUITools.showAsDialog(parent, organismSelector, "Please select your species", true);
     if (ret == JOptionPane.OK_OPTION) {
       return (Species) organismSelector.getSelectedItem();
@@ -541,6 +545,7 @@ public class IntegratorGUITools {
         break;
       }
     }
+    
     if (datasets.size()<1) {
       GUITools.showMessage("Could not find any input datasets with observations.", ui.getApplicationName());
       return null;

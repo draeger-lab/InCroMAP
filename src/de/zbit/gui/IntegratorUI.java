@@ -41,10 +41,15 @@ import javax.swing.filechooser.FileFilter;
 
 import y.view.Graph2D;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.gui.actions.TranslatorTabActions;
+import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
+import de.zbit.gui.tabs.IntegratorTab;
+import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.DNAMethylationReader;
 import de.zbit.io.NameAndSignalReader;
@@ -284,10 +289,10 @@ public class IntegratorUI extends BaseFrame {
 //          mRNAReader r = mRNAReader.getExampleReader();
 //          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example_mRNA");
 //          
-//          miRNAReader r2 = new miRNAReader(1,0);
-//          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-//          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-//          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorGUITools.organisms.get(1)), "Example_miRNA");
+          miRNAReader r2 = new miRNAReader(1,0);
+          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorUITools.organisms.get(1)), "Example_miRNA");
           
         } catch (Exception e) {e.printStackTrace();}
         
@@ -471,7 +476,7 @@ public class IntegratorUI extends BaseFrame {
      * Tools tab.
      */
     JMenu tools = new JMenu("Tools");
-    tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorGUITools(), "showBatchPathwayDialog"),
+    tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorUITools(), "showBatchPathwayDialog"),
       Action.BATCH_PATHWAY_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
     
     return new JMenu[]{importData, tools};
@@ -585,7 +590,7 @@ public class IntegratorUI extends BaseFrame {
    * list of genes to the {@link #tabbedPane}.
    */
   public void showInputGenelistDialog() {
-    ValueTriplet<Species, IdentifierType, String> input = IntegratorGUITools.showInputGeneListDialog();
+    ValueTriplet<Species, IdentifierType, String> input = IntegratorUITools.showInputGeneListDialog();
     if (input==null) return; // Cancelled
     
     // Initialize reader
@@ -603,7 +608,7 @@ public class IntegratorUI extends BaseFrame {
    * for this organism.
    */
   public void showMicroRNAtargets() {
-    ValuePair<miRNAtargets, Species> vp = IntegratorGUITools.loadMicroRNAtargets(null);
+    ValuePair<miRNAtargets, Species> vp = IntegratorUITools.loadMicroRNAtargets(null);
     if (vp==null || vp.getA()==null) return; // Cancel pressed
 
     // Add as tab and annotate symbols in background
@@ -651,7 +656,7 @@ public class IntegratorUI extends BaseFrame {
         // Try to get species from graph panel
         String specKegg = TranslatorTools.getOrganismKeggAbbrFromGraph((Graph2D) ((TranslatorPanel) o).getDocument());
         if (specKegg!=null) {
-          currentSpecies = Species.search(IntegratorGUITools.organisms, specKegg, Species.KEGG_ABBR);
+          currentSpecies = Species.search(IntegratorUITools.organisms, specKegg, Species.KEGG_ABBR);
         }
         // ----
         
@@ -828,7 +833,7 @@ public class IntegratorUI extends BaseFrame {
     // Ask file format
     if ( (reader == null) || (reader.length < 1) || (reader.length==1 && reader[0]==null)) {
       reader = new Class[1];
-      reader[0] = IntegratorGUITools.createInputDataTypeChooser();
+      reader[0] = IntegratorUITools.createInputDataTypeChooser();
       if (reader[0]==null) return null; // Cancel pressed
     }
     

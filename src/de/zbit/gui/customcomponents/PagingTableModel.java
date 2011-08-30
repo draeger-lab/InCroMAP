@@ -16,10 +16,14 @@ import javax.swing.table.AbstractTableModel;
  * This simulation is pretty simple. It doesn't do common-sense things like
  * canceling scheduled loads when they aren't needed anymore.
  * 
+ * <P>XXX:THIS CLASS IS CURRENTLY UNUSED!
+ * 
  * @author Brian Cole
  * @author Clemens Wrzodek
  */
 public class PagingTableModel extends AbstractTableModel {
+  private static final long serialVersionUID = -448471257818926368L;
+  
   private static final int MAX_PAGE_SIZE = 50;
   private static final int LATENCY_MILLIS = 1500;
   

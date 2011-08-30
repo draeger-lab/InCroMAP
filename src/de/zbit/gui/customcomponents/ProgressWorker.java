@@ -2,7 +2,7 @@
  *
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.customcomponents;
 
 import javax.swing.SwingWorker;
 

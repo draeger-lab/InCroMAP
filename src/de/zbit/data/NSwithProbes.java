@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
-import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
@@ -296,7 +296,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
     */
    public static void convertNamesToGeneSymbols(List<? extends NameAndSignals> data, Species species) throws Exception {
      log.config("Loading GeneSymbol mapping...");
-     GeneID2GeneSymbolMapper mapper = IntegratorGUITools.get2GeneSymbolMapping(species);
+     GeneID2GeneSymbolMapper mapper = IntegratorUITools.get2GeneSymbolMapping(species);
      for (NameAndSignals m: data) {
        if (m instanceof miRNA) {
          if (((miRNA)m).hasTargets()) {

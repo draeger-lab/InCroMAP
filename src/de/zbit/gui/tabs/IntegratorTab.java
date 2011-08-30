@@ -2,7 +2,7 @@
  *
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.tabs;
 
 import java.awt.Container;
 import java.awt.Dimension;
@@ -24,6 +24,13 @@ import javax.swing.JToolBar;
 
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.gui.BaseFrameTab;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.ProgressBarSwing;
+import de.zbit.gui.VerticalLayout;
+import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 
@@ -153,7 +160,7 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
    */
   public Species getSpecies(boolean showDialogIfUnknown) {
     if (species==null && showDialogIfUnknown) {
-      species = IntegratorGUITools.showOrganismSelectorDialog(parent);
+      species = IntegratorUITools.showOrganismSelectorDialog(parent);
     }
     return species;
   }
@@ -336,6 +343,19 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
   public int compareTo(IntegratorTab<?> o) {
     // Just to make this class usable with ValuePair and ValueTriplet.
     return toString().compareTo(o.toString());
+  }
+  
+  /**
+   * @return the name of the tab in the parent {@link #getIntegratorUI()}.
+   */
+  public String getTabName() {
+    return getName();
+//    int i = getIntegratorUI().getTabIndex(this);
+//    if (i>=0 && i<getIntegratorUI().getTabbedPane().getComponentCount()) {
+//      return getIntegratorUI().getTabbedPane().getTitleAt(i);
+//    } else {
+//      return "Unknown";
+//    }
   }
   
 }

@@ -2,7 +2,7 @@
  *
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.tabs;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -21,7 +21,10 @@ import javax.swing.SwingWorker.StateValue;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.parser.Species;

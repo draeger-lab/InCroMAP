@@ -1,7 +1,7 @@
 /**
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.customcomponents;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -13,7 +13,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtarget;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
@@ -50,7 +53,7 @@ public class IterableRenderer extends DefaultTableCellRenderer {
    */
   @Override
   protected void setValue(Object value) {
-    GeneID2GeneSymbolMapper mapper = IntegratorGUITools.get2GeneSymbolMapping(species);
+    GeneID2GeneSymbolMapper mapper = IntegratorUITools.get2GeneSymbolMapping(species);
     String initialString = "<html><body><nobr>";
     String space = "&nbsp;";
     if (value==null) setText("");

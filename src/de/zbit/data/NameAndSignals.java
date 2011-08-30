@@ -25,11 +25,11 @@ import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.exception.CorruptInputStreamException;
-import de.zbit.gui.IntegratorGUITools;
-import de.zbit.gui.miRNAandTarget;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.io.CSVwriteable;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Reflect;
@@ -61,7 +61,9 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   public final static String implodeString = ", ";
   
   /**
-   * The SystematicName
+   * Any best-matching name.<p>Please access using {@link #getName()}, because
+   * this may be <code>NULL</code> but {@link #getName()} guarantees to return
+   * a non-null String.
    */
   protected String name;
   
@@ -79,7 +81,9 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   
   /**
    * Simply sets the name of this instance.
-   * @param name
+   * @param name may only be null if you overwrite the {@link #getName()}
+   * method and return a non-null string. Else, this is not allowed to
+   * be <code>NULL</code>.
    */
   public NameAndSignals(String name) {
     super();
@@ -164,6 +168,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
+   * Should always return a non-null string, but better don't rely on that.
    * @return the name.
    * @see #name
    */
@@ -259,11 +264,12 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   public int compareTo(Object o) {
     // Compares ONLY THE NAME! Not the signal(s). and NOT the additional data.
     int r;
+    String name = getName();
     if (o instanceof NameAndSignals) {
       NameAndSignals ot = (NameAndSignals) o;
-      r = this.name.compareTo(ot.name);
+      r = name.compareTo(ot.getName());
     } else {
-      r=this.name.compareTo(o.toString());
+      r= name.compareTo(o.toString());
     }
     
     return r;
@@ -274,7 +280,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    */
   @Override
   public int hashCode() {
-    return name.hashCode();
+    return getName().hashCode();
   }
 
   
@@ -330,7 +336,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @return collection with the given items merged (and cloned), <b>and all other items untouched</b>!
    */
   public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals, Collection<Object[]> groupIdentifiersToMerge, MergeType m) {
-    if (m==null || m.equals(MergeType.AskUser)) m = IntegratorGUITools.getMergeType();
+    if (m==null || m.equals(MergeType.AskUser)) m = IntegratorUITools.getMergeType();
     
     // Group data by name (or gene ID)
     Map<String, Collection<T>> group = group_by_name(nameAndSignals);
@@ -381,7 +387,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   /**
    * Merge a collection of objects to one, e.g., by concatenating strings
    * and taking the {@link MergeType} (e.g. mean) of all numeric values.
-   * @param <T> the implementing class
+   * @param <T> the implementing class ({@link NameAndSignals} derived)
    * @param c collection of objects to merge
    * @param m {@link MergeType} describing how to merge the signals.
    * @return
@@ -681,7 +687,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   protected <T extends NameAndSignals> void cloneAbstractFields(T target, T source) {
-    target.name = new String(source.name);
+    target.name = new String(source.getName());
     target.signals = (List<Signal>) cloneCollection(source.signals);
     if (additional_data==null) {
       target.additional_data = null;
@@ -760,7 +766,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       className = className.substring(className.lastIndexOf('.')+1);
     
     // Output primary identifiers
-    r.append("[" + className + " " + name + " ");
+    r.append("[" + className + " " + getName() + " ");
     
     // Append customizable string.
     if (append!=null && append.length()>0) {
@@ -863,7 +869,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   public Object getObjectAtColumn(int columnIndex, Object[] extensions) {
     int signalStart=1+(extensions==null?0:extensions.length);
     int afterSignals = signalStart+getNumberOfSignals();
-    if (columnIndex == 0) return this.name;
+    if (columnIndex == 0) return this.getName();
     else if (columnIndex >= 1 && columnIndex<signalStart)
       return extensions[columnIndex-1];
     else if (columnIndex >= signalStart && columnIndex<afterSignals)

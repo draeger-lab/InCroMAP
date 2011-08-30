@@ -24,9 +24,9 @@ import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtarget;
-import de.zbit.gui.IntegratorGUITools;
-import de.zbit.gui.miRNAandTarget;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
@@ -329,7 +329,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
       log.info("Gene centering input list...");
       // Remark: "geneCentered()" Converts miRNAandTargets to miRNAs!
       // MergeType does NOT make any difference, because signals of input data are not processed
-      Collection newList = NameAndSignals.geneCentered((Collection<? extends NameAndSignals>)geneList2, IntegratorGUITools.getMergeTypeSilent());
+      Collection newList = NameAndSignals.geneCentered((Collection<? extends NameAndSignals>)geneList2, IntegratorUITools.getMergeTypeSilent());
       if (newList!=null && newList.size()>0) {
         geneList2 = newList;
       }

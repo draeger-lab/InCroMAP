@@ -1,7 +1,7 @@
 /**
  * @author Clemens Wrzodek
  */
-package de.zbit.integrator;
+package de.zbit.visualization;
 
 import java.awt.Color;
 import java.awt.Insets;
@@ -38,14 +38,16 @@ import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.GUITools;
-import de.zbit.gui.IntegratorGUITools;
-import de.zbit.gui.IntegratorTab;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.IntegratorUI;
-import de.zbit.gui.KEGGPathwayActionListener;
-import de.zbit.gui.NameAndSignalsTab;
-import de.zbit.gui.TranslatorTabActions;
+import de.zbit.gui.actions.TranslatorTabActions;
+import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.SignalOptions;
+import de.zbit.gui.tabs.IntegratorTab;
+import de.zbit.gui.tabs.NameAndSignalsTab;
+import de.zbit.integrator.GraphMLmapsExtended;
+import de.zbit.integrator.NameAndSignal2PWTools;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.KGMLSelectAndDownload;
 import de.zbit.kegg.gui.TranslatorPanel;
@@ -548,7 +550,7 @@ public class VisualizeDataInPathway {
     // Write signals to nodes
     //Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals(true);
     boolean isMRNAlist = NameAndSignals.getType(nsList).equals(mRNA.class);
-    MergeType mt = IntegratorGUITools.getMergeTypeSilent();
+    MergeType mt = IntegratorUITools.getMergeTypeSilent();
     for (Node n : graph.getNodeArray()) {
       Collection<T> n_nsList = node2nsMap.get(n);
       // Do we have associated signals?
@@ -749,7 +751,7 @@ public class VisualizeDataInPathway {
     
     // 0.5 Preprocessing: GENE-CENTER data if requested.
     if (!SignalOptions.PROBE_CENTERED.getValue(prefs)) {
-      nsList = NameAndSignals.geneCentered(nsList, IntegratorGUITools.getMergeTypeSilent(prefs));
+      nsList = NameAndSignals.geneCentered(nsList, IntegratorUITools.getMergeTypeSilent(prefs));
     }
     
     // Branch between mRNA and miRNA (=> Node color) and other types (=> labels)
@@ -809,7 +811,7 @@ public class VisualizeDataInPathway {
     int boxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     
     // Prepare maps and required classes
-    MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();
+    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
     Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
     SignalColor recolorer = new SignalColor(nsList, experimentName, type);
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
@@ -876,7 +878,7 @@ public class VisualizeDataInPathway {
     int boxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     
     // Prepare maps and required classes
-    MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();
+    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
     Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
     double[] minMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
     double maxSignalValue = minMax[1]+minMax[0];
@@ -936,7 +938,7 @@ public class VisualizeDataInPathway {
   public int colorNodesAccordingToSignals(SignalColor recolorer, String tabName, String experimentName, SignalType type) {
     boolean inputContainedMicroRNAnodes=false;
     boolean inputContainedmRNAnodes=false;
-    MergeType sigMerge = IntegratorGUITools.getMergeTypeSilent();
+    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
     
     DataMap nsMapper     = tools.getMap(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
     DataMap parentMapper = tools.getMap(GraphMLmapsExtended.NODE_BELONGS_TO);

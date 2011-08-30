@@ -1,4 +1,4 @@
-package de.zbit.gui;
+package de.zbit.gui.actions;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -21,14 +21,20 @@ import y.view.Graph2D;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.data.protein.ProteinModificationExpression;
-import de.zbit.integrator.VisualizeDataInPathway;
+import de.zbit.gui.ActionCommand;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.JDropDownButton;
+import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.TranslatorTools;
 import de.zbit.util.ValuePair;
+import de.zbit.visualization.VisualizeDataInPathway;
 
 /**
  * Actions for a {@link JToolBar} that can be created
@@ -260,10 +266,10 @@ public class TranslatorTabActions implements ActionListener{
     parent.showTemporaryLoadingBar("Adding microRNAs to pathway...");
     
     // 1. Get organism from TranslatorPanel
-    Species spec = getSpeciesOfPathway(parent, IntegratorGUITools.organisms);
+    Species spec = getSpeciesOfPathway(parent, IntegratorUITools.organisms);
     
     // 2. LoadTargets
-    ValuePair<miRNAtargets, Species> vp = IntegratorGUITools.loadMicroRNAtargets(spec);
+    ValuePair<miRNAtargets, Species> vp = IntegratorUITools.loadMicroRNAtargets(spec);
     
     // 3. Visualize targets.
     int nodesAdded = 0;

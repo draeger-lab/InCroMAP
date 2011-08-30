@@ -11,7 +11,7 @@ import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 
 import de.zbit.gui.JLabeledComponent;
-import de.zbit.gui.NodeShapeSelector;
+import de.zbit.gui.customcomponents.NodeShapeSelector;
 
 /**
  * Enable an option tab for the {@link PathwayVisualizationOptions}.

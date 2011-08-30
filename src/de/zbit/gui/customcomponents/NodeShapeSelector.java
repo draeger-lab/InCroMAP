@@ -1,7 +1,7 @@
 /**
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.customcomponents;
 
 import java.awt.Color;
 import java.awt.Component;

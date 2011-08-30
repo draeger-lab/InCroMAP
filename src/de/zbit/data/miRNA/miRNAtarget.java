@@ -15,6 +15,10 @@ import de.zbit.io.CSVwriteable;
 public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwriteable, TableResult {
   private static final long serialVersionUID = -9197560384266247185L;
 
+  public static final String SOURCE_KEY = "Relation source";
+  
+  public static final String PVAL_KEY = "Relation score";
+
   /**
    * Target gene id
    */

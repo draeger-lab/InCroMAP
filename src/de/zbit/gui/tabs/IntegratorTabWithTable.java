@@ -1,7 +1,7 @@
 /**
  * @author Clemens Wrzodek
  */
-package de.zbit.gui;
+package de.zbit.gui.tabs;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,7 +14,10 @@ import javax.swing.JTable;
 import javax.swing.JToolBar;
 
 import de.zbit.data.TableResult;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.BaseFrame.BaseAction;
+import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.io.CSVWriter;
 import de.zbit.io.SBFileFilter;
 import de.zbit.parser.Species;

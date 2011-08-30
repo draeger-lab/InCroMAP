@@ -15,6 +15,8 @@ import y.view.NodeRealizer;
  * sort them (e.g., from red tones, to white tones to blue tones)
  * and use this gradient as background for a simple rectangle node.
  * 
+ * <P>XXX:THIS CLASS IS CURRENTLY UNUSED!
+ * 
  * @author Clemens Wrzodek
  */
 public class GradientNodeRealizer extends NodeRealizer {

@@ -13,7 +13,7 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.GUITools;
-import de.zbit.gui.IntegratorGUITools;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
@@ -69,7 +69,7 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
   public Collection<miRNA> importWithGUI(Component parent, String file, ReaderCache cache) {
     
     // Create a new panel that allows selection of species (Not required! Optional)
-    JLabeledComponent spec = IntegratorGUITools.getOrganismSelector();
+    JLabeledComponent spec = IntegratorUITools.getOrganismSelector();
     
     // Create and show the import dialog
     try {
@@ -78,7 +78,7 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
       
       // Show the CSV Import dialog
       final CSVImporterV2 c = new CSVImporterV2(inputReader, exCol);
-      boolean dialogConfirmed = IntegratorGUITools.showCSVImportDialog(parent, c, spec);
+      boolean dialogConfirmed = IntegratorUITools.showCSVImportDialog(parent, c, spec);
       
       // Process user input and read data
       if (dialogConfirmed) {
