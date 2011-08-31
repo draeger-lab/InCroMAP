@@ -3,6 +3,7 @@
  */
 package de.zbit.analysis;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
@@ -11,6 +12,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import de.zbit.data.EnrichmentObject;
 import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
@@ -84,7 +86,9 @@ public class PairData {
     LayoutHelper lh = new LayoutHelper(jp);
     
     // Create a list of available datasets and get initial selection.
-    List<LabeledObject<IntegratorTab<?>>> datasets = IntegratorUITools.getNameAndSignalTabs(true, null, null);
+    List<Class<?>> excludeDatatypes = new ArrayList<Class<?>>();
+    excludeDatatypes.add(EnrichmentObject.class);
+    List<LabeledObject<IntegratorTab<?>>> datasets = IntegratorUITools.getNameAndSignalTabs(true, excludeDatatypes, null);
     if (datasets.size()<1) {
       GUITools.showMessage("Could not find any second dataset for pairing.", IntegratorUI.appName);
       return null;
@@ -95,7 +99,7 @@ public class PairData {
       lh.add(dataSelect);
       
       // Add other options (gene-centere, merged-signal)
-      JCheckBox gene_center = new JCheckBox("Gene center data before pairing", true);
+      JCheckBox gene_center = new JCheckBox("Gene center both datatsets before pairing", true);
       lh.add(gene_center);
       
       String firstPartName = firstPart!=null?firstPart.getTabName():data.iterator().next().getClass().getSimpleName();
@@ -210,7 +214,7 @@ public class PairData {
       newSigName = String.format("%s of %s", mergeType.toString(), experiment1);
     } else {
       if (mergeType.equals(MergeTypeForTwo.AbsoluteSum)) {
-        newSigName = String.format("|%s + %s|", experiment1, experiment2);
+        newSigName = String.format("|%s| + |%s|", experiment1, experiment2);
       } else if (mergeType.equals(MergeTypeForTwo.Sum)) {
         newSigName = String.format("%s + %s", experiment1, experiment2);
       } else if (mergeType.equals(MergeTypeForTwo.Difference)) {
@@ -284,7 +288,7 @@ public class PairData {
         
         // Are there missing annotated targets?
       } else if (firstPart!=null && NameAndSignals.isMicroRNA(firstPart.getData())) {
-        if (annotateTargetsAndRecurse && !miRNA.hasTargets((Iterable<? extends miRNA>) firstPart)) {
+        if (annotateTargetsAndRecurse && !miRNA.hasTargets((Iterable<? extends miRNA>) firstPart.getData())) {
           firstPart.getActions().annotateMiRNAtargets();
           return pairData(tab, geneCenter, false);
         }

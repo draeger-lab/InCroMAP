@@ -26,13 +26,17 @@ import y.view.Graph2D;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.ActionCommand;
 import de.zbit.gui.BaseFrameTab;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
+import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.actions.TranslatorTabActions.TPAction;
 import de.zbit.gui.customcomponents.TableResultTableModel;
@@ -530,6 +534,44 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     if (evt.getPropertyName().equals("ORGANISM_NAME")) {
       // Could add as tooltip...
     }
+  }
+  
+  
+  
+  
+  
+  
+  
+  void showIntegrationDialog() throws Exception {
+    //visualizeAndColorPathway(); //<= examples
+    
+    JPanel jp = new JPanel();
+    LayoutHelper lh = new LayoutHelper(jp);
+    
+    JLabeledComponent orgSel = IntegratorUITools.getOrganismSelector();
+    lh.add(orgSel);
+    
+    PathwaySelector pwSel = new PathwaySelector(Translator.getFunctionManager(),null, null);
+    lh.add(pwSel);
+    
+    // Data types to let the user choose one from
+    Class<? extends NameAndSignals>[] toVisualize = new Class[]{
+      mRNA.class, miRNA.class, DNAmethylation.class, ProteinModificationExpression.class
+    };
+    
+    
+    for (Class<? extends NameAndSignals> type : toVisualize) {
+      /* TODO: Create the following dialog for each type :
+       * 
+       * [ ] Visualize (mRNA-PairNS.getTypeName()) data
+       *     (________) datasets (same species as in box1 !?!?)
+       *     (________) experiments
+       *     
+       * Disable by default if none is available [for any species].
+       * 
+       */
+    }
+    
   }
   
 }

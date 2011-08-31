@@ -11,8 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -212,14 +210,15 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     r.setProgressBar(getProgressBar());
     r.setDisplayProgress(getProgressBar()!=null);
     r.open();
-    Map<T, T> ret = new HashMap<T, T>();
+    //Map<T, T> ret = new HashMap<T, T>();
+    Collection<T> ret = new ArrayList<T>(128);
     
     String[] line;
     while ((line=r.getNextLine())!=null) {
       processLine(line, ret);
     }
     
-    return ret.values();
+    return ret; //.values();
   }
   
   
@@ -242,14 +241,15 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    */
   public Collection<T> read(String[] identifiers) throws IOException, Exception {
     init();
-    Map<T, T> ret = new HashMap<T, T>();
+    //Map<T, T> ret = new HashMap<T, T>();
+    Collection<T> ret = new ArrayList<T>(128);
     
     nameCol = 0;
     for (String id : identifiers) {
       processLine(new String[]{id}, ret);
     }
     
-    return ret.values();
+    return ret; //.values();
   }
   
   /**
@@ -258,7 +258,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * @param ret current data that has been read
    * @throws Exception 
    */
-  private void processLine(String[] line, Map<T, T> ret) throws Exception {
+  private void processLine(String[] line, Collection<T> ret) throws Exception {
     if (nameCol>=line.length) return; // continue;
     
     T m = createObject(line[nameCol], line);
@@ -273,11 +273,13 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     }
     
     // Get unique object to assign signals
-    T mi = ret.get(m);
-    if (mi==null) {
-      mi = m;
-      ret.put(mi, mi);
-    }
+//    T mi = ret.get(m);
+//    if (mi==null) {
+//      mi = m;
+//      ret.put(mi, mi);
+//    }
+    T mi = m;
+    ret.add(m);
     
     // Add signals
     if (signalColumns!=null) {

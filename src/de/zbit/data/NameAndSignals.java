@@ -80,6 +80,12 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   private Map<String, Object> additional_data = null;
   
   /**
+   * Is linked to {@link #additional_data} and contains true, if this data should
+   * NOT be shown to the user (e.g., in columns of tables).
+   */
+  public static Set<String> additional_data_is_invisible = new HashSet<String>();
+  
+  /**
    * Simply sets the name of this instance.
    * @param name may only be null if you overwrite the {@link #getName()}
    * method and return a non-null string. Else, this is not allowed to
@@ -289,7 +295,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * <p>Gene centering is performed by name, thus, {@link miRNA}s are centered by the
    * miRNA, and not by the target.
    * @param nameAndSignals
-   * @return
+   * @return gene centered list (merged and cloned items).
+   * If list was already gene-centered, simply returns the same list.
    */  
   public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals) {
     return geneCentered(nameAndSignals, MergeType.AskUser);
@@ -303,7 +310,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * a mixture of protein name and modification name.
    * @param nameAndSignals
    * @param m {@link MergeType}
-   * @return
+   * @return gene centered list (merged and cloned items).
+   * If list was already gene-centered, simply returns the same list.
    */
   public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals, MergeType m) {
 //    if (m==null || m.equals(MergeType.AskUser)) m = IntegratorGUITools.getMergeType();
@@ -334,12 +342,27 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * <li>{@link #name} for all others (e.g., {@link miRNA}s)</li></ul>
    * @param m
    * @return collection with the given items merged (and cloned), <b>and all other items untouched</b>!
+   * If list was already gene-centered, simply returns the same list.
    */
   public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals, Collection<Object[]> groupIdentifiersToMerge, MergeType m) {
     if (m==null || m.equals(MergeType.AskUser)) m = IntegratorUITools.getMergeType();
     
     // Group data by name (or gene ID)
-    Map<String, Collection<T>> group = group_by_name(nameAndSignals);
+    Map<String, Collection<T>> group = group_by_name(nameAndSignals, true);
+    
+    // Eventually return already gene-centered list
+    if (group==null) {
+      // Set gene-centered mark
+      for (NameAndSignals ns : nameAndSignals) {
+        if (ns instanceof NSwithProbes) {
+          ((NSwithProbes) ns).setGeneCentered(true);
+        } else {
+          break; // Mixed content is not allowed. => all not NSwithProbes
+        }
+      }
+      
+      return nameAndSignals;
+    }
     
     Collection<T> toReturn = new ArrayList<T>();
     if (groupIdentifiersToMerge==null) {
@@ -627,12 +650,17 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * <li>Name for all others (e.g., {@link miRNA}s)</li></ul>
    * 
    * @param nsList collection of {@link NameAndSignals}s.
+   * @param returnNullIfListIsGeneCentered returns null if the list was already gene-centered.
+   * A list is gene-centered, if each group has a size of exactly 1.
    * @return A map with group identifier (as described above) to all belonging {@link NameAndSignals}.
    * E.g., a map with miRNA names ({@link miRNA#getName()}) as keys and all belonging {@link miRNA}s as values.
    * Or anything else extending {@link NameAndSignals}.
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <T extends NameAndSignals> Map<String, Collection<T>> group_by_name(Collection<T> nsList) {
+  public static <T extends NameAndSignals> Map<String, Collection<T>> group_by_name(Collection<T> nsList,
+    boolean returnNullIfListIsGeneCentered) {
+    boolean atLeastOneListHasMoreThanOneItem=false;
+    
     // Group by miRNA name
     Map<String, Collection<T>> ret = new HashMap<String, Collection<T>>();
     
@@ -653,7 +681,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         if (!gic.hasNext()) continue;
         Object listType = gic.next();
         if (listType instanceof NameAndSignals) {
-          ret.putAll(group_by_name(((EnrichmentObject)mi).getGenesInClass()));
+          ret.putAll(group_by_name(((EnrichmentObject)mi).getGenesInClass(), returnNullIfListIsGeneCentered));
         } else {
           log.severe("Cannot gene center list of: " + listType.getClass());
         }
@@ -665,12 +693,20 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         name = getIdentifier(mi).toString();
       }
       
+      // Put into map
       Collection<T> col = ret.get(name);
       if (col==null) {
         col = new ArrayList<T>();
         ret.put(name, col);
+      } else {
+        atLeastOneListHasMoreThanOneItem=true;
       }
       col.add(mi);
+    }
+    
+    // If list was already gene-centered, return this information.
+    if (!atLeastOneListHasMoreThanOneItem && returnNullIfListIsGeneCentered) {
+      return null;
     }
     
     return ret;
@@ -790,6 +826,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       Iterator<String> it = additional_data.keySet().iterator();
       while (it.hasNext()) {
         String key = it.next();
+        //if (additional_data_is_invisible.contains(key)) continue; // Output everything here
         r.append(key + ":" + additional_data.get(key));
         if (it.hasNext()) r.append(implodeString);
       }
@@ -809,8 +846,17 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   public int getNumberOfAdditionalData() {
-    return additional_data==null?0:additional_data.size();
+    //return additional_data==null?0:additional_data.size();
+    int size=0;
+    if (additional_data!=null) {
+      for (String key : additional_data.keySet()) {
+        if (additional_data_is_invisible.contains(key)) continue;
+        size++;
+      }
+    }
+    return size;
   }
+  
   public int getNumberOfSignals() {
     return signals==null?0:signals.size();
   }
@@ -853,9 +899,11 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       Iterator<String> it = additional_data.keySet().iterator();
       int i=0;
       while (it.hasNext()) {
+        String name = it.next();
+        if (additional_data_is_invisible.contains(name)) continue;
         if (columnIndex==i++) {
-          return StringUtil.formatOptionName(it.next());
-        } else it.next();
+          return StringUtil.formatOptionName(name);
+        };
       }
     }
     return "";
@@ -888,13 +936,16 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       Iterator<String> it = additional_data.keySet().iterator();
       int i=0;
       while (it.hasNext()) {
+        
+        String key = it.next();
+        if (additional_data_is_invisible.contains(key)) continue;
         if (columnIndex==i++) {
-          String key = it.next();
           Object add =  additional_data.get(key);
           // Do not return null. Number of cols must be solid and thus,
           // must not be null for unset additional data.
           return (add!=null?add:"");
-        } else it.next();
+        };
+        
       }
     }
     return null;

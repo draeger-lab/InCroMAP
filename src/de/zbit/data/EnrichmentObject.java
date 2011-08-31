@@ -510,5 +510,12 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
   public String getUniqueLabel() {
     return getName();
   }
+
+  /**
+   * @return true if this is a kegg pathway enrichment.
+   */
+  public boolean isKEGGenrichment() {
+    return getIdentifier().toString().startsWith("path:");
+  }
   
 }

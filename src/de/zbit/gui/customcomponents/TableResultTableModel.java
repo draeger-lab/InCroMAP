@@ -190,7 +190,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
 
       // Other data type dependent capabilities
       if (tab.getDataContentType().equals(EnrichmentObject.class)) {
-        if (((EnrichmentObject)tab.getExampleData()).getIdentifier().toString().startsWith("path:")) {
+        if (((EnrichmentObject)tab.getExampleData()).isKEGGenrichment()) {
           // It's a KEGG Pathway enrichment.
           KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
           IntegratorUITools.addRightMousePopup(jc, IntegratorUITools.createKeggPathwayPopup(al2, popUp));
@@ -246,17 +246,14 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
         Component c = super.prepareRenderer(renderer, row, column);
         
         // Make border bold, if boldBorders contains the index.
-        boolean makeBorder = false;
         short left=0, right=0;
         if (boldBorders.contains(column-(model.isRowIndexIncluded()?1:0))) { // 1 is offset for "#" column
-          makeBorder = true;
-          left+=1;
+          left=1;
         }
         if (boldBorders.contains((column+1)-(model.isRowIndexIncluded()?1:0))) {
-          makeBorder = true;
-          right+=1;
+          right=1;
         }
-        if (makeBorder) {
+        if (left>0 || right>0) {
           ((JComponent)c).setBorder(new MatteBorder(0, left, 0, right, gridColor));
         }
         

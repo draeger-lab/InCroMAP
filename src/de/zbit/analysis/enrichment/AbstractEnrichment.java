@@ -194,7 +194,9 @@ public abstract class AbstractEnrichment <EnrichIDType> {
       }
       
       if (!checkGeneIDs(geneIDs)) {
-        log.log(Level.WARNING, "Could not get Entrez Gene ID for " + gene);
+        String geneN = gene.toString();
+        if (gene instanceof NameAndSignals) geneN = ((NameAndSignals) gene).getUniqueLabel();
+        log.log(Level.WARNING, "Could not get Entrez Gene ID for " + geneN);
         continue;
       }
       

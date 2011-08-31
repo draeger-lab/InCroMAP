@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import de.zbit.data.GeneID;
-import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 
@@ -128,6 +127,24 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
     return getName();
   }
   
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#hashCode()
+   */
+  @Override
+  public int hashCode() {
+    return super.hashCode() + getUniqueLabel().hashCode();
+  }
   
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#compareTo(java.lang.Object)
+   */
+  @Override
+  public int compareTo(Object o) {
+    int r = super.compareTo(o);
+    if (r==0 && o instanceof ProteinModificationExpression) {
+      r = getUniqueLabel().compareTo(((ProteinModificationExpression)o).getUniqueLabel());
+    }
+    return r;
+  }
   
 }

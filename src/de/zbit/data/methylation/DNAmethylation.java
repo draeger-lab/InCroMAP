@@ -72,4 +72,6 @@ public class DNAmethylation extends NameAndSignals implements GeneID {
     return null;
   }
   
+  // TODO: Overwrite hashcode and compareTo with unique comparisons!
+  
 }

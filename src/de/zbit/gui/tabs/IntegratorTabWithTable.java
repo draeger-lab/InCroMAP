@@ -5,7 +5,9 @@ package de.zbit.gui.tabs;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.swing.JComponent;
@@ -14,9 +16,9 @@ import javax.swing.JTable;
 import javax.swing.JToolBar;
 
 import de.zbit.data.TableResult;
+import de.zbit.gui.BaseFrame.BaseAction;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
-import de.zbit.gui.BaseFrame.BaseAction;
 import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.io.CSVWriter;
 import de.zbit.io.SBFileFilter;
@@ -34,6 +36,11 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
    * The {@link JTable} holding visualized Names and Signals.
    */
   private JTable table=null;
+  
+  /**
+   * Listeners that must be informed, if the current table changes.
+   */
+  private Set<IntegratorTabWithTable> tableChangeListeners=null;
 
   /**
    * @param parent
@@ -171,5 +178,44 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
   public void rebuildTable() {
     createTable();
     super.init();
+    fireTableChangeListeners();
+  }
+  
+  /**
+   * Invokes the {@link #rebuildTable()} method on all 
+   * tabs in {@link #tableChangeListeners}.
+   */
+  private void fireTableChangeListeners() {
+    /* If you wonder why this "might not work":
+     * If data get's gene-centered, objects are COPIES! */
+    if (tableChangeListeners == null) return;
+    for (IntegratorTabWithTable tab : tableChangeListeners) {
+      // Call rebuildTable() on listeners, avoid endless-loops.
+      Set<IntegratorTabWithTable> otherListeners = tab.getTableChangeListeners();
+      if (otherListeners==null || !(otherListeners.contains(this))) {
+        tab.rebuildTable();
+        tab.repaint();
+      }
+    }
+  }
+
+  /**
+   * @return all tabs that listen to changes on this table.
+   * May return null!
+   */
+  private Set<IntegratorTabWithTable> getTableChangeListeners() {
+    return tableChangeListeners;
+  }
+
+  /**
+   * If {@link #rebuildTable()} is invoked, on all <code>nsTab</code>s added
+   * with this method, their {@link #rebuildTable()} is invoked, too.
+   * <p>You must be careful not to create endless loops with this method!
+   * @param nsTab
+   */
+  public void addTableChangeListener(IntegratorTabWithTable nsTab) {
+    if (nsTab.equals(this)) return; // do not accept yourself
+    if (tableChangeListeners == null) tableChangeListeners = new HashSet<IntegratorTabWithTable>();
+    tableChangeListeners.add(nsTab);
   }
 }

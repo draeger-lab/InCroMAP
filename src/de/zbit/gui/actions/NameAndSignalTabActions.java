@@ -182,15 +182,21 @@ public class NameAndSignalTabActions implements ActionListener {
     // Visualize in Pathway
     ActionCommand pathwayCommand;
     if (tableContent.equals(EnrichmentObject.class)) {
-      pathwayCommand = KEGGPathwayActionListener.VISUALIZE_PATHWAY;
+      if (((EnrichmentObject<?>)parent.getExampleData()).isKEGGenrichment()) {
+        pathwayCommand = KEGGPathwayActionListener.VISUALIZE_PATHWAY;
+      } else {
+        pathwayCommand=null;
+      }
     } else {
       pathwayCommand = NSAction.VISUALIZE_IN_PATHWAY;
     }
     
-    KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(parent);
-    JButton showPathway = GUITools.createJButton(al2,
+    if (pathwayCommand!=null) {
+      KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(parent);
+      JButton showPathway = GUITools.createJButton(al2,
         pathwayCommand, UIManager.getIcon("ICON_GEAR_16"));
-    bar.add(showPathway);
+      bar.add(showPathway);
+    }
     
     // Integrate (pair) data button
     if (!tableContent.equals(EnrichmentObject.class)) {
@@ -233,9 +239,6 @@ public class NameAndSignalTabActions implements ActionListener {
       
     } if (tableContent.equals(PairedNS.class)) {
       bar.add(GUITools.createJButton(this, NSAction.ADD_OBSERVATION, UIManager.getIcon("ICON_GEAR_16")));
-     
-      // TODO: let select one signal of each data type.
-      GUITools.setEnabled(false, bar, KEGGPathwayActionListener.VISUALIZE_PATHWAY, NSAction.VISUALIZE_IN_PATHWAY);
     }      
     
     
@@ -276,6 +279,11 @@ public class NameAndSignalTabActions implements ActionListener {
         NameAndSignalsTab nsTab = new NameAndSignalsTab(parent.getIntegratorUI(), pairedData, parent.getSpecies(false));
         parent.getIntegratorUI().addTab(nsTab, "IntegratedData",
           String.format("Integration of '%s' and '%s'.", parent.getTabName(), pd.getLastSelectedOtherTab().getTabName()));
+        
+        // If one of the input table changes (during to changes in NameAndSignals), the
+        // derived tables must be changed, too!
+        parent.addTableChangeListener(nsTab);
+        pd.getLastSelectedOtherTab().addTableChangeListener(nsTab);
       }
       
     } else if (command.equals(NSAction.ADD_OBSERVATION.toString())) {

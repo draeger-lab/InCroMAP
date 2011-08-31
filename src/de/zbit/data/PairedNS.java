@@ -57,10 +57,12 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
   @Override
   public String getName() {
     // Simply concatenate both names
-    StringBuffer out = new StringBuffer();
+    StringBuilder out = new StringBuilder(32);
+    out.append("[");
     out.append(ns1.getName());
     out.append(implodeString);
     out.append(ns2.getName());
+    out.append("]");
     
     return out.toString();
   }
@@ -114,13 +116,22 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
    * in bold to separate the NS pairs.
    */
   public Set<Integer> getBoldBorders() {
-    Set<Integer> ret = new HashSet<Integer>(2);
+    Set<Integer> ret = new HashSet<Integer>();
     
     int c = ns1.getColumnCount();
+    if (ns1 instanceof PairedNS) {
+      ret.addAll(((PairedNS<?,?>) ns1).getBoldBorders());
+    }
     ret.add(c);
     c+=getNumberOfSignals(); //Signals
     c+=getNumberOfAdditionalData(); //Additional data
     ret.add(c);
+    
+    if (ns2 instanceof PairedNS) {
+      for (Integer i: ((PairedNS<?,?>) ns2).getBoldBorders()) {
+        ret.add(i+c); 
+      }
+    }
 
     return ret;
   }
@@ -136,21 +147,35 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
    * @see de.zbit.data.NameAndSignals#getColumnName(int, java.lang.String[])
    */
   public String getColumnName(int columnIndex, String[] extensionNames) {
+    // NS1 Headers
     int ns1ColCount = ns1.getColumnCount();
     if (columnIndex<ns1ColCount) {
-      String ns1Type = getTypeName(ns1.getClass());
-      return ns1Type + '\n' + ns1.getColumnName(columnIndex);
+      return createTwoLinedHeader(ns1, columnIndex);
     }
     
+    // Own Headers
     int supColCount = super.getColumnCount();
-    if (columnIndex-ns1ColCount+1<(super.getColumnCount()))
+    if (columnIndex-ns1ColCount+1<(supColCount))
       return super.getColumnName(columnIndex-ns1ColCount+1, extensionNames);
     
-    {
-      String ns2Type = getTypeName(ns2.getClass());
-      return ns2Type + '\n' + ns2.getColumnName(columnIndex-ns1ColCount+1-supColCount);
+    // NS2 Headers
+    return createTwoLinedHeader(ns2, columnIndex-ns1ColCount+1-supColCount);
+  }
+
+  /**
+   * Create a two-lined header with data type in first column and
+   * actual column description in the second.
+   * @param ns
+   * @param columnIndex
+   * @return
+   */
+  public String createTwoLinedHeader(NameAndSignals ns, int columnIndex) {
+    if (ns instanceof PairedNS) {
+      // Recursive assign names
+      return ns.getColumnName(columnIndex);
+    } else {
+      return getTypeName(ns.getClass()) + '\n' + ns.getColumnName(columnIndex);
     }
-    
   }
 
   /**
@@ -210,6 +235,16 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
     }
     if (ns2 instanceof GeneID) {
       id2 = ((GeneID)ns2).getGeneID();
+    }
+    
+    /* XXX:
+     * - if only one miRNA then it is always ns1.
+     * - if exactly one miRNA, then other is the TARGET,
+     * thus return the miRNA of the target!
+     */
+    if (ns1 instanceof miRNA &&
+        !(ns2 instanceof miRNA)) {
+      id1 = default_geneID;
     }
     
     // Evaluate...

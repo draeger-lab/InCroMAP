@@ -46,6 +46,13 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
   private boolean wasGeneCentered = false;
   
   /**
+   * Always marks the #gene_centered_key as invisible.
+   */
+  static {
+    NameAndSignals.additional_data_is_invisible.add(gene_centered_key);
+  }
+  
+  /**
    * @param probeName
    * @param geneName
    * @param geneID

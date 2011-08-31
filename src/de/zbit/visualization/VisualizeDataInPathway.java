@@ -29,6 +29,7 @@ import y.view.Graph2D;
 import y.view.NodeLabel;
 import y.view.NodeRealizer;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
@@ -166,7 +167,7 @@ public class VisualizeDataInPathway {
   /**
    * Get information which data types are currently visualized in the graph
    * @return boolean array of size 4:
-   * <ol><li>mRNA</li>
+   * <ol><li>mRNA (or unknown)</li>
    * <li>miRNA</li>
    * <li>ProteinModificationExpression</li>
    * <li>DNA methylation</li></ol>
@@ -191,6 +192,9 @@ public class VisualizeDataInPathway {
         visualizedDataTypes[2]=true;
       } else if (DNAmethylation.class.isAssignableFrom(t)) {
         visualizedDataTypes[3]=true;
+      } else {
+        // EVERYTHING ELSE IS ALSO VISUALIZED AS NODE COLOR
+        visualizedDataTypes[0]=true;
       }
     }
     
@@ -211,7 +215,7 @@ public class VisualizeDataInPathway {
   /**
    * Test if a certain data type is already visualized in the pathway.
    * @param <T>
-   * @param dt e.g., mRNA or miRNA, etc.
+   * @param dt e.g.,  or miRNA, etc.
    * @return true if and only if already any dataset of this type is
    * currently visualized in the pathway.
    */
@@ -229,7 +233,9 @@ public class VisualizeDataInPathway {
       return visualizedDataTypes[3];
     } else {
       // In doubt, return false.
-      return false;
+      //return false;
+      // EVERYTHING ELSE IS ALSO VISUALIZED AS NODE COLOR
+      return visualizedDataTypes[0];
     }
     
   }
@@ -549,7 +555,8 @@ public class VisualizeDataInPathway {
     
     // Write signals to nodes
     //Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals(true);
-    boolean isMRNAlist = NameAndSignals.getType(nsList).equals(mRNA.class);
+    //boolean isMRNAlist = NameAndSignals.getType(nsList).equals(mRNA.class);
+    Class<? extends NameAndSignals> nsType = NameAndSignals.getType(nsList);
     MergeType mt = IntegratorUITools.getMergeTypeSilent();
     for (Node n : graph.getNodeArray()) {
       Collection<T> n_nsList = node2nsMap.get(n);
@@ -557,14 +564,24 @@ public class VisualizeDataInPathway {
       if (n_nsList!=null && n_nsList.size()>0) {
         
         // Build a merged-fake ns to show the merged signal
-        if (isMRNAlist && n_nsList.size()>1) {
+        boolean fakeAdded = false;
+        if (n_nsList.size()>1) { // isMRNAlist && 
           n_nsList = new ArrayList<T>(n_nsList);
-          mRNA fake = new mRNA("#"+ mt.toString());
-          fake.addSignal(Signal.merge(n_nsList, mt, experimentName, type));
-          ((List<T>)n_nsList).add(0, (T) fake); // add to beginning
+          //mRNA fake = new mRNA("#"+ mt.toString());
+          try {
+            NameAndSignals fake = nsType.getConstructor(String.class).newInstance("#"+ mt.toString());
+            fake.addSignal(Signal.merge(n_nsList, mt, experimentName, type));
+            ((List<T>)n_nsList).add(0, (T) fake); // add to beginning
+            fakeAdded = true;
+          } catch (Exception e) {}; // not important...
         }
 
         writeSignalsToNode(n, n_nsList, tabName, experimentName, type);
+        
+        // Remove the fake signal
+        if (fakeAdded) {
+          ((List<T>)n_nsList).remove(0); // remove from beginning
+        }
         //----------
       }
     }
@@ -757,8 +774,20 @@ public class VisualizeDataInPathway {
     // Branch between mRNA and miRNA (=> Node color) and other types (=> labels)
     int nodesColored = 0;
     Class<? extends NameAndSignals> inputType = NameAndSignals.getType(nsList);
-    if (mRNA.class.isAssignableFrom(inputType) || miRNA.class.isAssignableFrom(inputType)) {
+    if (ProteinModificationExpression.class.isAssignableFrom(inputType)) {
+      // Protein modifications as boxes (node labels) below nodes
+      nodesColored=addBoxedLabelsBelowNodes(nsList, tabName, experimentName, type);
       
+    } else if (DNAmethylation.class.isAssignableFrom(inputType)) {
+      // DNA methylation as black box with varied width (node labels) left of nodes
+      nodesColored=addBlackBoxLeftOfNodes(nsList, tabName, experimentName, type);
+      
+    } else {
+      if (!(mRNA.class.isAssignableFrom(inputType) || miRNA.class.isAssignableFrom(inputType)
+          || PairedNS.class.isAssignableFrom(inputType))) {
+        log.warning("No visualization method implemented for " + inputType.getSimpleName() + ". Using node-color-visualization.");
+      }
+    
       // 1. Add NS to nodes and perform splits
       Collection<T> oldNsList = nsList;
       nsList = nsTools.prepareGraph(nsList, tabName, experimentName, type, pwCentered);
@@ -773,21 +802,21 @@ public class VisualizeDataInPathway {
       
       // 4. change shape
       // TODO: Similar to writeSignals
-      
-    } else if (ProteinModificationExpression.class.isAssignableFrom(inputType)) {
-      // Protein modifications as boxes (node labels) below nodes
-      addBoxedLabelsBelowNodes(nsList, tabName, experimentName, type);
-      
-    } else if (DNAmethylation.class.isAssignableFrom(inputType)) {
-      // DNA methylation as black box with varied width (node labels) left of nodes
-      addBlackBoxLeftOfNodes(nsList, tabName, experimentName, type);
-      
-    } else {
-      log.warning("No visualization method implemented for " + inputType.getSimpleName());
+       
     }
+//    } else {
+//      log.warning("No visualization method implemented for " + inputType.getSimpleName());
+//    }
     
     // Remember that we have visualized this data.
-    getVisualizedData(true).add(visData);
+    if (nodesColored>0) {
+      getVisualizedData(true).add(visData);
+    } else {
+      // Mostly not the same species...
+      if(!miRNA.class.isAssignableFrom(inputType)) { // miRNA has its own warning.
+        log.warning("Could not find any graph nodes that match to the input data.");
+      }
+    }
     
     
     return nodesColored;
@@ -803,8 +832,9 @@ public class VisualizeDataInPathway {
    * @param tabName unique identifier to re-identify the given <code>nsList</code>
    * @param experimentName filter for certain signals from <code>nsList</code>
    * @param type filter for certain signals from <code>nsList</code>
+   * @return number of nodes that have been changed
    */
-  public <T extends NameAndSignals> void addBoxedLabelsBelowNodes(Collection<T> nsList, 
+  public <T extends NameAndSignals> int addBoxedLabelsBelowNodes(Collection<T> nsList, 
     String tabName, String experimentName, SignalType type) {
     // Read box height from preferences (Default:8)
     SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
@@ -816,6 +846,7 @@ public class VisualizeDataInPathway {
     SignalColor recolorer = new SignalColor(nsList, experimentName, type);
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
     
+    int changedNodes = 0;
     for (Node n: n2ns.keySet()) {
       Set<T> nsForNode = n2ns.get(n);
       if (nsForNode==null) continue;
@@ -853,9 +884,11 @@ public class VisualizeDataInPathway {
       
       // Write all those signals to node annotations
       writeSignalsToNode(n, sorted, tabName, experimentName, type);
+      changedNodes++;
     }
     // TODO: Change eventual DNA methylation box-heights. If so,
     // Change also on REMOVAL of prot mod data.
+    return changedNodes;
   }
   
   /**
@@ -868,8 +901,9 @@ public class VisualizeDataInPathway {
    * @param tabName unique identifier to re-identify the given <code>nsList</code>
    * @param experimentName filter for certain signals from <code>nsList</code>
    * @param type filter for certain signals from <code>nsList</code>
+   * @return number of nodes that have been changed
    */
-  public <T extends NameAndSignals> void addBlackBoxLeftOfNodes(Collection<T> nsList, 
+  public <T extends NameAndSignals> int addBlackBoxLeftOfNodes(Collection<T> nsList, 
     String tabName, String experimentName, SignalType type) {
     // Read max. box width from preferences (Default:10)
     SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
@@ -889,6 +923,7 @@ public class VisualizeDataInPathway {
     // TODO: Better show pValue AND fold-change!
     // (via position: left/right of node OR color).
     
+    int changedNodes=0;
     for (Node n: n2ns.keySet()) {
       Set<T> nsForNode = n2ns.get(n);
       if (nsForNode==null) continue;
@@ -918,7 +953,10 @@ public class VisualizeDataInPathway {
         nl.setLineColor(nl.getBackgroundColor());
         nl.setDistance(0);
       }
+      changedNodes++;
     }
+    
+    return changedNodes;
   }
   
   /**
@@ -1111,7 +1149,7 @@ public class VisualizeDataInPathway {
                 nr.setY(nr.getY()+oldHeight);
                 graph.setLabelText(n, oldText);
               }
-              // Only works for mRNA
+              // Only works for mRNA (or any unknown)
               instance.removeVisualization(observation.getA().getName(), obsExpName, obsExpType);
               // Only works for Phospho or DNA methylation
               instance.removeVisualizedLabels(observation.getA().getName(), obsExpName, obsExpType);
