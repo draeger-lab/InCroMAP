@@ -10,11 +10,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import de.zbit.data.GeneID;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
@@ -74,6 +76,63 @@ public class miRNA extends NSwithProbes {
     return matched;
   }
   
+  /**
+   * Group a given list of {@link miRNA}s by target geneIDs.
+   * <p>Note: one {@link miRNA} can have multiple targets and thus, occur
+   * in multiple key-lists!
+   * @param list
+   * @return mapping from geneID to list of {@link miRNA}s.
+   */
+  public static Map<Integer, List<miRNA>> groupByTarget(Iterable<? extends miRNA> list) {
+    Map<Integer, List<miRNA>> map = new HashMap<Integer, List<miRNA>>();
+    for (miRNA mi: list) {
+      if (!mi.hasTargets()) addToList(map, GeneID.default_geneID, mi);
+      else {
+        for (miRNAtarget t: mi.getTargets()) {
+          addToList(map, t.getTarget(), mi);
+        }
+      }
+    }
+    return map;
+  }
+  
+  /**
+   * Actually the same as {@link #groupByTarget(Iterable)}, but
+   * converts all keys to strings.
+   * <p>This has been created for compatibility with {@link #group_by_name(Collection, boolean)}
+   * @param list
+   * @return
+   * @see #groupByTarget(Iterable)
+   */
+  public static Map<String, List<miRNA>> groupByTargetAndReturnKeysAsString(Iterable<? extends miRNA> list) {
+    Map<String, List<miRNA>> map = new HashMap<String, List<miRNA>>();
+    for (miRNA mi: list) {
+      if (!mi.hasTargets()) addToList(map, Integer.toString(GeneID.default_geneID), mi);
+      else {
+        for (miRNAtarget t: mi.getTargets()) {
+          addToList(map, Integer.toString(t.getTarget()), mi);
+        }
+      }
+    }
+    return map;
+  }
+  
+
+  /**
+   * Adds an item to a map of a list of V.
+   * @param <K>
+   * @param <V>
+   * @param map
+   * @param key
+   * @param listItem
+   */
+  private static <K, V> void addToList(Map<K, List<V>> map, K key, V listItem) {
+    List<V> list = map.get(key);
+    if (list==null) {
+      list = new LinkedList<V>();
+    }
+    list.add(listItem);
+  }
 
   /**
    * Set the targets of this miRNA. Ensures that this is always a

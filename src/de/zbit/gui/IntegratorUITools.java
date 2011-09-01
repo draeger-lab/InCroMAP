@@ -63,6 +63,7 @@ import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.csv.CSVImporterV2;
+import de.zbit.gui.dialogs.IntegratedVisualizationDialog;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.MergeTypeOptions;
 import de.zbit.gui.prefs.SignalOptionPanel;
@@ -81,6 +82,7 @@ import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
+import de.zbit.util.ArrayUtils;
 import de.zbit.util.StringUtil;
 import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
@@ -396,8 +398,8 @@ public class IntegratorUITools {
    * @return
    */
   public static <T extends NameAndSignals> JLabeledComponent createSelectExperimentBox(T ns) {
-    JLabeledComponent jc = new JLabeledComponent("Select an observation",true,new String[]{"temp"});
-    return createSelectExperimentBox(jc, ns);
+    JLabeledComponent jc = new JLabeledComponent("Select an observation",true,new String[]{"N/A"});
+    return ns==null?jc:createSelectExperimentBox(jc, ns);
   }
   
   /**
@@ -431,7 +433,7 @@ public class IntegratorUITools {
    */
   @SuppressWarnings("rawtypes")
   public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorUI ui, IntegratorTab initialSelection) {
-    return showSelectExperimentBox(ui, initialSelection, null);
+    return showSelectExperimentBox(ui, initialSelection, null, null);
   }
   
 
@@ -440,11 +442,29 @@ public class IntegratorUITools {
    * {@link NameAndSignals} objects with signals.
    */
   public static List<LabeledObject<NameAndSignalsTab>> getNameAndSignalTabsWithSignals() {
+    return getNameAndSignalTabsWithSignals(null, (Class<? extends NameAndSignals>)null);
+  }
+  
+  /**
+   * Create a filtered List of available {@link NameAndSignalsTab}s, that contain {@link Signal}s.
+   * @param species if not null, only tabs for that species will be returned.
+   * @param onlyDataTypes if not null, only tabs that contain on of these
+   * data types will be returned.
+   * @return
+   */
+  public static List<LabeledObject<NameAndSignalsTab>> getNameAndSignalTabsWithSignals(Species species, Class<? extends NameAndSignals>... onlyDataTypes) {
     IntegratorUI ui = IntegratorUI.getInstance();
     List<LabeledObject<NameAndSignalsTab>> datasets = new LinkedList<LabeledObject<NameAndSignalsTab>>();
     for (int i=0; i<ui.getTabbedPane().getTabCount(); i++) {
       Component c = ui.getTabbedPane().getComponentAt(i);
       if (c instanceof NameAndSignalsTab) {
+        // Filter
+        if (species!=null) {
+          Species spec2 = ((NameAndSignalsTab)c).getSpecies(false);
+          if (spec2==null || !species.equals(spec2)) continue;
+        }
+        if (onlyDataTypes!=null && !ArrayUtils.contains(onlyDataTypes, ((NameAndSignalsTab)c).getDataContentType())) continue;
+        
         //Class<?> cl = ((NameAndSignalsTab)c).getDataContentType(); 
         //if (cl.equals(mRNA.class) || cl.equals(miRNA.class)) {
         if (((NameAndSignalsTab)c).getSourceTab()==null && // Data has not been derived, but read from disk!
@@ -532,7 +552,7 @@ public class IntegratorUITools {
    * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.
    */
   @SuppressWarnings("rawtypes")
-  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorUI ui, IntegratorTab initialSelection, String dialogTitle) {
+  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorUI ui, IntegratorTab initialSelection, String dialogTitle, Species filterForSpecies) {
     final JPanel jp = new JPanel(new BorderLayout());
     int initialSelIdx=0;
     
@@ -982,15 +1002,17 @@ public class IntegratorUITools {
     SBPreferences prefs = SBPreferences.getPreferencesFor(MergeTypeOptions.class);
     return getMergeTypeSilent(prefs);
   }
+  
+  /**
+   * Shows a dialog that lets the user chooser a Pathway
+   * and one dataset per data type.
+   * @return
+   */
+  public void showIntegratedVisualizationDialog() {
+    IntegratedVisualizationDialog.showAndEvaluateDialog();
+  }
     
 }
-
-
-
-
-
-
-
 
 
 

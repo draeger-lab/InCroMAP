@@ -39,7 +39,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
-import y.view.Graph2D;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
@@ -63,7 +62,6 @@ import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
-import de.zbit.util.TranslatorTools;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 import de.zbit.util.logging.LogUtil;
@@ -183,7 +181,11 @@ public class IntegratorUI extends BaseFrame {
     /**
      * Creates pictures for many observations and pathways.
      */
-    BATCH_PATHWAY_VISUALIZATION;
+    BATCH_PATHWAY_VISUALIZATION,
+    /**
+     * Show different data of different types in one pathway.
+     */
+    INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION;
     
     /*
      * (non-Javadoc)
@@ -242,7 +244,9 @@ public class IntegratorUI extends BaseFrame {
         case NEW_PATHWAY:
           return "Download and visualize a KEGG pathway.";
         case BATCH_PATHWAY_VISUALIZATION:
-          return "Batch color nodes in various pathways according to observations and save these pictures as images.";  
+          return "Batch color nodes in various pathways according to observations and save these pictures as images.";
+        case INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION:
+          return "Visualize heterogeneous data from different datasets in one pathway.";
           
         default:
           return "";
@@ -478,6 +482,8 @@ public class IntegratorUI extends BaseFrame {
     JMenu tools = new JMenu("Tools");
     tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorUITools(), "showBatchPathwayDialog"),
       Action.BATCH_PATHWAY_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
+    tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorUITools(), "showIntegratedVisualizationDialog"),
+      Action.INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
     
     return new JMenu[]{importData, tools};
   }
@@ -654,10 +660,11 @@ public class IntegratorUI extends BaseFrame {
       if (o instanceof TranslatorPanel) {
         
         // Try to get species from graph panel
-        String specKegg = TranslatorTools.getOrganismKeggAbbrFromGraph((Graph2D) ((TranslatorPanel) o).getDocument());
-        if (specKegg!=null) {
-          currentSpecies = Species.search(IntegratorUITools.organisms, specKegg, Species.KEGG_ABBR);
-        }
+//        String specKegg = TranslatorTools.getOrganismKeggAbbrFromGraph((Graph2D) ((TranslatorPanel) o).getDocument());
+//        if (specKegg!=null) {
+//          currentSpecies = Species.search(IntegratorUITools.organisms, specKegg, Species.KEGG_ABBR);
+//        }
+        currentSpecies = TranslatorTabActions.getSpeciesOfPathway((TranslatorPanel) o, IntegratorUITools.organisms);
         // ----
         
         TranslatorTabActions actions = translatorActionMap.get(o);

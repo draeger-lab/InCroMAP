@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,9 +18,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.RandomAccess;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.swing.tree.TreeNode;
 
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
@@ -44,7 +48,7 @@ import de.zbit.util.ValuePair;
  * many functionalities.
  * @author Clemens Wrzodek
  */
-public abstract class NameAndSignals implements Serializable, Comparable<Object>, Cloneable, CSVwriteable, TableResult  {
+public abstract class NameAndSignals implements Serializable, Comparable<Object>, Cloneable, CSVwriteable, TableResult, TreeNode  {
   private static final long serialVersionUID = 732610412438240532L;
   public static final transient Logger log = Logger.getLogger(NameAndSignals.class.getName());
 
@@ -72,6 +76,11 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * String is the name of the experiment (defaults to {@link #defaultExperimentName}).
    */
   protected List<Signal> signals=null;
+  
+  /**
+   * Allows to build a tree of NameAndSignals.
+   */
+  private TreeNode parent = null;
   
   /**
    * Can hold any additional data (Mostly strings, such as gene descriptions
@@ -965,6 +974,16 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   public int getCSVOutputVersionNumber() {
     return 0;
   }
+  
+  /**
+   * Allows to build a tree of {@link NameAndSignals}.
+   * <p>Note: This does not register this node as a Child on the parent!
+   * You have to do this manually.
+   * @param parent
+   */
+  public void setParent(TreeNode parent) {
+    this.parent = parent;
+  }
 
   /* (non-Javadoc)
    * @see de.zbit.io.CSVwriteable#toCSV(int)
@@ -1191,4 +1210,82 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    */
   public abstract String getUniqueLabel();
     
+  
+  /*
+   * From TreeNode, everything is implemented in a way that this NameAndSignals
+   * is a leaf node.
+   */
+
+  /* (non-Javadoc)
+   * @see javax.swing.tree.TreeNode#getChildAt(int)
+   */
+  @Override
+  public TreeNode getChildAt(int childIndex) {
+    List<? extends TreeNode> childs = getChildrenList();
+    return childs==null?null:childs.get(childIndex);
+  }
+
+  /* (non-Javadoc)
+   * @see javax.swing.tree.TreeNode#getChildCount()
+   */
+  @Override
+  public int getChildCount() {return getChildrenList().size();}
+
+  /* (non-Javadoc)
+   * @see javax.swing.tree.TreeNode#getParent()
+   */
+  @Override
+  public TreeNode getParent() {return parent;}
+
+  /* (non-Javadoc)
+   * @see javax.swing.tree.TreeNode#getIndex(javax.swing.tree.TreeNode)
+   */
+  @Override
+  public int getIndex(TreeNode node) {
+    // Inefficient default implementation
+    List<? extends TreeNode> childs = getChildrenList();
+    return childs==null?-1:childs.indexOf(node);
+  }
+
+  /* (non-Javadoc)
+   * @see javax.swing.tree.TreeNode#getAllowsChildren()
+   */
+  @Override
+  public boolean getAllowsChildren() {return !isLeaf();}
+
+  /* (non-Javadoc)
+   * @see javax.swing.tree.TreeNode#isLeaf()
+   */
+  @Override
+  public boolean isLeaf() {return getChildCount()>0;}
+
+  /* (non-Javadoc)
+   * @see javax.swing.tree.TreeNode#children()
+   */
+  @Override
+  public Enumeration<?> children() {
+    List<? extends TreeNode> childs = getChildrenList();
+    return childs==null?null:Collections.enumeration(childs);
+  }
+  
+  /**
+   * If this node has children, overwrite this method and return them!
+   * @return a {@link RandomAccess} list!
+   */
+  public List<? extends TreeNode> getChildrenList() {
+    return null;
+  }
+
+  /**
+   * @return a {@link Comparator} that compares {@link GeneID}s.
+   */
+  public static Comparator<GeneID> getGeneIdComparator() {
+    return new Comparator<GeneID>() {
+      @Override
+      public int compare(GeneID o1, GeneID o2) {
+        return o1.getGeneID()-o2.getGeneID();
+      }
+    };
+  }
+  
 }

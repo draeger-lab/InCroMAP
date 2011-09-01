@@ -5,6 +5,7 @@ package de.zbit.data;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -12,8 +13,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.swing.tree.TreeNode;
+
 import de.zbit.analysis.miRNA2mRNA_pair;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.data.protein.ProteinModificationExpression;
@@ -49,6 +53,16 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
     super(null);
     this.ns1 = ns1;
     this.ns2 = ns2;
+    registerMeAsParentOnChilds();
+  }
+  
+  /**
+   * Calls {@link #setParent(TreeNode)} on {@link #ns1} and {@link #ns2}.
+   */
+  private void registerMeAsParentOnChilds() {
+    // TODO: What happens the same ns instance gets assigned multiple parents from different tabs?
+    ns1.setParent(this);
+    ns2.setParent(this);
   }
   
   /* (non-Javadoc)
@@ -58,11 +72,11 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
   public String getName() {
     // Simply concatenate both names
     StringBuilder out = new StringBuilder(32);
-    out.append("[");
+    out.append("(");
     out.append(ns1.getName());
     out.append(implodeString);
     out.append(ns2.getName());
-    out.append("]");
+    out.append(")");
     
     return out.toString();
   }
@@ -82,6 +96,7 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
     }
     ((PairedNS)target).ns1 = merge(nsOnes, m);
     ((PairedNS)target).ns2 = merge(nsTwos, m);
+    ((PairedNS)target).registerMeAsParentOnChilds();
   }
 
   /* (non-Javadoc)
@@ -184,7 +199,27 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
    */
   public static String getTypeName(Class<? extends NameAndSignals> class1) {
     if (class1.equals(ProteinModificationExpression.class)) {
-      return "Prot. Mod.";
+      return "Prot. mod.";
+    } else if (class1.equals(DNAmethylation.class)) {
+      return "DNA methylation";
+    } else if (class1.equals(EnrichmentObject.class)) {
+      return "Enriched";
+    } else if (class1.equals(PairedNS.class)) {
+      return "Other pair";
+    } 
+    
+    return class1.getSimpleName();
+  }
+  
+  /**
+   * @param class1
+   * @return full data type name (e.g., "Protein modification").
+   */
+  public static String getTypeNameFull(Class<? extends NameAndSignals> class1) {
+    if (class1.equals(ProteinModificationExpression.class)) {
+      return "Protein modification";
+    } else if (class1.equals(DNAmethylation.class)) {
+      return "DNA methylation";
     } else if (class1.equals(EnrichmentObject.class)) {
       return "Enriched";
     } else if (class1.equals(PairedNS.class)) {
@@ -369,6 +404,15 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
   public T2 getNS2() {
     return ns2;
   }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#getChildrenList()
+   */
+  @Override
+  public List<? extends TreeNode> getChildrenList() {
+    return Arrays.asList(ns1, ns2);
+  }
+
   
   /**
    * Create a list of all {@link #getNS1()} items.

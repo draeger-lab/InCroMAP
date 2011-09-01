@@ -26,18 +26,15 @@ import y.view.Graph2D;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.data.mRNA.mRNA;
-import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
-import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.ActionCommand;
 import de.zbit.gui.BaseFrameTab;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
-import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
+import de.zbit.gui.actions.TranslatorTabActions;
 import de.zbit.gui.actions.TranslatorTabActions.TPAction;
 import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.gui.dialogs.VisualizeDataInPathwayDialog;
@@ -51,6 +48,7 @@ import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.gui.TranslatorUI;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
+import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.TranslatorTools;
 import de.zbit.util.ValuePair;
@@ -126,9 +124,10 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
             
     } else if (e.getActionCommand().equals(TPAction.VISUALIZE_DATA.toString()) &&
         source instanceof TranslatorPanel) {
+      Species spec = TranslatorTabActions.getSpeciesOfPathway((TranslatorPanel) source, IntegratorUITools.organisms);
       ValueTriplet<NameAndSignalsTab, String, SignalType>  vt
         = IntegratorUITools.showSelectExperimentBox(IntegratorUI.getInstance(), null,
-            "Please select an observation to visualize in this pathway.");
+            "Please select an observation to visualize in this pathway.", spec);
        if (vt!=null) {
          visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
        }
@@ -153,49 +152,65 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       if (e.getID() != JOptionPane.OK_OPTION) {
         // If translation failed, remove the tab. The error
         // message has already been issued by the translator.
-        
         IntegratorUI.getInstance().closeTab(source);
-      } else if (this.source!=null) {
-//        int r = GUITools.showQuestionMessage(source, "Do you want to color the nodes accoring to an observation?", 
-//          IntegratorUI.appName, new String[]{"Yes", "No"});
-        int r=1;
-        if (r==0 || source.getData(TPAction.VISUALIZE_DATA.toString())!=null) {
-          /* Color Pathway (for fold changes) and write singals to nodes.
-           */
+        
+      } else {
+        // Should we immediately visualize data? OR highlight nodes?
+        Object dataToVisualize = source.getData(TPAction.VISUALIZE_DATA.toString());
+        if (dataToVisualize!=null) {
+          // Color Pathway (for fold changes) and write signals to nodes.
+          
+          boolean askUser=false;
           ValueTriplet<NameAndSignalsTab, String, SignalType>  vt=null;
-          if ( source.getData(TPAction.VISUALIZE_DATA.toString())!=null) {
-            try {
-              vt = (ValueTriplet<NameAndSignalsTab, String, SignalType>) source.getData(TPAction.VISUALIZE_DATA.toString());
-            } catch (Exception ex) {}
-          }
-          if (vt==null || vt.getA()==null) {
+          try {
+            if (dataToVisualize instanceof List) {
+              // More than one type/set?
+              askUser=true; // if list has size 0
+              for(ValueTriplet<NameAndSignalsTab, String, SignalType> vt2: 
+                (List<ValueTriplet<NameAndSignalsTab, String, SignalType>>) dataToVisualize) {
+                visualizeData(source,vt2.getA(),vt2.getB(), vt2.getC());
+                askUser=false;
+              }
+            } else {
+              askUser=true;
+              // Single instance to visualize (Eventually ask user)
+              vt = (ValueTriplet<NameAndSignalsTab, String, SignalType>) dataToVisualize;
+            }
+            
+          } catch (Exception ex) {}
+          
+          // Get valid data source
+          if ((vt==null && askUser) || vt!=null && (vt.getA()==null || vt.getB()==null || vt.getC()==null)) {
+            // If data should get visualized, but no valid information is available, ask user.
             // Let the user choose a signal to color the nodes
             IntegratorTab st = null;
-            if (this.source instanceof IntegratorTab) {
+            if (this.source!=null && this.source instanceof IntegratorTab) {
               st = (IntegratorTab) this.source;
               while (st.getSourceTab()!=null) {
                 st = st.getSourceTab();
               }
             }
+            Species spec = TranslatorTabActions.getSpeciesOfPathway(source, IntegratorUITools.organisms);
             vt = IntegratorUITools.showSelectExperimentBox(IntegratorUI.getInstance(), st,
-              "Please select an observation to visualize in this pathway.");
+              "Please select an observation to visualize in this pathway.", spec);
           }
           
+          // Visualize single data instance
           if (vt!=null) {
             visualizeData(source,vt.getA(),vt.getB(), vt.getC());
-          } else {
-            r = -1; // At least highlight source gene nodes
-          }
-        } if (r!=0 && source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())!=null) {
-          // Highlight source genes
+          } 
+          
+        } else if (source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())!=null) {
+          // At least highlight source gene nodes
           Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())).getGeneIDsFromGenesInClass();
           hightlightGenes(source, geneIDs);
         }
+        
       }
       
     } else if (e.getActionCommand().equals(TranslatorUI.Action.NEW_PROGRESSBAR.toString())) {
       IntegratorUI.getInstance().getStatusBar().showProgress((AbstractProgressBar)e.getSource());
-        
+      
     } else {
       log.warning("Unknown action command " + e.getActionCommand());
     }
@@ -410,7 +425,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param pwId pathway id to visualized (e.g., "hsa00130").
    * @param pwo optional parent {@link EnrichmentObject} (if applicable, may be null).
    */
-  private TranslatorPanel visualizePathway(String pwId, EnrichmentObject<?> pwo) {
+   TranslatorPanel visualizePathway(String pwId, EnrichmentObject<?> pwo) {
     //Create the translator panel
     TranslatorPanel pwTab = new TranslatorPanel(pwId,Format.JPG, this);
     String name = pwId;
@@ -419,13 +434,36 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       name = pwo.getName();
     }
     
-    String extra = "";
-    if (source!=null && (source instanceof IntegratorTab)) {
-      extra = " for " + ((IntegratorTab<?>)source).getSpecies().getCommonName();
+    // Try to get species
+    Species spec = TranslatorTabActions.getSpeciesOfPathway(pwTab, IntegratorUITools.organisms);
+    if (spec==null && source!=null && (source instanceof IntegratorTab)) {
+      spec = ((IntegratorTab<?>)source).getSpecies();
     }
+    String extra = spec==null?"":" for " + spec.getCommonName();
     IntegratorUI.getInstance().addTab(pwTab, name, "Pathway: '" + name + "'" + extra + ".");
     return pwTab;
   }
+   
+   /**
+    * Evaluates the {@link PathwaySelector} <code>pwSel</code> and
+    * adds the corresponding tab to the current 
+    * {@link IntegratorUI#instance}.
+    * 
+    * @param pwSel
+    * @return the created tab or null, if selection was not valid.
+    */
+   public TranslatorPanel visualizePathway(PathwaySelector pwSel) {
+     //Create the translator panel
+     String pwId = pwSel.getSelectedPathwayID();
+     if (pwId==null) return null;
+     TranslatorPanel pwTab = new TranslatorPanel(pwId,Format.JPG, this);
+     
+     // Add tab and create ToolTip
+     String name = pwSel.getSelectedPathway();
+     IntegratorUI.getInstance().addTab(pwTab, name,
+       String.format("Pathway: '%s' for %s.", name, pwSel.getOrganismSelector().getSelectedOrganism()));
+     return pwTab;
+   }
   
   /**
    * Builds a pathway selector and downloads and visualizes a
@@ -473,7 +511,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       ret.add(expSel, BorderLayout.SOUTH);
     }
     
-    // Create a chooser for existing tabs
+    // Create a chooser for existing tabs (visualize data in and EXISTING pathway)
     /* If one has time, this could be implemented.
      * TO-DO then: Pathway-tabs need to be filtered to allow only
      * same species as data tab.*/
@@ -534,44 +572,6 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     if (evt.getPropertyName().equals("ORGANISM_NAME")) {
       // Could add as tooltip...
     }
-  }
-  
-  
-  
-  
-  
-  
-  
-  void showIntegrationDialog() throws Exception {
-    //visualizeAndColorPathway(); //<= examples
-    
-    JPanel jp = new JPanel();
-    LayoutHelper lh = new LayoutHelper(jp);
-    
-    JLabeledComponent orgSel = IntegratorUITools.getOrganismSelector();
-    lh.add(orgSel);
-    
-    PathwaySelector pwSel = new PathwaySelector(Translator.getFunctionManager(),null, null);
-    lh.add(pwSel);
-    
-    // Data types to let the user choose one from
-    Class<? extends NameAndSignals>[] toVisualize = new Class[]{
-      mRNA.class, miRNA.class, DNAmethylation.class, ProteinModificationExpression.class
-    };
-    
-    
-    for (Class<? extends NameAndSignals> type : toVisualize) {
-      /* TODO: Create the following dialog for each type :
-       * 
-       * [ ] Visualize (mRNA-PairNS.getTypeName()) data
-       *     (________) datasets (same species as in box1 !?!?)
-       *     (________) experiments
-       *     
-       * Disable by default if none is available [for any species].
-       * 
-       */
-    }
-    
   }
   
 }

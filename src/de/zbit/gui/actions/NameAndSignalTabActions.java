@@ -203,6 +203,12 @@ public class NameAndSignalTabActions implements ActionListener {
       JButton integrate = GUITools.createJButton(this,
           NSAction.INTEGRATE, UIManager.getIcon("ICON_GEAR_16"));
       bar.add(integrate);
+      /* TODO: Make integrate a button with three choices:
+       * 1. Pair data
+       * 2. Integrate various heterogeneous data (TreeTable with [GeneName|miRNA|mRNA|...])
+       * 3. Integrated pathway visualization.
+       */
+      
     }
     
     // Datatype specific buttons:

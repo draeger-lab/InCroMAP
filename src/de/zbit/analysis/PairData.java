@@ -5,6 +5,7 @@ package de.zbit.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -29,6 +30,7 @@ import de.zbit.gui.dialogs.MergedSignalDialog;
 import de.zbit.gui.dialogs.MergedSignalDialog.MergeTypeForTwo;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
+import de.zbit.parser.Species;
 import de.zbit.util.ValuePair;
 
 /**
@@ -89,6 +91,9 @@ public class PairData {
     List<Class<?>> excludeDatatypes = new ArrayList<Class<?>>();
     excludeDatatypes.add(EnrichmentObject.class);
     List<LabeledObject<IntegratorTab<?>>> datasets = IntegratorUITools.getNameAndSignalTabs(true, excludeDatatypes, null);
+    // Filter for species
+    Species filter = firstPart!=null?firstPart.getSpecies(false):null;
+    filterForSpecies(datasets, filter);
     if (datasets.size()<1) {
       GUITools.showMessage("Could not find any second dataset for pairing.", IntegratorUI.appName);
       return null;
@@ -123,6 +128,25 @@ public class PairData {
     }
     
     
+  }
+
+  /**
+   * Filters the given datasets to return only those, that are for a
+   * defined species.
+   * @param datasets
+   * @param filter
+   */
+  public static void filterForSpecies(List<LabeledObject<IntegratorTab<?>>> datasets,
+    Species filter) {
+    Iterator<LabeledObject<IntegratorTab<?>>> it = datasets.iterator();
+    while (it.hasNext()) {
+      LabeledObject<IntegratorTab<?>> lo = it.next();
+      Species spec2 = lo.getObject().getSpecies(false);
+      if (filter==null) continue;
+      else if (spec2==null || !filter.equals(spec2)) {
+        it.remove();
+      }
+    }
   }
   
   
