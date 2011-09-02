@@ -63,7 +63,7 @@ import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.csv.CSVImporterV2;
-import de.zbit.gui.dialogs.IntegratedVisualizationDialog;
+import de.zbit.gui.dialogs.IntegrationDialog;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.MergeTypeOptions;
 import de.zbit.gui.prefs.SignalOptionPanel;
@@ -1006,12 +1006,19 @@ public class IntegratorUITools {
   /**
    * Shows a dialog that lets the user chooser a Pathway
    * and one dataset per data type.
-   * @return
    */
   public void showIntegratedVisualizationDialog() {
-    IntegratedVisualizationDialog.showAndEvaluateDialog();
+    IntegrationDialog.showAndEvaluateIntegratedVisualizationDialog();
+  }
+  
+  /**
+   * TODO: ...
+   */
+  public void showIntegratedTreeTableDialog() {
+    IntegrationDialog.showAndEvaluateIntegratedTreeTableDialog();
   }
     
+  
 }
 
 

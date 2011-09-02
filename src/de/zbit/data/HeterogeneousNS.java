@@ -10,7 +10,8 @@ import java.util.List;
 import javax.swing.tree.TreeNode;
 
 /**
- * One instance per Gene
+ * Customizes for {@link HeterogeneousData}. This is to build a tree structure
+ * of {@link NameAndSignals}.
  * @author Clemens Wrzodek
  */
 public class HeterogeneousNS extends NSwithProbes {
@@ -53,11 +54,15 @@ public class HeterogeneousNS extends NSwithProbes {
   public void addChild(NameAndSignals nsOfThisGene) {
     if (childs==null) childs = new ArrayList<NameAndSignals>();
     childs.add(nsOfThisGene);
+    nsOfThisGene.setParent(this);
   }
   
   public void addChilds(Collection<NameAndSignals> nsOfThisGene) {
     if (childs==null) childs = new ArrayList<NameAndSignals>();
     childs.addAll(nsOfThisGene);
+    for(NameAndSignals child: nsOfThisGene) {
+      child.setParent(this);
+    }
   }
   
   

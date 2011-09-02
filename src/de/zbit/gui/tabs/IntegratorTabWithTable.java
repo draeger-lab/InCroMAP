@@ -35,7 +35,7 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
   /**
    * The {@link JTable} holding visualized Names and Signals.
    */
-  private JTable table=null;
+  protected JTable table=null;
   
   /**
    * Listeners that must be informed, if the current table changes.
@@ -115,7 +115,8 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
    */
   @Override
   public JComponent getVisualization() {
-    if (data==null) return null;
+    // null check is in createTable().
+    //if (data==null) return null;
     
     if (table==null) {
       createTable();
@@ -165,7 +166,7 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
     return geneList;
   }
 
-  private void createTable() {
+  protected void createTable() {
     if (data==null) return;
     
     // Also adds the enrichment right mouse menu

@@ -107,7 +107,18 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
       columnIndex = columnIndex-1;
     }
     
-    Object o = ns.get(rowIndex).getObjectAtColumn(columnIndex);
+    return getValueAt(ns.get(rowIndex), columnIndex);
+  }
+
+  /**
+   * 
+   * @param <A>
+   * @param ns
+   * @param columnIndex
+   * @return
+   */
+  public static<A extends TableResult> Object getValueAt(A ns, int columnIndex) {
+    Object o = ns.getObjectAtColumn(columnIndex);
     if (o instanceof Signal) {
       // Experiment name and signal type is already in header!
       Number n = ((Signal)o).getSignal();
@@ -148,8 +159,17 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
       o = ns.get(i++).getObjectAtColumn(columnIndex);
     }
     
-    Class<?> c = o!=null?o.getClass():null;
+    Class<?> c = getColumnClass(o);
     if (c==null) return super.getColumnClass(columnIndex);
+    return c;
+  }
+  
+  /**
+   * @param o ns.getObjectAtColumn(columnIndex);
+   * @return Column Class OR NULL.
+   */
+  public static Class<?> getColumnClass(Object o) {
+    Class<?> c = o!=null?o.getClass():null;
     return c;
   }
   
@@ -283,7 +303,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    * @param spec
    * @param table
    */
-  public static <T extends TableResult> void buildJTable(TableResultTableModel<T> model, Species spec, final JTable table) {
+  public static void buildJTable(TableModel model, Species spec, final JTable table) {
     // Set additional attributes
     table.setPreferredScrollableViewportSize(new Dimension(500, 100));
     table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -297,7 +317,8 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
       width = Math.max(width, 125);
       for (int i=0; i<table.getColumnModel().getColumnCount(); i++)
         table.getColumnModel().getColumn(i).setPreferredWidth(width);
-      if (model.isRowIndexIncluded()) {
+      if ((model instanceof  TableResultTableModel<?>) &&  
+          ((TableResultTableModel<?>)model).isRowIndexIncluded()) {
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
       }
     }
@@ -319,7 +340,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     
     // Cannot refer directly to "java.util.HashMap$Values".
     HashMap<String,String> map = new HashMap<String,String>();
-    map.put("test", "test");
+    map.put("dummy", "dummy");
     table.setDefaultRenderer(map.values().getClass(), new IterableRenderer(spec));
     //table.setDefaultRenderer(RowIndex.class, RowIndex.getRowHeaderRenderer(table));
     

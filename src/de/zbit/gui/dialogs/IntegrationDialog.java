@@ -10,13 +10,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JCheckBox;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
 import javax.swing.border.TitledBorder;
+import javax.swing.treetable.JTreeTable;
 
+import de.zbit.data.HeterogeneousData;
 import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
+import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
@@ -29,6 +35,7 @@ import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.actions.TranslatorTabActions.TPAction;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.gui.prefs.SignalOptionPanel;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.OrganismSelector;
@@ -43,7 +50,7 @@ import de.zbit.util.ValueTriplet;
  * and one dataset per data type.
  * @author Clemens Wrzodek
  */
-public class IntegratedVisualizationDialog extends JPanel {
+public class IntegrationDialog extends JPanel {
   private static final long serialVersionUID = 7451686453282214876L;
 
   /**
@@ -58,12 +65,12 @@ public class IntegratedVisualizationDialog extends JPanel {
   /**
    * Organism selector
    */
-  private OrganismSelector orgSel;
+  private OrganismSelector orgSel=null;
   
   /**
    * Pathway selector
    */
-  private PathwaySelector pwSel;
+  private PathwaySelector pwSel=null;
 
   /**
    * Should the data type be visualized?
@@ -80,31 +87,46 @@ public class IntegratedVisualizationDialog extends JPanel {
    */
   private JLabeledComponent[] expSelect;
   
+  /**
+   * Allows to select a individual {@link MergeType} for each data type.
+   */
+  private JLabeledComponent[] mergeSelect;
   
-  public IntegratedVisualizationDialog() throws Exception {
-    createIntegrationDialog();
+  
+  public IntegrationDialog(boolean showPathwaySelector, boolean showMergeTypeSelectos) throws Exception {
+    createIntegrationDialog(showPathwaySelector, showMergeTypeSelectos);
   }
   
-  private void createIntegrationDialog() throws Exception {
+  private void createIntegrationDialog(boolean showPathwaySelector, boolean showMergeTypeSelectos) throws Exception {
     //KEGGpwAL.visualizeAndColorPathway(); //<= examples
     LayoutHelper lh = new LayoutHelper(this);
     
     // Create organism and pathway selector
-    pwSel = new PathwaySelector(Translator.getFunctionManager(),null, IntegratorUITools.organisms);
-    orgSel = pwSel.getOrganismSelector();
-    lh.add(pwSel);
+    
+    if (showPathwaySelector) {
+      pwSel = new PathwaySelector(Translator.getFunctionManager(),null, IntegratorUITools.organisms);
+      orgSel = pwSel.getOrganismSelector();
+      lh.add(pwSel);
+    } else {
+      orgSel = new OrganismSelector(Translator.getFunctionManager(), null, IntegratorUITools.organisms);
+      lh.add(orgSel);
+    }
+    lh.add(showPathwaySelector?pwSel:orgSel);
+    MergeType defaultMergeSelection=(showMergeTypeSelectos)?IntegratorUITools.getMergeTypeSilent():null;
 
     
     // Create selectors for each data type
     visDataType = new JCheckBox[toVisualize.length];
     dataSelect = new JLabeledComponent[toVisualize.length];
     expSelect = new JLabeledComponent[toVisualize.length];
+    mergeSelect = new JLabeledComponent[toVisualize.length];
     int i=-1;
     for (Class<? extends NameAndSignals> type : toVisualize) {
       i++;
       JPanel curDS = new JPanel();
       LayoutHelper ld = new LayoutHelper(curDS);
-      final JCheckBox visData = new JCheckBox("Visualize " + PairedNS.getTypeNameFull(type) + " data");
+      String name = String.format("%s %s data", showPathwaySelector?"Visualize":"Integrate", PairedNS.getTypeNameFull(type));
+      final JCheckBox visData = new JCheckBox(name);
       visDataType[i] = visData;
       ld.add(visDataType[i]);
       
@@ -115,6 +137,17 @@ public class IntegratedVisualizationDialog extends JPanel {
       final JLabeledComponent experimentSelector = IntegratorUITools.createSelectExperimentBox(null);
       expSelect[i] = experimentSelector;
       ld.add(expSelect[i]);
+      
+      final JLabeledComponent mergeTypeSelector;
+      if (showMergeTypeSelectos) {
+        mergeTypeSelector = new JLabeledComponent("Gene-center observations by",true,MergeType.values());
+        SignalOptionPanel.removeItemFromJComboBox(mergeTypeSelector, MergeType.AskUser);
+        mergeTypeSelector.setDefaultValue(defaultMergeSelection);
+        mergeSelect[i] = mergeTypeSelector;
+        ld.add(mergeSelect[i]);  
+      } else {
+        mergeTypeSelector=null;
+      }
       
       // Change experiment box upon dataset selection
       dataSelect[i].addActionListener(new ActionListener() {
@@ -131,6 +164,7 @@ public class IntegratedVisualizationDialog extends JPanel {
         public void actionPerformed(ActionEvent e) {
           dataSetSelector.setEnabled(visData.isSelected());
           experimentSelector.setEnabled(visData.isSelected());
+          if (mergeTypeSelector!=null) mergeTypeSelector.setEnabled(visData.isSelected());
         }
       });
       
@@ -143,12 +177,14 @@ public class IntegratedVisualizationDialog extends JPanel {
     updateExperimentSelectionBoxes();
     
     // Listener on species box and others
-    orgSel.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        updateExperimentSelectionBoxes();
-      }
-    });
+    if (orgSel!=null) {
+      orgSel.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          updateExperimentSelectionBoxes();
+        }
+      });
+    }
         
         
       /* TODO: Create the following dialog for each type :
@@ -169,6 +205,13 @@ public class IntegratedVisualizationDialog extends JPanel {
   private Species getSpeciesFromSelector() {
     String abbr = orgSel==null?null:orgSel.getSelectedOrganismAbbreviation();
     return Species.search(IntegratorUITools.organisms, abbr, Species.KEGG_ABBR);
+  }
+  
+  /**
+   * @return
+   */
+  public PathwaySelector getPathwaySelector() {
+    return pwSel;
   }
   
   /**
@@ -199,17 +242,18 @@ public class IntegratedVisualizationDialog extends JPanel {
       
       dataSelect[i].setEnabled(visDataType[i].isSelected());
       expSelect[i].setEnabled(visDataType[i].isSelected());
+      if (mergeSelect[i]!=null) mergeSelect[i].setEnabled(visDataType[i].isSelected());
     }
   }
   
   
-  public static IntegratedVisualizationDialog showDialog() {
-    return showDialog(IntegratorUI.getInstance());
+  public static IntegrationDialog showIntegratedVisualizationDialog() {
+    return showIntegratedVisualizationDialog(IntegratorUI.getInstance());
   }
-  public static IntegratedVisualizationDialog showDialog(Component parent) {
-    IntegratedVisualizationDialog integratedVis;
+  public static IntegrationDialog showIntegratedVisualizationDialog(Component parent) {
+    IntegrationDialog integratedVis;
     try {
-      integratedVis = new IntegratedVisualizationDialog();
+      integratedVis = new IntegrationDialog(true, false);
     } catch (Exception e) {
       GUITools.showErrorMessage(null, e);
       return null;
@@ -221,15 +265,30 @@ public class IntegratedVisualizationDialog extends JPanel {
     else return integratedVis;
   }
   
+  public static IntegrationDialog showIntegratedTreeTableDialog(Component parent) {
+    IntegrationDialog integratedTbl;
+    try {
+      integratedTbl = new IntegrationDialog(false, true);
+    } catch (Exception e) {
+      GUITools.showErrorMessage(null, e);
+      return null;
+    }
+    
+    // Show and evaluate dialog
+    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), integratedTbl, "Data integration", JOptionPane.OK_CANCEL_OPTION);
+    if (ret!=JOptionPane.OK_OPTION) return null;
+    else return integratedTbl;
+  }
+  
   /**
-   * Shows the {@link IntegratedVisualizationDialog} and
+   * Shows the {@link IntegrationDialog} and
    * evaluates the selection by adding a pathway tab
    * to the current {@link IntegratorUI#instance}.
    * Also sets all data to visualize.
    */
-  public static void showAndEvaluateDialog() {
+  public static void showAndEvaluateIntegratedVisualizationDialog() {
     IntegratorUI ui = IntegratorUI.getInstance();
-    IntegratedVisualizationDialog dialog = showDialog(ui);
+    IntegrationDialog dialog = showIntegratedVisualizationDialog(ui);
     if (dialog!=null) {
       // Evaluate and eventually open new tab.
       if (dialog.getPathwaySelector().getSelectedPathwayID()!=null) {
@@ -253,10 +312,56 @@ public class IntegratedVisualizationDialog extends JPanel {
   }
 
   /**
-   * @return
+   * Shows the {@link IntegrationDialog} and
+   * evaluates the selection by adding a TreeTable tab
+   * to the current {@link IntegratorUI#instance}.
    */
-  public PathwaySelector getPathwaySelector() {
-    return pwSel;
+  public static void showAndEvaluateIntegratedTreeTableDialog() {
+    IntegratorUI ui = IntegratorUI.getInstance();
+    IntegrationDialog dialog = showIntegratedTreeTableDialog(ui);
+    if (dialog!=null) {
+      // Evaluate and eventually open new tab.
+      final HeterogeneousData visualizer = new HeterogeneousData();
+      Species species = null;
+      for (int i=0; i<dialog.visDataType.length; i++) {
+        if (dialog.visDataType[i].isEnabled() && dialog.visDataType[i].isSelected()) {
+          ValuePair<String, SignalType> expSignal = (ValuePair<String, SignalType>) dialog.expSelect[i].getSelectedItem();
+          NameAndSignalsTab nsTab = ((LabeledObject<NameAndSignalsTab>)dialog.dataSelect[i].getSelectedItem()).getObject();
+          MergeType mergeType = (MergeType) dialog.mergeSelect[i].getSelectedItem();
+          
+          visualizer.addDataType(nsTab.getData(), expSignal, mergeType);
+          species = nsTab.getSpecies();
+        }          
+      }
+      
+      // TODO: IN PROGRESS_SWINGWORKER Tun und umschreiben (getData(), etc.)
+      visualizer.buildTree(species);
+      
+      
+      JFrame frame = new JFrame("DEMOTree");
+      JTree treeTable = new JTree(visualizer);
+      frame.getContentPane().add(new JScrollPane(treeTable));
+      frame.pack();
+      frame.show();
+      
+      JFrame frame2 = new JFrame("DEMOTreeTable");
+      JTreeTable JTreeTable = new JTreeTable(visualizer);
+      frame2.getContentPane().add(new JScrollPane(JTreeTable));
+      frame2.pack();
+      frame2.show();
+      
+      
+      // Create NameAndSignalsTab with customized table
+      NameAndSignalsTab nsTab = new NameAndSignalsTab(IntegratorUI.getInstance(), visualizer, species) {
+        private static final long serialVersionUID = 7415047130386194731L;
+        protected void createTable() {
+          table = new JTreeTable(visualizer, false); // TODO: hide root
+          //TableResultTableModel.buildJTable(table.getModel(), getSpecies(), table);
+        };
+      };
+      
+      IntegratorUI.getInstance().addTab(nsTab, "IntegratedData", null);
+    }
   }
   
 }

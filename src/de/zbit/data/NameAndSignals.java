@@ -357,7 +357,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     if (m==null || m.equals(MergeType.AskUser)) m = IntegratorUITools.getMergeType();
     
     // Group data by name (or gene ID)
-    Map<String, Collection<T>> group = group_by_name(nameAndSignals, true);
+    Map<String, Collection<T>> group = group_by_name(nameAndSignals, false, true);
     
     // Eventually return already gene-centered list
     if (group==null) {
@@ -659,6 +659,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * <li>Name for all others (e.g., {@link miRNA}s)</li></ul>
    * 
    * @param nsList collection of {@link NameAndSignals}s.
+   * @param forceGroupByGeneID forces grouping by GeneID for all items.
    * @param returnNullIfListIsGeneCentered returns null if the list was already gene-centered.
    * A list is gene-centered, if each group has a size of exactly 1.
    * @return A map with group identifier (as described above) to all belonging {@link NameAndSignals}.
@@ -667,7 +668,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static <T extends NameAndSignals> Map<String, Collection<T>> group_by_name(Collection<T> nsList,
-    boolean returnNullIfListIsGeneCentered) {
+    boolean forceGroupByGeneID, boolean returnNullIfListIsGeneCentered) {
     boolean atLeastOneListHasMoreThanOneItem=false;
     
     // Group by miRNA name
@@ -683,14 +684,17 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
 //      if (!(mi instanceof miRNA) && mi instanceof GeneID) {
 //        name = Integer.toString(((GeneID)mi).getGeneID());
 //      } else 
-      if (mi instanceof EnrichmentObject) {
+      if (forceGroupByGeneID && mi instanceof GeneID) {
+        name = Integer.toString(((GeneID)mi).getGeneID());
+      }
+      else if (mi instanceof EnrichmentObject) {
         // A little bit more complicated for EnrichmentObjects,
         // return a list of genes in the class here!
         Iterator gic = ((EnrichmentObject)mi).getGenesInClass().iterator();
         if (!gic.hasNext()) continue;
         Object listType = gic.next();
         if (listType instanceof NameAndSignals) {
-          ret.putAll(group_by_name(((EnrichmentObject)mi).getGenesInClass(), returnNullIfListIsGeneCentered));
+          ret.putAll(group_by_name(((EnrichmentObject)mi).getGenesInClass(), forceGroupByGeneID, returnNullIfListIsGeneCentered));
         } else {
           log.severe("Cannot gene center list of: " + listType.getClass());
         }
@@ -1222,14 +1226,17 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   @Override
   public TreeNode getChildAt(int childIndex) {
     List<? extends TreeNode> childs = getChildrenList();
-    return childs==null?null:childs.get(childIndex);
+    return childs==null||childIndex>=childs.size()?null:childs.get(childIndex);
   }
 
   /* (non-Javadoc)
    * @see javax.swing.tree.TreeNode#getChildCount()
    */
   @Override
-  public int getChildCount() {return getChildrenList().size();}
+  public int getChildCount() {
+    List<? extends TreeNode> list = getChildrenList();
+    return list==null?0:list.size();
+  }
 
   /* (non-Javadoc)
    * @see javax.swing.tree.TreeNode#getParent()
@@ -1286,6 +1293,29 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         return o1.getGeneID()-o2.getGeneID();
       }
     };
+  }
+
+  /**
+   * Extract a specified {@link Signal} from a list of {@link NameAndSignals}.
+   * @param <T>
+   * @param nsList
+   * @param experimentName
+   * @param type
+   * @return List with {@link Signal}s from all {@link NameAndSignals}
+   * in <code>nsList</code>.
+   */
+  public static <T extends NameAndSignals> List<Signal> getSignals(Collection<T> nsList,
+    String experimentName, SignalType type) {
+    List<Signal> ret = new ArrayList<Signal>(nsList!=null?nsList.size():1);
+    if (nsList==null) return ret;
+    
+    Iterator<T> it = nsList.iterator();
+    while (it.hasNext()) {
+      Signal signal = it.next().getSignal(type, experimentName);
+      if (signal!=null) ret.add(signal);
+    }
+    
+    return ret;
   }
   
 }

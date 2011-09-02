@@ -185,7 +185,12 @@ public class IntegratorUI extends BaseFrame {
     /**
      * Show different data of different types in one pathway.
      */
-    INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION;
+    INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION,
+    /**
+     * Show an integrated TreeTable of various data types.
+     */
+    INTEGRATED_TABLE;
+    
     
     /*
      * (non-Javadoc)
@@ -212,6 +217,8 @@ public class IntegratorUI extends BaseFrame {
         return "Show microRNA targets";
       case NEW_PATHWAY:
         return "Show pathway";
+      case INTEGRATED_TABLE:
+        return "Integrate heterogeneous data";
         
       default:
         return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
@@ -247,6 +254,9 @@ public class IntegratorUI extends BaseFrame {
           return "Batch color nodes in various pathways according to observations and save these pictures as images.";
         case INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION:
           return "Visualize heterogeneous data from different datasets in one pathway.";
+        case INTEGRATED_TABLE:
+          return "Build a gene-centered table of various integrated heterogeneous data.";
+          // TODO: heterogeneous....
           
         default:
           return "";
@@ -290,9 +300,9 @@ public class IntegratorUI extends BaseFrame {
         ui.toFront();
         
         try {
-//          mRNAReader r = mRNAReader.getExampleReader();
-//          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorGUITools.organisms.get(1)), "Example_mRNA");
-//          
+          mRNAReader r = mRNAReader.getExampleReader();
+          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorUITools.organisms.get(1)), "Example_mRNA");
+          
           miRNAReader r2 = new miRNAReader(1,0);
           r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
           r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
@@ -484,6 +494,11 @@ public class IntegratorUI extends BaseFrame {
       Action.BATCH_PATHWAY_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
     tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorUITools(), "showIntegratedVisualizationDialog"),
       Action.INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
+    
+    tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorUITools(), "showIntegratedTreeTableDialog"),
+      Action.INTEGRATED_TABLE, UIManager.getIcon("ICON_GEAR_16")));
+    
+    
     
     return new JMenu[]{importData, tools};
   }
