@@ -92,6 +92,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
    * @param species required for the GeneSymbol mapping
    * @return TreeModel
    */
+  @SuppressWarnings("unchecked")
   public TreeTableModel buildTree(Species species) {
     GeneID2GeneSymbolMapper gsMap = IntegratorUITools.get2GeneSymbolMapping(species);
     
@@ -201,6 +202,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
     if (list!=null && list.size()>0) {
       HeterogeneousNS type = new HeterogeneousNS(dataTypeName, dataTypeNodeGeneID);
       createdNodes++;
+      // FIXME: Add dummy signals to get to right column index.
       type.addSignal(signal, dataTypeName, signalToGeneCenter.getB());
       gene.addChild(type);
       
@@ -211,6 +213,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
           // e.g., for miRNAs this is the miRNA geneID and not the targets(gene.getGeneID()).
           geneID = ((GeneID) ns).getGeneID();
         }
+     // FIXME: Add dummy signals to get to right column index.
         HeterogeneousNS probe = new HeterogeneousNS(String.format("%s (%s)", ns.getName(), ns.getUniqueLabel()), geneID);
         createdNodes++;
         probe.addSignal(ns.getSignal(signalToGeneCenter.getB(), signalToGeneCenter.getA()));
