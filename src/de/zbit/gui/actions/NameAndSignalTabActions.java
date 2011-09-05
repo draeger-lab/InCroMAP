@@ -295,7 +295,7 @@ public class NameAndSignalTabActions implements ActionListener {
     } else if (command.equals(NSAction.ADD_OBSERVATION.toString())) {
       MergedSignalDialog options = MergedSignalDialog.showDialog(parent, (PairedNS<?, ?>) parent.getExampleData());
       if (options==null) return;
-      PairData.calculateMergedSignal((List<PairedNS<?, ?>>) parent.getData(), options);
+      PairData.calculateMergedSignal((Iterable<PairedNS<?, ?>>) parent.getData(), options);
       parent.rebuildTable();
       parent.repaint();
       
@@ -348,7 +348,7 @@ public class NameAndSignalTabActions implements ActionListener {
     } else if (pa)
     }*/
     try {
-      NSwithProbes.convertNamesToGeneSymbols((List<? extends NameAndSignals>) parent.getData(), parent.getSpecies());
+      NSwithProbes.convertNamesToGeneSymbols((Iterable<? extends NameAndSignals>) parent.getData(), parent.getSpecies());
     } catch (Exception e1) {
       GUITools.showErrorMessage(parent, e1);
     }
@@ -365,7 +365,7 @@ public class NameAndSignalTabActions implements ActionListener {
     ValuePair<miRNAtargets, Species> t_all = IntegratorUITools.loadMicroRNAtargets(parent.getSpecies(false));
     if (t_all==null || t_all.getA()==null) return;
     int annot = miRNA.link_miRNA_and_targets(t_all.getA(), (Collection<miRNA>) parent.getData());
-    log.info(String.format("Annotated %s/%s microRNAs with targets.", annot, parent.getData().size()));
+    log.info(String.format("Annotated %s/%s microRNAs with targets.", annot, ((Collection<miRNA>)parent.getData()).size()));
     
     // Convert IN BACKGROUND (new thread) ids to symbols
     showGeneSymbols_InNewThread();
@@ -401,7 +401,7 @@ public class NameAndSignalTabActions implements ActionListener {
    * Removes all {@link miRNAtargets} from {@link miRNA} contained in the data in {@link #parent}.
    */
   public void removeMiRNAtargets() {
-    List<? extends TableResult> data = parent.getData();
+    Iterable<? extends TableResult> data = parent.getData();
     for (TableResult tr: data) {
       if (tr instanceof miRNA) {
         ((miRNA)tr).removeTargets();

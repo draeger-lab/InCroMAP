@@ -5,8 +5,11 @@ package de.zbit.gui.tabs;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.RandomAccess;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -23,12 +26,13 @@ import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.io.CSVWriter;
 import de.zbit.io.SBFileFilter;
 import de.zbit.parser.Species;
+import de.zbit.util.ValuePairUncomparable;
 
 /**
  * A generic Integrator tab with a table on top.
  * @author Clemens Wrzodek
  */
-public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableResult>> {
+public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends TableResult>> {
   private static final long serialVersionUID = -8876183417528573116L;
   public static final transient Logger log = Logger.getLogger(IntegratorTab.class.getName());
   
@@ -41,6 +45,13 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
    * Listeners that must be informed, if the current table changes.
    */
   private Set<IntegratorTabWithTable> tableChangeListeners=null;
+  
+  /**
+   * Having an iterator, pointing at an indice of #data is
+   * much faster, if data is no List (overwriting methods sometimes
+   * also use a non-list here).
+   */
+  private ValuePairUncomparable<Iterator<? extends TableResult>, Integer> currentDataIterator=null;
 
   /**
    * @param parent
@@ -130,7 +141,26 @@ public class IntegratorTabWithTable extends IntegratorTab<List<? extends TableRe
    */
   @Override
   public Object getObjectAt(int i) {
-    return data.get(i);
+    if (data instanceof RandomAccess && data instanceof List) {
+      return ((List<? extends TableResult>)data).get(i);
+    } else {
+      // Memorize an internal iterator (can only go forward)
+      if (currentDataIterator==null || currentDataIterator.getB()>=i) {
+        currentDataIterator = new ValuePairUncomparable<Iterator<? extends TableResult>, Integer>(data.iterator(), 0);
+      }
+      // Go to current element
+      Iterator<? extends TableResult> it = currentDataIterator.getA();
+      Integer index = currentDataIterator.getB();
+      Object ret = null;
+      while (it.hasNext()) {
+        ret = it.next();
+        index++;
+        if (index==i) break;
+      }
+      // Store current iterator position and return object
+      currentDataIterator.setB(index);
+      if (index==i) return ret; else return null;
+    }
   }
 
   /* (non-Javadoc)

@@ -73,11 +73,12 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
   }
   
   /**
-   * @return the internal data.
+   * @return the internal data. Is in most cases a {@link List}!
+   * Only in some (e.g., TreeTable) very rare cases a {@link Collection}.
    */
   @SuppressWarnings("unchecked")
-  public List<? extends NameAndSignals> getData() {
-    return (List<? extends NameAndSignals>) super.getData();
+  public Collection<? extends NameAndSignals> getData() {
+    return (Collection<? extends NameAndSignals>) super.getData();
   }
 
   /**

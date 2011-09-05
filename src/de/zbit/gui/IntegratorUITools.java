@@ -453,6 +453,7 @@ public class IntegratorUITools {
    * @return
    */
   public static List<LabeledObject<NameAndSignalsTab>> getNameAndSignalTabsWithSignals(Species species, Class<? extends NameAndSignals>... onlyDataTypes) {
+    if (onlyDataTypes!=null && onlyDataTypes.length==1 && onlyDataTypes[0]==null) onlyDataTypes = null;
     IntegratorUI ui = IntegratorUI.getInstance();
     List<LabeledObject<NameAndSignalsTab>> datasets = new LinkedList<LabeledObject<NameAndSignalsTab>>();
     for (int i=0; i<ui.getTabbedPane().getTabCount(); i++) {

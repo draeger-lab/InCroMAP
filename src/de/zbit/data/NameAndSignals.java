@@ -1226,7 +1226,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   @Override
   public TreeNode getChildAt(int childIndex) {
     List<? extends TreeNode> childs = getChildrenList();
-    return childs==null||childIndex>=childs.size()?null:childs.get(childIndex);
+    return (childs==null||childIndex>=childs.size())?null:childs.get(childIndex);
   }
 
   /* (non-Javadoc)
@@ -1264,7 +1264,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @see javax.swing.tree.TreeNode#isLeaf()
    */
   @Override
-  public boolean isLeaf() {return getChildCount()>0;}
+  public boolean isLeaf() {return getChildCount()<=0;}
 
   /* (non-Javadoc)
    * @see javax.swing.tree.TreeNode#children()

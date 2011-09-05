@@ -26,8 +26,8 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.BaseFrameTab;
 import de.zbit.gui.GUITools;
-import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.ProgressBarSwing;
 import de.zbit.gui.VerticalLayout;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
@@ -57,7 +57,7 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
   /**
    * The data associated with this tab.
    */
-  T data;
+  protected T data;
   
   /**
    * If this is the result of data from another tab, this pointer
@@ -227,7 +227,7 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
     int[] selRows = getSelectedIndices();
     if (selRows==null) return null;
     
-    List<Object> geneList = new ArrayList<Object>(selRows.length);
+    List<Object> geneList = new ArrayList<Object>(selRows.length);  
     for (int i=0; i<selRows.length; i++) {
       geneList.add(getObjectAt(selRows[i]));
     }

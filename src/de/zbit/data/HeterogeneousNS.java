@@ -75,4 +75,11 @@ public class HeterogeneousNS extends NSwithProbes {
     return childs;
   }
   
+  /* (non-Javadoc)
+   * @see de.zbit.data.NSwithProbes#toString()
+   */
+  @Override
+  public String toString() {
+    return getName();
+  }
 }

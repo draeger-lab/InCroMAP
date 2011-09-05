@@ -308,7 +308,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
     * @param species
     * @throws Exception
     */
-   public static void convertNamesToGeneSymbols(List<? extends NameAndSignals> data, Species species) throws Exception {
+   public static void convertNamesToGeneSymbols(Iterable<? extends NameAndSignals> data, Species species) throws Exception {
      log.config("Loading GeneSymbol mapping...");
      GeneID2GeneSymbolMapper mapper = IntegratorUITools.get2GeneSymbolMapping(species);
      for (NameAndSignals m: data) {

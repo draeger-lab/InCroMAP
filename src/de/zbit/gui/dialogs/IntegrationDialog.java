@@ -6,15 +6,14 @@ package de.zbit.gui.dialogs;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JCheckBox;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
 import javax.swing.border.TitledBorder;
 import javax.swing.treetable.JTreeTable;
 
@@ -35,6 +34,7 @@ import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.actions.TranslatorTabActions.TPAction;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.gui.prefs.SignalOptionPanel;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
@@ -311,6 +311,15 @@ public class IntegrationDialog extends JPanel {
     }
   }
 
+  public static <T> List<T> getAsList(Collection<T> col) {
+    if (col==null) return (List<T>) null;
+    else if (col instanceof List) {
+      return (List<T>) col;
+    } else {
+      return new ArrayList<T>(col);
+    }
+  }
+  
   /**
    * Shows the {@link IntegrationDialog} and
    * evaluates the selection by adding a TreeTable tab
@@ -329,7 +338,7 @@ public class IntegrationDialog extends JPanel {
           NameAndSignalsTab nsTab = ((LabeledObject<NameAndSignalsTab>)dialog.dataSelect[i].getSelectedItem()).getObject();
           MergeType mergeType = (MergeType) dialog.mergeSelect[i].getSelectedItem();
           
-          visualizer.addDataType(nsTab.getData(), expSignal, mergeType);
+          visualizer.addDataType(getAsList(nsTab.getData()), expSignal, mergeType);
           species = nsTab.getSpecies();
         }          
       }
@@ -338,25 +347,39 @@ public class IntegrationDialog extends JPanel {
       visualizer.buildTree(species);
       
       
-      JFrame frame = new JFrame("DEMOTree");
-      JTree treeTable = new JTree(visualizer);
-      frame.getContentPane().add(new JScrollPane(treeTable));
-      frame.pack();
-      frame.show();
+//      JFrame frame = new JFrame("DEMOTree");
+//      JTree tree = new JTree((TreeNode) visualizer.getRoot());
+//      frame.getContentPane().add(new JScrollPane(tree));
+//      frame.pack();
+//      frame.show();
       
-      JFrame frame2 = new JFrame("DEMOTreeTable");
-      JTreeTable JTreeTable = new JTreeTable(visualizer);
-      frame2.getContentPane().add(new JScrollPane(JTreeTable));
-      frame2.pack();
-      frame2.show();
+//      JFrame frame3 = new JFrame("DEMOTree2");
+//      JTree tree2 = new JTree((TreeNode) visualizer.getRoot(), true);
+//      frame3.getContentPane().add(new JScrollPane(tree2));
+//      frame3.pack();
+//      frame3.show();
+      
+//      JFrame frame4 = new JFrame("DEMOTree3");
+//      JTree tree3 = new JTree(visualizer);
+//      frame4.getContentPane().add(new JScrollPane(tree3));
+//      frame4.pack();
+//      frame4.show();
+//      
+//      
+//      JFrame frame2 = new JFrame("DEMOTreeTable");
+//      JTreeTable JTreeTable = new JTreeTable(visualizer);
+//      frame2.getContentPane().add(new JScrollPane(JTreeTable));
+//      frame2.pack();
+//      frame2.show();
       
       
       // Create NameAndSignalsTab with customized table
-      NameAndSignalsTab nsTab = new NameAndSignalsTab(IntegratorUI.getInstance(), visualizer, species) {
+      NameAndSignalsTab nsTab = new NameAndSignalsTab(IntegratorUI.getInstance(), (null), species) {
         private static final long serialVersionUID = 7415047130386194731L;
         protected void createTable() {
-          table = new JTreeTable(visualizer, false); // TODO: hide root
-          //TableResultTableModel.buildJTable(table.getModel(), getSpecies(), table);
+          if (this.data==null) this.data = visualizer;
+          table = new JTreeTable(visualizer, true);
+          TableResultTableModel.buildJTable(table.getModel(), getSpecies(), table);
         };
       };
       

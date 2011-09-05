@@ -7,6 +7,7 @@ package de.zbit.gui.customcomponents;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -190,16 +191,30 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     return s;
   }
   
+  /**
+   * Builds a nice, search- and sortable table from any integrator tab with
+   * a list of {@link TableResult}
+   * @param tab should actually contain a {@link List}, else, the Collection
+   * is converted to a list.
+   * @return
+   */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public static <T extends TableResult> JTable buildJTable(IntegratorTab<List<? extends TableResult>> tab) {
+  public static JTable buildJTable(IntegratorTab<Collection<? extends TableResult>> tab) {
     
     // Build table on scroll pane
     JTable jc;
-    if (tab.getDataContentType().equals(PairedNS.class)) {
-      jc = buildJTableWithBoldBorders(new TableResultTableModel(tab.getData()), tab.getSpecies(), ((PairedNS)tab.getExampleData()).getBoldBorders() );
+    List<? extends TableResult> list;
+    if (tab.getData() instanceof List) {
+      list = (List<? extends TableResult>) tab.getData();
     } else {
-      jc = buildJTable(new TableResultTableModel(tab.getData()), tab.getSpecies());
+      list = new ArrayList<TableResult>(tab.getData());
     }
+    if (tab.getDataContentType().equals(PairedNS.class)) {
+      jc = buildJTableWithBoldBorders(new TableResultTableModel(list), tab.getSpecies(), ((PairedNS)tab.getExampleData()).getBoldBorders() );
+    } else {
+      jc = buildJTable(new TableResultTableModel(list), tab.getSpecies());
+    }
+    
     
     // Add enrichment capabilities
     if (tab instanceof IntegratorTabWithTable) {

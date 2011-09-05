@@ -133,7 +133,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
         if (geneName.equals(defaultGeneID)) geneName="Unknown";
           
         // Create gene as child of root
-        HeterogeneousNS gene = new HeterogeneousNS("GENE"+geneName, geneIDint);
+        HeterogeneousNS gene = new HeterogeneousNS(geneName, geneIDint);
         root.addChild(gene);
         size++;
         
@@ -199,7 +199,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
     // Add a child with data type and all probes from data type to the gene
     int createdNodes=0;
     if (list!=null && list.size()>0) {
-      HeterogeneousNS type = new HeterogeneousNS("TYPE"+dataTypeName, dataTypeNodeGeneID);
+      HeterogeneousNS type = new HeterogeneousNS(dataTypeName, dataTypeNodeGeneID);
       createdNodes++;
       type.addSignal(signal, dataTypeName, signalToGeneCenter.getB());
       gene.addChild(type);
@@ -211,7 +211,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
           // e.g., for miRNAs this is the miRNA geneID and not the targets(gene.getGeneID()).
           geneID = ((GeneID) ns).getGeneID();
         }
-        HeterogeneousNS probe = new HeterogeneousNS(String.format("PROBE %s (%s)", ns.getName(), ns.getUniqueLabel()), geneID);
+        HeterogeneousNS probe = new HeterogeneousNS(String.format("%s (%s)", ns.getName(), ns.getUniqueLabel()), geneID);
         createdNodes++;
         probe.addSignal(ns.getSignal(signalToGeneCenter.getB(), signalToGeneCenter.getA()));
         type.addChild(probe);
@@ -249,6 +249,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
    */
   @Override
   public Class<?> getColumnClass(int column) {
+    if (column==0) return TreeTableModel.class; // Required to display the tree renderer
     
     // Get first non-null object in column
     Object o = null;
@@ -267,7 +268,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
    */
   @Override
   public int getColumnCount() {
-    return 1+data.size();
+    return 1+data.size(); //+1 for GeneName
   }
 
   /* (non-Javadoc)
@@ -299,12 +300,14 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
   public int size() {
     return size;
   }
+  
 
   /* (non-Javadoc)
    * @see java.util.AbstractCollection#iterator()
    */
   @Override
   public Iterator<HeterogeneousNS> iterator() {
+    // Man koennte einen TreePath bis zum lezten Knoten erzeugen lassen...
     // TODO TEST THIS METHOD
     return new Iterator<HeterogeneousNS>() {
         TreeNode currentNode = (TreeNode) getRoot();

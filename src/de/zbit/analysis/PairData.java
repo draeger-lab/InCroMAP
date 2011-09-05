@@ -160,7 +160,7 @@ public class PairData {
    * @param pairedData
    * @param mergeSignal
    */
-  public static void calculateMergedSignal(List<PairedNS<?, ?>> pairedData,
+  public static void calculateMergedSignal(Iterable<PairedNS<?, ?>> pairedData,
     MergedSignalDialog mergeSignal) {
     calculateMergedSignal(pairedData, mergeSignal, false);
   }
@@ -173,11 +173,11 @@ public class PairData {
    * (only if this is true and both signals are fold-changes).
    * @see #calculateMergedSignal(List, MergedSignalDialog)
    */
-  public static void calculateMergedSignal(List<PairedNS<?, ?>> pairedData,
+  public static void calculateMergedSignal(Iterable<PairedNS<?, ?>> pairedData,
       MergedSignalDialog mergeSignal, boolean generateUpDownColumn) {
     // Check if we should calculate
     if (!mergeSignal.getCalculateMergedSignal() ||
-        pairedData==null || pairedData.size()<1) return;
+        pairedData==null || !pairedData.iterator().hasNext()) return;
     
     // Get properties
     ValuePair<String, SignalType> signal1 = mergeSignal.getSignal1();
