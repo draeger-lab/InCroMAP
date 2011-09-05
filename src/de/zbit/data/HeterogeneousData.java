@@ -5,9 +5,11 @@ package de.zbit.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.swing.tree.TreeNode;
@@ -34,18 +36,18 @@ import de.zbit.util.ValuePair;
  * @author Clemens Wrzodek
  */
 public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> implements TreeTableModel {
-  // TODO: Let me implement Collection. (or even list?)
   public static final transient Logger log = Logger.getLogger(HeterogeneousData.class.getName());
   
   /**
    * GeneID for nodes, that represent a specific data type
    * (e.g., mRNA node, etc.)
    */
-  private final static int dataTypeNodeGeneID=-2;
+  private final static int geneIDofTypeNode=-2;
   
   /**
    * Data to build a tree of.
    * (List of data types(mRNA), that contain all {@link NameAndSignals} of this type).
+   * <p>Will be erased and replaced by {@link #maps} on runtime.
    */
   List<List<? extends NameAndSignals>> data;
   
@@ -67,6 +69,18 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
   int size=0;
 
   /**
+   * Maps from GeneID (as String) to a Collection of all probes,
+   * matching to this gene ID.
+   * For all lists in {@link #data}
+   */
+  private List<Map<String, ?>> maps;
+
+  /**
+   * Human readable data type names for all {@link #data}
+   */
+  private List<String> dataTypeName;
+
+  /**
    */
   public HeterogeneousData() {
     super(null);
@@ -76,7 +90,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
   }
   
   /**
-   * Add a data type that should be considered when creating the tree with {@link #buildTree(Species)}.
+   * Add a data type that should be considered when creating the tree with {@link #initTree(Species)}.
    * @param nsList
    * @param signal
    * @param mergeType
@@ -88,12 +102,13 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
   }
   
   /**
-   * Builds the tree structure.
+   * Initializes the tree structure by building nodes for the root
+   * and all genes.
    * @param species required for the GeneSymbol mapping
    * @return TreeModel
    */
   @SuppressWarnings("unchecked")
-  public TreeTableModel buildTree(Species species) {
+  public TreeTableModel initTree(Species species) {
     GeneID2GeneSymbolMapper gsMap = IntegratorUITools.get2GeneSymbolMapping(species);
     
     // Every tree needs exactly one root. This will not be visible later on.
@@ -101,8 +116,8 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
     size=1;
     
     // Group all lists by geneID
-    List<Map<String,?>> maps = new ArrayList<Map<String,?>>(data.size());
-    List<String> dataTypeName = new ArrayList<String>(data.size());
+    maps = new ArrayList<Map<String,?>>(data.size());
+    dataTypeName = new ArrayList<String>(data.size());
     for (List<? extends NameAndSignals> d: data) {
       Class<? extends NameAndSignals> type = NameAndSignals.getType(d);
       if (miRNA.class.isAssignableFrom(type)) {
@@ -117,15 +132,18 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
         maps.add(new HashMap<String, NameAndSignals>());
       }
     }
+    data=null; // Free unused memory... All we need is in maps!
     
     // Add all genes to the root node
     String defaultGeneID = Integer.toString(GeneID.default_geneID);
+    Set<Integer> createdGeneIds = new HashSet<Integer>(maps.iterator().next().size());
     for (int i=0; i<maps.size(); i++) {
       Iterator<String> mapIgeneIDs = maps.get(i).keySet().iterator();
       while (mapIgeneIDs.hasNext()) {
         // Get geneID and symbol
         String geneID = mapIgeneIDs.next();
         Integer geneIDint = Integer.parseInt(geneID);
+        if (!createdGeneIds.add(geneIDint)) continue; // One row per gene
         String geneName=null;
         try {
           geneName = gsMap.map(geneIDint);
@@ -138,26 +156,13 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
         root.addChild(gene);
         size++;
         
-        // One node per data type (mRNA, miRNA,...)
-        
-        // We need to have a consistent number of Signals (add dummy items if i>0)
-        for (int l=0; l<i; l++) {
-          size+=addDataTypeToGeneNode(gene, dataTypeName.get(l), (List<NameAndSignals>) maps.get(l).get(geneID),
-            signalFromData.get(l), mergeTypeForData.get(l));
-          maps.get(l).remove(geneID); // Remove after it has been added
+        // Theoretically one node per data type (mRNA, miRNA,...) and then one per probe
+        // will be created on-the-fly, but the signal still needs to be calculated.
+        for (int l=0; l<maps.size(); l++) {
+          addSignal(geneID, gene, l);
         }
+        size+=maps.size(); // TYPE-nodes
         
-        // Current node (i)
-        size+=addDataTypeToGeneNode(gene, dataTypeName.get(i), (List<NameAndSignals>) maps.get(i).get(geneID),
-          signalFromData.get(i), mergeTypeForData.get(i));
-        mapIgeneIDs.remove(); // Remove after it has been added
-        
-        // All other data types that have signals for this gene
-        for (int j=i+1; j<maps.size(); j++) {
-          size+=addDataTypeToGeneNode(gene, dataTypeName.get(j), (List<NameAndSignals>) maps.get(j).get(geneID),
-            signalFromData.get(j), mergeTypeForData.get(j));
-          maps.get(j).remove(geneID); // Remove after it has been added
-        }
       }
     }
     
@@ -166,77 +171,119 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
     return this;
   }
 
-
   /**
-   * Adds a data type node to a gene Node (called <code>dataTypeName</code>) and
-   * calculates a gene-centered {@link Signal} from all items in <code>list</code>.
-   * <br/>The signal is specified by <code>signalToGeneCenter</code> and will
-   * be merged according to <code>mergeTypeForSignals</code>.
-   * <p>Afterwards, a kind of probe is generated and added to the type node for
-   * each {@link NameAndSignals} in <code>list</code>, containing just a label
-   * and the corresponding, given, signal.
-   * 
-   * @param gene parent Node.
-   * @param dataTypeName e.g., mRNA. Will be the name of the type node (added to the <code>gene</code>).
-   * @param list list with probes to add as child to the type node and to calculate the
-   * Signal for the type node for.
-   * @param signalToGeneCenter Specify the Signal that should be taken from the {@link NameAndSignals}
-   * from the <code>list</code>.
-   * @param mergeTypeForSignals how to merge all Signals from the <code>list</code>.
-   * @return total number of {@link HeterogeneousNS} instances, that have been created.
+   * Add a signal to a node
+   * @param geneID geneID as integer
+   * @param gene NS to add the signal to
+   * @param l current index of {@link #data} (and all other lists).
    */
-  private int addDataTypeToGeneNode(HeterogeneousNS gene, String dataTypeName, List<NameAndSignals> list,
-    ValuePair<String, SignalType> signalToGeneCenter, MergeType mergeTypeForSignals) {
-    
-    // Add type-Signal to gene
+  @SuppressWarnings("unchecked")
+  private void addSignal(String geneID, HeterogeneousNS gene, int l) {
+    // Add merged-type-Signal to gene
+    // (We need to have a consistent number of Signals (add dummy items if i>0))
+    List<NameAndSignals> list = (List<NameAndSignals>) maps.get(l).get(geneID);
+    ValuePair<String, SignalType> signalToGeneCenter = signalFromData.get(l);
     Double signal = Double.NaN;
     if (list!=null && list.size()>0) {
       // Gene-center signal
-      signal = Signal.merge(list, mergeTypeForSignals, signalToGeneCenter.getA(), signalToGeneCenter.getB()).getSignal().doubleValue();
+      signal = Signal.merge(list, mergeTypeForData.get(l), signalToGeneCenter.getA(), signalToGeneCenter.getB()).getSignal().doubleValue();
+      size+=list.size(); // PROBE-nodes
     }
-    gene.addSignal(signal, dataTypeName, signalToGeneCenter.getB());
-    
-    
-    // Add a child with data type and all probes from data type to the gene
-    int createdNodes=0;
-    if (list!=null && list.size()>0) {
-      HeterogeneousNS type = new HeterogeneousNS(dataTypeName, dataTypeNodeGeneID);
-      createdNodes++;
-      // FIXME: Add dummy signals to get to right column index.
-      type.addSignal(signal, dataTypeName, signalToGeneCenter.getB());
-      gene.addChild(type);
-      
-      // Create all probes (miRNAs or whatever)
-      for (NameAndSignals ns: list) {
-        Integer geneID = gene.getGeneID();
-        if (ns instanceof GeneID) {
-          // e.g., for miRNAs this is the miRNA geneID and not the targets(gene.getGeneID()).
-          geneID = ((GeneID) ns).getGeneID();
-        }
-     // FIXME: Add dummy signals to get to right column index.
-        HeterogeneousNS probe = new HeterogeneousNS(String.format("%s (%s)", ns.getName(), ns.getUniqueLabel()), geneID);
-        createdNodes++;
-        probe.addSignal(ns.getSignal(signalToGeneCenter.getB(), signalToGeneCenter.getA()));
-        type.addChild(probe);
-      }
-    }
-    return createdNodes;
+    gene.addSignal(signal, dataTypeName.get(l), signalToGeneCenter.getB());
   }
+  
 
   /* (non-Javadoc)
    * @see javax.swing.tree.TreeModel#getChild(java.lang.Object, int)
    */
+  @SuppressWarnings("unchecked")
   @Override
   public Object getChild(Object parent, int index) {
-    return ((TreeNode)parent).getChildAt(index);
+    int geneId = ((GeneID)parent).getGeneID();
+    if (geneId==HeterogeneousNS.geneIDofRootNode) {
+      // All gene-nodes are pre-created
+      return ((TreeNode)parent).getChildAt(index);
+    } else if (geneId==geneIDofTypeNode) {
+      // Is a TYPE-Node => Return probe
+      geneId = ((GeneID) ((HeterogeneousNS)parent).getParent() ).getGeneID();
+      int l = (Integer) ((HeterogeneousNS)parent).getData("_PARENT_LIST_NUMBER");
+      List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
+      if (probes!=null && index<probes.size()) {
+        NameAndSignals ns = probes.get(index);
+        HeterogeneousNS probe = new HeterogeneousNS(String.format("%s (%s)", ns.getName(), ns.getUniqueLabel()), geneId);
+        probe.setParent((TreeNode) parent);
+//        for (int j=0; j<maps.size(); j++) {
+//          if (j!=l) { // add dummy
+//            probe.addSignal(Double.NaN, dataTypeName.get(j), signalFromData.get(j).getB());
+//          } else { // Add real
+            Signal original = ns.getSignal(signalFromData.get(l).getB(), signalFromData.get(l).getA());
+            probe.addSignal(original.getSignal().doubleValue(), dataTypeName.get(l), original.getType());
+//          }
+//        }
+        return probe;
+      }
+      
+    } else if (((TreeNode)parent).getParent().equals(getRoot())) {
+      // Is a GENE-node (2nd level) => Create a TYPE node
+      int index2=-1;
+      for (int l=0; l<maps.size(); l++) {
+        List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
+        if (probes!=null && probes.size()>0) {
+          if (++index2==index) {
+            HeterogeneousNS type = new HeterogeneousNS(dataTypeName.get(l), geneIDofTypeNode);
+            type.setParent((TreeNode) parent);
+            type.addData("_PARENT_LIST_NUMBER", l);
+//            for (int j=0; j<maps.size(); j++) {
+//              if (j!=l) { // add dummy
+//                type.addSignal(Double.NaN, dataTypeName.get(j), signalFromData.get(j).getB());
+//              } else { // Add real
+                addSignal(Integer.toString(geneId), type, l);
+//              }
+//            }
+            return type;
+          }
+        }
+      }
+      
+    } else {
+      // Probe node (has no childs).
+    }
+    
+    return null;
   }
 
   /* (non-Javadoc)
    * @see javax.swing.tree.TreeModel#getChildCount(java.lang.Object)
    */
+  @SuppressWarnings("unchecked")
   @Override
   public int getChildCount(Object parent) {
-    return ((TreeNode)parent).getChildCount();
+    int geneId = ((GeneID)parent).getGeneID();
+    if (geneId==HeterogeneousNS.geneIDofRootNode) {
+      // All gene-nodes are pre-created
+      return ((TreeNode)parent).getChildCount();
+    } else if (geneId==geneIDofTypeNode) {
+      // Is a TYPE-Node => Return probe
+      geneId = ((GeneID) ((HeterogeneousNS)parent).getParent() ).getGeneID();
+      int l = (Integer) ((HeterogeneousNS)parent).getData("_PARENT_LIST_NUMBER");
+      List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
+      return probes==null?0:probes.size();
+
+    } else if (((TreeNode)parent).getParent().equals(getRoot())) {
+      // Is a GENE-node (2nd level) => Create a TYPE node
+      int nonNullCounter=0;
+      for (int l=0; l<maps.size(); l++) {
+        List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
+        if (probes!=null && probes.size()>0) {
+          nonNullCounter++;
+        }
+      }
+      return nonNullCounter;
+      
+    } else {
+      // Probe node (has no childs).
+    }
+    return 0;
   }
   
   /* (non-Javadoc)
@@ -253,17 +300,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
   @Override
   public Class<?> getColumnClass(int column) {
     if (column==0) return TreeTableModel.class; // Required to display the tree renderer
-    
-    // Get first non-null object in column
-    Object o = null;
-    Iterator<HeterogeneousNS> it = iterator();
-    while (o==null && it.hasNext()) {
-      o = it.next().getObjectAtColumn(column);
-    }
-    
-    Class<?> c = TableResultTableModel.getColumnClass(o);
-    if (c==null) return super.getColumnClass(column);
-    return c;
+    else return Double.class; // Signals
   }
 
   /* (non-Javadoc)
@@ -271,7 +308,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
    */
   @Override
   public int getColumnCount() {
-    return 1+data.size(); //+1 for GeneName
+    return 1+maps.size(); //+1 for GeneName
   }
 
   /* (non-Javadoc)
@@ -280,9 +317,8 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
   @Override
   public String getColumnName(int column) {
     if (column==0) return "Gene";
-    else if ((column-1)<data.size()) {
-      Class<? extends NameAndSignals> type = NameAndSignals.getType(data.get(column-1));
-      return PairedNS.getTypeNameFull(type);
+    else if ((column-1)<dataTypeName.size()) {
+      return dataTypeName.get(column-1);
     } else {
       return "";
     }
@@ -293,7 +329,35 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
    */
   @Override
   public Object getValueAt(Object node, int column) {
-    return TableResultTableModel.getValueAt((TableResult)node, column);
+    //return TableResultTableModel.getValueAt((TableResult)node, column);
+    if (column==0) return ((HeterogeneousNS)node).getName();
+    else {
+      // Node type-dependent
+//    int geneId = ((GeneID)node).getGeneID();
+//    if (geneId==HeterogeneousNS.geneIDofRootNode) {
+//      // Only name should show up on root
+//      return "";
+//    } else if (geneId==geneIDofTypeNode) {
+//      // Is a TYPE-Node => Only own signal type should show up.
+//      int l = (Integer) ((HeterogeneousNS)node).getData("_PARENT_LIST_NUMBER");
+//      if (column-1!=l) return "";
+//      else { // Return merged signal
+//        ((HeterogeneousNS)node).getSignalValue(signalFromData.get(l).getB(), signalFromData.get(l).getA());
+//      }
+//      
+//    } else if (((TreeNode)node).getParent().equals(root)) {
+//      // Is a GENE-node (2nd level) => Create a TYPE node
+//      ValuePair<String, SignalType> sig = signalFromData.get(column-1);
+//      ((HeterogeneousNS)node).getSignalValue(sig.getB(), sig.getA());
+//      
+//    } else {
+//      // Probe node (has no childs).
+//    }
+      if (column-1>=signalFromData.size()) return Double.NaN;
+      ValuePair<String, SignalType> sig = signalFromData.get(column-1);
+      Number n = ((HeterogeneousNS)node).getSignalValue(sig.getB(), dataTypeName.get(column-1));
+      return TableResultTableModel.returnNumberOrNA(n);
+    }
   }
 
   /* (non-Javadoc)
@@ -312,6 +376,8 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
   public Iterator<HeterogeneousNS> iterator() {
     // Man koennte einen TreePath bis zum lezten Knoten erzeugen lassen...
     // TODO TEST THIS METHOD
+    // TODO: Iterator must ONLY go over visible nodes!
+    // TODO: Tree visible iterator oder sowas... TreePath!
     return new Iterator<HeterogeneousNS>() {
         TreeNode currentNode = (TreeNode) getRoot();
 

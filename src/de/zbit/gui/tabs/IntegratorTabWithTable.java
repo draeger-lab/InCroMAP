@@ -34,12 +34,13 @@ import de.zbit.util.ValuePairUncomparable;
  */
 public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends TableResult>> {
   private static final long serialVersionUID = -8876183417528573116L;
-  public static final transient Logger log = Logger.getLogger(IntegratorTab.class.getName());
+  public static final transient Logger log = Logger.getLogger(IntegratorTabWithTable.class.getName());
   
   /**
    * The {@link JTable} holding visualized Names and Signals.
    */
-  protected JTable table=null;
+  // do NOT set to null initially!!!!
+  protected JTable table;
   
   /**
    * Listeners that must be informed, if the current table changes.
@@ -154,8 +155,8 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
       Object ret = null;
       while (it.hasNext()) {
         ret = it.next();
-        index++;
         if (index==i) break;
+        index++;
       }
       // Store current iterator position and return object
       currentDataIterator.setB(index);

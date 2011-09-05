@@ -130,6 +130,7 @@ public class miRNA extends NSwithProbes {
     List<V> list = map.get(key);
     if (list==null) {
       list = new LinkedList<V>();
+      map.put(key, list);
     }
     list.add(listItem);
   }

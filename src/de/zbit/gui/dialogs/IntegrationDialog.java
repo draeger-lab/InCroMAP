@@ -14,6 +14,7 @@ import java.util.List;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 import javax.swing.treetable.JTreeTable;
 
@@ -342,9 +343,13 @@ public class IntegrationDialog extends JPanel {
           species = nsTab.getSpecies();
         }          
       }
+      if (species==null || dialog.visDataType.length<1) {
+        GUITools.showErrorMessage(ui, "Please make a valid selection.");
+        return;
+      }
       
       // TODO: IN PROGRESS_SWINGWORKER Tun und umschreiben (getData(), etc.)
-      visualizer.buildTree(species);
+      visualizer.initTree(species);
       
       
 //      JFrame frame = new JFrame("DEMOTree");
@@ -372,14 +377,17 @@ public class IntegrationDialog extends JPanel {
 //      frame2.pack();
 //      frame2.show();
       
-      
       // Create NameAndSignalsTab with customized table
       NameAndSignalsTab nsTab = new NameAndSignalsTab(IntegratorUI.getInstance(), (null), species) {
         private static final long serialVersionUID = 7415047130386194731L;
+        @Override
         protected void createTable() {
           if (this.data==null) this.data = visualizer;
-          table = new JTreeTable(visualizer, true);
-          TableResultTableModel.buildJTable(table.getModel(), getSpecies(), table);
+          super.table = new JTreeTable(visualizer, true);
+          // Set Renderers and add search capabilities
+          TableResultTableModel.buildJTable(super.table.getModel(), getSpecies(), super.table);
+          super.table.setRowSorter(null); // TreeTables are not sortable.
+          super.table.getTableHeader().setReorderingAllowed(false); // Else: Collapsing does not work.
         };
       };
       

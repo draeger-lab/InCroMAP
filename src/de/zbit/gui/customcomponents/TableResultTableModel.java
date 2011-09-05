@@ -134,7 +134,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    * @param n
    * @return the number or "N/A".
    */
-  private static Object returnNumberOrNA(Object n) {
+  public static Object returnNumberOrNA(Object n) {
     if (n==null) return n;
     if (n.equals(Double.NaN)) {
       return "N/A";
