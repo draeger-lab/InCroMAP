@@ -5,6 +5,7 @@ package de.zbit.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.tree.TreeNode;
@@ -55,6 +56,15 @@ public class HeterogeneousNS extends NSwithProbes {
     if (childs==null) childs = new ArrayList<NameAndSignals>();
     childs.add(nsOfThisGene);
     nsOfThisGene.setParent(this);
+  }
+  
+  /**
+   * Be careful with this method, as it also changes the result
+   * of i.e. {@link #getChildAt(int)}!
+   */
+  public void sortChilds() {
+    if (childs==null) return;
+    Collections.sort(childs);
   }
   
   public void addChilds(Collection<NameAndSignals> nsOfThisGene) {

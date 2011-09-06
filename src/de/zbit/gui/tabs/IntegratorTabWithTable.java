@@ -98,7 +98,7 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
     }
     
     // Enable and disable items
-    if (data!=null) {
+    if (isReady()) {
       GUITools.setEnabled(true, menuBar, BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
     } else {
       // Reading/Analyzing is still in progress.

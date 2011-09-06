@@ -14,8 +14,9 @@ import java.util.List;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.treetable.JTreeTable;
 
 import de.zbit.data.HeterogeneousData;
@@ -348,7 +349,7 @@ public class IntegrationDialog extends JPanel {
         return;
       }
       
-      // TODO: IN PROGRESS_SWINGWORKER Tun und umschreiben (getData(), etc.)
+      // Is usually fast, so no need for another thread here.
       visualizer.initTree(species);
       
       
@@ -380,15 +381,48 @@ public class IntegrationDialog extends JPanel {
       // Create NameAndSignalsTab with customized table
       NameAndSignalsTab nsTab = new NameAndSignalsTab(IntegratorUI.getInstance(), (null), species) {
         private static final long serialVersionUID = 7415047130386194731L;
+        boolean tableChanged = true;
         @Override
         protected void createTable() {
-          if (this.data==null) this.data = visualizer;
           super.table = new JTreeTable(visualizer, true);
           // Set Renderers and add search capabilities
           TableResultTableModel.buildJTable(super.table.getModel(), getSpecies(), super.table);
           super.table.setRowSorter(null); // TreeTables are not sortable.
           super.table.getTableHeader().setReorderingAllowed(false); // Else: Collapsing does not work.
+          table.getModel().addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+              tableChanged=true;
+            };
+          });
         };
+        
+        @SuppressWarnings("unchecked")
+        @Override
+        public Collection<? extends NameAndSignals> getData() {
+          if (table==null) return null;
+          if (tableChanged || data==null) {
+            tableChanged = false;
+            data = (Collection<? extends NameAndSignals>) ((JTreeTable)table).asList();
+          }
+          return (Collection<? extends NameAndSignals>) data;
+        }
+        
+        @Override
+        public Object getObjectAt(int i) {
+          if (tableChanged || data==null) getData();
+          return super.getObjectAt(i);
+        }
+        
+        @Override
+        public Object getExampleData() {
+          return visualizer.getFirstGeneNode();
+        }
+        
+        @Override
+        public boolean isReady() {
+          return table!=null;
+        }
       };
       
       IntegratorUI.getInstance().addTab(nsTab, "IntegratedData", null);

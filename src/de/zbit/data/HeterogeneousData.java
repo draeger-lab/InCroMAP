@@ -171,6 +171,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
     return this;
   }
 
+
   /**
    * Add a signal to a node
    * @param geneID geneID as integer
@@ -205,46 +206,36 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
       return ((TreeNode)parent).getChildAt(index);
     } else if (geneId==geneIDofTypeNode) {
       // Is a TYPE-Node => Return probe
-      geneId = ((GeneID) ((HeterogeneousNS)parent).getParent() ).getGeneID();
-      int l = (Integer) ((HeterogeneousNS)parent).getData("_PARENT_LIST_NUMBER");
-      List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
-      if (probes!=null && index<probes.size()) {
-        NameAndSignals ns = probes.get(index);
-        HeterogeneousNS probe = new HeterogeneousNS(String.format("%s (%s)", ns.getName(), ns.getUniqueLabel()), geneId);
-        probe.setParent((TreeNode) parent);
-//        for (int j=0; j<maps.size(); j++) {
-//          if (j!=l) { // add dummy
-//            probe.addSignal(Double.NaN, dataTypeName.get(j), signalFromData.get(j).getB());
-//          } else { // Add real
-            Signal original = ns.getSignal(signalFromData.get(l).getB(), signalFromData.get(l).getA());
-            probe.addSignal(original.getSignal().doubleValue(), dataTypeName.get(l), original.getType());
-//          }
-//        }
-        return probe;
+      if (((HeterogeneousNS)parent).getChildCount()<=0) {
+        geneId = ((GeneID) ((HeterogeneousNS)parent).getParent() ).getGeneID();
+        int l = (Integer) ((HeterogeneousNS)parent).getData("_PARENT_LIST_NUMBER");
+        List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
+        if (probes==null || probes.size()<=0) return null;
+        for (int i=0; i<probes.size(); i++) {
+          NameAndSignals ns = probes.get(i);
+          HeterogeneousNS probe = new HeterogeneousNS(String.format("%s (%s)", ns.getName(), ns.getUniqueLabel()), geneId);
+          ((HeterogeneousNS)parent).addChild(probe);
+          Signal original = ns.getSignal(signalFromData.get(l).getB(), signalFromData.get(l).getA());
+          probe.addSignal(original.getSignal().doubleValue(), dataTypeName.get(l), original.getType());
+        }
+        ((HeterogeneousNS)parent).sortChilds();
       }
+      return ((HeterogeneousNS)parent).getChildAt(index);
       
     } else if (((TreeNode)parent).getParent().equals(getRoot())) {
       // Is a GENE-node (2nd level) => Create a TYPE node
-      int index2=-1;
-      for (int l=0; l<maps.size(); l++) {
-        List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
-        if (probes!=null && probes.size()>0) {
-          if (++index2==index) {
-            HeterogeneousNS type = new HeterogeneousNS(dataTypeName.get(l), geneIDofTypeNode);
-            type.setParent((TreeNode) parent);
-            type.addData("_PARENT_LIST_NUMBER", l);
-//            for (int j=0; j<maps.size(); j++) {
-//              if (j!=l) { // add dummy
-//                type.addSignal(Double.NaN, dataTypeName.get(j), signalFromData.get(j).getB());
-//              } else { // Add real
-                addSignal(Integer.toString(geneId), type, l);
-//              }
-//            }
-            return type;
-          }
+      if (((HeterogeneousNS)parent).getChildCount()<=0) {
+        for (int l=0; l<maps.size(); l++) {
+          List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
+          if (probes==null || probes.size()<=0) continue;
+          HeterogeneousNS type = new HeterogeneousNS(dataTypeName.get(l), geneIDofTypeNode);
+          ((HeterogeneousNS)parent).addChild(type);
+          type.addData("_PARENT_LIST_NUMBER", l);
+          addSignal(Integer.toString(geneId), type, l);
         }
       }
-      
+      return ((HeterogeneousNS)parent).getChildAt(index);
+
     } else {
       // Probe node (has no childs).
     }
@@ -330,7 +321,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
   @Override
   public Object getValueAt(Object node, int column) {
     //return TableResultTableModel.getValueAt((TableResult)node, column);
-    if (column==0) return ((HeterogeneousNS)node).getName();
+    if (column==0) return ((HeterogeneousNS)node); // toString() returns .getName()
     else {
       // Node type-dependent
 //    int geneId = ((GeneID)node).getGeneID();
@@ -360,62 +351,16 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
     }
   }
 
-  /* (non-Javadoc)
-   * @see java.util.AbstractCollection#size()
+  /**
    */
-  @Override
-  public int size() {
+  public int getTotalSize() {
     return size;
   }
-  
 
-  /* (non-Javadoc)
-   * @see java.util.AbstractCollection#iterator()
-   */
-  @Override
-  public Iterator<HeterogeneousNS> iterator() {
-    // Man koennte einen TreePath bis zum lezten Knoten erzeugen lassen...
-    // TODO TEST THIS METHOD
-    // TODO: Iterator must ONLY go over visible nodes!
-    // TODO: Tree visible iterator oder sowas... TreePath!
-    return new Iterator<HeterogeneousNS>() {
-        TreeNode currentNode = (TreeNode) getRoot();
-
-        @Override
-        public boolean hasNext() {
-          // TODO !currentNode.isLeaf(); is wrong.
-          // Make ! equals lastNode() or something...
-          return currentNode!=null&&!currentNode.isLeaf();
-        }
-        
-        
-        private TreeNode getNextNode(TreeNode node, int nextIndex) {
-          // Tiefensuche
-          if (node.isLeaf()||nextIndex>=node.getChildCount()) {
-            TreeNode parent = node.getParent();
-            if (parent==null) return null;
-            else {
-              int index = parent.getIndex(node);
-              return getNextNode(parent, index+1);
-            }
-          } else {
-            return node.getChildAt(nextIndex);
-          }
-        }
-
-        @Override
-        public HeterogeneousNS next() {
-          // It is intended that the root is never returned.
-          return (HeterogeneousNS) getNextNode(currentNode, 0);
-        }
-
-        @Override
-        public void remove() {
-          System.err.println("REMOVE NOT SUPPORTED!");
-        }
-    };
+  public Object getFirstGeneNode() {
+    if (root==null || getChildCount(root)<=0) return null;
+    return ((TreeNode)root).getChildAt(0);
   }
-  
   
   
 }
