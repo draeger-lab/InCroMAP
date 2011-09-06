@@ -99,10 +99,19 @@ public class JTreeTable extends JTable {
     // Installs a tableModel representing the visible rows in the tree. 
     super.setModel(new TreeTableModelAdapter(treeTableModel, tree));
 
-    // Forces the JTable and JTree to share their row selection models. 
-    ListToTreeSelectionModelWrapper selectionWrapper = new ListToTreeSelectionModelWrapper();
-    tree.setSelectionModel(selectionWrapper);
-    setSelectionModel(selectionWrapper.getListSelectionModel()); 
+    // Forces the JTable and JTree to share their row selection models.
+    // VERY SLOW!!
+//    ListToTreeSelectionModelWrapper selectionWrapper = new ListToTreeSelectionModelWrapper();
+//    tree.setSelectionModel(selectionWrapper);
+//    setSelectionModel(selectionWrapper.getListSelectionModel());
+    // Force the JTable and JTree to share their row selection models. 
+    tree.setSelectionModel(new DefaultTreeSelectionModel() { 
+      private static final long serialVersionUID = 806644403532301953L;
+        // Extend the implementation of the constructor, as if: 
+     /* public this() */ {
+      setSelectionModel(listSelectionModel); 
+        } 
+    });
 
     // Installs the tree editor renderer and editor. 
     setDefaultRenderer(TreeTableModel.class, tree); 
@@ -641,19 +650,17 @@ public class JTreeTable extends JTable {
    * @return a list of all items in the first row.
    */
   public List<Object> getFirstRowAsList() {
+    // Actually, this should implement RanomdAccess, but this is not possible.
     return new AbstractList<Object>() {
-
       @Override
       public Object get(int index) {
-        return getValueAt(index, 0);
+        return getModel().getValueAt(index, 0);
       }
-
       @Override
       public int size() {
         return getRowCount();
       }
     };
-    
   }
 
 }

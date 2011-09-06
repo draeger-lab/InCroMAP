@@ -15,8 +15,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.treetable.JTreeTable;
 
 import de.zbit.data.HeterogeneousData;
@@ -25,6 +23,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -189,7 +188,7 @@ public class IntegrationDialog extends JPanel {
     }
         
         
-      /* TODO: Create the following dialog for each type :
+      /* XXX: Create the following dialog for each type :
        * 
        * [ ] Visualize (mRNA-PairNS.getTypeName()) data
        *     (________) datasets (same species as in box1 !?!?)
@@ -288,6 +287,7 @@ public class IntegrationDialog extends JPanel {
    * to the current {@link IntegratorUI#instance}.
    * Also sets all data to visualize.
    */
+  @SuppressWarnings("unchecked")
   public static void showAndEvaluateIntegratedVisualizationDialog() {
     IntegratorUI ui = IntegratorUI.getInstance();
     IntegrationDialog dialog = showIntegratedVisualizationDialog(ui);
@@ -327,6 +327,7 @@ public class IntegrationDialog extends JPanel {
    * evaluates the selection by adding a TreeTable tab
    * to the current {@link IntegratorUI#instance}.
    */
+  @SuppressWarnings("unchecked")
   public static void showAndEvaluateIntegratedTreeTableDialog() {
     IntegratorUI ui = IntegratorUI.getInstance();
     IntegrationDialog dialog = showIntegratedTreeTableDialog(ui);
@@ -351,80 +352,29 @@ public class IntegrationDialog extends JPanel {
       
       // Is usually fast, so no need for another thread here.
       visualizer.initTree(species);
-      
-      
-//      JFrame frame = new JFrame("DEMOTree");
-//      JTree tree = new JTree((TreeNode) visualizer.getRoot());
-//      frame.getContentPane().add(new JScrollPane(tree));
-//      frame.pack();
-//      frame.show();
-      
-//      JFrame frame3 = new JFrame("DEMOTree2");
-//      JTree tree2 = new JTree((TreeNode) visualizer.getRoot(), true);
-//      frame3.getContentPane().add(new JScrollPane(tree2));
-//      frame3.pack();
-//      frame3.show();
-      
-//      JFrame frame4 = new JFrame("DEMOTree3");
-//      JTree tree3 = new JTree(visualizer);
-//      frame4.getContentPane().add(new JScrollPane(tree3));
-//      frame4.pack();
-//      frame4.show();
-//      
-//      
-//      JFrame frame2 = new JFrame("DEMOTreeTable");
-//      JTreeTable JTreeTable = new JTreeTable(visualizer);
-//      frame2.getContentPane().add(new JScrollPane(JTreeTable));
-//      frame2.pack();
-//      frame2.show();
-      
+
       // Create NameAndSignalsTab with customized table
       NameAndSignalsTab nsTab = new NameAndSignalsTab(IntegratorUI.getInstance(), (null), species) {
         private static final long serialVersionUID = 7415047130386194731L;
-        boolean tableChanged = true;
         @Override
         protected void createTable() {
           super.table = new JTreeTable(visualizer, true);
+          data = (List<? extends TableResult>) ((JTreeTable)table).getFirstRowAsList();
+          
           // Set Renderers and add search capabilities
           TableResultTableModel.buildJTable(super.table.getModel(), getSpecies(), super.table);
           super.table.setRowSorter(null); // TreeTables are not sortable.
           super.table.getTableHeader().setReorderingAllowed(false); // Else: Collapsing does not work.
-          table.getModel().addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-              tableChanged=true;
-            };
-          });
         };
-        
-        @SuppressWarnings("unchecked")
-        @Override
-        public Collection<? extends NameAndSignals> getData() {
-          if (table==null) return null;
-          if (tableChanged || data==null) {
-            tableChanged = false;
-            data = (Collection<? extends NameAndSignals>) ((JTreeTable)table).asList();
-          }
-          return (Collection<? extends NameAndSignals>) data;
-        }
-        
-        @Override
-        public Object getObjectAt(int i) {
-          if (tableChanged || data==null) getData();
-          return super.getObjectAt(i);
-        }
         
         @Override
         public Object getExampleData() {
+          // Gene nodes have all available signals.
           return visualizer.getFirstGeneNode();
-        }
-        
-        @Override
-        public boolean isReady() {
-          return table!=null;
-        }
+        }        
       };
       
+      // Add tab to current UI
       IntegratorUI.getInstance().addTab(nsTab, "IntegratedData", null);
     }
   }

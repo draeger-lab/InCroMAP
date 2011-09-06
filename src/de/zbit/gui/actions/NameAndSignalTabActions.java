@@ -20,6 +20,7 @@ import javax.swing.UIManager;
 
 import de.zbit.analysis.PairData;
 import de.zbit.data.EnrichmentObject;
+import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
@@ -187,6 +188,8 @@ public class NameAndSignalTabActions implements ActionListener {
       } else {
         pathwayCommand=null;
       }
+    } else if (tableContent.equals(HeterogeneousNS.class)) {
+      pathwayCommand=null;
     } else {
       pathwayCommand = NSAction.VISUALIZE_IN_PATHWAY;
     }
@@ -199,7 +202,8 @@ public class NameAndSignalTabActions implements ActionListener {
     }
     
     // Integrate (pair) data button
-    if (!tableContent.equals(EnrichmentObject.class)) {
+    if (!tableContent.equals(EnrichmentObject.class) && 
+        !tableContent.equals(HeterogeneousNS.class)) {
       JButton integrate = GUITools.createJButton(this,
           NSAction.INTEGRATE, UIManager.getIcon("ICON_GEAR_16"));
       bar.add(integrate);

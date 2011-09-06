@@ -146,7 +146,8 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
       return ((List<? extends TableResult>)data).get(i);
     } else {
       // Memorize an internal iterator (can only go forward)
-      if (currentDataIterator==null || currentDataIterator.getB()>=i) {
+      if (currentDataIterator==null || currentDataIterator.getB()>i) {
+        // NOTE: index is a pointer on the NEXT element, not on the last. 
         currentDataIterator = new ValuePairUncomparable<Iterator<? extends TableResult>, Integer>(data.iterator(), 0);
       }
       // Go to current element
@@ -159,7 +160,7 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
         index++;
       }
       // Store current iterator position and return object
-      currentDataIterator.setB(index);
+      currentDataIterator.setB(index+1);
       if (index==i) return ret; else return null;
     }
   }
