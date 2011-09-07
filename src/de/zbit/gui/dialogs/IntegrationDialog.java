@@ -43,6 +43,7 @@ import de.zbit.kegg.gui.OrganismSelector;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.parser.Species;
+import de.zbit.util.ArrayUtils;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 
@@ -51,7 +52,7 @@ import de.zbit.util.ValueTriplet;
  * and one dataset per data type.
  * @author Clemens Wrzodek
  */
-public class IntegrationDialog extends JPanel {
+public class IntegrationDialog extends JPanel implements ActionListener {
   private static final long serialVersionUID = 7451686453282214876L;
 
   /**
@@ -93,6 +94,11 @@ public class IntegrationDialog extends JPanel {
    */
   private JLabeledComponent[] mergeSelect;
   
+  /**
+   * A dirty static way to set an default selection on the dialog.
+   */
+  public static NameAndSignalsTab defaultSelection = null;
+  
   
   public IntegrationDialog(boolean showPathwaySelector, boolean showMergeTypeSelectos) throws Exception {
     createIntegrationDialog(showPathwaySelector, showMergeTypeSelectos);
@@ -103,7 +109,6 @@ public class IntegrationDialog extends JPanel {
     LayoutHelper lh = new LayoutHelper(this);
     
     // Create organism and pathway selector
-    
     if (showPathwaySelector) {
       pwSel = new PathwaySelector(Translator.getFunctionManager(),null, IntegratorUITools.organisms);
       orgSel = pwSel.getOrganismSelector();
@@ -112,6 +117,7 @@ public class IntegrationDialog extends JPanel {
       orgSel = new OrganismSelector(Translator.getFunctionManager(), null, IntegratorUITools.organisms);
       lh.add(orgSel);
     }
+    orgSel.addOrganismBoxLoadedCompletelyListener(this);
     lh.add(showPathwaySelector?pwSel:orgSel);
     MergeType defaultMergeSelection=(showMergeTypeSelectos)?IntegratorUITools.getMergeTypeSilent():null;
 
@@ -186,20 +192,18 @@ public class IntegrationDialog extends JPanel {
         }
       });
     }
-        
-        
-      /* XXX: Create the following dialog for each type :
-       * 
-       * [ ] Visualize (mRNA-PairNS.getTypeName()) data
-       *     (________) datasets (same species as in box1 !?!?)
-       *     (________) experiments
-       *     
-       * Disable by default if none is available [for any species].
-       * 
-       */
-    }
 
-  
+    /* XXX: Create the following dialog for each type :
+     * 
+     * [ ] Visualize (mRNA-PairNS.getTypeName()) data
+     *     (________) datasets (same species as in box1 !?!?)
+     *     (________) experiments
+     *     
+     * Disable by default if none is available [for any species].
+     * 
+     */
+  }
+
   /**
    * @return {@link Species} from current selector or null if none selected
    */
@@ -227,7 +231,6 @@ public class IntegrationDialog extends JPanel {
     for (Class<? extends NameAndSignals> type : toVisualize) {
       i++;
       List<LabeledObject<NameAndSignalsTab>> datasets = IntegratorUITools.getNameAndSignalTabsWithSignals(species, type);
-      
       if (datasets==null || datasets.size()<1) {
         // Disable all and deselect checkbox
         visDataType[i].setSelected(false);
@@ -385,6 +388,35 @@ public class IntegrationDialog extends JPanel {
       // Add tab to current UI
       IntegratorUI.getInstance().addTab(nsTab, "IntegratedData", null);
     }
+  }
+
+  @Override
+  public void actionPerformed(ActionEvent e) {
+    if (e.getActionCommand().toString().equals(OrganismSelector.LOADING_COMPLETE_ACTION_COMMAND)) {
+      setAndEraseDefaultSelection();
+    }
+  }
+
+  /**
+   * Set all values to {@link #defaultSelection} and set
+   * this variable to <code>NULL</code> afterwards.
+   * <p>May only be called if all loading is complete
+   * (also the Organism box!)
+   */
+  private void setAndEraseDefaultSelection() {
+    // Should we set an initial default selection?
+    if (defaultSelection!=null && defaultSelection.getSpecies(false)!=null) {
+      orgSel.setDefeaultSelection(defaultSelection.getSpecies().getScientificName());
+      Class<? extends NameAndSignals> type = NameAndSignals.getType(defaultSelection.getExampleData());
+      int id = ArrayUtils.indexOf(toVisualize, type);
+      if (id>=0) {
+        visDataType[id].setSelected(true);
+        updateExperimentSelectionBoxes();
+        int setId = LabeledObject.getIndexOfObject(dataSelect[id].getHeaders(), defaultSelection);
+        if (setId>=0) dataSelect[id].setSelectedValue(setId);
+      }
+    }
+    defaultSelection=null;
   }
   
 }

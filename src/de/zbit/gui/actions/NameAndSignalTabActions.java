@@ -30,11 +30,13 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.ActionCommand;
 import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUI.Action;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JDropDownButton;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.gui.dialogs.IntegrationDialog;
 import de.zbit.gui.dialogs.MergedSignalDialog;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
@@ -91,7 +93,7 @@ public class NameAndSignalTabActions implements ActionListener {
     VISUALIZE_SELETED_DATA_IN_PATHWAY,
     ADD_OBSERVATION,
     SEARCH_TABLE,
-    INTEGRATE,
+    PAIR_DATA,
     ADD_GENE_SYMBOLS,
     ANNOTATE_TARGETS,
     REMOVE_TARGETS,
@@ -141,6 +143,9 @@ public class NameAndSignalTabActions implements ActionListener {
           return "Show gene symbols as names, using a NCBI gene id to gene symbol converter.";
         case ADD_OBSERVATION:
           return "Calculate a new observation, based on two other ones.";
+          
+        case PAIR_DATA: // ToolTip is changes for miRNA in code later
+          return "Integrate two different datasets by pairing matching genes.";
           
         case FDR_CORRECTION_BH:
           return "Correct p-values with the Benjamini and Hochberg method and save as q-values.";
@@ -203,16 +208,27 @@ public class NameAndSignalTabActions implements ActionListener {
     
     // Integrate (pair) data button
     if (!tableContent.equals(EnrichmentObject.class) && 
-        !tableContent.equals(HeterogeneousNS.class)) {
-      JButton integrate = GUITools.createJButton(this,
-          NSAction.INTEGRATE, UIManager.getIcon("ICON_GEAR_16"));
-      bar.add(integrate);
-      /* TODO: Make integrate a button with three choices:
-       * 1. Pair data
-       * 2. Integrate various heterogeneous data (TreeTable with [GeneName|miRNA|mRNA|...])
-       * 3. Integrated pathway visualization.
-       */
+        !tableContent.equals(HeterogeneousNS.class)) {      
+      JPopupMenu integrate = new JPopupMenu("Integrate");
+      JMenuItem pairData = GUITools.createJMenuItem(this,
+          NSAction.PAIR_DATA, UIManager.getIcon("ICON_GEAR_16"));
+      if (miRNA.class.isAssignableFrom(tableContent)) {
+        String toolTip = "Integrate miRNA data with other (e.g. mRNA data) by mapping the miRNA targets to the other dataset.";
+        StringUtil.toHTML(toolTip, GUITools.TOOLTIP_LINE_LENGTH);
+        pairData.setToolTipText(toolTip);
+      }
+      integrate.add(pairData);
+
+      integrate.add(GUITools.createJMenuItem(this,
+          IntegratorUI.Action.INTEGRATED_TABLE, UIManager.getIcon("ICON_GEAR_16")));
+      integrate.add(GUITools.createJMenuItem(this,
+          IntegratorUI.Action.INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
+
+      JDropDownButton integrateButton = new JDropDownButton("Integrate", 
+          UIManager.getIcon("ICON_GEAR_16"), integrate);
+      integrateButton.setToolTipText("Perform heterogeneous data integration.");
       
+      bar.add(integrateButton);
     }
     
     // Datatype specific buttons:
@@ -280,7 +296,7 @@ public class NameAndSignalTabActions implements ActionListener {
       }
       
       
-    } else if (command.equals(NSAction.INTEGRATE.toString())) {
+    } else if (command.equals(NSAction.PAIR_DATA.toString())) {
       PairData pd = new PairData(parent);
       @SuppressWarnings("rawtypes")
       List pairedData = pd.showDialogAndPairData();
@@ -302,6 +318,14 @@ public class NameAndSignalTabActions implements ActionListener {
       PairData.calculateMergedSignal((Iterable<PairedNS<?, ?>>) parent.getData(), options);
       parent.rebuildTable();
       parent.repaint();
+      
+    } else if (command.equals(IntegratorUI.Action.INTEGRATED_TABLE.toString())) {
+      IntegrationDialog.defaultSelection = parent;
+      IntegratorUITools.showIntegratedTreeTableDialog();
+      
+    } else if (command.equals(IntegratorUI.Action.INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION.toString())) {
+      IntegrationDialog.defaultSelection = parent;
+      IntegratorUITools.showIntegratedVisualizationDialog();
       
     } else if (command.equals(NSAction.ADD_GENE_SYMBOLS.toString())) {
       log.info("Converting GeneIDs to Gene symbols.");

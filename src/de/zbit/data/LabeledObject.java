@@ -5,6 +5,8 @@ package de.zbit.data;
 
 import java.io.Serializable;
 
+import de.zbit.gui.tabs.NameAndSignalsTab;
+
 /**
  * This class is a very generic override of the {@link #toString()} method.
  * With it, you can return any string and associate this string with an object.
@@ -84,5 +86,43 @@ public class LabeledObject<T> implements Serializable, Comparable<LabeledObject<
   public int compareTo(LabeledObject<?> o) {
     return label.compareTo(o.getLabel());
   }
+
+
+
+  /**
+   * Returns the index of <code>object</code> inside
+   * {@link #getObject()} in <code>arr</code>.
+   * @param arr array of {@link LabeledObject}s
+   * @param object to search for (ignoring the label)
+   * @return index of <code>object</code> in <code>arr</code>.
+   */
+  public static <T> int getIndexOfObject(LabeledObject<T>[] arr,
+      T object) {
+    for (int i=0; i<arr.length; i++) {
+      if (arr[i].getObject().equals(object)) return i;
+    }
+    return -1;
+  }
   
+  /**
+   * Does the same as {@link #getIndexOfObject(LabeledObject[], NameAndSignalsTab)}
+   * but casts each element of <code>arr</code> to
+   * {@link LabeledObject}.
+   * @param arr
+   * @param object
+   * @return
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> int getIndexOfObject(Object[] arr,
+      T object) {
+    for (int i=0; i<arr.length; i++) {
+      if ((arr[i] instanceof LabeledObject) &&
+         (((LabeledObject<T>)arr[i]).getObject().equals(object))) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+
 }

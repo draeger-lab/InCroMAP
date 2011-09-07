@@ -255,8 +255,7 @@ public class IntegratorUI extends BaseFrame {
         case INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION:
           return "Visualize heterogeneous data from different datasets in one pathway.";
         case INTEGRATED_TABLE:
-          return "Build a gene-centered table of various integrated heterogeneous data.";
-          // TODO: heterogeneous....
+          return "Integrate multiple heterogeneous datasets from different platforms by building a gene-centered tree.";
           
         default:
           return "";

@@ -1008,21 +1008,19 @@ public class IntegratorUITools {
    * Shows a dialog that lets the user chooser a Pathway
    * and one dataset per data type.
    */
-  public void showIntegratedVisualizationDialog() {
+  public static void showIntegratedVisualizationDialog() {
     IntegrationDialog.showAndEvaluateIntegratedVisualizationDialog();
   }
   
   /**
-   * TODO: ...
+   * Shows a dialog and creates a TreeTable with one row/node per Gene
+   * and subnodes for each datatype (mRNA, miRNA, etc.) and subNodes
+   * with each probe.
    */
-  public void showIntegratedTreeTableDialog() {
+  public static void showIntegratedTreeTableDialog() {
     IntegrationDialog.showAndEvaluateIntegratedTreeTableDialog();
   }
     
   
 }
-
-
-
-
 
