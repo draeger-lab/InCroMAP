@@ -61,6 +61,8 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
    */
   private void registerMeAsParentOnChilds() {
     // TODO: What happens the same ns instance gets assigned multiple parents from different tabs?
+    // => Currently, the parent variable is unused, so this is not a problem... but it might get
+    // when new functionality is implemented.
     ns1.setParent(this);
     ns2.setParent(this);
   }
@@ -272,7 +274,7 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
       id2 = ((GeneID)ns2).getGeneID();
     }
     
-    /* XXX:
+    /* XXX Remark:
      * - if only one miRNA then it is always ns1.
      * - if exactly one miRNA, then other is the TARGET,
      * thus return the miRNA of the target!

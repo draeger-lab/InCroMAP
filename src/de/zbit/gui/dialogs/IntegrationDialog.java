@@ -341,6 +341,14 @@ public class IntegrationDialog extends JPanel {
           NameAndSignalsTab nsTab = ((LabeledObject<NameAndSignalsTab>)dialog.dataSelect[i].getSelectedItem()).getObject();
           MergeType mergeType = (MergeType) dialog.mergeSelect[i].getSelectedItem();
           
+          // Check if we have to annotate miRNA with targets
+          if (miRNA.class.isAssignableFrom(NameAndSignals.getType(nsTab.getExampleData()))) {
+            if (!miRNA.hasTargets((Iterable<? extends miRNA>) nsTab.getData())) {
+              nsTab.getActions().annotateMiRNAtargets();
+            }
+          }
+          //---
+          
           visualizer.addDataType(getAsList(nsTab.getData()), expSignal, mergeType);
           species = nsTab.getSpecies();
         }          

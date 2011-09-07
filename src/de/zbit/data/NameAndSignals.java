@@ -586,7 +586,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     Object o = c.iterator().next();
     if (o==null) return null;
     
-    // TODO: Add File, Character and Color (Not that important)
+    // TODO: Add File, Character and Color (not important - unused currently)
     if (NameAndSignals.class.isAssignableFrom(o.getClass()) || o instanceof NameAndSignals) {
       // Case 1: Mergeable NameAndSignals
       return NameAndSignals.merge(c, m);
@@ -1038,8 +1038,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       if (!mi.hasTargets()) {
         //log.warning("miRNA " +o+ " has no annotated targets.");
       } else {
-        // TODO: We now have also geneIDs for miRNAs... when to use
+        // XXX: We now have also geneIDs for miRNAs... when to use
         // target and when to use real geneIDs? (e.g., Targets for most enrichments)
+        // => Currently, we still take the name for miRNAs (problem with mapping
+        // those "systematic name"-String on miRNAs (*, -3p, etc.).
         for (miRNAtarget t: mi.getTargets()) {
           geneIds.add(t.getTarget());
         }
@@ -1159,7 +1161,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * Thus, it is also true for {@link miRNAandTarget}s.
    */
   public static boolean isMicroRNA(Iterable<?> col) {
-    // TODO: Generalize these isMiRNA methods and make
+    // XXX: One could generalize these isMiRNA methods and make
     // isGeneID annotated in dataset or similar.
     if (col==null) return false; // Empty list
     Iterator<?> it = col.iterator();

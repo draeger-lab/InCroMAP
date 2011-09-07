@@ -287,7 +287,7 @@ public class NameAndSignalTabActions implements ActionListener {
       if (pairedData!=null && pairedData.size()>0) {
         // Add tab
         NameAndSignalsTab nsTab = new NameAndSignalsTab(parent.getIntegratorUI(), pairedData, parent.getSpecies(false));
-        parent.getIntegratorUI().addTab(nsTab, "IntegratedData",
+        parent.getIntegratorUI().addTab(nsTab, "PairedData",
           String.format("Integration of '%s' and '%s'.", parent.getTabName(), pd.getLastSelectedOtherTab().getTabName()));
         
         // If one of the input table changes (during to changes in NameAndSignals), the

@@ -316,6 +316,7 @@ public class miRNA2mRNA_pair {
     // TODO: Species (mmu here) should be a variable (add GeneID2ListOfKEGGpathways to submitted variables)!
     GeneID2ListOfKEGGpathways pws=null;
     try {
+      log.warning("Initializing GeneID2ListOfKEGGpathways with static species mmu!");
       pws= new GeneID2ListOfKEGGpathways("mmu");
     } catch (IOException e) {
       log.log(Level.WARNING, "Could not read gene_id 2 kegg pathway mapping.", e);
@@ -326,8 +327,6 @@ public class miRNA2mRNA_pair {
         "Source", "Relationship", "Combined_FC",
         "mRNA_probe", "mRNA", "p-value", "FC", "Description", "GeneID", "Pathways"};
     ret.add(header);
-    
-    // TODO: Make more dynamic (Iterate over all objects and scores, defined in the first of each elements).
     
     // Add content
     for (ValueTriplet<miRNA, miRNAtarget, mRNA> vt : table) {
