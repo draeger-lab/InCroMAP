@@ -262,6 +262,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     if (nameCol>=line.length) return; // continue;
     
     T m = createObject(line[nameCol], line);
+    if (m==null) return;
     
     // Assign additional data
     if (additionalDataToRead!=null) {
