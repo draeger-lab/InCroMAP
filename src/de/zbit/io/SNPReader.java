@@ -67,6 +67,7 @@ public class SNPReader extends NameAndSignalReader<SNP> {
     List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
 
     ExpectedColumn e = new ExpectedColumn("dbSNP identifier", true);
+    e.setRegExPatternForInitialSuggestion("rs|ss\\d+");
     list.add(e);
     
     list.addAll(NameAndSignalReader.getExpectedSignalColumns(1));
