@@ -3,75 +3,162 @@
  */
 package de.zbit.data.methylation;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 import de.zbit.data.GeneID;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
-import de.zbit.data.Signal.MergeType;
-import de.zbit.data.protein.ProteinModificationExpression;
+import de.zbit.data.Signal;
+import de.zbit.util.Utils;
 
 /**
- * TODO: Eventuell besser von {@link NSwithProbes} erben?
+ * A generic class to hold DNA methylation data with annotated genes
+ * (gene-based, with geneID), current probe position and Signals. 
  * @author Clemens Wrzodek
  */
-public class DNAmethylation extends NameAndSignals implements GeneID {
+public class DNAmethylation extends NSwithProbes {
   private static final long serialVersionUID = -6002300790004775432L;
   public static final transient Logger log = Logger.getLogger(DNAmethylation.class.getName());
-
+  
   /**
-   * @param name
+   * Probe start is added to {@link #addData(String, Object)} with this key.
    */
-  public DNAmethylation(String name) {
-    super(name);
-    // TODO Auto-generated constructor stub
-  }
-
+  public final static String probeStartKey = "Probe_position_start";
+  
   /**
+   * Probe end is added to {@link #addData(String, Object)} with this key.
+   */
+  public final static String probeEndKey = "Probe_position_end";
+  
+  public DNAmethylation(String geneName) {
+    this (geneName, GeneID.default_geneID);
+  }
+  
+  /**
+   * @param geneName
    * @param geneID
-   * @param position
    */
-  public DNAmethylation(int geneID, int position) {
-    // TODO Auto-generated constructor stub
+  public DNAmethylation(String geneName, Integer geneID) {
+    // Yes, we could have included the probe name.
+    // But since it is not used anywhere, we removed it.
+    super(null, geneName, geneID);
+    unsetProbeName();
   }
-
+  
+  /**
+   * @return the probe start (or null).
+   */
+  public Integer getProbeStart() {
+    Object probeStart = getData(probeStartKey);
+    return probeStart==null?null:(Integer)probeStart;
+  }
+  
+  /**
+   * Set the corresponding probe start.
+   */
+  public void setProbeStart(Integer probeStart) {
+    super.addData(probeStartKey, probeStart);
+  }
+  
+  /**
+   * Remove the probe Start
+   */
+  public void unsetProbeStart() {
+    super.removeData(probeStartKey);
+  }
+  
+  /**
+   * @return the probe end (or null).
+   */
+  public Integer getProbeEnd() {
+    Object probeEnd = getData(probeEndKey);
+    return probeEnd==null?null:(Integer)probeEnd;
+  }
+  
+  /**
+   * Set the corresponding probe end.
+   */
+  public void setProbeEnd(Integer probeEnd) {
+    super.addData(probeEndKey, probeEnd);
+  }
+  
+  /**
+   * Remove the probe end
+   */
+  public void unsetProbeEnd() {
+    super.removeData(probeEndKey);
+  }
+  
   /* (non-Javadoc)
-   * @see de.zbit.data.GeneID#setGeneID(int)
+   * @see java.lang.Object#clone()
    */
   @Override
-  public void setGeneID(int geneID) {
-    // TODO Auto-generated method stub
+  protected Object clone() throws CloneNotSupportedException {
+    DNAmethylation nm = new DNAmethylation(name, getGeneID());
+    return super.clone(nm);
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.NSwithProbes#hashCode()
+   */
+  @Override
+  public int hashCode() {
+    Integer start = getProbeStart();
+    return super.hashCode() + (start==null?3:start);
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.NSwithProbes#compareTo(java.lang.Object)
+   */
+  @Override
+  public int compareTo(Object o) {
+    int r = super.compareTo(o); // compares name, GeneID, (and the currently unused probe id)
+    if (o instanceof DNAmethylation) {
+      DNAmethylation ot = (DNAmethylation) o;
+      if (r==0) {
+        r = Utils.compareIntegers(getProbeStart(), ot.getProbeStart());
+        if (r==0) {
+          r = Utils.compareIntegers(getProbeEnd(), ot.getProbeEnd());
+        }
+      }
+    } else {
+      return -2;
+    }
+    
+    return r;
+  }
+  
+  
+  protected <T extends NameAndSignals> void merge(Collection<T> source, T target, Signal.MergeType m) {
+    super.merge(source, target, m);
+    
+    // This is required to ensure having (min of) integers as start and end positions.
+    List<Integer> positions = new ArrayList<Integer>(source.size());
+    for (T o : source) {
+      Integer s = ((DNAmethylation) o).getProbeStart();
+      if (s!=null) positions.add(s);
+    }
+    if (positions.size()>0) {
+      double averagePosition = Utils.min(positions);
+      ((DNAmethylation) target).setProbeStart((int)(averagePosition));
+    }
+    
+    // End pos (max and integer)
+    positions = new ArrayList<Integer>(source.size());
+    for (T o : source) {
+      Integer s = ((DNAmethylation) o).getProbeEnd();
+      if (s!=null) positions.add(s);
+    }
+    if (positions.size()>0) {
+      double averagePosition = Utils.max(positions);
+      ((DNAmethylation) target).setProbeEnd((int)(averagePosition));
+    }
+    
     
   }
   
-  /* (non-Javadoc)
-   * @see de.zbit.data.GeneID#getGeneID()
-   */
-  @Override
-  public int getGeneID() {
-    // TODO Auto-generated method stub
-    return 0;
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.data.NameAndSignals#merge(java.util.Collection, de.zbit.data.NameAndSignals, de.zbit.data.Signal.MergeType)
-   */
-  @Override
-  protected <T extends NameAndSignals> void merge(Collection<T> source, T target, MergeType m) {
-    // TODO Auto-generated method stub
-    
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.data.NameAndSignals#getUniqueLabel()
-   */
-  @Override
-  public String getUniqueLabel() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-  
-  // TODO: Overwrite hashcode and compareTo with unique comparisons!
   
 }

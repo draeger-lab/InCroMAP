@@ -63,6 +63,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
     //if (probeName!=null)
     setProbeName(probeName);
     //if (geneID!=null && geneID!=default_geneID && geneID>0)
+    if (geneID==null) geneID = default_geneID;
     setGeneID(geneID);
   }
   
@@ -118,28 +119,28 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
   
   
   
-   /**
-    * @return the probe name (or a list of probes,
-    * separated usually by a ";").
-    */
+  /**
+   * @return the probe name (or a list of probes,
+   * separated usually by a ";").
+   */
   public String getProbeName() {
     Object probeName = getData(probeNameKey);
     return probeName==null?null:probeName.toString();
   }
-   
-   /**
-    * Set the corresponding probe name.
-    */
-   public void setProbeName(String probeName) {
-     super.addData(probeNameKey, probeName);
-   }
-   
-   /**
-    * Remove the probe name
-    */
-   public void unsetProbeName() {
-     super.removeData(probeNameKey);
-   }
+  
+  /**
+   * Set the corresponding probe name.
+   */
+  public void setProbeName(String probeName) {
+    super.addData(probeNameKey, probeName);
+  }
+  
+  /**
+   * Remove the probe name
+   */
+  public void unsetProbeName() {
+    super.removeData(probeNameKey);
+  }
    
    /**
     * @return associated gene symbol. Only uses stored symbol,
@@ -167,7 +168,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
        // Compare probe name
        if (r==0) {
          if (isSetProbeName() && ot.isSetProbeName()) {
-           r = getProbeName().compareTo(getProbeName());
+           r = getProbeName().compareTo(ot.getProbeName());
          } else {
            r=-1;
          }

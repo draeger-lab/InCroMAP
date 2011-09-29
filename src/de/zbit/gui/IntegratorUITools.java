@@ -74,6 +74,7 @@ import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.OpenFile;
 import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.SBFileFilter;
+import de.zbit.io.SNPReader;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.kegg.Translator;
@@ -251,6 +252,8 @@ public class IntegratorUITools {
         itemsForModel.add(Math.min(itemsForModel.size(), 2), new LabeledObject<Class<?>>("Protein modification data", value));
       } else if (value.equals(DNAMethylationReader.class)) {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("DNA methylation data", value));
+      } else if (value.equals(SNPReader.class)) {
+        itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("SNP or GWAS data", value));
       } else {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>(value.getSimpleName(), value));
       }

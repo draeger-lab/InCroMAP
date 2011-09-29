@@ -26,7 +26,7 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
    */
   public PathwayVisualizationOptionPanel()
     throws IOException {
-    super("MyTITLE", PathwayVisualizationOptions.class, SignalOptions.class);
+    super("Observation and visualization options", SignalOptions.class, PathwayVisualizationOptions.class);
   }
   
   /* (non-Javadoc)
@@ -36,7 +36,7 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
   public void init() {
     super.init();
     if (getComponentCount()>0) {
-      changeFCSpinnerStepsize();
+      changeFCSpinnerStepsize(this);
       changeNodeShapeSelector();
     }
   }
@@ -60,9 +60,9 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
   /**
    * Tries to change the step size of the fold change spinner to 0.1
    */
-  private void changeFCSpinnerStepsize() {
-    Object c = option2component.get(PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR);
-    if (c instanceof JLabeledComponent) {
+  public static void changeFCSpinnerStepsize(PreferencesPanel panel) {
+    Object c = panel.getComponentForOption(PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR);
+    if (c!=null && c instanceof JLabeledComponent) {
       Object c2 = ((JLabeledComponent)c).getColumnChooser();
       if (c2 instanceof JSpinner) {
         SpinnerModel model = ((JSpinner)c2).getModel();

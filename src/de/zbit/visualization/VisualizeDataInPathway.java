@@ -909,11 +909,13 @@ public class VisualizeDataInPathway {
     SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
     int maxWidth = PathwayVisualizationOptions.DNA_METHYLATION_MAXIMUM_BOX_WIDTH.getValue(prefs);
     // The protein mod. box height is required to calc. the dna methylation bar height
-    int boxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
+    int protBoxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     
     // Prepare maps and required classes
     MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
     Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
+    // TODO: All "-1" geneIds are summed up to a very great number...
+    // TODO: Really take global max? ....
     double[] minMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
     double maxSignalValue = minMax[1]+minMax[0];
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));

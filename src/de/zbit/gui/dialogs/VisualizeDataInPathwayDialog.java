@@ -16,6 +16,9 @@ import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.prefs.PathwayVisualizationOptionPanel;
+import de.zbit.gui.prefs.PathwayVisualizationOptions;
+import de.zbit.gui.prefs.PreferencesPanel;
+import de.zbit.gui.prefs.PreferencesPanelForKeyProvider;
 import de.zbit.gui.prefs.SignalOptionPanel;
 
 
@@ -47,7 +50,7 @@ public class VisualizeDataInPathwayDialog extends JPanel {
   /**
    * Pathway visualization options (color, threshold and node shape)
    */
-  private PathwayVisualizationOptionPanel colorThresholdAndShape;
+  private PreferencesPanel colorThresholdAndShape;
   
   public VisualizeDataInPathwayDialog() {
     super ();
@@ -71,7 +74,10 @@ public class VisualizeDataInPathwayDialog extends JPanel {
     lh.add(mergeDepthAndType);
     
     // Put the PathwayVisualizationOptionPanel on an collapsed, expandable panel.
-    colorThresholdAndShape = new PathwayVisualizationOptionPanel();
+    //colorThresholdAndShape = new PathwayVisualizationOptionPanel(); // <= also contains SignalOptionPanel().
+    colorThresholdAndShape = new PreferencesPanelForKeyProvider(PathwayVisualizationOptions.class);
+    
+    PathwayVisualizationOptionPanel.changeFCSpinnerStepsize(colorThresholdAndShape);
     lh.add(new ExpandablePanel("Advanced visualization options", colorThresholdAndShape, true, true));
     
   }

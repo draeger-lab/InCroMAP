@@ -600,7 +600,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       return Ratio.merge(c,m);
     
     } else if (Number.class.isAssignableFrom(o.getClass()) || o instanceof Number) {
-      // Case 4: Numeric values
+      // Case 4: Numeric values (XXX: Integers may get converted to doubles here!)
       return Signal.calculate(m, c);
       
     } else if (Boolean.class.isAssignableFrom(o.getClass()) || o instanceof Boolean) {

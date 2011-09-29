@@ -64,7 +64,7 @@ public class Signal implements Serializable, Comparable<Object>  {
    * @author Clemens Wrzodek
    */
   public static enum MergeType {
-    Mean, Median, Minimum, Maximum, MaximumDistanceToZero, AskUser;
+    Mean, Median, Minimum, Maximum, MaximumDistanceToZero, AbsoluteSumOfLog2Values, AskUser;
   }
 
   
@@ -293,7 +293,29 @@ public class Signal implements Serializable, Comparable<Object>  {
     } else if (m.equals(MergeType.Maximum)) {
       return Utils.max(values);
     } else if (m.equals(MergeType.MaximumDistanceToZero)) {
-      return Utils.max(values);
+      Iterator<? extends Number> it = values.iterator();
+      double max = it.next().doubleValue();
+      while (it.hasNext()) {
+        double value = it.next().doubleValue();
+        if (Math.abs(value)>Math.abs(max))
+          max = value;
+      }
+      return max;
+      
+    } else if (m.equals(MergeType.AbsoluteSumOfLog2Values)) {
+      // Does ONLY make sense for p-values!!!
+      Iterator<? extends Number> it = values.iterator();
+      double sum = 0;
+      while (it.hasNext()) {
+        double value = it.next().doubleValue();
+        // [p-values] are between 0 and 1 => the log is negative.
+        value = Math.abs(Utils.log2(value));
+        if (!Double.isNaN(value)) {
+          sum+=value;
+        }
+      }
+      return sum;
+      
     } else {
       log.severe("Please implement calculation for " + m.toString() + "!");
       return 0;
@@ -331,6 +353,19 @@ public class Signal implements Serializable, Comparable<Object>  {
         if (Math.abs(value)>Math.abs(max))
           max = value;
       return max;
+      
+    } else if (m.equals(MergeType.AbsoluteSumOfLog2Values)) {
+      // Does ONLY make sense for p-values!!!
+      double sum = 0;
+      for (double value:values) {
+        // [p-values] are between 0 and 1 => the log is negative.
+        value = Math.abs(Utils.log2(value));
+        if (!Double.isNaN(value)) {
+          sum+=value;
+        }
+      }
+      return sum;
+      
     } else {
       log.severe("Please implement calculation for " + m.toString() + "!");
       return 0;

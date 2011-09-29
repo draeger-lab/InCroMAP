@@ -39,10 +39,15 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
+import de.zbit.data.EnrichmentObject;
+import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.PairedNS;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.actions.TranslatorTabActions;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.prefs.IntegratorIOOptions;
@@ -287,9 +292,22 @@ public class IntegratorUI extends BaseFrame {
     // SBProperties props = 
     SBPreferences.analyzeCommandLineArguments(getStaticCommandLineOptions(), args);
     
+    // TODO: Create an "automatic" mergeType that takes
+    // - MaxDistTo0 for FoldChanges
+    // - Minimum for p-values
+    // - Mean for others
+    
+    /* TODO:
+     * - Special gene-centering MergeType for DNA methylation:
+     * Sum of -log(pvalues). [bin-method should be already executed]
+     * 
+     */
+    
+    
     // Set the often used KeggTranslator methods to use this appName as application name
     Translator.APPLICATION_NAME = appName;
     Translator.VERSION_NUMBER = appVersion;
+    TranslatorPanel.logoResourcePath = "../../gui/img/logo.jpg";
     
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -361,7 +379,7 @@ public class IntegratorUI extends BaseFrame {
    */
   private void initStatusBarSpeciesLabel() {
     // Create a smaller panel for the statusBar
-    Dimension panelSize = new Dimension(200, 15);
+    Dimension panelSize = new Dimension(275, 15);
     JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     panel.setOpaque(false);
     panel.setPreferredSize(panelSize);
@@ -670,6 +688,7 @@ public class IntegratorUI extends BaseFrame {
     GUITools.setEnabled(false, getJMenuBar(), BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
     BaseFrameTab o = getCurrentlySelectedPanel();
     Species currentSpecies = null;
+    String panelDataContent = null; // E.g., "mRNA"
     if (o != null) {
       if (o instanceof TranslatorPanel) {
         
@@ -690,6 +709,23 @@ public class IntegratorUI extends BaseFrame {
         actions.updateToolbarButtons(toolBar);
       } else if (o instanceof IntegratorTab) {
         currentSpecies = ((IntegratorTab<?>) o).getSpecies(false);
+        if (o instanceof NameAndSignalsTab) {
+          try {
+            Class<?> cl = NameAndSignals.getType(((NameAndSignalsTab) o).getExampleData());
+            
+            // Translate class name to a nice and simple data type name.
+            if (EnrichmentObject.class.isAssignableFrom(cl)) panelDataContent = null;
+            else if (PairedNS.class.isAssignableFrom(cl)) panelDataContent = null;
+            else if (HeterogeneousNS.class.isAssignableFrom(cl)) panelDataContent = null;
+            else if (cl.equals(NameAndSignals.class)) panelDataContent = null; // Temp panels return NS
+            else if (ProteinModificationExpression.class.isAssignableFrom(cl)) panelDataContent = "protein";
+            else if (DNAmethylation.class.isAssignableFrom(cl)) panelDataContent = "DNA methylation";
+            else panelDataContent = cl.getSimpleName();
+            
+          } catch (Exception e) {
+            panelDataContent = null;
+          }
+        }
       }
       
       o.updateButtons(getJMenuBar(), getJToolBar());
@@ -700,6 +736,7 @@ public class IntegratorUI extends BaseFrame {
     
     // Display the current species.
     String specLabel = currentSpecies!=null?"Species: " + currentSpecies.getName():"";
+    if (panelDataContent!=null) specLabel = "Type: " + panelDataContent + (specLabel.equals("")?"":", " + specLabel);
     if (speciesLabel!=null) speciesLabel.setText(specLabel);
   }
   
