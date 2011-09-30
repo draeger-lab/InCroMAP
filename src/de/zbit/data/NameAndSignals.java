@@ -38,6 +38,7 @@ import de.zbit.io.CSVwriteable;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Reflect;
 import de.zbit.util.StringUtil;
+import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 
 /**
@@ -1140,6 +1141,28 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     }
     return minMax;
   }
+  
+  /**
+   * 
+   * @param <T>
+   * @param nsList
+   * @param experimentName
+   * @param type
+   * @param quantile
+   * @return
+   */
+  public static <T extends NameAndSignals> double[] getMinMaxSignalQuantile(Collection<T> nsList, String experimentName, SignalType type, int quantile) {
+    List<Number> signalValues = new ArrayList<Number>(nsList.size());
+    for (NameAndSignals ns: nsList) {
+      Number sig = ns.getSignalValue(type, experimentName);
+      signalValues.add(sig);
+    }
+    
+    double upperQuant = Utils.quantile(signalValues, quantile, false);
+    double lowerQuant = Utils.quantile(signalValues, 100-quantile, true);
+    return new double[]{lowerQuant, upperQuant};
+  }
+  
   
   /**
    * @param col any iterable.

@@ -905,6 +905,7 @@ public class VisualizeDataInPathway {
    */
   public <T extends NameAndSignals> int addBlackBoxLeftOfNodes(Collection<T> nsList, 
     String tabName, String experimentName, SignalType type) {
+    boolean showBorderForDNAmethylationBox = true;
     // Read max. box width from preferences (Default:10)
     SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
     int maxWidth = PathwayVisualizationOptions.DNA_METHYLATION_MAXIMUM_BOX_WIDTH.getValue(prefs);
@@ -914,9 +915,12 @@ public class VisualizeDataInPathway {
     // Prepare maps and required classes
     MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
     Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
-    // TODO: All "-1" geneIds are summed up to a very great number...
-    // TODO: Really take global max? ....
-    double[] minMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
+    // XXX: All "-1" geneIds are summed up to a very great number ing global min max...
+    //double[] minMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
+    // Better take 90% value as max.
+    double[] minMax = NameAndSignals.getMinMaxSignalQuantile(nsList, experimentName, type, 90);
+    // TODO: Test a few to know good max values. Test setting min to global min?
+    log.config(String.format("Min/max values for box to visualize data: %s to %s.", minMax[0], minMax[1]));
     double maxSignalValue = minMax[1]+minMax[0];
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
     
@@ -939,7 +943,9 @@ public class VisualizeDataInPathway {
         else signalValue+=minMax[0];
         
         NodeLabel nl = nr.createNodeLabel();
-        nr.addLabel(nl);
+        
+        
+        // TODO: Set a border? Write signals to nodes?
         
         // Remember what we visualized
         nl.setUserData(new ValuePair<VisualizedData, NameAndSignals>(visData, ns));
@@ -949,11 +955,30 @@ public class VisualizeDataInPathway {
         nl.setBackgroundColor(nr.getLineColor());
         nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
         nl.setContentHeight(barHeight);
-        nl.setContentWidth(signalValue/maxSignalValue*maxWidth);
+        nl.setContentWidth(Math.min(Math.max(signalValue/maxSignalValue, 0), 1)*maxWidth);
         
         nl.setFreeOffset(-nl.getContentWidth(), 0);
         nl.setLineColor(nl.getBackgroundColor());
         nl.setDistance(0);
+        
+        if (showBorderForDNAmethylationBox) {
+          NodeLabel border = nr.createNodeLabel(); //(NodeLabel) nl.clone();
+          border.setModel(NodeLabel.FREE);
+          border.setBackgroundColor(Color.WHITE);
+          border.setContentWidth(maxWidth);
+          border.setFreeOffset(-border.getContentWidth(), 0);
+          
+          
+          border.setPosition(NodeLabel.W);
+          border.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
+          border.setContentHeight(barHeight);
+          border.setDistance(0);
+          border.setLineColor(Color.BLACK);
+          
+          nr.addLabel(border);
+        }
+        
+        nr.addLabel(nl);
       }
       changedNodes++;
     }
