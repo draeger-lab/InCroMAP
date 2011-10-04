@@ -148,7 +148,8 @@ public class IntegrationDialog extends JPanel implements ActionListener {
       final JLabeledComponent mergeTypeSelector;
       if (showMergeTypeSelectos) {
         mergeTypeSelector = new JLabeledComponent("Gene-center observations by",true,MergeType.values());
-        SignalOptionPanel.removeItemFromJComboBox(mergeTypeSelector, MergeType.AskUser);
+        //SignalOptionPanel.removeItemFromJComboBox(mergeTypeSelector, MergeType.AskUser);
+        SignalOptionPanel.performCommonSignalOptionPanelModifications(mergeTypeSelector);
         mergeTypeSelector.setDefaultValue(defaultMergeSelection);
         mergeSelect[i] = mergeTypeSelector;
         ld.add(mergeSelect[i]);  

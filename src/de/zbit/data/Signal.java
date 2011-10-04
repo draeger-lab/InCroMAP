@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.util.ScientificNumberRenderer;
 import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
@@ -64,7 +65,7 @@ public class Signal implements Serializable, Comparable<Object>  {
    * @author Clemens Wrzodek
    */
   public static enum MergeType {
-    Mean, Median, Minimum, Maximum, MaximumDistanceToZero, AbsoluteSumOfLog2Values, AskUser;
+    Automatic, Mean, Median, Minimum, Maximum, MaximumDistanceToZero, NormalizedSumOfLog2Values, AskUser;
   }
 
   
@@ -198,7 +199,7 @@ public class Signal implements Serializable, Comparable<Object>  {
   /**
    * Merges all <b>compatible</b> signals, i.e., all signals with same experimentName and SignalType.
    * @param c list of signals to merge
-   * @param m {@link MergeType} - Either Mean or Median, etc.
+   * @param m {@link MergeType} - Either Mean or Median, etc. May also be Automatic!
    * @return a new list of {@link Signal}s.
    */
   public static List<Signal> merge(Collection<Signal> c, MergeType m) {
@@ -218,7 +219,9 @@ public class Signal implements Serializable, Comparable<Object>  {
     // Merge the signals (e.g., taking the mean)
     List<Signal> toReturn = new ArrayList<Signal>();
     for (ValuePair<String, SignalType> key : compatibleSignals.keySet()) {
-      double sig = calculate(m, compatibleSignals.get(key));
+      MergeType mTemp = m;
+      if (m.equals(MergeType.Automatic)) mTemp = IntegratorUITools.autoInferMergeType(key.getB());
+      double sig = calculate(mTemp, compatibleSignals.get(key));
       toReturn.add(new Signal(sig, key.getA(), key.getB()));
     }
     
@@ -249,6 +252,8 @@ public class Signal implements Serializable, Comparable<Object>  {
       }
     }
     
+    if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(type);
+    
     // Merge the signals (e.g., taking the mean)
     double sig = calculate(m, list);
     return new Signal(sig, experimentName, type);
@@ -262,14 +267,21 @@ public class Signal implements Serializable, Comparable<Object>  {
    * @return a new list of {@link Signal}s.
    */
   public static double mergeAll(Collection<Signal> c, MergeType m) {
+    int size = c.size();
+    SignalType commonSignalType = null;
+    if (c.size()>0) commonSignalType = c.iterator().next().getType();
     
     // Collect all signal values
-    double[] values = new double[c.size()];
+    double[] values = new double[size];
     int i=0;
     Iterator<Signal> it = c.iterator();
     while (it.hasNext()) {
-      values[i++] = it.next().getSignal().doubleValue();
+      Signal sig = it.next();
+      if (!sig.getType().equals(commonSignalType)) commonSignalType = null;
+      values[i++] = sig.getSignal().doubleValue();
     }
+    
+    if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(commonSignalType);
     
     return calculate(m, values);
   }
@@ -283,6 +295,7 @@ public class Signal implements Serializable, Comparable<Object>  {
   public static double calculate(MergeType m, Collection<? extends Number> values) {
     if (values==null || values.size()<1) return Double.NaN;
     else if (values.size()==1) return values.iterator().next().doubleValue();
+    else if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(null); // Mean
     
     if (m.equals(MergeType.Mean)) {
       return Utils.average(values);
@@ -302,19 +315,22 @@ public class Signal implements Serializable, Comparable<Object>  {
       }
       return max;
       
-    } else if (m.equals(MergeType.AbsoluteSumOfLog2Values)) {
+    } else if (m.equals(MergeType.NormalizedSumOfLog2Values)) {
       // Does ONLY make sense for p-values!!!
       Iterator<? extends Number> it = values.iterator();
       double sum = 0;
+      double size=0;
       while (it.hasNext()) {
         double value = it.next().doubleValue();
         // [p-values] are between 0 and 1 => the log is negative.
         value = Math.abs(Utils.log2(value));
         if (!Double.isNaN(value)) {
           sum+=value;
+          size++;
         }
       }
-      return sum;
+      if (size==0) return Double.NaN;
+      return sum/size;
       
     } else {
       log.severe("Please implement calculation for " + m.toString() + "!");
@@ -331,6 +347,7 @@ public class Signal implements Serializable, Comparable<Object>  {
   public static double calculate(MergeType m, double... values) {
     if (values==null || values.length<1) return Double.NaN;
     else if (values.length==1) return values[0];
+    else if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(null); // Mean
     
     if (m.equals(MergeType.Mean)) {
       return Utils.average(values);
@@ -354,17 +371,20 @@ public class Signal implements Serializable, Comparable<Object>  {
           max = value;
       return max;
       
-    } else if (m.equals(MergeType.AbsoluteSumOfLog2Values)) {
+    } else if (m.equals(MergeType.NormalizedSumOfLog2Values)) {
       // Does ONLY make sense for p-values!!!
       double sum = 0;
+      double size=0;
       for (double value:values) {
         // [p-values] are between 0 and 1 => the log is negative.
         value = Math.abs(Utils.log2(value));
         if (!Double.isNaN(value)) {
           sum+=value;
+          size++;
         }
       }
-      return sum;
+      if (size==0) return Double.NaN;
+      return sum/size;
       
     } else {
       log.severe("Please implement calculation for " + m.toString() + "!");

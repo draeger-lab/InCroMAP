@@ -941,6 +941,16 @@ public class IntegratorUITools {
    * @return the user-approved {@link MergeType}.
    */
   public static MergeType getMergeType() {
+    return getMergeType((SignalType)null);
+  }
+  /**
+   * @param forAutoInference if automatic mergeType is selected an
+   * appropriate {@link MergeType} is selected automatically,
+   * dependent on this {@link SignalType}.
+   * @return the user-approved {@link MergeType}. This is either 
+   * a valid (directly usable) {@link MergeType} OR {@link MergeType#Automatic}.
+   */
+  public static MergeType getMergeType(SignalType forAutoInference) {
     MergeType m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getDefaultValue();
     
     // Look if "remember my decision" is set and take it without asking
@@ -948,6 +958,7 @@ public class IntegratorUITools {
     if (MergeTypeOptions.REMEMBER_GENE_CENTER_DECISION.getValue(prefs)) {
       try {
         m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
+        if (m.equals(MergeType.Automatic)) m = autoInferMergeType(forAutoInference);
         if (!m.equals(MergeType.AskUser)) return m;
       } catch (Throwable t) {}
     }
@@ -968,9 +979,17 @@ public class IntegratorUITools {
     }
     
     // Ensure a valid return value
-    if (m.equals(MergeType.AskUser)) {
-      log.warning("For some reason, MergeType was still AskUser. Changed to Mean.");
-      m = MergeType.Mean;
+    if (m.equals(MergeType.AskUser) || m.equals(MergeType.Automatic)) {
+      boolean wasAskUser = m.equals(MergeType.AskUser);
+      if (forAutoInference==null) {
+        m = MergeType.Automatic; 
+      } else {
+        // Auto-inference of adequate merge type
+        m = autoInferMergeType(forAutoInference);
+      }
+      if (wasAskUser) {
+        log.warning(String.format("For some reason, MergeType was still AskUser. Changed to %s.", m.toString()));
+      }
     }
     
     return m;
@@ -985,14 +1004,68 @@ public class IntegratorUITools {
    * @return
    */
   public static MergeType getMergeTypeSilent(SBPreferences prefs) {
+    return getMergeTypeSilent(prefs, (SignalType)null);
+  }
+  /**
+   * Please see {@link #getMergeTypeSilent(SBPreferences)}
+   * @param prefs 
+   * @param forAutoInference if {@link MergeType#Automatic} is selected,
+   * returns a value dependent on the {@link SignalType}.
+   * @return Valid (directly usable) {@link MergeType} OR
+   * {@link MergeType#Automatic}.
+   * @see #getMergeTypeSilent(SBPreferences)
+   */
+  public static MergeType getMergeTypeSilent(SBPreferences prefs, SignalType forAutoInference) {
     MergeType m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getDefaultValue();
     
     try {
       m = MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs);
     } catch (Throwable t) {}
-    if (!m.equals(MergeType.AskUser)) return m;
     
-    return MergeType.Mean;
+    // Silent => Auto-infer a valid merge type
+    if (m.equals(MergeType.AskUser) || m.equals(MergeType.Automatic)) {
+      if (forAutoInference==null) {
+        m = MergeType.Automatic; 
+      } else {
+        // Auto-inference of adequate merge type
+        m = autoInferMergeType(forAutoInference);
+      }
+    }
+    
+    return m;
+  }
+
+  /**
+   * Return a good {@link MergeType}, dependent on a {@link SignalType}.
+   * This will return MaxDistanceToZero for FoldChanges and
+   * Minimum for pValues. Else, always Mean is returned.
+   * @param forAutoInference
+   * @return
+   */
+  public static MergeType autoInferMergeType(SignalType forAutoInference) {
+    MergeType m;
+    if (forAutoInference == null) {
+      m = MergeType.Mean;
+    } else if (forAutoInference.equals(SignalType.FoldChange)) {
+      m = MergeType.MaximumDistanceToZero;
+    } else if (forAutoInference.equals(SignalType.pValue)) {
+      m = MergeType.Minimum;
+    } else {
+      m = MergeType.Mean;
+    }
+    return m;
+  }
+  
+  /**
+   * Please see {@link #getMergeTypeSilent()}.
+   * @param forAutoInference if {@link MergeType#Automatic} is selected,
+   * returns a value dependent on the {@link SignalType}.
+   * @return
+   * @see #getMergeTypeSilent()
+   */
+  public static MergeType getMergeTypeSilent(SignalType forAutoInference) {
+    SBPreferences prefs = SBPreferences.getPreferencesFor(MergeTypeOptions.class);
+    return getMergeTypeSilent(prefs, forAutoInference);
   }
   
   /**
@@ -1003,8 +1076,7 @@ public class IntegratorUITools {
    * @return
    */
   public static MergeType getMergeTypeSilent() {
-    SBPreferences prefs = SBPreferences.getPreferencesFor(MergeTypeOptions.class);
-    return getMergeTypeSilent(prefs);
+    return getMergeTypeSilent((SignalType)null);
   }
   
   /**

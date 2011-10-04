@@ -6,10 +6,13 @@ package de.zbit.gui.prefs;
 import java.awt.Component;
 import java.io.IOException;
 
+import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 
 import de.zbit.data.Signal.MergeType;
+import de.zbit.gui.ActionCommand;
+import de.zbit.gui.ActionCommandFactory;
 import de.zbit.gui.GUITools;
 
 /**
@@ -34,7 +37,62 @@ public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
   @Override
   public void init() {
     super.init();
-    removeItemFromJComboBox(this, MergeType.AskUser);
+    performCommonSignalOptionPanelModifications(this);
+  }
+
+
+  /**
+   * Removes the {@link MergeType#AskUser} and adds a few tooltips.
+   */
+  public static void performCommonSignalOptionPanelModifications(JComponent SigOptionalPanel) {
+    removeItemFromJComboBox(SigOptionalPanel, MergeType.AskUser);
+    addToolTipToJComboBox(SigOptionalPanel, MergeType.Automatic, "Automatically selectes MaxDistanceToZero for fold changes, minimum for p-values and mean for all others.");
+    addToolTipToJComboBox(SigOptionalPanel, MergeType.NormalizedSumOfLog2Values, "This calculation is especially suitable for p-values from DNA methylation data.");
+  }
+
+
+  /**
+   * Adds a <code>tooltip</code> for a specific Element <code>comboBoxElement</code>
+   * to all {@link JComboBox}es on <code>sigOptionalPanel</code> that
+   * contain this element.
+   * @param sigOptionalPanel
+   * @param comboBoxElement
+   * @param tooltip
+   * @return true if at least one item has been modified.
+   */
+  public static boolean addToolTipToJComboBox(JComponent sigOptionalPanel,
+    final Object comboBoxElement, final String tooltip) {
+    
+    if (sigOptionalPanel instanceof JComboBox) {
+      ComboBoxModel model = ((JComboBox)sigOptionalPanel).getModel();
+      boolean ret = false;
+      
+      // Create an actionCommand that contains the selected tooltip
+      ActionCommand newObject = ActionCommandFactory.create(comboBoxElement.toString(), tooltip);
+      
+      // Look for the old element and replace it.
+      int sel = ((JComboBox)sigOptionalPanel).getSelectedIndex(); //backup
+      for (int i=0; i<model.getSize(); i++) {
+        if (model.getElementAt(i).equals(comboBoxElement)) {
+          ret = true;
+          ((JComboBox)sigOptionalPanel).removeItemAt(i);
+          ((JComboBox)sigOptionalPanel).insertItemAt(newObject, i);
+        }
+      }
+      if (ret) ((JComboBox)sigOptionalPanel).setSelectedIndex(sel); // restore selection
+      
+      return ret;
+    } else if (sigOptionalPanel.getComponentCount()>0) {
+      boolean ret = false;
+      for (Component c2: sigOptionalPanel.getComponents()) {
+        if (c2 instanceof JComponent) {
+          ret |= addToolTipToJComboBox((JComponent)c2, comboBoxElement, tooltip);
+        }
+      }
+      return ret;
+    } else {
+      return false;
+    }
   }
 
 

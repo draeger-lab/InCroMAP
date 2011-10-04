@@ -356,6 +356,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    */
   public static <T extends NameAndSignals> Collection<T> geneCentered(Collection<T> nameAndSignals, Collection<Object[]> groupIdentifiersToMerge, MergeType m) {
     if (m==null || m.equals(MergeType.AskUser)) m = IntegratorUITools.getMergeType();
+    // Automatic should be accepted by all merge and calculate methods.
+    //if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(null); // Returns mean.
     
     // Group data by name (or gene ID)
     Map<String, Collection<T>> group = group_by_name(nameAndSignals, false, true);
@@ -423,6 +425,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @param <T> the implementing class ({@link NameAndSignals} derived)
    * @param c collection of objects to merge
    * @param m {@link MergeType} describing how to merge the signals.
+   * Accepts {@link MergeType#Automatic}.
    * @return
    */
   @SuppressWarnings("unchecked")
@@ -579,6 +582,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * and extensions of {@link NameAndSignals}.
    * @param c collection that contains object of exactly one class!
    * @param m {@link MergeType} that defines how to merge numbers.
+   * Accepts also {@link MergeType#Automatic}.
    * @return
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -648,7 +652,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @param source collection of objects to merge
    * @param target pre-prepared object, that already contains a merged {@link #name} and {@link Signal}s.
    * Other attributes from the source list should be written into this object
-   * @param m {@link MergeType} describing how to merge numeric values.
+   * @param m {@link MergeType} describing how to merge numeric values. Please also accept {@link MergeType#Automatic}.
    */
   protected abstract <T extends NameAndSignals> void merge(Collection<T> source, T target, MergeType m);
 

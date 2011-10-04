@@ -326,7 +326,7 @@ public class NameAndSignal2PWTools {
    */
   public <T extends NameAndSignals> Collection<T> prepareGraph(Collection<T> nsList, String tabName, String experimentName, SignalType type, boolean pathwayCentered) {
     // Only if multiple times the same signal is available, which is actually impossible...
-    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
+    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent(type);
     
     // Prepare a key to uniquely describe the visualized data.
     ValueTriplet<String, String, SignalType> key = new ValueTriplet<String, String, SignalType>(tabName, experimentName, type);

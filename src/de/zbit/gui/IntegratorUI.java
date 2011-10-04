@@ -291,19 +291,7 @@ public class IntegratorUI extends BaseFrame {
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
     // SBProperties props = 
     SBPreferences.analyzeCommandLineArguments(getStaticCommandLineOptions(), args);
-    
-    // TODO: Create an "automatic" mergeType that takes
-    // - MaxDistTo0 for FoldChanges
-    // - Minimum for p-values
-    // - Mean for others
-    
-    /* TODO:
-     * - Special gene-centering MergeType for DNA methylation:
-     * Sum of -log(pvalues). [bin-method should be already executed]
-     * 
-     */
-    
-    
+        
     // Set the often used KeggTranslator methods to use this appName as application name
     Translator.APPLICATION_NAME = appName;
     Translator.VERSION_NUMBER = appVersion;

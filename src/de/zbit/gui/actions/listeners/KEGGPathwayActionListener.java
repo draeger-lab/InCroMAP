@@ -255,7 +255,6 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     
     // Perform operations in another thread
     SwingWorker<Integer, Void> visData = new SwingWorker<Integer, Void>() {
-      
       @Override
       protected Integer doInBackground() throws Exception {
         try {

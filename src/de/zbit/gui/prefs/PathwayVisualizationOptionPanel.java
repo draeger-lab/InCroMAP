@@ -38,6 +38,7 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
     if (getComponentCount()>0) {
       changeFCSpinnerStepsize(this);
       changeNodeShapeSelector();
+      SignalOptionPanel.performCommonSignalOptionPanelModifications(this);
     }
   }
 

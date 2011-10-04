@@ -557,7 +557,7 @@ public class VisualizeDataInPathway {
     //Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals(true);
     //boolean isMRNAlist = NameAndSignals.getType(nsList).equals(mRNA.class);
     Class<? extends NameAndSignals> nsType = NameAndSignals.getType(nsList);
-    MergeType mt = IntegratorUITools.getMergeTypeSilent();
+    MergeType mt = IntegratorUITools.getMergeTypeSilent(type);
     for (Node n : graph.getNodeArray()) {
       Collection<T> n_nsList = node2nsMap.get(n);
       // Do we have associated signals?
@@ -759,6 +759,7 @@ public class VisualizeDataInPathway {
     // If explicitly PATHWAY_CENTERED is set or nothing is set
     boolean pwCentered = SignalOptions.PATHWAY_CENTERED.getValue(prefs) ||
       (!SignalOptions.PROBE_CENTERED.getValue(prefs) && !SignalOptions.GENE_CENTERED.getValue(prefs));
+    Class<? extends NameAndSignals> inputType = NameAndSignals.getType(nsList);
     
     // 0. Remove previous visualizations of the same data.
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
@@ -768,12 +769,16 @@ public class VisualizeDataInPathway {
     
     // 0.5 Preprocessing: GENE-CENTER data if requested.
     if (!SignalOptions.PROBE_CENTERED.getValue(prefs)) {
-      nsList = NameAndSignals.geneCentered(nsList, IntegratorUITools.getMergeTypeSilent(prefs));
+      MergeType merge = IntegratorUITools.getMergeTypeSilent(prefs, type);
+      if (DNAmethylation.class.isAssignableFrom(inputType) && type.equals(SignalType.pValue)) {
+        // Override with a fixed merge type for DNA methylation data
+        merge = MergeType.NormalizedSumOfLog2Values;
+      }
+      nsList = NameAndSignals.geneCentered(nsList, merge);
     }
     
     // Branch between mRNA and miRNA (=> Node color) and other types (=> labels)
     int nodesColored = 0;
-    Class<? extends NameAndSignals> inputType = NameAndSignals.getType(nsList);
     if (ProteinModificationExpression.class.isAssignableFrom(inputType)) {
       // Protein modifications as boxes (node labels) below nodes
       nodesColored=addBoxedLabelsBelowNodes(nsList, tabName, experimentName, type);
@@ -841,7 +846,7 @@ public class VisualizeDataInPathway {
     int boxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     
     // Prepare maps and required classes
-    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
+    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent(type);
     Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
     SignalColor recolorer = new SignalColor(nsList, experimentName, type);
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
@@ -913,12 +918,16 @@ public class VisualizeDataInPathway {
     int protBoxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     
     // Prepare maps and required classes
-    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
+    // XXX: Fixed MergeType for DNA-m data. Must be pValues in here.
+    // TODO: Consider writing the "top-10" pValues to ToolTip or similar instead of this value.
+    MergeType sigMerge =  MergeType.NormalizedSumOfLog2Values; // IntegratorUITools.getMergeTypeSilent();
     Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
     // XXX: All "-1" geneIds are summed up to a very great number ing global min max...
     //double[] minMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
     // Better take 90% value as max.
+    // TODO: Observe results of the implemented normalized quantile max calculation...
     double[] minMax = NameAndSignals.getMinMaxSignalQuantile(nsList, experimentName, type, 90);
+    System.out.println(Arrays.toString(minMax));
     // TODO: Test a few to know good max values. Test setting min to global min?
     log.config(String.format("Min/max values for box to visualize data: %s to %s.", minMax[0], minMax[1]));
     double maxSignalValue = minMax[1]+minMax[0];
@@ -956,6 +965,7 @@ public class VisualizeDataInPathway {
         nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
         nl.setContentHeight(barHeight);
         nl.setContentWidth(Math.min(Math.max(signalValue/maxSignalValue, 0), 1)*maxWidth);
+        System.out.println(signalValue);
         
         nl.setFreeOffset(-nl.getContentWidth(), 0);
         nl.setLineColor(nl.getBackgroundColor());
@@ -1003,7 +1013,7 @@ public class VisualizeDataInPathway {
   public int colorNodesAccordingToSignals(SignalColor recolorer, String tabName, String experimentName, SignalType type) {
     boolean inputContainedMicroRNAnodes=false;
     boolean inputContainedmRNAnodes=false;
-    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent();
+    MergeType sigMerge = IntegratorUITools.getMergeTypeSilent(type);
     
     DataMap nsMapper     = tools.getMap(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
     DataMap parentMapper = tools.getMap(GraphMLmapsExtended.NODE_BELONGS_TO);
