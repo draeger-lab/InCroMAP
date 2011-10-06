@@ -10,6 +10,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
 import java.io.File;
@@ -23,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -34,6 +36,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
+import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -91,7 +94,7 @@ public class IntegratorUI extends BaseFrame {
   /**
    * The version of {@link #appName}
    */
-  public final static String appVersion = "0.0.1";
+  public final static String appVersion = "1.0";
   
   /**
    * A simple light blue color. Used e.g. in {@link PathwayVisualizationOptions}
@@ -194,7 +197,11 @@ public class IntegratorUI extends BaseFrame {
     /**
      * Show an integrated TreeTable of various data types.
      */
-    INTEGRATED_TABLE;
+    INTEGRATED_TABLE,
+    /**
+     * Perform an integrated enrichment analysis.
+     */
+    INTEGRATED_ENRICHMENT;
     
     
     /*
@@ -217,7 +224,7 @@ public class IntegratorUI extends BaseFrame {
       case LOAD_DNA_METHYLATION:
         return "Load DNA methylation data";
       case INPUT_GENELIST:
-        return "Manually enter a genelist";
+        return "Manually enter a gene list";
       case SHOW_MICRO_RNA_TARGETS:
         return "Show microRNA targets";
       case NEW_PATHWAY:
@@ -246,9 +253,9 @@ public class IntegratorUI extends BaseFrame {
         case LOAD_MICRO_RNA:
           return "Load processed microRNA data from file.";
         case LOAD_PROTEIN_MODIFICATION:
-          return "Load processed protein modification expression data from a file";
+          return "Load processed protein modification expression data from a file.";
         case LOAD_DNA_METHYLATION:
-          return "Load processed and gene-centered DNA methylation data from a file"; // TODO: stimmt das?
+          return "Load processed and gene-centered DNA methylation data from a file."; // TODO: stimmt das?
         case INPUT_GENELIST:
           return "Manually enter a list of genes.";
         case SHOW_MICRO_RNA_TARGETS:
@@ -261,6 +268,8 @@ public class IntegratorUI extends BaseFrame {
           return "Visualize heterogeneous data from different datasets in one pathway.";
         case INTEGRATED_TABLE:
           return "Integrate multiple heterogeneous datasets from different platforms by building a gene-centered tree.";
+        case INTEGRATED_ENRICHMENT:
+          return "Perform an integrated enrichment across multiple (heterogeneous) datasets.";
           
         default:
           return "";
@@ -295,7 +304,13 @@ public class IntegratorUI extends BaseFrame {
     // Set the often used KeggTranslator methods to use this appName as application name
     Translator.APPLICATION_NAME = appName;
     Translator.VERSION_NUMBER = appVersion;
-    TranslatorPanel.logoResourcePath = "../../gui/img/logo.jpg";
+    TranslatorPanel.logoResourcePath = "../../gui/img/logo.png";
+    
+    /*
+     * Many tooltips contain descriptions that must be shown
+     * longer than the system default. Let's show them 15 seconds!
+     */
+    ToolTipManager.sharedInstance().setDismissDelay(15000);
     
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -320,6 +335,22 @@ public class IntegratorUI extends BaseFrame {
     
   }
   
+  /**
+   * Load icons in static constructor
+   */
+  static {
+    String iconPaths[] = {"IntegratorIcon_16.png","IntegratorIcon_32.png","IntegratorIcon_48.png","IntegratorIcon_128.png","IntegratorIcon_256.png"
+        ,"ICON_PATHWAY_16.png", "ICON_MATH_16.png", "IntegratorIcon_16_straight.png"
+        ,"ICON_MSIGDB_16.png", "ICON_GO_16.png", "ICON_KEGG_16.png"
+        ,"ICON_MRNA_16.png", "ICON_MIRNA_16.png", "ICON_DNAM_16.png", "ICON_PROTEIN_16.png"};
+    for (String path : iconPaths) {
+      URL url = IntegratorUI.class.getResource("img/" + path);
+      if (url!=null) {
+        UIManager.put(path.substring(0, path.lastIndexOf('.')), new ImageIcon(url));
+      }
+    }
+  }
+  
   public IntegratorUI() {
     super();
     
@@ -329,7 +360,7 @@ public class IntegratorUI extends BaseFrame {
     // Load reader cache
     ReaderCache.getCache();
     
-    // TODO: Icons and preferences
+    // TODO: preferences
     /*File file = new File(prefsIO.get(KEGGtranslatorIOOptions.INPUT));
     openDir = file.isDirectory() ? file.getAbsolutePath() : file.getParent();
     file = new File(prefsIO.get(KEGGtranslatorIOOptions.OUTPUT));
@@ -337,16 +368,17 @@ public class IntegratorUI extends BaseFrame {
     
     // Depending on the current OS, we should add the following image
     // icons: 16x16, 32x32, 48x48, 128x128 (MAC), 256x256 (Vista).
-    /*int[] resolutions=new int[]{16,32,48,128,256};
+    int[] resolutions=new int[]{16,32,48,128,256};
     List<Image> icons = new LinkedList<Image>();
     for (int res: resolutions) {
-      Object icon = UIManager.get("KEGGtranslatorIcon_"+res);
+      Object icon = UIManager.get("IntegratorIcon_"+res);
       if ((icon != null) && (icon instanceof ImageIcon)) {
         icons.add(((ImageIcon) icon).getImage());
       }
     }
-    setIconImages(icons);*/
+    setIconImages(icons);
     
+    // Adds a label for the species and data type of the current tab to the status bar.
     initStatusBarSpeciesLabel();
     
     instance = this;
@@ -462,16 +494,16 @@ public class IntegratorUI extends BaseFrame {
     JMenu importData = new JMenu("Import data");
     
     JMenuItem lmRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMRNAfile"),
-        Action.LOAD_MRNA, UIManager.getIcon("ICON_OPEN_16"));
+        Action.LOAD_MRNA, UIManager.getIcon("ICON_MRNA_16"));
       
     JMenuItem lmiRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMiRNAfile"),
-        Action.LOAD_MICRO_RNA, UIManager.getIcon("ICON_OPEN_16"));
+        Action.LOAD_MICRO_RNA, UIManager.getIcon("ICON_MIRNA_16"));
     
     JMenuItem lprotMod = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openProteinModificationExpressionFile"),
-      Action.LOAD_PROTEIN_MODIFICATION, UIManager.getIcon("ICON_OPEN_16"));
+      Action.LOAD_PROTEIN_MODIFICATION, UIManager.getIcon("ICON_PROTEIN_16"));
     
     JMenuItem ldnaM = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openDNAmethylationFile"),
-      Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_OPEN_16"));
+      Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_DNAM_16"));
       
     JMenuItem genelist = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "showInputGenelistDialog"),
         Action.INPUT_GENELIST, UIManager.getIcon("ICON_OPEN_16"));
@@ -480,7 +512,7 @@ public class IntegratorUI extends BaseFrame {
         Action.SHOW_MICRO_RNA_TARGETS, UIManager.getIcon("ICON_GEAR_16"));
 
     JMenuItem newPathway = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openPathwayTab"),
-        Action.NEW_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
+        Action.NEW_PATHWAY, UIManager.getIcon("ICON_PATHWAY_16"));
 
     importData.add(lmRNA);
     importData.add(lmiRNA);
@@ -496,12 +528,15 @@ public class IntegratorUI extends BaseFrame {
      */
     JMenu tools = new JMenu("Tools");
     tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorUITools(), "showBatchPathwayDialog"),
-      Action.BATCH_PATHWAY_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
+      Action.BATCH_PATHWAY_VISUALIZATION, UIManager.getIcon("ICON_PATHWAY_16")));
     tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorUITools(), "showIntegratedVisualizationDialog"),
-      Action.INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
+      Action.INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION, UIManager.getIcon("ICON_PATHWAY_16")));
     
     tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorUITools(), "showIntegratedTreeTableDialog"),
-      Action.INTEGRATED_TABLE, UIManager.getIcon("ICON_GEAR_16")));
+      Action.INTEGRATED_TABLE, UIManager.getIcon("IntegratorIcon_16_straight")));
+    
+    tools.add(GUITools.createJMenuItem(EventHandler.create(ActionListener.class, new IntegratorUITools(), "showIntegratedEnrichmentDialog"),
+      Action.INTEGRATED_ENRICHMENT, UIManager.getIcon("IntegratorIcon_16_straight")));
     
     
     
@@ -543,16 +578,16 @@ public class IntegratorUI extends BaseFrame {
       // Create several loadData buttons
       JPopupMenu load = new JPopupMenu("Load data");
       JMenuItem lmRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMRNAfile"),
-        Action.LOAD_MRNA, UIManager.getIcon("ICON_OPEN_16"));
+        Action.LOAD_MRNA, UIManager.getIcon("ICON_MRNA_16"));
       load.add(lmRNA);
       JMenuItem lmiRNA = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMiRNAfile"),
-        Action.LOAD_MICRO_RNA, UIManager.getIcon("ICON_OPEN_16"));
+        Action.LOAD_MICRO_RNA, UIManager.getIcon("ICON_MIRNA_16"));
       load.add(lmiRNA);
       JMenuItem lprotMod = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openProteinModificationExpressionFile"),
-        Action.LOAD_PROTEIN_MODIFICATION, UIManager.getIcon("ICON_OPEN_16"));
+        Action.LOAD_PROTEIN_MODIFICATION, UIManager.getIcon("ICON_PROTEIN_16"));
       load.add(lprotMod);
       JMenuItem ldnaM = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openDNAmethylationFile"),
-        Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_OPEN_16"));
+        Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_DNAM_16"));
       load.add(ldnaM);
       load.addSeparator();
       if (fileHistoryDuplicate==null) {
@@ -568,7 +603,7 @@ public class IntegratorUI extends BaseFrame {
         Action.SHOW_MICRO_RNA_TARGETS, UIManager.getIcon("ICON_GEAR_16"));
       
       JButton newPathway = GUITools.createJButton(EventHandler.create(ActionListener.class, this, "openPathwayTab"),
-        Action.NEW_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
+        Action.NEW_PATHWAY, UIManager.getIcon("ICON_PATHWAY_16"));
       
       r.add(loadDataButton);
       r.add(genelist);
@@ -624,7 +659,7 @@ public class IntegratorUI extends BaseFrame {
     
     // Show import dialog and read data
     String[] genes = input.getC().split("\n");
-    addTab(new NameAndSignalsTab(this, nsreader, genes, input.getA()), "Custom genelist (" + genes.length + " genes)");
+    addTab(new NameAndSignalsTab(this, nsreader, genes, input.getA()), "Custom gene list (" + genes.length + " genes)");
     getStatusBar().showProgress(nsreader.getProgressBar());
     
   }
@@ -656,7 +691,7 @@ public class IntegratorUI extends BaseFrame {
    */
   @Override
   protected Component createMainComponent() {
-    ImageIcon logo = new ImageIcon(IntegratorUI.class.getResource("img/logo.jpg"));
+    ImageIcon logo = new ImageIcon(IntegratorUI.class.getResource("img/logo.png"));
     tabbedPane = new JTabbedLogoPane(logo);
     
     // Change active buttons, based on selection.
@@ -701,14 +736,7 @@ public class IntegratorUI extends BaseFrame {
           try {
             Class<?> cl = NameAndSignals.getType(((NameAndSignalsTab) o).getExampleData());
             
-            // Translate class name to a nice and simple data type name.
-            if (EnrichmentObject.class.isAssignableFrom(cl)) panelDataContent = null;
-            else if (PairedNS.class.isAssignableFrom(cl)) panelDataContent = null;
-            else if (HeterogeneousNS.class.isAssignableFrom(cl)) panelDataContent = null;
-            else if (cl.equals(NameAndSignals.class)) panelDataContent = null; // Temp panels return NS
-            else if (ProteinModificationExpression.class.isAssignableFrom(cl)) panelDataContent = "protein";
-            else if (DNAmethylation.class.isAssignableFrom(cl)) panelDataContent = "DNA methylation";
-            else panelDataContent = cl.getSimpleName();
+            panelDataContent = getShortTypeNameForNS(cl);
             
           } catch (Exception e) {
             panelDataContent = null;
@@ -726,6 +754,23 @@ public class IntegratorUI extends BaseFrame {
     String specLabel = currentSpecies!=null?"Species: " + currentSpecies.getName():"";
     if (panelDataContent!=null) specLabel = "Type: " + panelDataContent + (specLabel.equals("")?"":", " + specLabel);
     if (speciesLabel!=null) speciesLabel.setText(specLabel);
+  }
+
+  /**
+   * @param cl should be any {@link NameAndSignals} derived class.
+   * @return a short name, describing the data type
+   */
+  public static String getShortTypeNameForNS(Class<?> cl) {
+    String panelDataContent;
+    // Translate class name to a nice and simple data type name.
+    if (EnrichmentObject.class.isAssignableFrom(cl)) panelDataContent = null;
+    else if (PairedNS.class.isAssignableFrom(cl)) panelDataContent = null;
+    else if (HeterogeneousNS.class.isAssignableFrom(cl)) panelDataContent = null;
+    else if (cl.equals(NameAndSignals.class)) panelDataContent = null; // Temp panels return NS
+    else if (ProteinModificationExpression.class.isAssignableFrom(cl)) panelDataContent = "protein";
+    else if (DNAmethylation.class.isAssignableFrom(cl)) panelDataContent = "DNA methylation";
+    else panelDataContent = cl.getSimpleName();
+    return panelDataContent;
   }
   
   /**
@@ -919,15 +964,35 @@ public class IntegratorUI extends BaseFrame {
   }
   
   /**
-   * Add a new tab to the {@link #tabbedPane}
+   * 
    * @param tab
    * @param name
    * @param toolTip
    */
   public void addTab(Component tab, String name, String toolTip) {
+    addTab(tab, name, toolTip, null);
+  }
+  
+  /**
+   * Add a new tab to the {@link #tabbedPane}
+   * @param tab
+   * @param name
+   * @param toolTip
+   * @param icon
+   */
+  public void addTab(Component tab, String name, String toolTip, Icon icon) {
     tab.setName(name);
-    tabbedPane.addTab(name, null, tab, toolTip);
+    if (icon==null) icon = IntegratorUITools.inferIconForTab(tab);
+    tabbedPane.addTab(name, icon, tab, toolTip);
     tabbedPane.setSelectedComponent(tab);
+  }
+  
+  /**
+   * Allows to auto-adjust the icon of the tab, dependent on the content.
+   * @param tab
+   */
+  public void setIconForTab(IntegratorTab<?> tab) {
+    tabbedPane.setIconAt(getTabIndex(tab), IntegratorUITools.inferIconForTab(tab));
   }
 
   /* (non-Javadoc)

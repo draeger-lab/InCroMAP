@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 
 import javax.swing.AbstractListModel;
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -52,17 +53,26 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
 import de.zbit.analysis.enrichment.AbstractEnrichment;
+import de.zbit.data.EnrichmentObject;
+import de.zbit.data.HeterogeneousData;
+import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.methylation.DNAmethylation;
+import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.csv.CSVImporterV2;
+import de.zbit.gui.dialogs.IntegratedEnrichmentDialog;
 import de.zbit.gui.dialogs.IntegrationDialog;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.MergeTypeOptions;
@@ -154,7 +164,7 @@ public class IntegratorUITools {
   }
   
   public static JLabeledComponent getIdentifierSelector() {
-    JLabeledComponent l = new JLabeledComponent("Please select the used identifier",true,IdentifierType.values());
+    JLabeledComponent l = new JLabeledComponent("Please select an identifier",true,IdentifierType.values());
     l.setSelectedItem(IdentifierType.GeneSymbol);
     // Make a flexible layout
     l.setLayout(new FlowLayout());
@@ -288,8 +298,8 @@ public class IntegratorUITools {
     }
     
     // Annotate targets
-    append.add(GUITools.createJMenuItem(l, NSAction.ANNOTATE_TARGETS, UIManager.getIcon("ICON_GEAR_16")));
-    append.add(GUITools.createJMenuItem(l, NSAction.REMOVE_TARGETS, UIManager.getIcon("ICON_GEAR_16")));
+    append.add(GUITools.createJMenuItem(l, NSAction.ANNOTATE_TARGETS, UIManager.getIcon("ICON_PENCIL_16")));
+    append.add(GUITools.createJMenuItem(l, NSAction.REMOVE_TARGETS, UIManager.getIcon("ICON_TRASH_16")));
     
     return append;
   }
@@ -304,7 +314,7 @@ public class IntegratorUITools {
   public static JPopupMenu createKeggPathwayPopup(KEGGPathwayActionListener l, JPopupMenu append) {
     JMenuItem showPathway = GUITools.createJMenuItem(l,
         KEGGPathwayActionListener.VISUALIZE_PATHWAY,
-        UIManager.getIcon("ICON_GEAR_16"));
+        UIManager.getIcon("ICON_PATHWAY_16"));
     
     append.add(showPathway);
     
@@ -456,6 +466,18 @@ public class IntegratorUITools {
    * @return
    */
   public static List<LabeledObject<NameAndSignalsTab>> getNameAndSignalTabsWithSignals(Species species, Class<? extends NameAndSignals>... onlyDataTypes) {
+    return getNameAndSignalTabs(species, true, onlyDataTypes);
+  }
+  
+  /**
+   * Create a filtered List of available {@link NameAndSignalsTab}s, that match the given restrictions
+   * @param species if not null, only tabs for that species will be returned.
+   * @param onlyWithSignals if true, only returns tabs, that contain {@link NameAndSignals} with {@link Signal}s-
+   * @param onlyDataTypes if not null, only tabs that contain on of these
+   * data types will be returned.
+   * @return
+   */
+  public static List<LabeledObject<NameAndSignalsTab>> getNameAndSignalTabs(Species species, boolean onlyWithSignals, Class<? extends NameAndSignals>... onlyDataTypes) {
     if (onlyDataTypes!=null && onlyDataTypes.length==1 && onlyDataTypes[0]==null) onlyDataTypes = null;
     IntegratorUI ui = IntegratorUI.getInstance();
     List<LabeledObject<NameAndSignalsTab>> datasets = new LinkedList<LabeledObject<NameAndSignalsTab>>();
@@ -473,7 +495,7 @@ public class IntegratorUITools {
         //if (cl.equals(mRNA.class) || cl.equals(miRNA.class)) {
         if (((NameAndSignalsTab)c).getSourceTab()==null && // Data has not been derived, but read from disk!
             ((NameAndSignals)((NameAndSignalsTab)c).getExampleData())!=null &&
-            ((NameAndSignals)((NameAndSignalsTab)c).getExampleData()).hasSignals()) {
+            (!onlyWithSignals || (onlyWithSignals && ((NameAndSignals)((NameAndSignalsTab)c).getExampleData()).hasSignals()))) {
           datasets.add(new LabeledObject<NameAndSignalsTab>(
               ui.getTabbedPane().getTitleAt(i), (NameAndSignalsTab) c));
         }
@@ -1094,6 +1116,46 @@ public class IntegratorUITools {
    */
   public static void showIntegratedTreeTableDialog() {
     IntegrationDialog.showAndEvaluateIntegratedTreeTableDialog();
+  }
+  
+  /**
+   * Shows a dialog that let's the user choose all optiions for an
+   * integrated enrichment and adds a new tab to the current IntegratorUI. 
+   */
+  public static void showIntegratedEnrichmentDialog() {
+    IntegratedEnrichmentDialog.showAndEvaluateIntegratedEnrichmentDialog();
+  }
+
+  /**
+   * @param tab
+   * @return
+   */
+  public static Icon inferIconForTab(Component tab) {
+    if (tab instanceof TranslatorPanel) {
+      return UIManager.getIcon("ICON_PATHWAY_16");
+      
+    } else if (tab instanceof IntegratorTab) {
+      Class<?> type = ((IntegratorTab<?>) tab).getDataContentType();
+      if (mRNA.class.isAssignableFrom(type)) {
+        return UIManager.getIcon("ICON_MRNA_16");
+      } else if (miRNA.class.isAssignableFrom(type)) {
+        return UIManager.getIcon("ICON_MIRNA_16");
+      } else if (ProteinModificationExpression.class.isAssignableFrom(type)) {
+        return UIManager.getIcon("ICON_PROTEIN_16");
+      } else if (DNAmethylation.class.isAssignableFrom(type)) {
+        return UIManager.getIcon("ICON_DNAM_16");
+        
+      } else if (EnrichmentObject.class.isAssignableFrom(type)) {
+        return UIManager.getIcon("ICON_GEAR_16");
+        
+      } else if (PairedNS.class.isAssignableFrom(type) ||
+          HeterogeneousNS.class.isAssignableFrom(type) ||
+          HeterogeneousData.class.isAssignableFrom(type)) {
+        return UIManager.getIcon("IntegratorIcon_16_straight");
+      }
+    }
+    // No icon in doubt.
+    return null;
   }
     
   

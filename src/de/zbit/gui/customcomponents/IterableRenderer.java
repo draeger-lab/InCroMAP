@@ -84,9 +84,10 @@ public class IterableRenderer extends DefaultTableCellRenderer {
     
     // Create comma separated list of values.
     for (Object v:((Iterable<?>)value)) {
-      if (buff.length()>initialString.length()) buff.append(","+ space);
       
       if (v instanceof miRNAandTarget) {
+        // Will be set later...
+        
         // Create a map of miRNA and targets in the pathway.
         List<miRNAtarget> l = miRNAandTarget.get(((miRNAandTarget)v).getName());
         if (l==null) {
@@ -94,25 +95,28 @@ public class IterableRenderer extends DefaultTableCellRenderer {
           miRNAandTarget.put(((miRNAandTarget)v).getName(), l);
         }
         l.add(((miRNAandTarget)v).getTarget());
-        
-      } else if (v instanceof NameAndSignals || NameAndSignals.class.isAssignableFrom(v.getClass())) {
-        buff.append(((NameAndSignals)v).getName());
-        
-      } else if (v instanceof miRNAtarget) {
-        buff.append(((miRNAtarget)v).getNiceTargetString());
-        
-      } else if (v instanceof Integer) {
-        // Gene IDs
-        String symbol = toSymbol((Integer) v,mapper);
-        buff.append(symbol);
-        
-      } else if (v.getClass().equals(String.class)) {
-        buff.append((String)v);
-        
       } else {
-        log.severe("Plese implement renderer for " + v.getClass());
-        buff.append(v.toString());
+        // Will be set now
+        if (buff.length()>initialString.length()) buff.append(","+ space);
         
+        if (v instanceof NameAndSignals || NameAndSignals.class.isAssignableFrom(v.getClass())) {
+          buff.append(((NameAndSignals)v).getName());
+          
+        } else if (v instanceof miRNAtarget) {
+          buff.append(((miRNAtarget)v).getNiceTargetString());
+          
+        } else if (v instanceof Integer) {
+          // Gene IDs
+          String symbol = toSymbol((Integer) v,mapper);
+          buff.append(symbol);
+          
+        } else if (v.getClass().equals(String.class)) {
+          buff.append((String)v);
+          
+        } else {
+          log.severe("Plese implement renderer for " + v.getClass());
+          buff.append(v.toString());
+        }
       }
     }
     

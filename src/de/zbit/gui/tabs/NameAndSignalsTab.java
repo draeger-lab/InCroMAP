@@ -179,6 +179,7 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
       // even if this tab is not currently visible!
       //updateButtons(parent.getJMenuBar(), parent.getJToolBar());
       parent.updateButtons();
+      parent.setIconForTab(this);
     }
   }
   
@@ -226,7 +227,7 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     
     KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(this);
     JButton showPathway = GUITools.createJButton(al2,
-        Action.VISUALIZE_IN_PATHWAY, UIManager.getIcon("ICON_GEAR_16"));
+        Action.VISUALIZE_IN_PATHWAY, UIManager.getIcon("ICON_PATHWAY_16"));
     // TODO: Create a temporary batch button.
     
     

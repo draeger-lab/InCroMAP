@@ -5,6 +5,8 @@ package de.zbit.data;
 
 import java.io.Serializable;
 
+import javax.swing.ListModel;
+
 import de.zbit.gui.tabs.NameAndSignalsTab;
 
 /**
@@ -118,6 +120,28 @@ public class LabeledObject<T> implements Serializable, Comparable<LabeledObject<
     for (int i=0; i<arr.length; i++) {
       if ((arr[i] instanceof LabeledObject) &&
          (((LabeledObject<T>)arr[i]).getObject().equals(object))) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+
+
+  /**
+   * The same as {@link #getIndexOfObject(Object[], Object)}, but with
+   * a list model.
+   * @param model
+   * @param object
+   * @return
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> int getIndexOfObject(ListModel model,
+    T object) {
+    for (int i=0; i<model.getSize(); i++) {
+      Object o = model.getElementAt(i);
+      if ((o instanceof LabeledObject) &&
+         (((LabeledObject<T>)o).getObject().equals(object))) {
         return i;
       }
     }

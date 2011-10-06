@@ -227,6 +227,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
       if (tab.getDataContentType().equals(EnrichmentObject.class)) {
         if (((EnrichmentObject)tab.getExampleData()).isKEGGenrichment()) {
           // It's a KEGG Pathway enrichment.
+          popUp.addSeparator();
           KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
           IntegratorUITools.addRightMousePopup(jc, IntegratorUITools.createKeggPathwayPopup(al2, popUp));
         }
@@ -238,7 +239,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
          * select an existing pathway tab.*/
         // KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
         // popUp.add(GUITools.createJMenuItem(al2,
-        //   NSAction.VISUALIZE_SELETED_DATA_IN_PATHWAY, UIManager.getIcon("ICON_GEAR_16")));
+        //   NSAction.VISUALIZE_SELETED_DATA_IN_PATHWAY, UIManager.getIcon("ICON_PATHWAY_16")));
       }
       
     }

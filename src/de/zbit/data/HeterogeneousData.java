@@ -166,6 +166,8 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
       }
     }
     
+    // Initial alphabetical sorting.
+    root.sortChilds();
     
     setRoot(root);
     return this;

@@ -229,8 +229,8 @@ public abstract class AbstractEnrichment <EnrichIDType> {
             
             // Add current gene to pw list
             if (mr!=null && mr.size()>0) {
-              mr = getSingleTarget(mr, geneID);
-              pwGenes.addAll(mr);
+              // Do NOT reassign the mr-variable here (loss of targets if miRNA occurs in mutliple pathways).
+              pwGenes.addAll(getSingleTarget(mr, geneID));
             } else {
               pwGenes.add(geneID);
             }
@@ -243,8 +243,8 @@ public abstract class AbstractEnrichment <EnrichIDType> {
   }
   
   /**
-   * Convert lists of {@link mRNA}s to single {@link miRNAandTarget} relations.
-   * This allows to display the actual target that cased the pathway to popup
+   * Convert lists of {@link miRNA}s to single {@link miRNAandTarget} relations.
+   * This allows to display the actual target that caused the pathway to popup
    * in the enrichment.
    * <p>For any other datatype, this method simply returns the input list.
    * @param mr
@@ -256,7 +256,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
       Iterator<NameAndSignals> it = mr.iterator();
       Collection<NameAndSignals> mrNew = new LinkedList<NameAndSignals>();
       while (it.hasNext()) {
-        Object o = it.next();
+        NameAndSignals o = it.next();
         if (o instanceof miRNA && !(o instanceof miRNAandTarget)) {
           miRNAtarget t = ((miRNA)o).getTarget(geneID);
           if (t!=null) {
@@ -268,6 +268,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
         } else {
           // our list is of mixed type. dont't change it!
           inkonsistency=true;
+          //mrNew.add(o);//With this (and removing inkonsistency) we could allow heterogeneous lists.
         }
         if (inkonsistency) break;
       }

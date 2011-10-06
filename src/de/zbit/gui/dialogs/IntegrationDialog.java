@@ -112,10 +112,8 @@ public class IntegrationDialog extends JPanel implements ActionListener {
     if (showPathwaySelector) {
       pwSel = new PathwaySelector(Translator.getFunctionManager(),null, IntegratorUITools.organisms);
       orgSel = pwSel.getOrganismSelector();
-      lh.add(pwSel);
     } else {
       orgSel = new OrganismSelector(Translator.getFunctionManager(), null, IntegratorUITools.organisms);
-      lh.add(orgSel);
     }
     orgSel.addOrganismBoxLoadedCompletelyListener(this);
     lh.add(showPathwaySelector?pwSel:orgSel);
@@ -265,7 +263,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
     }
     
     // Show and evaluate dialog
-    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), integratedVis, "Integrated data visualization", JOptionPane.OK_CANCEL_OPTION);
+    int ret = JOptionPane.showConfirmDialog(parent, integratedVis, "Integrated data visualization", JOptionPane.OK_CANCEL_OPTION);
     if (ret!=JOptionPane.OK_OPTION) return null;
     else return integratedVis;
   }
@@ -280,7 +278,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
     }
     
     // Show and evaluate dialog
-    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), integratedTbl, "Data integration", JOptionPane.OK_CANCEL_OPTION);
+    int ret = JOptionPane.showConfirmDialog(parent, integratedTbl, "Data integration", JOptionPane.OK_CANCEL_OPTION);
     if (ret!=JOptionPane.OK_OPTION) return null;
     else return integratedTbl;
   }
@@ -407,7 +405,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
   private void setAndEraseDefaultSelection() {
     // Should we set an initial default selection?
     if (defaultSelection!=null && defaultSelection.getSpecies(false)!=null) {
-      orgSel.setDefeaultSelection(defaultSelection.getSpecies().getScientificName());
+      orgSel.setDefaultSelection(defaultSelection.getSpecies().getScientificName());
       Class<? extends NameAndSignals> type = NameAndSignals.getType(defaultSelection.getExampleData());
       int id = ArrayUtils.indexOf(toVisualize, type);
       if (id>=0) {

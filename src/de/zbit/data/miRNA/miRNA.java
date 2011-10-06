@@ -78,7 +78,7 @@ public class miRNA extends NSwithProbes {
   
   /**
    * Group a given list of {@link miRNA}s by target geneIDs.
-   * <p>Note: one {@link miRNA} can have multiple targets and thus, occur
+   * <p>Note: one {@link miRNA} can have multiple targets and thus, occurs
    * in multiple key-lists!
    * @param list
    * @return mapping from geneID to list of {@link miRNA}s.
@@ -88,7 +88,7 @@ public class miRNA extends NSwithProbes {
     for (miRNA mi: list) {
       if (!mi.hasTargets()) addToList(map, GeneID.default_geneID, mi);
       else {
-        for (miRNAtarget t: mi.getTargets()) {
+        for (miRNAtarget t: mi.getUniqueTargets()) {
           addToList(map, t.getTarget(), mi);
         }
       }
@@ -109,7 +109,7 @@ public class miRNA extends NSwithProbes {
     for (miRNA mi: list) {
       if (!mi.hasTargets()) addToList(map, Integer.toString(GeneID.default_geneID), mi);
       else {
-        for (miRNAtarget t: mi.getTargets()) {
+        for (miRNAtarget t: mi.getUniqueTargets()) {
           addToList(map, Integer.toString(t.getTarget()), mi);
         }
       }

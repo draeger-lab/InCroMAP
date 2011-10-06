@@ -1084,7 +1084,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    */
   public static Collection<NameAndSignals> getGenes(Object o) {
     Set<NameAndSignals> geneIds = new HashSet<NameAndSignals>();
-    if (o==null) return geneIds;
+    if (o==null) return geneIds; // return an empty set
     
     if (o instanceof Iterable) {
       for (Object o2 : ((Iterable<?>)o)) {

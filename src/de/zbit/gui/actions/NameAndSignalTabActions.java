@@ -36,6 +36,7 @@ import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JDropDownButton;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.gui.dialogs.IntegratedEnrichmentDialog;
 import de.zbit.gui.dialogs.IntegrationDialog;
 import de.zbit.gui.dialogs.MergedSignalDialog;
 import de.zbit.gui.tabs.IntegratorTab;
@@ -202,7 +203,7 @@ public class NameAndSignalTabActions implements ActionListener {
     if (pathwayCommand!=null) {
       KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(parent);
       JButton showPathway = GUITools.createJButton(al2,
-        pathwayCommand, UIManager.getIcon("ICON_GEAR_16"));
+        pathwayCommand, UIManager.getIcon("ICON_PATHWAY_16"));
       bar.add(showPathway);
     }
     
@@ -211,7 +212,7 @@ public class NameAndSignalTabActions implements ActionListener {
         !tableContent.equals(HeterogeneousNS.class)) {      
       JPopupMenu integrate = new JPopupMenu("Integrate");
       JMenuItem pairData = GUITools.createJMenuItem(this,
-          NSAction.PAIR_DATA, UIManager.getIcon("ICON_GEAR_16"));
+          NSAction.PAIR_DATA, UIManager.getIcon("IntegratorIcon_16_straight"));
       if (miRNA.class.isAssignableFrom(tableContent)) {
         String toolTip = "Integrate miRNA data with other (e.g. mRNA data) by mapping the miRNA targets to the other dataset.";
         StringUtil.toHTML(toolTip, GUITools.TOOLTIP_LINE_LENGTH);
@@ -220,12 +221,14 @@ public class NameAndSignalTabActions implements ActionListener {
       integrate.add(pairData);
 
       integrate.add(GUITools.createJMenuItem(this,
-          IntegratorUI.Action.INTEGRATED_TABLE, UIManager.getIcon("ICON_GEAR_16")));
+        IntegratorUI.Action.INTEGRATED_ENRICHMENT, UIManager.getIcon("IntegratorIcon_16_straight")));
       integrate.add(GUITools.createJMenuItem(this,
-          IntegratorUI.Action.INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
+          IntegratorUI.Action.INTEGRATED_TABLE, UIManager.getIcon("IntegratorIcon_16_straight")));
+      integrate.add(GUITools.createJMenuItem(this,
+          IntegratorUI.Action.INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION, UIManager.getIcon("ICON_PATHWAY_16")));
 
       JDropDownButton integrateButton = new JDropDownButton("Integrate", 
-          UIManager.getIcon("ICON_GEAR_16"), integrate);
+          UIManager.getIcon("IntegratorIcon_16_straight"), integrate);
       integrateButton.setToolTipText("Perform heterogeneous data integration.");
       
       bar.add(integrateButton);
@@ -236,35 +239,35 @@ public class NameAndSignalTabActions implements ActionListener {
       // Removed fir miRNA, is done every time after annotating targets!
       //|| tableContent.equals(miRNAandTarget.class) || tableContent.equals(miRNA.class)) {
       bar.add(GUITools.createJButton(this,
-          NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_GEAR_16")));
+          NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_PENCIL_16")));
       
     } if (tableContent.equals(miRNA.class)) {
       // Annotate and Remove targets
       JPopupMenu targets = IntegratorUITools.createMiRNAtargetPopup(this, null);
-      JDropDownButton targetsButton = new JDropDownButton(targets.getLabel(), UIManager.getIcon("ICON_GEAR_16"), targets);
+      JDropDownButton targetsButton = new JDropDownButton(targets.getLabel(), UIManager.getIcon("ICON_PENCIL_16"), targets);
       bar.add(targetsButton);
     
     } if (tableContent.equals(EnrichmentObject.class)) {
       
       JPopupMenu fdr = new JPopupMenu("FDR correction");
       BH_cor = GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BH, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class);
+          NSAction.FDR_CORRECTION_BH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class);
       fdr.add(BH_cor);
       BFH_cor = GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class);
+          NSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class);
       fdr.add(BFH_cor);
       BO_cor = GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_GEAR_16"),null,null,JCheckBoxMenuItem.class);
+          NSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class);
       fdr.add(BO_cor);
       JDropDownButton fdrButton = new JDropDownButton("FDR correction", 
-          UIManager.getIcon("ICON_GEAR_16"), fdr);
+          UIManager.getIcon("ICON_MATH_16"), fdr);
       fdrButton.setToolTipText("Change the false-discovery-rate correction method.");
       
       bar.add(fdrButton);
       BH_cor.setSelected(true);
       
     } if (tableContent.equals(PairedNS.class)) {
-      bar.add(GUITools.createJButton(this, NSAction.ADD_OBSERVATION, UIManager.getIcon("ICON_GEAR_16")));
+      bar.add(GUITools.createJButton(this, NSAction.ADD_OBSERVATION, UIManager.getIcon("ICON_MATH_16")));
     }      
     
     
@@ -322,6 +325,10 @@ public class NameAndSignalTabActions implements ActionListener {
     } else if (command.equals(IntegratorUI.Action.INTEGRATED_TABLE.toString())) {
       IntegrationDialog.defaultSelection = parent;
       IntegratorUITools.showIntegratedTreeTableDialog();
+
+    } else if (command.equals(IntegratorUI.Action.INTEGRATED_ENRICHMENT.toString())) {
+      IntegratedEnrichmentDialog.defaultSelection = parent;
+      IntegratorUITools.showIntegratedEnrichmentDialog();
       
     } else if (command.equals(IntegratorUI.Action.INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION.toString())) {
       IntegrationDialog.defaultSelection = parent;

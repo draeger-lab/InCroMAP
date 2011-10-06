@@ -348,7 +348,7 @@ public class VisualizeDataInPathway {
     
     // Inspect all labels of all nodes
     int removedCounter=0;
-    for (NodeCursor nc = graph.nodes(); nc.ok(); nc.next()) {  
+    for (NodeCursor nc = graph.nodes(); nc.ok(); nc.next()) {
       Node n = nc.node();  
       NodeRealizer nr = graph.getRealizer(n);
       
@@ -761,8 +761,14 @@ public class VisualizeDataInPathway {
       (!SignalOptions.PROBE_CENTERED.getValue(prefs) && !SignalOptions.GENE_CENTERED.getValue(prefs));
     Class<? extends NameAndSignals> inputType = NameAndSignals.getType(nsList);
     
+    // First, disallow invalid data selections
+    if (DNAmethylation.class.isAssignableFrom(inputType) && !type.equals(SignalType.pValue)) {
+      GUITools.showErrorMessage(null, "Only p-values of DNA methylation data can be visualized.");
+      return -1;
+    }
+    
     // 0. Remove previous visualizations of the same data.
-    VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
+    VisualizedData visData = new VisualizedData(tabName, experimentName, type, inputType);
     if (isDataVisualized(visData)) {
       removeVisualization(tabName, experimentName, type);
     }
@@ -927,7 +933,7 @@ public class VisualizeDataInPathway {
     // Better take 90% value as max.
     // TODO: Observe results of the implemented normalized quantile max calculation...
     double[] minMax = NameAndSignals.getMinMaxSignalQuantile(nsList, experimentName, type, 90);
-    System.out.println(Arrays.toString(minMax));
+//    System.out.println(Arrays.toString(minMax));
     // TODO: Test a few to know good max values. Test setting min to global min?
     log.config(String.format("Min/max values for box to visualize data: %s to %s.", minMax[0], minMax[1]));
     double maxSignalValue = minMax[1]+minMax[0];
@@ -957,7 +963,8 @@ public class VisualizeDataInPathway {
         // TODO: Set a border? Write signals to nodes?
         
         // Remember what we visualized
-        nl.setUserData(new ValuePair<VisualizedData, NameAndSignals>(visData, ns));
+        ValuePair<VisualizedData, NameAndSignals> visNS = new ValuePair<VisualizedData, NameAndSignals>(visData, ns);
+        nl.setUserData(visNS);
         
         nl.setModel(NodeLabel.FREE);
         nl.setPosition(NodeLabel.W);
@@ -965,7 +972,7 @@ public class VisualizeDataInPathway {
         nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
         nl.setContentHeight(barHeight);
         nl.setContentWidth(Math.min(Math.max(signalValue/maxSignalValue, 0), 1)*maxWidth);
-        System.out.println(signalValue);
+//        System.out.println(signalValue);
         
         nl.setFreeOffset(-nl.getContentWidth(), 0);
         nl.setLineColor(nl.getBackgroundColor());
@@ -977,6 +984,7 @@ public class VisualizeDataInPathway {
           border.setBackgroundColor(Color.WHITE);
           border.setContentWidth(maxWidth);
           border.setFreeOffset(-border.getContentWidth(), 0);
+          border.setUserData(visNS); // We need to do that to allow removal of the border.
           
           
           border.setPosition(NodeLabel.W);

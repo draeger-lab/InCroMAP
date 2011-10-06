@@ -158,10 +158,10 @@ public class TranslatorTabActions implements ActionListener{
     JPopupMenu visualize = new JPopupMenu("Visualize data");
     KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(parent);
     visualize.add(GUITools.createJMenuItem(al2,
-        TPAction.VISUALIZE_DATA, UIManager.getIcon("ICON_GEAR_16")));
+        TPAction.VISUALIZE_DATA, UIManager.getIcon("ICON_PENCIL_16")));
     visualize.add(GUITools.createJMenuItem(this,
-      TPAction.ADD_MIRNAS, UIManager.getIcon("ICON_GEAR_16")));
-    bar.add(new JDropDownButton(UIManager.getIcon("ICON_GEAR_16"), visualize));
+      TPAction.ADD_MIRNAS, UIManager.getIcon("ICON_PENCIL_16")));
+    bar.add(new JDropDownButton(UIManager.getIcon("ICON_PENCIL_16"), visualize));
     
     
     
@@ -172,15 +172,15 @@ public class TranslatorTabActions implements ActionListener{
     
     // Remove nodes
     JPopupMenu remove = new JPopupMenu("Remove");
-    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MRNA_VISUALIZATION, UIManager.getIcon("ICON_GEAR_16")));
-    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MIRNA_NODES, UIManager.getIcon("ICON_GEAR_16")));
-    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES, UIManager.getIcon("ICON_GEAR_16")));
-    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_DNA_METHYLATION_BOXES, UIManager.getIcon("ICON_GEAR_16")));
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MRNA_VISUALIZATION, UIManager.getIcon("ICON_TRASH_16")));
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MIRNA_NODES, UIManager.getIcon("ICON_TRASH_16")));
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES, UIManager.getIcon("ICON_TRASH_16")));
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_DNA_METHYLATION_BOXES, UIManager.getIcon("ICON_TRASH_16")));
     // Set by default all to disabled. enableRemoveButtonsAsRequired() does the enabling job.
     GUITools.setEnabled(false, remove, TPAction.REMOVE_MIRNA_NODES, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES,
       TPAction.REMOVE_MRNA_VISUALIZATION,TPAction.REMOVE_DNA_METHYLATION_BOXES);
     
-    removeButton = new JDropDownButton(remove.getLabel(), UIManager.getIcon("ICON_GEAR_16"), remove);
+    removeButton = new JDropDownButton(remove.getLabel(), UIManager.getIcon("ICON_TRASH_16"), remove);
     bar.add(removeButton);
     
     
