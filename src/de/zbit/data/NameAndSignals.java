@@ -1107,6 +1107,38 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
+   * Counts the number of unique genes in the list and returns them (as geneIDs).
+   * For {@link miRNA}s, all target gene ids are taken and for everything else
+   * (that implements {@link GeneID}, the gene id is taken.
+   * @param nsList any gene list. Makes especially sense for <b>heterogeneous</b> lists!
+   * @return
+   */
+  public static Collection<Integer> getAllUniqueGenes(Collection<? extends NameAndSignals> nsList) {
+    Set<Integer> ret = new HashSet<Integer>();
+    if (nsList==null) return ret;
+    
+    // Count all geneIDs
+    Iterator<? extends NameAndSignals> it = nsList.iterator();
+    while (it.hasNext()) {
+      NameAndSignals ns = it.next();
+      if (ns instanceof miRNA) {
+        if (((miRNA) ns).hasTargets()) {
+          for (miRNAtarget target: ((miRNA) ns).getTargets()) {
+            ret.add(target.getTarget());
+          }
+        }
+      } else if (ns instanceof GeneID) {
+        ret.add(((GeneID) ns).getGeneID());
+      }
+    }
+    
+    // Remove default gene id (= n/a)
+    ret.remove(GeneID.default_geneID);
+    
+    return ret;
+  }
+  
+  /**
    * 
    * @param <T>
    * @param nsList
@@ -1196,6 +1228,20 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     
     if (it.next() instanceof miRNA) return true;
     
+    return false;
+  }
+  
+  /**
+   * @param col
+   * @return true if and only if <code>col</code> contains any instance
+   * of {@link miRNA}.
+   */
+  public static boolean containsMicroRNA(Iterable<?> col) {
+    if (col==null) return false; // Empty list
+    Iterator<?> it = col.iterator();
+    while (it.hasNext()) {
+      if (it.next() instanceof miRNA) return true;
+    }
     return false;
   }
   

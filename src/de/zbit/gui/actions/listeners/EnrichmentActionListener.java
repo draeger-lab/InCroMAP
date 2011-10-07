@@ -137,7 +137,7 @@ public class EnrichmentActionListener implements ActionListener {
   public EnrichmentActionListener(IntegratorTabWithTable source) {
     this.source = source;
     if (source!=null) {
-      this.species = source.getSpecies();
+      this.species = source.getSpecies(false);
     }
   }
   
@@ -168,7 +168,7 @@ public class EnrichmentActionListener implements ActionListener {
        * TODO:
        * - Check and add miRNA targets in getGeneList() methods
        */
-    } else if (!checkGeneList(geneList)) return;
+    } else if (!checkGeneList(geneList, true)) return;
     final String loadingString = "Performing enrichment analysis...";
     
     // Log this action.
@@ -259,27 +259,26 @@ public class EnrichmentActionListener implements ActionListener {
    * @param geneList
    * @return
    */
-  private boolean checkGeneList(List<?> geneList) {
-    boolean issueNoTargetMessage = true;
+  private boolean checkGeneList(List<?> geneList, boolean showMessage) {
+    boolean noTargetsFound = true;
     for (Object o: geneList) {
       if (o instanceof miRNA) {
         if (((miRNA)o).hasTargets()) {
-          issueNoTargetMessage = false;
+          noTargetsFound = false;
           break;
         }
       } else {
-        issueNoTargetMessage = false;
+        noTargetsFound = false;
         break;
       }
     }
     
-    if (issueNoTargetMessage) {
+    if (noTargetsFound && showMessage) {
       GUITools.showMessage("None of the selected miRNAs has annotated targets. Please use the " +
-      		"\"annotate targets\" button to annotate your miRNAs with targets.", "Can not continnue");
-      return false;
+      		"\"annotate targets\" button to annotate your miRNAs with targets.", "Can not continue");
     }
     
-    return true;
+    return !noTargetsFound;
   }
 
   /**
@@ -343,7 +342,15 @@ public class EnrichmentActionListener implements ActionListener {
           JTableFilter filt = JTableFilter.showDialog(tab, (JTable) tab.getVisualization(),
           String.format("Apply filter to %s to select genes for enrichment", moreTableInfoString));
           if (filt==null) return null;
-          geneList.addAll(tab.getSelectedItems(filt.getSelectedRows()));
+          List<?> newItems = tab.getSelectedItems(filt.getSelectedRows());
+          // Check for missing miRNA targets and annotate
+          if (!checkGeneList(newItems, false)) {
+            if (tab instanceof NameAndSignalsTab) {
+              ((NameAndSignalsTab)tab).getActions().annotateMiRNAtargets();
+            }
+          }
+          //---
+          geneList.addAll(newItems);
         }
       }
 

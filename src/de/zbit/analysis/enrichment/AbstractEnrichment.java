@@ -27,6 +27,7 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.prefs.EnrichmentOptions;
 import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
@@ -37,6 +38,7 @@ import de.zbit.math.EnrichmentPvalue;
 import de.zbit.math.HypergeometricTest;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
+import de.zbit.util.prefs.SBPreferences;
 
 /**
  * Abstract enrichment class to test a list of genes for enrichments
@@ -347,7 +349,17 @@ public abstract class AbstractEnrichment <EnrichIDType> {
     }
     
     // Initialize pValue calculations and ProgressBar
+    // get total sum of input gene list (difficult for miRNA: #miRNAs or #GeneTargets ?)
     int geneListSize = geneList2.size();
+    boolean countMicroRNAs = false;
+    if (NameAndSignals.containsMicroRNA(geneList2)) {
+      SBPreferences prefs = SBPreferences.getPreferencesFor(EnrichmentOptions.class);
+      countMicroRNAs = !EnrichmentOptions.COUNT_MIRNA_TARGETS_FOR_LIST_RATIO.getValue(prefs);
+      if (!countMicroRNAs) {
+        // display number of targets in pw / total number of targets
+        geneListSize = NameAndSignals.getAllUniqueGenes(geneList2).size();
+      }
+    }
     EnrichmentPvalue pval = new HypergeometricTest(geneID2enrich_ID.getGenomeSize(), geneListSize);
     if (prog!=null) {
       prog.reset();
@@ -377,9 +389,16 @@ public abstract class AbstractEnrichment <EnrichIDType> {
       // Total # genes in pw
       int pwSize=geneID2enrich_ID.getEnrichmentClassSize(entry.getKey());
       
+      // List ratio
+      int subsetOfList = entry.getValue().size();
+      if (NameAndSignals.containsMicroRNA(entry.getValue()) && countMicroRNAs) {
+        // display number of microRNAs with targets in pw/ total # miRNAs
+        subsetOfList = NameAndSignals.geneCentered((Collection<NameAndSignals>)entry.getValue()).size();
+      }
+      
       // Create result object
       EnrichmentObject<EnrichIDType> o = new EnrichmentObject<EnrichIDType>(pw_name,entry.getKey(),
-          entry.getValue().size(), geneListSize, pwSize, geneID2enrich_ID.getGenomeSize(),
+          subsetOfList, geneListSize, pwSize, geneID2enrich_ID.getGenomeSize(),
           pval, entry.getValue());
       ret.add(o);
     }

@@ -1134,7 +1134,8 @@ public class IntegratorUITools {
     if (tab instanceof TranslatorPanel) {
       return UIManager.getIcon("ICON_PATHWAY_16");
       
-    } else if (tab instanceof IntegratorTab) {
+    } else if (tab instanceof IntegratorTab &&
+        ((IntegratorTab<?>)tab).isReady() ) {
       Class<?> type = ((IntegratorTab<?>) tab).getDataContentType();
       if (mRNA.class.isAssignableFrom(type)) {
         return UIManager.getIcon("ICON_MRNA_16");

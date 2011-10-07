@@ -24,9 +24,10 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
    * @param provider
    * @throws IOException
    */
+  @SuppressWarnings("unchecked")
   public PathwayVisualizationOptionPanel()
     throws IOException {
-    super("Observation and visualization options", SignalOptions.class, PathwayVisualizationOptions.class);
+    super("Integrator options", SignalOptions.class, EnrichmentOptions.class, PathwayVisualizationOptions.class);
   }
   
   /* (non-Javadoc)
