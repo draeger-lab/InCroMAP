@@ -104,6 +104,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       visualizePathway();
       
     } else if (e.getActionCommand().equals(NSAction.VISUALIZE_IN_PATHWAY.toString())) {
+      // Coming mostly from a click on the toolbar-button in NameAndSignalTabs
       try {
         visualizeAndColorPathway();
       } catch (Exception e1) {
@@ -113,7 +114,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     } else if (e.getActionCommand().equals(NSAction.VISUALIZE_SELETED_DATA_IN_PATHWAY.toString())) {
       try {
         if (source instanceof IntegratorTabWithTable) {
-          // TODO: Implement functionality to limit visualization to selected data.
+          // TODO: Implement functionality to limit visualization to selected data/genes.
           @SuppressWarnings("unused")
           List<?> toVisualize = ((IntegratorTabWithTable) source).getSelectedItems();
         }
@@ -124,6 +125,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
             
     } else if (e.getActionCommand().equals(TPAction.VISUALIZE_DATA.toString()) &&
         source instanceof TranslatorPanel) {
+      // Coming mostly from a click on the toolbar-button in TranslatorPanelTabs
       Species spec = TranslatorTabActions.getSpeciesOfPathway((TranslatorPanel) source, IntegratorUITools.organisms);
       ValueTriplet<NameAndSignalsTab, String, SignalType>  vt
         = IntegratorUITools.showSelectExperimentBox(IntegratorUI.getInstance(), null,
@@ -486,12 +488,15 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     
     // Create pathway and experiment selectors
     final PathwaySelector selector = new PathwaySelector(Translator.getFunctionManager(),null, organism);
-    final JLabeledComponent expSel;
+    JLabeledComponent expSel;
     boolean setA=false;
     if (source instanceof NameAndSignalsTab) {
       NameAndSignals ns = (NameAndSignals)((NameAndSignalsTab)source).getExampleData();
       if (ns.hasSignals()) {
         expSel = IntegratorUITools.createSelectExperimentBox(ns);
+        // Only show p-values for DNA methylation data
+        IntegratorUITools.modifyExperimentBoxForDNAMethylation(expSel, ns);
+        if (expSel.getHeaders()==null || expSel.getHeaders().length<1) expSel = null;
       } else if (ns instanceof miRNA) {
         // Targets can still be visualized (even without signals).
         setA = true;
@@ -506,7 +511,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     // Make one panel of both selectors
     JPanel ret = new JPanel(new BorderLayout());
     ret.add(selector, BorderLayout.CENTER);
-    if (expSel!=null) {
+    if (expSel!=null && expSel.getHeaders()!=null && expSel.getHeaders().length>0) {
       ret.add(expSel, BorderLayout.SOUTH);
     }
     

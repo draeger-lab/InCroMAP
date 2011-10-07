@@ -429,7 +429,28 @@ public class IntegratorUITools {
   }
   
   /**
+   * Replace the signals in the existing experiment box by the (filtered) given one.
+   * @param <T>
+   * @param jc
+   * @param ns
+   * @param onlyIncludeThisType only takes signals from this {@link SignalType}.
+   * @return
+   */
+  public static <T extends NameAndSignals> JLabeledComponent createSelectExperimentBox(JLabeledComponent jc, T ns, SignalType onlyIncludeThisType) {
+    List<ValuePair<String, SignalType>> list = new ArrayList<ValuePair<String, SignalType>>(ns.getSignalNames());
+    for (int i=0; i<list.size(); i++) {
+      if (!list.get(i).getB().equals(onlyIncludeThisType)) {
+        list.remove(i);
+        i--;
+      }
+    }
+    jc.setHeaders(list);
+    return jc;
+  }
+  
+  /**
    * Shows a signal selection box.
+   * <p>Note: {@link DNAmethylation} is filtered for p-values only!</p>
    * @param <T>
    * @param ui
    * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.  
@@ -439,6 +460,7 @@ public class IntegratorUITools {
   }
   /**
    * Shows a signal selection box.
+   * <p>Note: {@link DNAmethylation} is filtered for p-values only!</p>
    * @param <T>
    * @param ui
    * @param initialSelection
@@ -502,6 +524,34 @@ public class IntegratorUITools {
       }
     }
     return datasets;
+  }
+  
+  /**
+   * Remove all {@link NameAndSignalsTab}s from the given list, that do not
+   * contain signals of a specific Type.
+   * <p>This is especially helpful if you want the user to select any
+   * e.g. methylation data set with p-values.
+   * @param toFilter
+   * @param nsType only filter tabs of this type
+   * @param onlyIncludeTabsWithThisType remove all tabs of type <code>nsType</code>
+   * that contain <b>no</b> {@link Signal} of {@link SignalType} <code>onlyIncludeTabsWithThisType</code>.
+   */
+  public static void filterNSTabs(List<LabeledObject<NameAndSignalsTab>> toFilter, Class<DNAmethylation> nsType, SignalType onlyIncludeTabsWithThisType) {
+    for (int i=0; i<toFilter.size(); i++) {
+      LabeledObject<NameAndSignalsTab> tab = toFilter.get(i);
+      List<Signal> signals = ((NameAndSignals)tab.getObject().getExampleData()).getSignals();
+      boolean found = false;
+      for (Signal sig: signals) {
+        if (sig.getType().equals(onlyIncludeTabsWithThisType)) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        toFilter.remove(i);
+        i--;
+      }
+    }
   }
   
   /**
@@ -571,6 +621,7 @@ public class IntegratorUITools {
   
   /**
    * Shows a signal selection box.
+   * <p>Note: {@link DNAmethylation} is filtered for p-values only!</p>
    * @param <T>
    * @param ui
    * @param initialSelection
@@ -584,6 +635,8 @@ public class IntegratorUITools {
     
     // Create a list of available datasets and get initial selection.
     List<LabeledObject<NameAndSignalsTab>> datasets = getNameAndSignalTabsWithSignals();
+    // Remove all DNA methylation datasets that contain no p-value signals
+    IntegratorUITools.filterNSTabs(datasets, DNAmethylation.class, SignalType.pValue);
     for (int i=0; i<datasets.size(); i++) {
       Component c = datasets.get(i).getObject();
       if (initialSelection!=null && c.equals(initialSelection)) {
@@ -603,13 +656,17 @@ public class IntegratorUITools {
       jp.add (dataSelect, BorderLayout.CENTER);
       
       // Add action listener to let user choose experiment from dataset
-      final JLabeledComponent selExpBox = createSelectExperimentBox((NameAndSignals)((NameAndSignalsTab)datasets.get(initialSelIdx).getObject()).getExampleData());
+      NameAndSignals ns = (NameAndSignals)((NameAndSignalsTab)datasets.get(initialSelIdx).getObject()).getExampleData();
+      final JLabeledComponent selExpBox = createSelectExperimentBox(ns);
+      IntegratorUITools.modifyExperimentBoxForDNAMethylation(selExpBox, ns);// <- Only show p-values for DNA methylation data
       jp.add(selExpBox, BorderLayout.SOUTH);
       dataSelect.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
           NameAndSignalsTab tab = (NameAndSignalsTab) ((LabeledObject)dataSelect.getSelectedItem()).getObject();
-          createSelectExperimentBox(selExpBox, (NameAndSignals)tab.getExampleData());
+          NameAndSignals ns = (NameAndSignals)tab.getExampleData();
+          createSelectExperimentBox(selExpBox, ns);
+          IntegratorUITools.modifyExperimentBoxForDNAMethylation(selExpBox, ns);// <- Only show p-values for DNA methylation data
         }
       });
       
@@ -1157,6 +1214,21 @@ public class IntegratorUITools {
     }
     // No icon in doubt.
     return null;
+  }
+
+  /**
+   * Only includes p-value signals if <code>ns</code> is
+   * of type {@link DNAmethylation}.
+   * <p>Please check <code>expSel</code> afterwards, as it
+   * now might be empty (i.e. contain no signals!).
+   * @param expSel
+   * @param ns
+   */
+  public static void modifyExperimentBoxForDNAMethylation(
+    JLabeledComponent expSel, NameAndSignals ns) {
+    // Only show p-values for DNA methylation data
+    if (ns instanceof DNAmethylation) IntegratorUITools.createSelectExperimentBox(expSel,ns,SignalType.pValue);
+    //if (expSel.getHeaders()==null || expSel.getHeaders().length<1) expSel = null;
   }
     
   

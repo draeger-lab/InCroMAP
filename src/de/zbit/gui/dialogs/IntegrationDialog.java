@@ -104,7 +104,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
     createIntegrationDialog(showPathwaySelector, showMergeTypeSelectos);
   }
   
-  private void createIntegrationDialog(boolean showPathwaySelector, boolean showMergeTypeSelectos) throws Exception {
+  private void createIntegrationDialog(final boolean showPathwaySelector, boolean showMergeTypeSelectos) throws Exception {
     //KEGGpwAL.visualizeAndColorPathway(); //<= examples
     LayoutHelper lh = new LayoutHelper(this);
     
@@ -162,6 +162,10 @@ public class IntegrationDialog extends JPanel implements ActionListener {
         public void actionPerformed(ActionEvent e) {
           NameAndSignalsTab tab = ((LabeledObject<NameAndSignalsTab>)dataSetSelector.getSelectedItem()).getObject();
           IntegratorUITools.createSelectExperimentBox(experimentSelector, (NameAndSignals)tab.getExampleData());
+          // Only show p-values for DNA methylation data
+          if (showPathwaySelector) { // i.e. integrated pw-based visualization
+            IntegratorUITools.modifyExperimentBoxForDNAMethylation(experimentSelector, (NameAndSignals)tab.getExampleData());
+          }
         }
       });
       // Enable/ disable others upon CheckBox selection
@@ -223,6 +227,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
    */
   @SuppressWarnings("unchecked")
   private void updateExperimentSelectionBoxes() {
+    boolean showPathwaySelector = (pwSel!=null && pwSel.isVisible());
     Species species = getSpeciesFromSelector();
     
     // Create a list of available datasets  
@@ -230,6 +235,10 @@ public class IntegrationDialog extends JPanel implements ActionListener {
     for (Class<? extends NameAndSignals> type : toVisualize) {
       i++;
       List<LabeledObject<NameAndSignalsTab>> datasets = IntegratorUITools.getNameAndSignalTabsWithSignals(species, type);
+      if (showPathwaySelector && DNAmethylation.class.isAssignableFrom(type)) { // i.e. integrated pw-based visualization of DNAm data
+        // Remove all DNA methylation datasets that contain no p-value signals
+        IntegratorUITools.filterNSTabs(datasets, DNAmethylation.class, SignalType.pValue);
+      }
       if (datasets==null || datasets.size()<1) {
         // Disable all and deselect checkbox
         visDataType[i].setSelected(false);
@@ -239,6 +248,10 @@ public class IntegrationDialog extends JPanel implements ActionListener {
         dataSelect[i].setHeaders(datasets);
         NameAndSignalsTab nsTab = ((LabeledObject<NameAndSignalsTab>)dataSelect[i].getSelectedItem()).getObject();
         IntegratorUITools.createSelectExperimentBox(expSelect[i], (NameAndSignals)nsTab.getExampleData());
+        // Only show p-values for DNA methylation data
+        if (showPathwaySelector) { // i.e. integrated pw-based visualization
+          IntegratorUITools.modifyExperimentBoxForDNAMethylation(expSelect[i], (NameAndSignals)nsTab.getExampleData());
+        }
         // TODO: does this also change the experiment box
         //dataSelect[i].fireACtionListeners();
       }

@@ -49,6 +49,7 @@ import de.zbit.data.PairedNS;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
+import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.actions.TranslatorTabActions;
@@ -734,7 +735,7 @@ public class IntegratorUI extends BaseFrame {
         currentSpecies = ((IntegratorTab<?>) o).getSpecies(false);
         if (o instanceof NameAndSignalsTab) {
           try {
-            Class<?> cl = NameAndSignals.getType(((NameAndSignalsTab) o).getExampleData());
+            Class<?> cl = ((NameAndSignalsTab) o).getDataContentType();
             
             panelDataContent = getShortTypeNameForNS(cl);
             
@@ -769,7 +770,9 @@ public class IntegratorUI extends BaseFrame {
     else if (cl.equals(NameAndSignals.class)) panelDataContent = null; // Temp panels return NS
     else if (ProteinModificationExpression.class.isAssignableFrom(cl)) panelDataContent = "protein";
     else if (DNAmethylation.class.isAssignableFrom(cl)) panelDataContent = "DNA methylation";
-    else panelDataContent = cl.getSimpleName();
+    else if (miRNA.class.isAssignableFrom(cl)) panelDataContent = "miRNA"; // Also includes derivates (miRNAandTarget)
+    else if (NameAndSignals.class.isAssignableFrom(cl)) panelDataContent = cl.getSimpleName();
+    else panelDataContent = null; // Don't say "Object" or such
     return panelDataContent;
   }
   
