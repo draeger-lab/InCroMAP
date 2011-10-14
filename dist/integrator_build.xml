@@ -78,7 +78,6 @@
 <!-- Uncomment for SysBio classes instead of compiled jar. -->
            <fileset dir="${SysBioPath}/bin">
               <exclude name="de/zbit/resources/liftover/*"/>
-           	  <exclude name="de/zbit/mapper/*"/>
             	<exclude name="**/package.html"/>
            </fileset>
     	
@@ -95,9 +94,17 @@
             <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/commons-cli-1.1.jar"/>
             
             <fileset dir="${KEGGtranslatorPath}/bin">
+              <exclude name="de/zbit/gui/prefs/PreferencePanels.class"/>
+            	<exclude name="overview.html"/>
             </fileset>
-            <zipfileset excludes="META-INF/*.SF" src="${base}/lib/y.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="${base}/lib/keggapi.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${KEGGtranslatorPath}/lib/y.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${KEGGtranslatorPath}/lib/keggapi.jar"/>
+    	
+    	      <!-- JSBML is actually NOT required, but I don't get it running without including the classes... -->
+    	      <zipfileset excludes="META-INF/*.SF" src="${KEGGtranslatorPath}/lib/jsbml-0.8-b2-with-dependencies.jar">
+    	      	<exclude name="javax/xml/namespace/QName.class"/>
+    	     </zipfileset>
+    	
     </jar>
   </target>
 
