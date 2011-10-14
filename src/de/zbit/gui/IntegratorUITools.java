@@ -539,12 +539,16 @@ public class IntegratorUITools {
   public static void filterNSTabs(List<LabeledObject<NameAndSignalsTab>> toFilter, Class<DNAmethylation> nsType, SignalType onlyIncludeTabsWithThisType) {
     for (int i=0; i<toFilter.size(); i++) {
       LabeledObject<NameAndSignalsTab> tab = toFilter.get(i);
+      if (!tab.getObject().getDataContentType().equals(nsType)) continue;
+      
       List<Signal> signals = ((NameAndSignals)tab.getObject().getExampleData()).getSignals();
       boolean found = false;
-      for (Signal sig: signals) {
-        if (sig.getType().equals(onlyIncludeTabsWithThisType)) {
-          found = true;
-          break;
+      if (signals!=null) {
+        for (Signal sig: signals) {
+          if (sig.getType().equals(onlyIncludeTabsWithThisType)) {
+            found = true;
+            break;
+          }
         }
       }
       if (!found) {

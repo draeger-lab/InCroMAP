@@ -354,7 +354,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
         if (dialog.visDataType[i].isEnabled() && dialog.visDataType[i].isSelected()) {
           ValuePair<String, SignalType> expSignal = (ValuePair<String, SignalType>) dialog.expSelect[i].getSelectedItem();
           NameAndSignalsTab nsTab = ((LabeledObject<NameAndSignalsTab>)dialog.dataSelect[i].getSelectedItem()).getObject();
-          MergeType mergeType = (MergeType) dialog.mergeSelect[i].getSelectedItem();
+          MergeType mergeType = MergeType.valueOf(dialog.mergeSelect[i].getSelectedItem().toString());
           
           // Check if we have to annotate miRNA with targets
           if (miRNA.class.isAssignableFrom(NameAndSignals.getType(nsTab.getExampleData()))) {

@@ -15,6 +15,7 @@ import java.awt.event.ActionListener;
 import java.beans.EventHandler;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -861,34 +862,28 @@ public class IntegratorUI extends BaseFrame {
     return 10;
   }
   
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getURLAboutMessage()
    */
-  @Override
   public URL getURLAboutMessage() {
-    // TODO Auto-generated method stub
-    log.severe("NOT YET IMPLEMENTED!");
-    return null;
+    return IntegratorUI.class.getResource("html/about.html");
   }
-  
-  /* (non-Javadoc)
+
+  /*
+   * (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getURLLicense()
    */
-  @Override
   public URL getURLLicense() {
-    // TODO Auto-generated method stub
-    log.severe("NOT YET IMPLEMENTED!");
-    return null;
+    return IntegratorUI.class.getResource("html/license.html");
   }
-  
-  /* (non-Javadoc)
+
+  /*
+   * (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getURLOnlineHelp()
    */
-  @Override
   public URL getURLOnlineHelp() {
-    // TODO Auto-generated method stub
-    log.severe("NOT YET IMPLEMENTED!");
-    return null;
+    return IntegratorUI.class.getResource("html/help.html");
   }
   
   /* (non-Javadoc)
@@ -896,8 +891,11 @@ public class IntegratorUI extends BaseFrame {
    */
   @Override
   public URL getURLOnlineUpdate() {
-    // TODO Auto-generated method stub
-    log.severe("NOT YET IMPLEMENTED!");
+    try {
+      return new URL("http://www.cogsys.cs.uni-tuebingen.de/software/Integrator/downloads/");
+    } catch (MalformedURLException e) {
+      GUITools.showErrorMessage(this, e);
+    }
     return null;
   }
   
