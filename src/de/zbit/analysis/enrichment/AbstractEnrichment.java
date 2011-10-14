@@ -1,6 +1,23 @@
-/**
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
  *
- * @author Clemens Wrzodek
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.analysis.enrichment;
 
@@ -33,7 +50,7 @@ import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.enrichment.EnrichmentMapper;
 import de.zbit.math.BenjaminiHochberg;
-import de.zbit.math.Correction;
+import de.zbit.math.FDRCorrection;
 import de.zbit.math.EnrichmentPvalue;
 import de.zbit.math.HypergeometricTest;
 import de.zbit.parser.Species;
@@ -45,11 +62,12 @@ import de.zbit.util.prefs.SBPreferences;
  * (e.g., PathwayEnrichment, GO-Term enrichments, ...).
  * 
  * @author Clemens Wrzodek
+ * @version $Rev$
  *
  * @param <EnrichIDType> The identifier type of your enrichment terms.
  * This is mostly a simply string.
  */
-public abstract class AbstractEnrichment <EnrichIDType> {
+public abstract class AbstractEnrichment<EnrichIDType> {
   public static final transient Logger log = Logger.getLogger(AbstractEnrichment.class.getName());
   
   /**
@@ -66,7 +84,7 @@ public abstract class AbstractEnrichment <EnrichIDType> {
    * pValue 2 qValue FDR correction method to correct pValues
    * for multiple testing.
    */
-  private Correction qVal = new BenjaminiHochberg();
+  private FDRCorrection qVal = new BenjaminiHochberg();
   
   /**
    * Progress Bar (mainly for downloading and reading mapping flat files).
@@ -462,10 +480,10 @@ public abstract class AbstractEnrichment <EnrichIDType> {
   }
   
   /**
-   * Set a new FDR {@link Correction} method.
+   * Set a new FDR {@link FDRCorrection} method.
    * @param c
    */
-  public void setFDRCorrectionMethod(Correction c) {
+  public void setFDRCorrectionMethod(FDRCorrection c) {
     this.qVal = c;
   }
   

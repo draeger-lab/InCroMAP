@@ -275,7 +275,7 @@ public class IntegratorUI extends BaseFrame {
         case LOAD_PROTEIN_MODIFICATION:
           return "Load processed protein modification expression data from a file.";
         case LOAD_DNA_METHYLATION:
-          return "Load processed and gene-centered DNA methylation data from a file."; // TODO: stimmt das?
+          return "Load processed and gene-centered DNA methylation data from a file.";
         case INPUT_GENELIST:
           return "Manually enter a list of genes.";
         case SHOW_MICRO_RNA_TARGETS:

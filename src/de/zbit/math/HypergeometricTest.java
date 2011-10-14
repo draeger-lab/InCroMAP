@@ -1,6 +1,23 @@
-/**
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
  *
- * @author Clemens Wrzodek
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.math;
 
@@ -16,6 +33,7 @@ import java.io.Serializable;
  * Publication: "SubpathwayMiner: a software package for flexible identification of pathways"</a>
  * for the hypergeometric test
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class HypergeometricTest implements Serializable, EnrichmentPvalue {
   private static final long serialVersionUID = -2415584131303973747L;
@@ -219,7 +237,6 @@ public class HypergeometricTest implements Serializable, EnrichmentPvalue {
   }
   
   public static void main(String[] args) {
-    // TODO: Das stimmt nicht.
     HypergeometricTest t = new HypergeometricTest(24391, 1977);
     
     /*int schranke=1;

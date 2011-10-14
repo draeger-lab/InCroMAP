@@ -1,6 +1,23 @@
-/**
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
  *
- * @author Clemens Wrzodek
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.io;
 
@@ -27,6 +44,7 @@ import de.zbit.util.logging.LogUtil;
 /**
  * miRNA Target data reader.
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class miRNATargetReader {
   public static final transient Logger log = Logger.getLogger(miRNATargetReader.class.getName());
@@ -367,10 +385,10 @@ public class miRNATargetReader {
     //if (true) return;
     
     
-    // TODO: Extend automatization (reduce Block per file), move colInference to separate static functions, add all miRNA target files.
+    // XXX: One could extend automatization (reduce Block per file), move colInference to separate static functions, add all miRNA target files.
     
     /*
-     * TODO: miRNAs wie
+     * XXX: miRNAs wie
      * - "miR-485/485-5p", "miR-214/761", "miR-96/1271",... gefunden in TargetScan v5.1
      * - "miR-128" in mmu equals: "mmu-miR-128".
      * - Web Splits "miR-26ab/1297" => "mmu-miR-26a" and "mmu-miR-26b"

@@ -1,5 +1,23 @@
-/**
- * @author Clemens Wrzodek
+/*
+ * $Id:  temp 13:46:56 wrzodek $
+ * $URL: temp $
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
+ *
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.visualization;
 
@@ -71,7 +89,16 @@ import de.zbit.utils.SignalColor;
  * visualizing {@link Signal}s to KEGG Pathways in {@link Graph2D}.
  * <p>This includes methods to color nodes according to signals, write signals
  * to node annotations, split nodes to visualize e.g. protein-variants, etc.
+ * 
+ * <p><i>Note:<br/>
+ * Due to yFiles license requirements, we have to obfuscate this class
+ * in the JAR release of this application. Thus, this class
+ * can not be found by using the class name.<br/> If you can provide us
+ * with a proof of possessing a yFiles license yourself, we can send you
+ * an unobfuscated release of Integrator.</i></p>
+ * 
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class VisualizeDataInPathway {
   public static final transient Logger log = Logger.getLogger(VisualizeDataInPathway.class.getName());
@@ -457,7 +484,7 @@ public class VisualizeDataInPathway {
          * and it is annoying to have the node size resetted all
          * the time. */
         //tools.resetWidthAndHeight(n);
-        // TODO: Also reset shape in resetWidthAndHeight()
+        // TODO: If shape-changing is introduced, reset shape here.
       } else {
         toLayout.add(n);
       }
@@ -812,7 +839,7 @@ public class VisualizeDataInPathway {
       writeSignalsToNodes(oldNsList, tabName, experimentName, type);
       
       // 4. change shape
-      // TODO: Similar to writeSignals
+      // TODO: If shape-changing is introduced, make it similar to writeSignals
        
     }
 //    } else {
@@ -939,7 +966,6 @@ public class VisualizeDataInPathway {
     double maxSignalValue = minMax[1]+minMax[0];
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
     
-    // TODO: Ensure Gene/Modification centric data!
     // TODO: If fold change, always maxWidth and change color.
     // TODO: Better show pValue AND fold-change!
     // (via position: left/right of node OR color).
@@ -960,7 +986,7 @@ public class VisualizeDataInPathway {
         NodeLabel nl = nr.createNodeLabel();
         
         
-        // TODO: Set a border? Write signals to nodes?
+        // TODO: Write signals to nodes?
         
         // Remember what we visualized
         ValuePair<VisualizedData, NameAndSignals> visNS = new ValuePair<VisualizedData, NameAndSignals>(visData, ns);

@@ -1,6 +1,23 @@
-/**
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
  *
- * @author Clemens Wrzodek
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.gui.actions.listeners;
 
@@ -41,6 +58,7 @@ import de.zbit.util.StringUtil;
  * Can handle enrichment actions for {@link IntegratorTab}s.
  * 
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class EnrichmentActionListener implements ActionListener {
   public static final transient Logger log = Logger.getLogger(EnrichmentActionListener.class.getName());
@@ -150,6 +168,7 @@ public class EnrichmentActionListener implements ActionListener {
   /* (non-Javadoc)
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
+  @SuppressWarnings("rawtypes")
   public synchronized void actionPerformed(final ActionEvent e) {
     // Get selected items
     final List<?> geneList;
@@ -164,10 +183,6 @@ public class EnrichmentActionListener implements ActionListener {
     if (geneList==null || geneList.size()<1) {
       GUITools.showErrorMessage(source, "No elements selected for enrichment analysis.");
       return;
-      /*
-       * TODO:
-       * - Check and add miRNA targets in getGeneList() methods
-       */
     } else if (!checkGeneList(geneList, true)) return;
     final String loadingString = "Performing enrichment analysis...";
     

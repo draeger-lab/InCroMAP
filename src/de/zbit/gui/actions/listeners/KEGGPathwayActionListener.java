@@ -1,5 +1,23 @@
-/**
- * @author Clemens Wrzodek
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
+ *
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.gui.actions.listeners;
 
@@ -64,7 +82,15 @@ import de.zbit.visualization.VisualizeMicroRNAdata;
  * <p>One instance is created for every compatible {@link TableResultTableModel},
  * which is actually just a list of {@link EnrichmentObject} of KEGG Pathways.
  * 
+ * <p><i>Note:<br/>
+ * Due to yFiles license requirements, we have to obfuscate this class
+ * in the JAR release of this application. Thus, this class
+ * can not be found by using the class name.<br/> If you can provide us
+ * with a proof of possessing a yFiles license yourself, we can send you
+ * an unobfuscated release of Integrator.</i></p>
+ * 
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class KEGGPathwayActionListener implements ActionListener, PropertyChangeListener {
   public static final transient Logger log = Logger.getLogger(KEGGPathwayActionListener.class.getName());
@@ -114,7 +140,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     } else if (e.getActionCommand().equals(NSAction.VISUALIZE_SELETED_DATA_IN_PATHWAY.toString())) {
       try {
         if (source instanceof IntegratorTabWithTable) {
-          // TODO: Implement functionality to limit visualization to selected data/genes.
+          // TODO: One could implement functionality to limit visualization to selected data/genes.
           @SuppressWarnings("unused")
           List<?> toVisualize = ((IntegratorTabWithTable) source).getSelectedItems();
         }

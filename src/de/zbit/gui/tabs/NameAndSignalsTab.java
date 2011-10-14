@@ -1,6 +1,23 @@
-/**
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
  *
- * @author Clemens Wrzodek
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.gui.tabs;
 
@@ -36,6 +53,7 @@ import de.zbit.util.Reflect;
  * A special tab for the {@link IntegratorUI} for
  * {@link Collections} of {@link NameAndSignals}.
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class NameAndSignalsTab extends IntegratorTabWithTable implements PropertyChangeListener {
   private static final long serialVersionUID = -6373461312937415980L;
@@ -228,8 +246,6 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(this);
     JButton showPathway = GUITools.createJButton(al2,
         Action.VISUALIZE_IN_PATHWAY, UIManager.getIcon("ICON_PATHWAY_16"));
-    // TODO: Create a temporary batch button.
-    
     
     bar.add(showPathway);
     

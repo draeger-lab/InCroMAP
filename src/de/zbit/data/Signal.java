@@ -1,6 +1,23 @@
-/**
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
  *
- * @author Clemens Wrzodek
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.data;
 
@@ -25,10 +42,11 @@ import de.zbit.util.ValuePair;
  * a Type (which describes the signal and is one of {@link SignalType})
  * and the actual signal.
  * 
- * <p> I used it to hold microarray signals of different treatments
+ * <p>I used it to hold microarray signals of different treatments
  * (encoded in name) and to read pValues, as well as fold changes.</p>
  * 
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class Signal implements Serializable, Comparable<Object>  {
   private static final long serialVersionUID = -6025922649069761114L;
@@ -57,6 +75,7 @@ public class Signal implements Serializable, Comparable<Object>  {
     Unknown, Raw, Processed, FoldChange, pValue, qValue, ratio, log_ratio, Merged;
     // XXX: Is it possible to overwrite toString() and return "p-value", which would be correct spelling.
     // If this is done, check that other methods still can translate the string to the SignalType!
+    // This could be done by usin the ActionCommand interface
   }
   
   /**

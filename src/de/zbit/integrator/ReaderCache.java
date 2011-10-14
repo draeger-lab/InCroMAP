@@ -1,5 +1,23 @@
-/**
- * @author Clemens Wrzodek
+/*
+ * $Id:  temp 13:46:56 wrzodek $
+ * $URL: temp $
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
+ *
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.integrator;
 
@@ -21,6 +39,7 @@ import de.zbit.util.Utils;
  * Stores the reader to use, the organism and confirmed file/
  * column configurations for the {@link CSVImporterV2}. 
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class ReaderCache implements Serializable {
   private static final long serialVersionUID = -4076147191332720931L;
@@ -172,9 +191,10 @@ public class ReaderCache implements Serializable {
         if (itemsToDelete<1) return;
         List<ReaderCacheElement> list = new ArrayList<ReaderCacheElement>(cache.values());
         Collections.sort(list, ReaderCacheElement.getAgeComparator());
+        // Oldest file is now fist (ascending sorting)
         for (int i=0; i<itemsToDelete; i++) {
           if (Thread.currentThread().isInterrupted() || list.size()<1) break;
-          // TODO: Test if sorting is ascending or descending!
+          
           cache.remove(list.get(0).getDescribingFile());
         }
       }

@@ -1,5 +1,23 @@
-/**
- * @author Clemens Wrzodek
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
+ *
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.gui.dialogs;
 
@@ -51,6 +69,7 @@ import de.zbit.util.ValueTriplet;
  * Shows a dialog that lets the user chooser a Pathway
  * and one dataset per data type.
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class IntegrationDialog extends JPanel implements ActionListener {
   private static final long serialVersionUID = 7451686453282214876L;
@@ -196,7 +215,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
       });
     }
 
-    /* XXX: Create the following dialog for each type :
+    /* Created the following dialog for each type :
      * 
      * [ ] Visualize (mRNA-PairNS.getTypeName()) data
      *     (________) datasets (same species as in box1 !?!?)
@@ -252,7 +271,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
         if (showPathwaySelector) { // i.e. integrated pw-based visualization
           IntegratorUITools.modifyExperimentBoxForDNAMethylation(expSelect[i], (NameAndSignals)nsTab.getExampleData());
         }
-        // TODO: does this also change the experiment box
+        // TODO: does this also change the experiment box?
         //dataSelect[i].fireACtionListeners();
       }
       

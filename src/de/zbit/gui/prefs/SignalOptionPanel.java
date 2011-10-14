@@ -1,5 +1,23 @@
-/**
- * @author Clemens Wrzodek
+/*
+ * $Id:  temp 13:46:56 wrzodek $
+ * $URL: temp $
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
+ *
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.gui.prefs;
 
@@ -18,6 +36,7 @@ import de.zbit.gui.GUITools;
 /**
  * Enables an option tab for the {@link MergeTypeOptions}.
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
   private static final long serialVersionUID = 19866295658231672L;
@@ -132,40 +151,5 @@ public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
   public void removeRememberSelectionCheckBox() {
     GUITools.removeAllComponentsWithName(this, MergeTypeOptions.REMEMBER_GENE_CENTER_DECISION.getOptionName());
   }
-  
-  
-  
-  
-  
-//  
-//
-//  /*
-//   * (non-Javadoc)
-//   * @see de.zbit.gui.prefs.PreferencesPanel#accepts(java.lang.Object)
-//   */
-//  @Override
-//  public boolean accepts(Object key) {
-//    try {
-//      System.out.println(provider.getField(key.toString()));
-//    } catch (SecurityException e) {
-//      // TODO Auto-generated catch block
-//      e.printStackTrace();
-//    } catch (NoSuchFieldException e) {
-//      // TODO Auto-generated catch block
-//      e.printStackTrace();
-//    }
-//    return preferences.keySetFull().contains(key);
-//  }
-//  
-//  /*
-//   * (non-Javadoc)
-//   * @see de.zbit.gui.prefs.PreferencesPanel#loadPreferences()
-//   */
-//  @Override
-//  protected SBPreferences loadPreferences() throws IOException {
-//    System.out.println(provider == null ? "null" : SBPreferences.getPreferencesFor(provider));
-//    return provider == null ? null : SBPreferences.getPreferencesFor(provider);
-//  }
-  
   
 }

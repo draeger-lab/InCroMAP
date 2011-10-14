@@ -1,5 +1,23 @@
-/**
- * @author Clemens Wrzodek
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * obtain the latest version of Integrator.
+ *
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
  */
 package de.zbit.analysis;
 
@@ -36,6 +54,7 @@ import de.zbit.util.ValuePair;
 /**
  * Provides tools and methods two pair two Collections of {@link NameAndSignals}.
  * @author Clemens Wrzodek
+ * @version $Rev$
  */
 public class PairData {
   public static final transient Logger log = Logger.getLogger(PairData.class.getName());
@@ -81,6 +100,7 @@ public class PairData {
    * Shows a dialog that lets the user choose a second pair to match
    * the {@link #firstPart} and subsequently pairs the data.
    */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public List showDialogAndPairData() {
     
     // Ask for other dataset
@@ -173,6 +193,7 @@ public class PairData {
    * (only if this is true and both signals are fold-changes).
    * @see #calculateMergedSignal(List, MergedSignalDialog)
    */
+  @SuppressWarnings("rawtypes")
   public static void calculateMergedSignal(Iterable<PairedNS<?, ?>> pairedData,
       MergedSignalDialog mergeSignal, boolean generateUpDownColumn) {
     // Check if we should calculate

@@ -1,0 +1,85 @@
+<body>
+  <p>
+    Welcome to the API for <a href="http://www.cogsys.cs.uni-tuebingen.de/software/Integrator/index.htm">Integrator</a>, an application for integrated analysis of microarray data from different platforms. Please, feel free to use and include Integrator in your own applications.
+    If you do so, please don't forget to <a href="http://www.cogsys.cs.uni-tuebingen.de/software/Integrator/index.htm#cite">cite us</a>.
+  </p>
+  
+  <h2>Examples of how to use the Integrator JAR in your application</h2>
+    <h3>1. Adding a new data type to Integrator:</h3>
+    <pre>
+public class siRNA extends NSwithProbes {
+  public siRNA(String siRNA_ID) {
+    this (siRNA_ID, GeneID.default_geneID);
+  }
+  public siRNA(String siRNA_ID, Integer geneID) {
+    super(null, siRNA_ID, geneID);
+    unsetProbeName();// If data is NOT probe based, remove it.
+  }
+  
+  /* (non-Javadoc)
+   * @see java.lang.Object#clone()
+   */
+  @Override
+  protected Object clone() throws CloneNotSupportedException {
+    siRNA nm = new siRNA(name, getGeneID());
+    // We just need to create a new object. The super method
+    // takes care of cloning all fields.
+    return super.clone(nm);
+  }
+}
+    </pre>
+  
+    <h3>2. Added a Reader for a new data type:</h3>
+    The IntegratorUI automatically detects all available Readers which are in or below package <i>de.zbit.io</i> and thus, simply
+    adding a Reader that extends <i>NameAndSignalReader</i> to the mentioned package is sufficient to make a new
+    data type available in Integrator.
+    <pre>
+public class siRNAReader extends AbstractGeneBasedNSreader<siRNA> {
+
+  public siRNA() {
+    super();
+  }
+  
+  public siRNA(int identifierCol, IdentifierType idType, Species species) {
+    super(identifierCol, idType, species);
+  }
+
+  @Override
+  protected List<ExpectedColumn> getAdditionalExpectedColumns() {
+    // you might add here any column you want to read from the input file.
+    return null;
+  }
+
+  @Override
+  protected void processAdditionalExpectedColumns(List<ExpectedColumn> additional) {
+    // returns user selections for columns defined in getAdditionalExpectedColumns().
+  }
+
+  @Override
+  protected siRNA createObject(String name, Integer geneID, String[] line) {
+    // Create siRNA
+    siRNA m;
+    if (geneID!=null) {
+      m = new siRNA(name, geneID);
+    } else {
+      m = new siRNA(name);
+    }
+    
+    return m;
+  }
+}
+    </pre>
+    
+    <h3>3. Adding new enrichment analyses:</h3>
+    1. Implement a reader for the input file, which is basically a mapper
+    from GeneID to any enrichment object. You must extend <i>AbstractEnrichmentMapper&lt;Integer, String&gt;</i> for this purpose.
+    Please refer to <i>de.zbit.mapper.enrichment.GeneID2GO_ID_Mapper</i> for an example.
+    <br/>2. Create a new class that extends <i>AbstractEnrichment&lt;String&gt;</i>. This class must only set the internal <i>geneID2enrich_ID</i> variable.
+    Please refer to <i>de.zbit.analysis.enrichment.GOEnrichment</i> for an example.
+    <br/>3. Add the new enrichment to the GUI by extending the <i>public static enum Enrichments</i> in <i>de.zbit.gui.actions.listeners.EnrichmentActionListener</i>.
+  
+  <p>
+    Main author(s) of this project:
+    <ul><li>Clemens Wrzodek</li></ul>
+  </p>
+</body>
