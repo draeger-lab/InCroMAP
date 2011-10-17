@@ -106,6 +106,7 @@ import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.PathwaySelector;
+import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
@@ -579,16 +580,16 @@ public class IntegratorUITools {
   /**
    * @return all opened pathway tabs ({@link TranslatorPanel}s).
    */
-  public static List<LabeledObject<TranslatorPanel>> getTranslatorTabs() {
+  public static List<LabeledObject<TranslatorGraphPanel>> getTranslatorTabs() {
     IntegratorUI ui = IntegratorUI.getInstance();
-    List<LabeledObject<TranslatorPanel>> datasets = new LinkedList<LabeledObject<TranslatorPanel>>();
+    List<LabeledObject<TranslatorGraphPanel>> datasets = new LinkedList<LabeledObject<TranslatorGraphPanel>>();
     for (int i=0; i<ui.getTabbedPane().getTabCount(); i++) {
       Component c = ui.getTabbedPane().getComponentAt(i);
       if (c instanceof TranslatorPanel) {
         // Create a nicer label
-        String name = String.format("%s (tab:\"%s\")", ((TranslatorPanel) c).getTitle(), ui.getTabbedPane().getTitleAt(i));
-        datasets.add(new LabeledObject<TranslatorPanel>(
-            name, (TranslatorPanel) c));
+        String name = String.format("%s (tab:\"%s\")", ((TranslatorGraphPanel) c).getTitle(), ui.getTabbedPane().getTitleAt(i));
+        datasets.add(new LabeledObject<TranslatorGraphPanel>(
+            name, (TranslatorGraphPanel) c));
       }
     }
     return datasets;
@@ -716,7 +717,7 @@ public class IntegratorUITools {
   public static JLabeledComponent createSelectPathwayTabBox(IntegratorUI ui) {
     
     // Create a list of available datasets and get initial selection.
-    List<LabeledObject<TranslatorPanel>> datasets = getTranslatorTabs();
+    List<LabeledObject<TranslatorGraphPanel>> datasets = getTranslatorTabs();
     if (datasets.size()<1) {
       return null;
     } else {
@@ -1001,7 +1002,7 @@ public class IntegratorUITools {
     loadPathways.start();
     
     // Output Format
-    final JComboBox fileFormat = new JComboBox(TranslatorPanel.getGraphMLfilefilter().toArray());
+    final JComboBox fileFormat = new JComboBox(TranslatorGraphPanel.getGraphMLfilefilter().toArray());
     fileFormat.setBorder(BorderFactory.createTitledBorder("Select output file format"));
     lh.add(fileFormat);
     

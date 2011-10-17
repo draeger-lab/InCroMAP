@@ -84,6 +84,8 @@ import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.kegg.KEGGtranslatorOptions;
 import de.zbit.kegg.Translator;
+import de.zbit.kegg.gui.TranslatePathwayDialog;
+import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.mapper.MappingUtils.IdentifierType;
@@ -145,7 +147,7 @@ public class IntegratorUI extends BaseFrame {
    * This map is required, because KEGGtranslator has no dynamic changing
    * Toolbar!
    */
-  private Map<TranslatorPanel, TranslatorTabActions> translatorActionMap = new HashMap<TranslatorPanel, TranslatorTabActions>();
+  private Map<TranslatorGraphPanel, TranslatorTabActions> translatorActionMap = new HashMap<TranslatorGraphPanel, TranslatorTabActions>();
   
   /**
    * Holds a duplicate of the list of recently opened files.
@@ -324,7 +326,7 @@ public class IntegratorUI extends BaseFrame {
     // Set the often used KeggTranslator methods to use this appName as application name
     Translator.APPLICATION_NAME = appName;
     Translator.VERSION_NUMBER = appVersion;
-    TranslatorPanel.logoResourcePath = "../../gui/img/logo.png";
+    TranslatorPanel.logoResourcePath = "img/logo.png";
     
     /*
      * Many tooltips contain descriptions that must be shown
@@ -701,9 +703,10 @@ public class IntegratorUI extends BaseFrame {
   public void openPathwayTab() {
     //Create the translator panel
     KEGGPathwayActionListener kpal = new KEGGPathwayActionListener(null);
-    TranslatorPanel pwTab = new TranslatorPanel(Format.JPG, kpal);
-    pwTab.addPropertyChangeListener(kpal);
-    addTab(pwTab, "Pathway");    
+//    TranslatorPanel pwTab = new TranslatorPanel(Format.JPG, kpal);
+//    pwTab.addPropertyChangeListener(kpal);
+//    addTab(pwTab, "Pathway"); 
+    TranslatePathwayDialog.showAndEvaluateDialog(tabbedPane, kpal, Format.JPG);   
   }
   
   /* (non-Javadoc)
@@ -740,13 +743,13 @@ public class IntegratorUI extends BaseFrame {
 //        if (specKegg!=null) {
 //          currentSpecies = Species.search(IntegratorUITools.organisms, specKegg, Species.KEGG_ABBR);
 //        }
-        currentSpecies = TranslatorTabActions.getSpeciesOfPathway((TranslatorPanel) o, IntegratorUITools.organisms);
+        currentSpecies = TranslatorTabActions.getSpeciesOfPathway((TranslatorGraphPanel) o, IntegratorUITools.organisms);
         // ----
         
         TranslatorTabActions actions = translatorActionMap.get(o);
         if (actions==null) {
-          actions = new TranslatorTabActions((TranslatorPanel)o);
-          translatorActionMap.put((TranslatorPanel) o, actions);
+          actions = new TranslatorTabActions((TranslatorGraphPanel)o);
+          translatorActionMap.put((TranslatorGraphPanel) o, actions);
         }
         actions.createJToolBarItems(toolBar);
         actions.updateToolbarButtons(toolBar);

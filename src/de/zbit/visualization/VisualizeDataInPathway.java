@@ -116,7 +116,7 @@ public class VisualizeDataInPathway {
   /**
    * The panel, that contains the {@link #graph}.
    */
-  protected TranslatorPanel panelContainingGraph;
+  protected TranslatorPanel<Graph2D> panelContainingGraph;
   
   /**
    * Common tools.
@@ -151,7 +151,7 @@ public class VisualizeDataInPathway {
    * on the {@link Graph2D} of the given {@link TranslatorPanel}.
    * @param tp any {@link TranslatorPanel}
    */
-  public VisualizeDataInPathway(TranslatorPanel tp){
+  public VisualizeDataInPathway(TranslatorPanel<Graph2D> tp){
     this(tp.isGraphML()?(Graph2D) tp.getDocument():null);
     panelContainingGraph = tp;
   }

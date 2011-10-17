@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.zbit.data.NameAndSignals;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.io.AbstractGeneBasedNSreader;

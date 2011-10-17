@@ -341,7 +341,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
 
         // Open pathway and set experiments to visualize.
         KEGGPathwayActionListener al = new KEGGPathwayActionListener(null);
-        TranslatorPanel tp = al.visualizePathway(dialog.getPathwaySelector());
+        TranslatorPanel<?> tp = al.visualizePathway(dialog.getPathwaySelector());
         tp.setData(TPAction.VISUALIZE_DATA.toString(), dataSource);
       }
     }

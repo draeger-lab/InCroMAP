@@ -76,7 +76,7 @@ public class TranslatorTabActions implements ActionListener{
   /**
    * The actual tab to perform actions on.
    */
-  TranslatorPanel parent;
+  TranslatorPanel<Graph2D> parent;
   
   /**
    * True if and only if microRNA nodes have been inserted
@@ -85,11 +85,11 @@ public class TranslatorTabActions implements ActionListener{
   boolean parentContainsMiRNANodes=false;
   
   /**
-   * 
+   * The DropDown button containing the "remove XY" visualization operations
    */
   private JDropDownButton removeButton = null;
   
-  public TranslatorTabActions(TranslatorPanel parent) {
+  public TranslatorTabActions(TranslatorPanel<Graph2D> parent) {
     super();
     this.parent = parent;
   }
@@ -256,7 +256,7 @@ public class TranslatorTabActions implements ActionListener{
     if (command.equals(TPAction.SEARCH_GRAPH.toString())) {
       String s = JOptionPane.showInputDialog("Please enter a string to search for");
       if (s!=null) {
-        TranslatorTools tools = new TranslatorTools((TranslatorPanel) parent);
+        TranslatorTools tools = new TranslatorTools((TranslatorPanel<Graph2D>) parent);
         tools.searchGenes(s);
         parent.repaint();
       }
@@ -319,7 +319,7 @@ public class TranslatorTabActions implements ActionListener{
    * @return {@link Species} of the pathway, currently shown in the {@link TranslatorPanel}.
    * Or <code>NULL</code> if it is unknown, the panel is not ready or it is a reference pw.
    */
-  public static Species getSpeciesOfPathway(TranslatorPanel tp, List<Species> spec) {
+  public static Species getSpeciesOfPathway(TranslatorPanel<?> tp, List<Species> spec) {
     File f = tp.getInputFile();
     if (f==null) return null;
     if (spec==null) try {

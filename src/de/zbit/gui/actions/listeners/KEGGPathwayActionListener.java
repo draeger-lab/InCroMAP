@@ -63,6 +63,7 @@ import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.PathwaySelector;
+import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.gui.TranslatorUI;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
@@ -257,7 +258,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param experimentName name of the observation to color
    * @param signalType signal type of the observation (usually fold change)
    */
-  private void visualizeData(final TranslatorPanel tp, final NameAndSignalsTab dataSource, final String experimentName, final SignalType signalType) {
+  private void visualizeData(final TranslatorPanel<Graph2D> tp, final NameAndSignalsTab dataSource, final String experimentName, final SignalType signalType) {
     // @return number of nodes, colored according to the signal, or -1 if an error occured.
     /* This method has the advantage to
      * - Ask the mergeType only once!
@@ -403,7 +404,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param source
    * @param geneIDs
    */
-  private void hightlightGenes(TranslatorPanel source, Iterable<Integer> geneIDs) {
+  private void hightlightGenes(TranslatorPanel<Graph2D> source, Iterable<Integer> geneIDs) {
     SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
     Color colorForUnaffectedNodes = PathwayVisualizationOptions.COLOR_FOR_NO_VALUE.getValue(prefs);
     Color affectedColor = PathwayVisualizationOptions.COLOR_FOR_MAXIMUM_FOLD_CHANGE.getValue(prefs);
@@ -452,9 +453,9 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param pwId pathway id to visualized (e.g., "hsa00130").
    * @param pwo optional parent {@link EnrichmentObject} (if applicable, may be null).
    */
-   TranslatorPanel visualizePathway(String pwId, EnrichmentObject<?> pwo) {
+   TranslatorPanel<Graph2D> visualizePathway(String pwId, EnrichmentObject<?> pwo) {
     //Create the translator panel
-    TranslatorPanel pwTab = new TranslatorPanel(pwId,Format.JPG, this);
+    TranslatorGraphPanel pwTab = new TranslatorGraphPanel(pwId, Format.JPG, this);
     String name = pwId;
     if (pwo!=null) {
       pwTab.setData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString(), pwo);
@@ -479,11 +480,11 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     * @param pwSel
     * @return the created tab or null, if selection was not valid.
     */
-   public TranslatorPanel visualizePathway(PathwaySelector pwSel) {
+   public TranslatorPanel<Graph2D> visualizePathway(PathwaySelector pwSel) {
      //Create the translator panel
      String pwId = pwSel.getSelectedPathwayID();
      if (pwId==null) return null;
-     TranslatorPanel pwTab = new TranslatorPanel(pwId,Format.JPG, this);
+     TranslatorGraphPanel pwTab = new TranslatorGraphPanel(pwId, Format.JPG, this);
      
      // Add tab and create ToolTip
      String name = pwSel.getSelectedPathway();
@@ -507,7 +508,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       if (source.getSpecies(false)!=null) 
         organism = source.getSpecies().getKeggAbbr();
     } else if (source instanceof TranslatorPanel) {
-      TranslatorPanel source = (TranslatorPanel) this.source;
+      TranslatorPanel<?> source = (TranslatorPanel<?>) this.source;
       if (source.getDocument()==null) return; // Is Ready check
       organism = TranslatorTools.getOrganismKeggAbbrFromGraph((Graph2D) source.getDocument());
     }
@@ -559,28 +560,35 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
 //      ret.add(tabSelect, BorderLayout.NORTH);
 //    }
 
-    // Let user chooser
-    int val = JOptionPane.showConfirmDialog((Component)source, ret, UIManager.getString("OptionPane.titleText"), JOptionPane.OK_CANCEL_OPTION);
-    GUITools.disableOkButton(ret);
-
     // Evaluate and eventually open new tab.
-    if (val==JOptionPane.OK_OPTION && selector.getSelectedPathwayID()!=null) {
-      ValueTriplet<NameAndSignalsTab, String, SignalType> dataSource;
-      if (expSel!=null) {
-        ValuePair<String, SignalType> expSignal = (ValuePair<String, SignalType>) expSel.getSelectedItem();
-        dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>((NameAndSignalsTab) source,
-            expSignal.getA(), expSignal.getB());
-      } else {
-        NameAndSignalsTab a = null;
-        if (setA) a = (NameAndSignalsTab) source;
-        // Will show the selector later (in TranslationDone).
-        dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>(a, null, null);
-      }
+    final boolean setAfinal = setA;
+    final JLabeledComponent expSelFinal = expSel;
+    Runnable okAction = new Runnable() {
+      @Override
+      public void run() {
+        if (selector.getSelectedPathwayID()!=null) {
+          ValueTriplet<NameAndSignalsTab, String, SignalType> dataSource;
+          if (expSelFinal!=null) {
+            ValuePair<String, SignalType> expSignal = (ValuePair<String, SignalType>) expSelFinal.getSelectedItem();
+            dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>((NameAndSignalsTab) source,
+                expSignal.getA(), expSignal.getB());
+          } else {
+            NameAndSignalsTab a = null;
+            if (setAfinal) a = (NameAndSignalsTab) source;
+            // Will show the selector later (in TranslationDone).
+            dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>(a, null, null);
+          }
 
-      // Open pathway and set experiment to visualize.
-      TranslatorPanel tp = visualizePathway(selector.getSelectedPathwayID(), null);
-      tp.setData(TPAction.VISUALIZE_DATA.toString(), dataSource);
-    }
+          // Open pathway and set experiment to visualize.
+          TranslatorPanel<?> tp = visualizePathway(selector.getSelectedPathwayID(), null);
+          tp.setData(TPAction.VISUALIZE_DATA.toString(), dataSource);
+        }
+      }
+    };
+    
+    // Let user chooser
+    GUITools.showOkCancelDialogInNewThred(ret, UIManager.getString("OptionPane.titleText"), okAction, null);
+    selector.autoActivateOkButton(ret);
 
   }
 
