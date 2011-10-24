@@ -47,6 +47,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.ActionCommand;
@@ -257,8 +258,8 @@ public class NameAndSignalTabActions implements ActionListener {
     }
     
     // Datatype specific buttons:
-    if (tableContent.equals(mRNA.class)) {
-      // Removed fir miRNA, is done every time after annotating targets!
+    if (tableContent.equals(mRNA.class) || tableContent.equals(DNAmethylation.class)) {
+      // Removed for miRNA, is done every time after annotating targets!
       //|| tableContent.equals(miRNAandTarget.class) || tableContent.equals(miRNA.class)) {
       bar.add(GUITools.createJButton(this,
           NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_PENCIL_16")));

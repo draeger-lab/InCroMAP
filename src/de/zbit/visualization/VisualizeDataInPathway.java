@@ -73,6 +73,7 @@ import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.BatchKEGGtranslator;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
+import de.zbit.math.LinearRescale;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.FileTools;
@@ -948,9 +949,10 @@ public class VisualizeDataInPathway {
     // Read max. box width from preferences (Default:10)
     SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
     int maxWidth = PathwayVisualizationOptions.DNA_METHYLATION_MAXIMUM_BOX_WIDTH.getValue(prefs);
+    double halfWidth = ((double)maxWidth/2);
     // The protein mod. box height is required to calc. the dna methylation bar height
     int protBoxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
-    
+    float maxFC = PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR.getValue(prefs);
     
     // Prepare maps and required classes
     // XXX: Fixed MergeType for DNA-m data. Must be pValues in here.
@@ -971,6 +973,7 @@ public class VisualizeDataInPathway {
     // TODO: If fold change, always maxWidth and change color.
     // TODO: Better show pValue AND fold-change!
     // (via position: left/right of node OR color).
+    LinearRescale rescale = new LinearRescale(0, maxFC, 0, halfWidth);
     
     int changedNodes=0;
     for (Node n: n2ns.keySet()) {
@@ -997,14 +1000,27 @@ public class VisualizeDataInPathway {
         nl.setModel(NodeLabel.FREE);
         nl.setPosition(NodeLabel.W);
         nl.setBackgroundColor(nr.getLineColor());
+        nl.setLineColor(nl.getBackgroundColor());
         nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
         nl.setContentHeight(barHeight);
-        nl.setContentWidth(Math.min(Math.max(signalValue/maxSignalValue, 0), 1)*maxWidth);
-//        System.out.println(signalValue);
+        nl.setDistance(0); // Adjacent to node
         
-        nl.setFreeOffset(-nl.getContentWidth(), 0);
-        nl.setLineColor(nl.getBackgroundColor());
-        nl.setDistance(0);
+        // Set box size dependent on signal value
+        if (type.equals(SignalType.FoldChange)) {
+          double rescaledSignal = rescale.rescale(Math.abs(signalValue)).doubleValue();
+          nl.setContentWidth(rescaledSignal);
+          
+          if (signalValue<=0) {
+            // negative fc => draw right of middle
+            nl.setFreeOffset(-halfWidth, 0); // = left border
+          } else {
+            // positive fc => draw left of middle
+            nl.setFreeOffset(-halfWidth-rescaledSignal, 0); // = left border
+          }
+        } else {
+          nl.setContentWidth(Math.min(Math.max(signalValue/maxSignalValue, 0), 1)*maxWidth); // =width
+          nl.setFreeOffset(-nl.getContentWidth(), 0); // =left border
+        }
         
         if (showBorderForDNAmethylationBox) {
           NodeLabel border = nr.createNodeLabel(); //(NodeLabel) nl.clone();
