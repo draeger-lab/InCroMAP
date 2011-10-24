@@ -23,8 +23,7 @@ package de.zbit.gui.prefs;
 
 import java.util.Arrays;
 
-import de.zbit.io.NameAndSignalReader;
-import de.zbit.util.Reflect;
+import de.zbit.gui.IntegratorUI;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.Range;
 
@@ -35,7 +34,8 @@ import de.zbit.util.prefs.Range;
  */
 @SuppressWarnings("rawtypes")
 public interface IntegratorIOOptions extends de.zbit.util.prefs.KeyProvider {
-  static Class[] available_formats = Reflect.getAllClassesInPackage("de.zbit.io", true, true, NameAndSignalReader.class,null,true);
+  // Note: Reflections don't work in webstart operations.
+  static Class[] available_formats = IntegratorUI.getAvailableReaders();
   
   /**
    * Readable file formats

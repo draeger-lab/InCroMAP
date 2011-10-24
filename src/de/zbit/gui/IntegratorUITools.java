@@ -659,7 +659,7 @@ public class IntegratorUITools {
     // Create a list of available datasets and get initial selection.
     List<LabeledObject<NameAndSignalsTab>> datasets = getNameAndSignalTabsWithSignals();
     // Remove all DNA methylation datasets that contain no p-value signals
-    IntegratorUITools.filterNSTabs(datasets, DNAmethylation.class, SignalType.pValue);
+    //IntegratorUITools.filterNSTabs(datasets, DNAmethylation.class, SignalType.pValue);//Keyword: DNAm-pValue
     for (int i=0; i<datasets.size(); i++) {
       Component c = datasets.get(i).getObject();
       if (initialSelection!=null && c.equals(initialSelection)) {
@@ -1249,6 +1249,7 @@ public class IntegratorUITools {
    */
   public static void modifyExperimentBoxForDNAMethylation(
     JLabeledComponent expSel, NameAndSignals ns) {
+    if (true) return; //Keyword: DNAm-pValue
     // Only show p-values for DNA methylation data
     if (ns instanceof DNAmethylation) IntegratorUITools.createSelectExperimentBox(expSel,ns,SignalType.pValue);
     //if (expSel.getHeaders()==null || expSel.getHeaders().length<1) expSel = null;

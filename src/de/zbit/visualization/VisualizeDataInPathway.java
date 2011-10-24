@@ -1,6 +1,6 @@
 /*
- * $Id:  temp 13:46:56 wrzodek $
- * $URL: temp $
+ * $Id$
+ * $URL$
  * ---------------------------------------------------------------------
  * This file is part of Integrator, a program integratively analyze
  * heterogeneous microarray datasets. This includes enrichment-analysis,
@@ -789,10 +789,11 @@ public class VisualizeDataInPathway {
     Class<? extends NameAndSignals> inputType = NameAndSignals.getType(nsList);
     
     // First, disallow invalid data selections
-    if (DNAmethylation.class.isAssignableFrom(inputType) && !type.equals(SignalType.pValue)) {
-      GUITools.showErrorMessage(null, "Only p-values of DNA methylation data can be visualized.");
-      return -1;
-    }
+  //Keyword: DNAm-pValue
+//    if (DNAmethylation.class.isAssignableFrom(inputType) && !type.equals(SignalType.pValue)) {
+//      GUITools.showErrorMessage(null, "Only p-values of DNA methylation data can be visualized.");
+//      return -1;
+//    }
     
     // 0. Remove previous visualizations of the same data.
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, inputType);
@@ -949,6 +950,7 @@ public class VisualizeDataInPathway {
     int maxWidth = PathwayVisualizationOptions.DNA_METHYLATION_MAXIMUM_BOX_WIDTH.getValue(prefs);
     // The protein mod. box height is required to calc. the dna methylation bar height
     int protBoxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
+    
     
     // Prepare maps and required classes
     // XXX: Fixed MergeType for DNA-m data. Must be pValues in here.

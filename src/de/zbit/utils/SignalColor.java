@@ -1,6 +1,6 @@
 /*
- * $Id:  temp 13:46:56 wrzodek $
- * $URL: temp $
+ * $Id$
+ * $URL$
  * ---------------------------------------------------------------------
  * This file is part of Integrator, a program integratively analyze
  * heterogeneous microarray datasets. This includes enrichment-analysis,

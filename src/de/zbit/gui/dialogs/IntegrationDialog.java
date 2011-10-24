@@ -256,7 +256,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
       List<LabeledObject<NameAndSignalsTab>> datasets = IntegratorUITools.getNameAndSignalTabsWithSignals(species, type);
       if (showPathwaySelector && DNAmethylation.class.isAssignableFrom(type)) { // i.e. integrated pw-based visualization of DNAm data
         // Remove all DNA methylation datasets that contain no p-value signals
-        IntegratorUITools.filterNSTabs(datasets, DNAmethylation.class, SignalType.pValue);
+        //IntegratorUITools.filterNSTabs(datasets, DNAmethylation.class, SignalType.pValue); //Keyword: DNAm-pValue
       }
       if (datasets==null || datasets.size()<1) {
         // Disable all and deselect checkbox

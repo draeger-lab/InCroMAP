@@ -90,6 +90,7 @@ import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
+import de.zbit.util.Reflect;
 import de.zbit.util.StringUtil;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
@@ -315,8 +316,9 @@ public class IntegratorUI extends BaseFrame {
    * @param args
    * @throws IOException 
    */
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException {    
     LogUtil.initializeLogging(Level.INFO,(String[])null);
+    
     // Set default values for KEGGtranslator
     KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
@@ -342,13 +344,13 @@ public class IntegratorUI extends BaseFrame {
         ui.toFront();
         
         try {
-          mRNAReader r = mRNAReader.getExampleReader();
-          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorUITools.organisms.get(1)), "Example_mRNA");
-          
-          miRNAReader r2 = new miRNAReader(1,0);
-          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorUITools.organisms.get(1)), "Example_miRNA");
+//          mRNAReader r = mRNAReader.getExampleReader();
+//          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorUITools.organisms.get(1)), "Example_mRNA");
+//          
+//          miRNAReader r2 = new miRNAReader(1,0);
+//          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+//          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
+//          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorUITools.organisms.get(1)), "Example_miRNA");
           
         } catch (Exception e) {e.printStackTrace();}
         
@@ -1042,6 +1044,27 @@ public class IntegratorUI extends BaseFrame {
    */
   public JTabbedPane getTabbedPane() {
     return tabbedPane;
+  }
+
+  /**
+   * @return
+   */
+  @SuppressWarnings("rawtypes")
+  public static Class[] getAvailableReaders() {
+    // Try first with reflections. Allows more flexibility.
+    Class[] available_formats = null;
+    try {
+      available_formats = Reflect.getAllClassesInPackage("de.zbit.io", true, true, NameAndSignalReader.class,null,true);
+    } catch (Throwable t) {
+      available_formats = null;
+    }
+    if (available_formats!=null && available_formats.length>0) {
+      return available_formats;
+    }
+    
+    // If it is a webstart application, then reflections don't
+    // work => include a static list as fallback.
+    return new Class[]{mRNAReader.class, miRNAReader.class, DNAMethylationReader.class, ProteinModificationReader.class};
   }
   
 }
