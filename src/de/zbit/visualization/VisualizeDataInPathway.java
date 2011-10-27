@@ -854,7 +854,9 @@ public class VisualizeDataInPathway {
     } else {
       // Mostly not the same species...
       if(!miRNA.class.isAssignableFrom(inputType)) { // miRNA has its own warning.
-        log.warning("Could not find any graph nodes that match to the input data.");
+        String noNodesMatchString = "Could not find any graph nodes that match to the input data.";
+        log.warning(noNodesMatchString);
+        GUITools.showErrorMessage(null, noNodesMatchString);
       }
     }
     
@@ -888,6 +890,7 @@ public class VisualizeDataInPathway {
     
     int changedNodes = 0;
     for (Node n: n2ns.keySet()) {
+      Set<String> addedAnalytes = new HashSet<String>(); // required to hide multiple values coming from the same analyte.
       Set<T> nsForNode = n2ns.get(n);
       if (nsForNode==null) continue;
       
@@ -899,8 +902,18 @@ public class VisualizeDataInPathway {
         double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
         if (Double.isNaN(signalValue)) continue;
         
+        // Get the label
+        String label = ns.getUniqueLabel();
+        if (ns instanceof ProteinModificationExpression) {
+          String analyteID = ((ProteinModificationExpression) ns).getAnalyteID();
+          // Add each analyte ID to a set and visualize it only per node once,
+          // even if the analyte matches to multiple IDs.
+          if (analyteID!=null && !addedAnalytes.add(analyteID)) continue;
+          label = ((ProteinModificationExpression) ns).getAnalyteShortName();
+        }
+        
         NodeLabel nl = nr.createNodeLabel();
-        nl.setText(ns.getUniqueLabel());
+        nl.setText(label);
         nr.addLabel(nl);
         
         // Remember what we visualized
@@ -1010,11 +1023,11 @@ public class VisualizeDataInPathway {
           double rescaledSignal = rescale.rescale(Math.abs(signalValue)).doubleValue();
           nl.setContentWidth(rescaledSignal);
           
-          if (signalValue<=0) {
-            // negative fc => draw right of middle
+          if (signalValue>=0) {
+            // negative fc => draw left of middle
             nl.setFreeOffset(-halfWidth, 0); // = left border
           } else {
-            // positive fc => draw left of middle
+            // positive fc => draw right of middle
             nl.setFreeOffset(-halfWidth-rescaledSignal, 0); // = left border
           }
         } else {

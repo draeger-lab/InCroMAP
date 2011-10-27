@@ -353,6 +353,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       // Remark: "geneCentered()" Converts miRNAandTargets to miRNAs!
       // MergeType does NOT make any difference, because signals of input data are not processed
       Collection newList = NameAndSignals.geneCentered((Collection<? extends NameAndSignals>)geneList2, IntegratorUITools.getMergeTypeSilent());
+      NameAndSignals.removeGenesWithoutGeneID(newList);
       if (newList!=null && newList.size()>0) {
         geneList2 = newList;
       }

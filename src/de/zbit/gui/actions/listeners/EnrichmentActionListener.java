@@ -27,7 +27,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.swing.Icon;
@@ -40,6 +42,7 @@ import de.zbit.analysis.enrichment.GOEnrichment;
 import de.zbit.analysis.enrichment.KEGGPathwayEnrichment;
 import de.zbit.analysis.enrichment.MSigDB_GSEA_Enrichment;
 import de.zbit.data.EnrichmentObject;
+import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.ActionCommandWithIcon;
@@ -174,7 +177,7 @@ public class EnrichmentActionListener implements ActionListener {
     final List<?> geneList;
     if (e.getSource() instanceof List) {
       // Only for integrated enrichments (see IntegratedEnrichmentDialog).
-      geneList = getGeneList(((List)e.getSource()).toArray());
+      geneList = getGeneList(e.getModifiers()==1?true:false, ((List)e.getSource()).toArray());
     } else if (e.getSource() instanceof IntegratorTabWithTable) {
       geneList = getGeneList((IntegratorTabWithTable)e.getSource());
     } else {
@@ -323,12 +326,25 @@ public class EnrichmentActionListener implements ActionListener {
   }
   
   /**
+   * @param tabs
+   * @return list of selected genes for the enrichment.
+   * This MUST BE {@link IntegratorTabWithTable} and is Object for compatibility reasons.
+   * WARNING: List may contain different types!
+   */
+  private List<?> getGeneList(Object... tabs) {
+    return getGeneList(false, tabs);
+  }
+  /**
+   * @param and if true, connects everything with "And". If false (recommended default),
+   * an "Or"-connection is performed. NOTE: "And" does only work for instances of
+   * {@link GeneID}.
+   * @param tabs
    * @return list of selected genes for the enrichment.
    * This MUST BE {@link IntegratorTabWithTable} and is Object for compatibility reasons.
    * WARNING: List may contain different types!
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  private List<?> getGeneList(Object... tabs) {
+  private List<?> getGeneList(boolean and, Object... tabs) {
     List geneList = new ArrayList();
     for (Object ta : tabs) {
       IntegratorTabWithTable tab = (IntegratorTabWithTable) ta;
@@ -337,6 +353,7 @@ public class EnrichmentActionListener implements ActionListener {
     
     // Eventually ask user
     if (withDialog) {
+      geneList.clear();
       boolean showFilterDialog=true;
 //      if (geneList!=null && geneList.size()>1) {
 //        int ret = GUITools.showQuestionMessage(source, "Do you want to take the selected genes for the enrichment analysis?", "Enrichment analysis", "Yes", "No");
@@ -364,13 +381,52 @@ public class EnrichmentActionListener implements ActionListener {
               ((NameAndSignalsTab)tab).getActions().annotateMiRNAtargets();
             }
           }
-          //---
-          geneList.addAll(newItems);
+          
+          
+          // Add items to list
+          if (!and || geneList.size()<=0) {
+            // default = "or"-connection, or build initial "and" list.
+            geneList.addAll(newItems);
+          } else {
+            // perform AND
+            //geneList.retainAll(newItems); // performs exact object checks
+            RetainAllGeneIDs(geneList, newItems);
+            if (geneList.size()<1) break; // and-connection=> will never get >0 again.
+          }
         }
       }
-
     }
+    
     return geneList;
+  }
+
+  /**
+   * Performs {@link Collection#retainAll(Collection)} with a special
+   * implementation for {@link GeneID}s. Compares and retains elements
+   * if they have the same GeneID. Objects that don't implement the
+   * {@link GeneID} interface are being removed!
+   * @param original
+   * @param newItems
+   * @return true if <code>original</code> has been modified
+   */
+  @SuppressWarnings("rawtypes")
+  public static boolean RetainAllGeneIDs(Iterable original, Iterable newItems) {
+    boolean modified = false;
+    Iterator<?> e = original.iterator();
+    Set<Integer> newItemsGeneIDs = NameAndSignals.getGeneIds(newItems);
+    while (e.hasNext()) {
+      Object item = e.next();
+      if (item instanceof GeneID) {
+        if (!newItemsGeneIDs.contains(((GeneID) item).getGeneID())) {
+          e.remove();
+          modified = true;
+        }
+      } else {
+        e.remove();
+        modified = true;
+      }
+    }
+    return modified;
   }
 
   /**

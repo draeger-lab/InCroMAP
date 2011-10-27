@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
@@ -206,7 +207,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
               vt = (ValueTriplet<NameAndSignalsTab, String, SignalType>) dataToVisualize;
             }
             
-          } catch (Exception ex) {}
+          } catch (Exception ex) {log.log(Level.WARNING, "Error while visualizing data.", ex);}
           
           // Get valid data source
           if ((vt==null && askUser) || vt!=null && (vt.getA()==null || vt.getB()==null || vt.getC()==null)) {
@@ -258,7 +259,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param experimentName name of the observation to color
    * @param signalType signal type of the observation (usually fold change)
    */
-  private void visualizeData(final TranslatorPanel<Graph2D> tp, final NameAndSignalsTab dataSource, final String experimentName, final SignalType signalType) {
+  private synchronized void visualizeData(final TranslatorPanel<Graph2D> tp, final NameAndSignalsTab dataSource, final String experimentName, final SignalType signalType) {
     // @return number of nodes, colored according to the signal, or -1 if an error occured.
     /* This method has the advantage to
      * - Ask the mergeType only once!
@@ -286,38 +287,40 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     SwingWorker<Integer, Void> visData = new SwingWorker<Integer, Void>() {
       @Override
       protected Integer doInBackground() throws Exception {
-        try {
-        
-        // Adds the microRNA NODES to the graph and automatically asks
-        // the user to annotate targets to his miRNA data if not already done.
-        if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
-          if (!addMicroRNAs((Graph2D)tp.getDocument(), dataSource)) {
-            log.warning("Could not detect any miRNA targets in the graph.");
-            return 0;
+          try {
+            int coloredNodes=0;
+            synchronized (tp.getDocument()) { // don't visualize multiple data at the same time
+              // Adds the microRNA NODES to the graph and automatically asks
+              // the user to annotate targets to his miRNA data if not already done.
+              if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
+                if (!addMicroRNAs((Graph2D)tp.getDocument(), dataSource)) {
+                  log.warning("Could not detect any miRNA targets in the graph.");
+                  return 0;
+                }
+              }
+              
+              // Perform visualization
+              VisualizeDataInPathway visData = new VisualizeDataInPathway(tp);
+              Class<? extends NameAndSignals> dataType = NameAndSignals.getType(dataSource.getData());
+              // Check if there is already this data type visualized and remove old visualization first.
+              if (visData.isDataTypeVisualized(dataType)) {
+                int answer = GUITools.showQuestionMessage(tp, "The pathway already contains visualized data of the same type (" + 
+                  dataType.getSimpleName() + "). Do you want to replace the currently visualized data with the given one?", "Visualize data", JOptionPane.YES_NO_OPTION);
+                if (answer==JOptionPane.NO_OPTION) return 0;
+                visData.removeVisualization(dataType);
+              }
+              
+              coloredNodes = visData.visualizeData(dataSource, experimentName,signalType);
+            }
+            // Repaint and hide loading screens
+            //tp.repaint();
+            //tp.hideTemporaryLoadingBar();
+            return coloredNodes;
+          } catch (Exception e) {
+            throw e;
           }
-        }
+          //return -1;
         
-        // Perform visualization
-        VisualizeDataInPathway visData = new VisualizeDataInPathway(tp);
-        Class<? extends NameAndSignals> dataType = NameAndSignals.getType(dataSource.getData());
-        // Check if there is already this data type visualized and remove old visualization first.
-        if (visData.isDataTypeVisualized(dataType)) {
-          int answer = GUITools.showQuestionMessage(tp, "The pathway already contains visualized data of the same type (" + 
-            dataType.getSimpleName() + "). Do you want to replace the currently visualized data with the given one?", "Visualize data", JOptionPane.YES_NO_OPTION);
-          if (answer==JOptionPane.NO_OPTION) return 0;
-          visData.removeVisualization(dataType);
-        }
-        
-        int coloredNodes = visData.visualizeData(dataSource, experimentName,signalType);
-        
-        // Repaint and hide loading screens
-        //tp.repaint();
-        //tp.hideTemporaryLoadingBar();
-        return coloredNodes;
-        } catch (Exception e) {
-          throw e;
-        }
-        //return -1;
       }
       
       @Override
@@ -330,9 +333,11 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
           e.printStackTrace();
           GUITools.showErrorMessage(null, e);
         } finally {
-          tp.hideTemporaryLoadingBar();
-          tp.repaint();
-          IntegratorUI.getInstance().updateButtons();
+          synchronized (tp) {
+            tp.hideTemporaryLoadingBar();
+            tp.repaint();
+            IntegratorUI.getInstance().updateButtons();
+          }
         }
       }
     };

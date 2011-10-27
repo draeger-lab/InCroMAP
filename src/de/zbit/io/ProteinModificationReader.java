@@ -38,7 +38,7 @@ import de.zbit.gui.csv.ExpectedColumn;
 public class ProteinModificationReader extends AbstractGeneBasedNSreader<ProteinModificationExpression> {
   public static final transient Logger log = Logger.getLogger(ProteinModificationReader.class.getName());
   
-  int analyteShortNameCol=-1;
+  int analyteIDCol=-1;
   int modificationCol=-1;
 
   /* (non-Javadoc)
@@ -48,7 +48,8 @@ public class ProteinModificationReader extends AbstractGeneBasedNSreader<Protein
   protected List<ExpectedColumn> getAdditionalExpectedColumns() {
     List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
     
-    list.add(new ExpectedColumn("Analyte short name",false));
+    //list.add(new ExpectedColumn("Analyte short name",false));
+    list.add(new ExpectedColumn("Analyte ID",false));
     list.add(new ExpectedColumn("Modification name",false));
     
     return list;
@@ -60,7 +61,7 @@ public class ProteinModificationReader extends AbstractGeneBasedNSreader<Protein
   @Override
   protected void processAdditionalExpectedColumns(List<ExpectedColumn> additional) {
     if (additional.get(0).hasAssignedColumns()) {
-      analyteShortNameCol = additional.get(0).getAssignedColumn();
+      analyteIDCol = additional.get(0).getAssignedColumn();
     }
     if (additional.get(1).hasAssignedColumns()) {
       modificationCol = additional.get(1).getAssignedColumn();
@@ -73,14 +74,14 @@ public class ProteinModificationReader extends AbstractGeneBasedNSreader<Protein
   @Override
   protected ProteinModificationExpression createObject(String name, Integer geneID, String[] line) {
     
-    String analyteShortName = null;
-    if (analyteShortNameCol>=0 && analyteShortNameCol<line.length) analyteShortName = line[analyteShortNameCol];
+    String analyteID = null;
+    if (analyteIDCol>=0 && analyteIDCol<line.length) analyteID = line[analyteIDCol];
     
     String modification = null;
     if (modificationCol>=0 && modificationCol<line.length) modification = line[modificationCol];
     
     if (geneID==null) geneID = GeneID.default_geneID;
-    return new ProteinModificationExpression(name, analyteShortName, modification, geneID);
+    return new ProteinModificationExpression(name, analyteID, modification, geneID);
   }
 
   

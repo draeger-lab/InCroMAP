@@ -61,24 +61,24 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
   
   /**
    * @param geneName the gene name
-   * @param analyteShortName
+   * @param analyteID
    * @param modification
    * @param geneID Corresponding NCBI Gene ID (Entrez).
    */
-  public ProteinModificationExpression(String geneName, String analyteShortName, String modification, int geneID) {
+  public ProteinModificationExpression(String geneName, String analyteID, String modification, int geneID) {
     this(geneName);
-    setAnalyteShortName(analyteShortName);
+    setAnalyteID(analyteID);
     setModification(modification);
     setGeneID(geneID);
   }
   
   
-  public String getAnalyteShortName() {
+  public String getAnalyteID() {
     Object s = super.getData(analyte_short_key);
     return s==null?null:s.toString();
   }
   
-  public void setAnalyteShortName(String shortName) {
+  public void setAnalyteID(String shortName) {
     super.addData(analyte_short_key, shortName);
   }
   
@@ -131,20 +131,32 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
    */
   @Override
   public String getUniqueLabel() {
-    String a = getAnalyteShortName();
+//    String a = getAnalyteID();
     // If data is gene-centered, symbol should be unique.
     // do NOT use getShortProbeName() here. Others merge signals
     // by this return value!
-    if (a!=null) return a;
+//    if (a!=null) return a;
     
     // Maybe the modification is set. A unique label would then be
     // Protein name + modification name
     if (getModification()!=null) {
-      a = String.format("%s_%s", getName(), getModification());
+      return getAnalyteShortName();
+    } else if (getAnalyteID()!=null) {
+      return getAnalyteID();
     }
     
-    
     return getName();
+  }
+  
+  /**
+   * @return {@link #getName()}_{@link #getModification()}
+   */
+  public String getAnalyteShortName() {
+    String a = getName();
+    if (getModification()!=null) {
+      a = String.format("%s_%s", a, getModification());
+    }
+    return a;
   }
   
   /* (non-Javadoc)
@@ -163,6 +175,9 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
     int r = super.compareTo(o);
     if (r==0 && o instanceof ProteinModificationExpression) {
       r = getUniqueLabel().compareTo(((ProteinModificationExpression)o).getUniqueLabel());
+      if (r==0) {
+        r = getAnalyteShortName().compareTo(((ProteinModificationExpression)o).getAnalyteShortName());
+      }
     }
     return r;
   }

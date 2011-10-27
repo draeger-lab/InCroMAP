@@ -723,6 +723,9 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         }
         continue;
       } else if (mi instanceof ProteinModificationExpression){
+        // Important: since we have multiple phosphoforms for one
+        // protein, do not group them by GeneID! AnalyteID maps to
+        // multiple GeneIDs!
         name = mi.getUniqueLabel();
         
       } else {
@@ -1409,6 +1412,24 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     }
     
     return ret;
+  }
+
+  /**
+   * Removes all objects that implement {@link GeneID}, but have an
+   * unset or invalid GeneID.
+   * @param newList
+   */
+  public static void removeGenesWithoutGeneID(Iterable<? extends NameAndSignals> newList) {
+    Iterator<? extends NameAndSignals> it = newList.iterator();
+    while (it.hasNext()) {
+      NameAndSignals o = it.next();
+      if (o instanceof GeneID) {
+        int geneID = ((GeneID) o).getGeneID();
+        if (geneID<=0) {
+          it.remove();
+        }
+      }
+    }
   }
   
 }

@@ -72,7 +72,7 @@ public interface PathwayVisualizationOptions extends KeyProvider {
   
   public static Option<Byte> DNA_METHYLATION_MAXIMUM_BOX_WIDTH = new Option<Byte>("DNA_METHYLATION_MAXIMUM_BOX_WIDTH", Byte.class,
       "Define a maximum width (in pixel) of boxes that are added left of nodes to represent DNA methylation changes.",
-      new Range<Byte>(Byte.class, "{[5,100]}"), new Byte((byte) 16), "DNA methylation maximum box width");
+      new Range<Byte>(Byte.class, "{[5,100]}"), new Byte((byte) 20), "DNA methylation maximum box width"); //should be dividable by 2
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static final OptionGroup PATHWAY_COLORING_OPTIONS = new OptionGroup(

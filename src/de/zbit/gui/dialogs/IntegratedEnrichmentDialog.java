@@ -27,15 +27,19 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
+import de.zbit.data.GeneID;
 import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.gui.ActionCommandRenderer;
@@ -48,6 +52,8 @@ import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.OrganismSelector;
 import de.zbit.parser.Species;
+import de.zbit.util.ResourceManager;
+import de.zbit.util.StringUtil;
 
 /**
  * Shows a dialog that let's the user choose datasets and options
@@ -58,6 +64,9 @@ import de.zbit.parser.Species;
 public class IntegratedEnrichmentDialog  extends JPanel implements ActionListener {
   private static final long serialVersionUID = 9089266583514540967L;
 
+  /** Bundle to get localized Strings. **/
+  protected static ResourceBundle bundle = ResourceManager.getBundle(GUITools.RESOURCE_LOCATION_FOR_LABELS);
+  
   /**
    * A dirty static way to set an default selection on the dialog.
    */
@@ -78,6 +87,16 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
    * Enrichment type selection
    */
   private JComboBox enrichment = null;
+  
+  /**
+   * Connect datasets with "and"
+   */
+  private JRadioButton and=null;
+  
+  /**
+   * Connect datasets with "or"
+   */
+  private JRadioButton or=null;
 
   
   public IntegratedEnrichmentDialog() throws Exception {
@@ -90,7 +109,7 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
     // Create organism selector
     orgSel = new OrganismSelector(Translator.getFunctionManager(), null, IntegratorUITools.organisms);
     orgSel.addOrganismBoxLoadedCompletelyListener(this);
-    lh.add(orgSel);
+    lh.add(orgSel,2);
     
     // Create experiments list
     datasets = new JList();
@@ -101,16 +120,26 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
     String ctrl = InputEvent.getModifiersExText(InputEvent.CTRL_DOWN_MASK);
     expScroll.setBorder(BorderFactory.createTitledBorder(String.format("Select datasets (hold %s-key)", ctrl)));
     
-    lh.add(expScroll);
+    lh.add(expScroll,2);
     
     // Enrichment selection
     enrichment = new JComboBox(EnrichmentActionListener.Enrichments.values());
     enrichment.setRenderer(new ActionCommandRenderer(true));
     enrichment.setBorder(BorderFactory.createTitledBorder("Select enrichment"));
-    lh.add(enrichment);
+    lh.add(enrichment,2);
     
     // Write current data sets to selectors and update on species selection
     updateDatasetSelectionBox();
+    
+    // Build "and" / "or" buttons
+    and = new JRadioButton(StringUtil.changeFirstLetterCase(bundle.getString("AND"), true, true));
+    or = new JRadioButton(StringUtil.changeFirstLetterCase(bundle.getString("OR"), true, true));
+    ButtonGroup group = new ButtonGroup();
+    or.setSelected(true);
+    group.add(or);
+    group.add(and);
+    lh.add("Merge genes from different datasets with");
+    lh.add(or, and);
     
     // Listener on species box and others
     if (orgSel!=null) {
@@ -131,6 +160,14 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
     
     // Create a list of available datasets  
     List<LabeledObject<NameAndSignalsTab>> datasets = IntegratorUITools.getNameAndSignalTabs(species, false, (Class<? extends NameAndSignals>) null);
+    // Only show items with GeneID
+    for (int i=0; i<datasets.size(); i++) {
+      Object example = datasets.get(i).getObject().getExampleData();
+      if (example==null || !(example instanceof GeneID)) {
+        datasets.remove(i);
+        i--;
+      }
+    }
     this.datasets.setListData(datasets.toArray());
   }
   
@@ -213,7 +250,7 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
       // Create enrichment-performer, set values and fire event
       EnrichmentActionListener al = new EnrichmentActionListener(null, true);
       al.setSpecies(dialog.getSpeciesFromSelector());
-      al.actionPerformed(new ActionEvent(selectedTabs, 0, dialog.enrichment.getSelectedItem().toString()));
+      al.actionPerformed(new ActionEvent(selectedTabs, 0, dialog.enrichment.getSelectedItem().toString(), dialog.and.isSelected()?1:0));
     }
   }
   

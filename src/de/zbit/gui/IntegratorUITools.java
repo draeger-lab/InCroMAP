@@ -266,25 +266,41 @@ public class IntegratorUITools {
    * used to read his data.
    * @return any Class, derived from {@link NameAndSignalReader}.
    */
-  @SuppressWarnings("rawtypes")
   public static Class<?> createInputDataTypeChooser() {
+    return createInputDataTypeChooser(null);
+  }
+  /**
+   * Lets the user choose a {@link NameAndSignalReader} that should be
+   * used to read his data.
+   * @param file select a reader for the given file.
+   * @return any Class, derived from {@link NameAndSignalReader}.
+   */
+  @SuppressWarnings("rawtypes")
+  public static Class<?> createInputDataTypeChooser(File file) {
     
     // Build a custom list with LabeledObject
     Vector<LabeledObject<Class<?>>> itemsForModel = new Vector<LabeledObject<Class<?>>>();
     List<Class> values = IntegratorIOOptions.READER.getRange().getAllAcceptableValues();
+    List<String[]> hitwords = new ArrayList<String[]>(values.size());
     for (Class<?> value: values) {
       if (value.equals(mRNAReader.class)) {
         itemsForModel.add(0,new LabeledObject<Class<?>>("messenger RNA", value));
+        hitwords.add(0, new String[]{"mrna", "messenger"});
       } else if (value.equals(miRNAReader.class)) {
         itemsForModel.add(Math.min(itemsForModel.size(), 1), new LabeledObject<Class<?>>("micro RNA", value));
+        hitwords.add(Math.min(hitwords.size(), 1), new String[]{"mirna", "microrna", "micro rna"});
       } else if (value.equals(ProteinModificationReader.class)) {
         itemsForModel.add(Math.min(itemsForModel.size(), 2), new LabeledObject<Class<?>>("Protein modification data", value));
+        hitwords.add(Math.min(hitwords.size(), 2), new String[]{"protein"});
       } else if (value.equals(DNAMethylationReader.class)) {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("DNA methylation data", value));
+        hitwords.add(hitwords.size(), new String[]{"dnam", "methylation"});
       } else if (value.equals(SNPReader.class)) {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("SNP or GWAS data", value));
+        hitwords.add(hitwords.size(), new String[]{"snp", "gwas"});
       } else {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>(value.getSimpleName(), value));
+        hitwords.add(hitwords.size(), new String[]{value.getSimpleName().replace("Reader", "").toLowerCase()});
       }
     }
     
@@ -293,8 +309,20 @@ public class IntegratorUITools {
     outputFormat.setSortHeaders(false);
     outputFormat.setHeaders(itemsForModel);
     
+    // Try to make a reasonable default choice
+    if (file!=null) {
+      String name = file.getName().toLowerCase();
+      for (int i=0; i<itemsForModel.size(); i++) {
+        if (StringUtil.containsAny(hitwords.get(i), name)>=0) {
+          outputFormat.setSelectedValue(i);
+          break;
+        }
+      }
+    }
+    
     // Let user choose
-    int button = JOptionPane.showOptionDialog(IntegratorUI.getInstance(), outputFormat, IntegratorUI.appName,
+    String title = file!=null?String.format("Open '%s'", file.getName()):IntegratorUI.appName;
+    int button = JOptionPane.showOptionDialog(IntegratorUI.getInstance(), outputFormat, title,
       JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
     
     // Return chosen class
@@ -1247,6 +1275,7 @@ public class IntegratorUITools {
    * @param expSel
    * @param ns
    */
+  @SuppressWarnings("unused")
   public static void modifyExperimentBoxForDNAMethylation(
     JLabeledComponent expSel, NameAndSignals ns) {
     if (true) return; //Keyword: DNAm-pValue

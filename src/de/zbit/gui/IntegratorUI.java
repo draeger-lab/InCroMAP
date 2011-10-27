@@ -64,7 +64,6 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
-import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -332,9 +331,9 @@ public class IntegratorUI extends BaseFrame {
     
     /*
      * Many tooltips contain descriptions that must be shown
-     * longer than the system default. Let's show them 15 seconds!
+     * longer than the system default. Let's show them 30 seconds!
      */
-    ToolTipManager.sharedInstance().setDismissDelay(15000);
+    ToolTipManager.sharedInstance().setDismissDelay(30000);
     
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
@@ -947,22 +946,27 @@ public class IntegratorUI extends BaseFrame {
     
     // Ask file format
     if ( (reader == null) || (reader.length < 1) || (reader.length==1 && reader[0]==null)) {
-      reader = new Class[1];
-      reader[0] = IntegratorUITools.createInputDataTypeChooser();
-      if (reader[0]==null) return null; // Cancel pressed
+      reader = new Class[files.length];
+      for (int i=0; i<files.length; i++) {
+        reader[i] = IntegratorUITools.createInputDataTypeChooser(files[i]);
+      }
     }
     
     // Read all files and add tabs
     for (int i=0; i<files.length; i++) {
       try {
         // Initialize reader
-        Class<?> r = i<reader.length?reader[i]:reader[0];
-        NameAndSignalReader<? extends NameAndSignals> nsreader = (NameAndSignalReader<?>) r.newInstance();
-        
-        // Show import dialog and read data
-        addTab(new NameAndSignalsTab(this, nsreader, files[i].getPath()), files[i].getName());
-        getStatusBar().showProgress(nsreader.getProgressBar());
-        
+        Class<?> r = (reader!=null&&i<reader.length)?reader[i]:null;
+        if (r==null) r = IntegratorUITools.createInputDataTypeChooser(files[i]);
+        if (r!=null) {
+          NameAndSignalReader<? extends NameAndSignals> nsreader = (NameAndSignalReader<?>) r.newInstance();
+          
+          // Show import dialog and read data
+          addTab(new NameAndSignalsTab(this, nsreader, files[i].getPath()), files[i].getName());
+          getStatusBar().showProgress(nsreader.getProgressBar());
+        } else {
+          files[i]=null; // Dont add to history.
+        }
       } catch (Exception e) {
         GUITools.showErrorMessage(this, e);
         files[i]=null; // Dont add to history.
