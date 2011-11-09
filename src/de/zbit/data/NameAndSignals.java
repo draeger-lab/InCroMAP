@@ -596,6 +596,44 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
+   * Sorts and returns the given {@link NameAndSignals} by
+   * AbsoluteMax for Fold changes,
+   * Min for p-values, and
+   * Max for others.
+   * @param <T>
+   * @param nsList
+   * @return
+   */
+  public static <T extends NameAndSignals> List<T> sortBySignificance(Iterable<T> nsList, final String experimentName, final SignalType type) {
+    List<T> l = Utils.IterableToList(nsList);
+    
+    // Create comparator that does the desired sorting
+    Comparator<T> sortByUniqueLabel = new Comparator<T>() {
+      @Override
+      public int compare(T o1, T o2) {
+        double sig1 = o1.getSignalValue(type, experimentName).doubleValue();
+        double sig2 = o2.getSignalValue(type, experimentName).doubleValue();
+        if (type.equals(SignalType.FoldChange)) {
+          // Return absolute max
+          sig1 = Math.abs(sig1);
+          sig2 = Math.abs(sig2);
+          return (sig1<sig2 ? 1 : (sig1==sig2 ? 0 : -1));
+        } else if (type.equals(SignalType.pValue)) {
+          // Return min
+          return (sig1<sig2 ? -1 : (sig1==sig2 ? 0 : 1));
+        } else {
+          // Return max
+          return (sig1<sig2 ? 1 : (sig1==sig2 ? 0 : -1));
+        }
+      }
+    };
+    
+    // Sort and return list
+    Collections.sort(l,sortByUniqueLabel);
+    return l;
+  }
+  
+  /**
    * Abstract merge functionality that can merge strings, numbers
    * and extensions of {@link NameAndSignals}.
    * @param c collection that contains object of exactly one class!

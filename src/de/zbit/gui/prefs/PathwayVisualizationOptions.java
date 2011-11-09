@@ -47,6 +47,11 @@ public interface PathwayVisualizationOptions extends KeyProvider {
   public static Option<Float> FOLD_CHANGE_FOR_MAXIMUM_COLOR = new Option<Float>("FOLD_CHANGE_FOR_MAXIMUM_COLOR", Float.class,
       "Min/Max (symmetric) fold change that is being assigned the full color.",
       new Range<Float>(Float.class, "{[0.0,1000.0]}"),1.5f);
+
+  public static Option<Float> DONT_VISUALIZED_FOLD_CHANGES = new Option<Float>("DONT_VISUALIZED_FOLD_CHANGES", Float.class,
+      "Fold changes between 0 and this fold change are not visualized at all.",
+      new Range<Float>(Float.class, "{[0.0,1000.0]}"),0.5f, "Don't visualize fold changes between ±");
+
   
   
   public static Option<Color> COLOR_FOR_MINIMUM_FOLD_CHANGE = new Option<Color>("COLOR_FOR_MINIMUM_FOLD_CHANGE", Color.class,
@@ -78,7 +83,7 @@ public interface PathwayVisualizationOptions extends KeyProvider {
   public static final OptionGroup PATHWAY_COLORING_OPTIONS = new OptionGroup(
     "Pathway coloring options",
     "Define various options that control the fold-change dependent coloring of pathway nodes.",
-    FOLD_CHANGE_FOR_MAXIMUM_COLOR,
+    FOLD_CHANGE_FOR_MAXIMUM_COLOR, DONT_VISUALIZED_FOLD_CHANGES,
     COLOR_FOR_MINIMUM_FOLD_CHANGE, COLOR_FOR_NO_FOLD_CHANGE, COLOR_FOR_MAXIMUM_FOLD_CHANGE, COLOR_FOR_NO_VALUE,
     CHANGE_NODE_SHAPE);
   

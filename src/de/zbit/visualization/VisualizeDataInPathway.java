@@ -56,6 +56,7 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.protein.ProteinModificationExpression;
+import de.zbit.graph.LineNodeRealizer;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
@@ -636,13 +637,19 @@ public class VisualizeDataInPathway {
     Map <ValueTriplet<String, String, SignalType>, StringBuffer> signalIdentifier2text = 
       new HashMap <ValueTriplet<String, String, SignalType>, StringBuffer>();
     
+    // Sort list by significance
+    List<T> sorted = NameAndSignals.sortBySignificance(nsList, experimentName, type);
+    int MAX_SIGNALS_TO_WRITE=5;
+    
     // Summarize all signals for all experiment and type combinations in one string
-    for (T ns : nsList) {
+    int counter=0;
+    for (T ns : sorted) {
       List<Signal> signals = NameAndSignal2PWTools.getSignals(ns);
       for (Signal sig: signals) {
         // Filter signals
         if ((experimentName==null || sig.getName().equals(experimentName)) &&
             (type==null || sig.getType().equals(type))) {
+          counter++;
           // Get existing NodeMap for signal
           ValueTriplet<String, String, SignalType> key = new ValueTriplet<String, String, SignalType>(tabName, sig.getName(), sig.getType());
           
@@ -654,8 +661,16 @@ public class VisualizeDataInPathway {
           }
           if (buff.length()>0) buff.append(StringUtil.newLine());
           buff.append(String.format("%s: %s", ns.getUniqueLabel(), sig.getNiceSignalString() ));
+          
+          // Break if we have many signals, but avoid "and 0 more".
+          if (counter>=MAX_SIGNALS_TO_WRITE && ((sorted.size()-counter)>0) ) {
+            if (buff.length()>0) buff.append(StringUtil.newLine());
+            buff.append(String.format("... and %s more.", (sorted.size()-counter) ));
+            break;
+          }
         }
       }
+      if (counter>=MAX_SIGNALS_TO_WRITE) break;
     }
     
     // Now we have a text for each signal we want to write to the node.
@@ -886,6 +901,9 @@ public class VisualizeDataInPathway {
     MergeType sigMerge = IntegratorUITools.getMergeTypeSilent(type);
     Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
     SignalColor recolorer = new SignalColor(nsList, experimentName, type);
+    Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZED_FOLD_CHANGES.getValue(prefs);
+    Color forNothing = PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs);
+    if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
     
     int changedNodes = 0;
@@ -921,7 +939,13 @@ public class VisualizeDataInPathway {
         
         nl.setModel(NodeLabel.SIDES);
         nl.setPosition(NodeLabel.S);
-        nl.setBackgroundColor(recolorer.getColor(signalValue));
+        Color color;
+        if ((type.equals(SignalType.FoldChange)) && Math.abs(signalValue)<ignoreFC) {
+          color = forNothing;
+        } else {
+          color = recolorer.getColor(signalValue);
+        }
+        nl.setBackgroundColor(color);
         nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NODE_WIDTH);
         nl.setContentHeight(boxHeight);
         nl.setContentWidth(nr.getWidth());
@@ -966,6 +990,8 @@ public class VisualizeDataInPathway {
     // The protein mod. box height is required to calc. the dna methylation bar height
     int protBoxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     float maxFC = PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR.getValue(prefs);
+    Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZED_FOLD_CHANGES.getValue(prefs);
+    if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
     
     // Prepare maps and required classes
     // XXX: Fixed MergeType for DNA-m data. Must be pValues in here.
@@ -983,7 +1009,6 @@ public class VisualizeDataInPathway {
     double maxSignalValue = minMax[1]+minMax[0];
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
     
-    // TODO: If fold change, always maxWidth and change color.
     // TODO: Better show pValue AND fold-change!
     // (via position: left/right of node OR color).
     LinearRescale rescale = new LinearRescale(0, maxFC, 0, halfWidth);
@@ -999,40 +1024,47 @@ public class VisualizeDataInPathway {
       for (T ns: nsForNode) {
         double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
         if (Double.isNaN(signalValue)) continue;
-        else signalValue+=minMax[0];
-        
-        NodeLabel nl = nr.createNodeLabel();
-        
         
         // TODO: Write signals to nodes?
         
         // Remember what we visualized
         ValuePair<VisualizedData, NameAndSignals> visNS = new ValuePair<VisualizedData, NameAndSignals>(visData, ns);
-        nl.setUserData(visNS);
         
-        nl.setModel(NodeLabel.FREE);
-        nl.setPosition(NodeLabel.W);
-        nl.setBackgroundColor(nr.getLineColor());
-        nl.setLineColor(nl.getBackgroundColor());
-        nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
-        nl.setContentHeight(barHeight);
-        nl.setDistance(0); // Adjacent to node
-        
-        // Set box size dependent on signal value
-        if (type.equals(SignalType.FoldChange)) {
-          double rescaledSignal = rescale.rescale(Math.abs(signalValue)).doubleValue();
-          nl.setContentWidth(rescaledSignal);
+        NodeLabel nl = null;
+        if (!(type.equals(SignalType.FoldChange)) || Math.abs(signalValue)>=ignoreFC) {
+          nl = nr.createNodeLabel();
+          nl.setUserData(visNS);
           
-          if (signalValue>=0) {
-            // negative fc => draw left of middle
-            nl.setFreeOffset(-halfWidth, 0); // = left border
+          nl.setModel(NodeLabel.FREE);
+          nl.setPosition(NodeLabel.W);
+          nl.setBackgroundColor(nr.getLineColor());
+          nl.setLineColor(nl.getBackgroundColor());
+          nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
+          nl.setContentHeight(barHeight);
+          nl.setDistance(0); // Adjacent to node
+          
+          // Set box size dependent on signal value
+          if (type.equals(SignalType.FoldChange)) {
+            double rescaledSignal;
+            if (Math.abs(signalValue)<ignoreFC) {
+              rescaledSignal = 0;
+            } else {
+              rescaledSignal = rescale.rescale(Math.abs(signalValue)).doubleValue();
+            }
+            nl.setContentWidth(rescaledSignal);
+            
+            if (signalValue>=0) {
+              // negative fc => draw left of middle
+              nl.setFreeOffset(-halfWidth, 0); // = left border
+            } else {
+              // positive fc => draw right of middle
+              nl.setFreeOffset(-halfWidth-rescaledSignal, 0); // = left border
+            }
           } else {
-            // positive fc => draw right of middle
-            nl.setFreeOffset(-halfWidth-rescaledSignal, 0); // = left border
+            // pValues
+            nl.setContentWidth(Math.min(Math.max((signalValue+minMax[0])/maxSignalValue, 0), 1)*maxWidth); // =width
+            nl.setFreeOffset(-nl.getContentWidth(), 0); // =left border
           }
-        } else {
-          nl.setContentWidth(Math.min(Math.max(signalValue/maxSignalValue, 0), 1)*maxWidth); // =width
-          nl.setFreeOffset(-nl.getContentWidth(), 0); // =left border
         }
         
         if (showBorderForDNAmethylationBox) {
@@ -1053,8 +1085,12 @@ public class VisualizeDataInPathway {
           nr.addLabel(border);
         }
         
-        nr.addLabel(nl);
+        if (nl!=null) nr.addLabel(nl);
       }
+      
+      // Write all those signals to node annotations
+      // TODO: Observe behaviour on probe-based data; write only top-5 dysregulated/min-pVal
+      writeSignalsToNode(n, nsForNode, tabName, experimentName, type);
       changedNodes++;
     }
     
@@ -1079,6 +1115,9 @@ public class VisualizeDataInPathway {
     boolean inputContainedMicroRNAnodes=false;
     boolean inputContainedmRNAnodes=false;
     MergeType sigMerge = IntegratorUITools.getMergeTypeSilent(type);
+    Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZED_FOLD_CHANGES.getValue(prefs);
+    Color forNothing = PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs);
+    if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
     
     DataMap nsMapper     = tools.getMap(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
     DataMap parentMapper = tools.getMap(GraphMLmapsExtended.NODE_BELONGS_TO);
@@ -1099,7 +1138,16 @@ public class VisualizeDataInPathway {
         else inputContainedmRNAnodes=true;
         double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
         if (Double.isNaN(signalValue)) continue;
-        Color newColor = recolorer.getColor(signalValue);
+        Color newColor;
+        if ((type.equals(SignalType.FoldChange)) && Math.abs(signalValue)<ignoreFC) {
+          newColor = forNothing;
+          if (graph.getRealizer(n) instanceof LineNodeRealizer && forNothing.equals(Color.WHITE)) {
+            // Lines are completely invisible when white...
+            newColor = Color.BLACK;
+          }
+        } else {
+          newColor = recolorer.getColor(signalValue);
+        }
         
         // Recolor node and remember to don't gray it out.
         graph.getRealizer(n).setFillColor(newColor);
