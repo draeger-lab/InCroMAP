@@ -181,7 +181,7 @@ public class Signal implements Serializable, Comparable<Object>  {
   public String toString() {
     StringBuffer r = new StringBuffer();
     r.append("[Signal ");
-    if (name!=null && name.length()>0) {
+    if (name!=null && name.length()>0 && !name.equals(NameAndSignals.defaultExperimentName)) {
       r.append("'"+name+"' ");
     }
     if (!type.equals(SignalType.Unknown)) {
@@ -270,6 +270,33 @@ public class Signal implements Serializable, Comparable<Object>  {
         }
       }
     }
+    
+    if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(type);
+    
+    // Merge the signals (e.g., taking the mean)
+    double sig = calculate(m, list);
+    return new Signal(sig, experimentName, type);
+  }
+  
+  /**
+   * Returns the merges value of one signal.
+   * @param sigList
+   * @param m
+   * @param experimentName
+   * @param type
+   * @return null if specified signal is not in list.
+   */
+  public static Signal mergeSignal(Collection<Signal> sigList, MergeType m, String experimentName, final SignalType type) {
+    List<Number> list = new ArrayList<Number>();
+    
+    // Collect all compatible signals
+    for (Signal signal: sigList) {
+      if ((experimentName==null || signal.getName().equals(experimentName)) &&
+          (type==null || signal.getType().equals(type)) && signal.signal!=null) {
+        list.add(signal.signal);
+      }
+    }
+    if (list.size()<1) return null;
     
     if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(type);
     

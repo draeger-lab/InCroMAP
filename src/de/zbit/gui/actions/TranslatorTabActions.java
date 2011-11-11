@@ -102,6 +102,7 @@ public class TranslatorTabActions implements ActionListener{
    */
   public static enum TPAction implements ActionCommand {
     VISUALIZE_DATA,
+    VISUALIZE_ENRICHMENT_PVALUES,
     ADD_MIRNAS,
     HIGHLIGHT_ENRICHED_GENES,
     SEARCH_GRAPH,
@@ -110,6 +111,7 @@ public class TranslatorTabActions implements ActionListener{
     REMOVE_PROTEIN_MODIFICATION_BOXES,
     REMOVE_MRNA_VISUALIZATION,
     REMOVE_DNA_METHYLATION_BOXES;
+    // TODO: remove enrichment-p-value coloring
     
     /*
      * (non-Javadoc)
@@ -122,6 +124,8 @@ public class TranslatorTabActions implements ActionListener{
         return "Search";
       case ADD_MIRNAS:
         return "Add miRNAs";
+      case VISUALIZE_ENRICHMENT_PVALUES:
+        return "Color pathway-references according enrichment"; //"Visualize enrichment p-values";
         
       case REMOVE_MIRNA_NODES:
         return "Remove miRNA nodes";
@@ -145,7 +149,9 @@ public class TranslatorTabActions implements ActionListener{
     public String getToolTip() {
       switch (this) {
         case VISUALIZE_DATA:
-          return "Color nodes accoring to fold changes.";
+          return "Color nodes accoring to fold changes or p-values.";
+        case VISUALIZE_ENRICHMENT_PVALUES:
+          return "Color pathway-reference nodes accoring to p-values or signals of enriched genes.";
         case HIGHLIGHT_ENRICHED_GENES:
           return "Highlight genes from source enrichment.";
         case SEARCH_GRAPH:
@@ -189,6 +195,8 @@ public class TranslatorTabActions implements ActionListener{
     KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(parent);
     visualize.add(GUITools.createJMenuItem(al2,
         TPAction.VISUALIZE_DATA, UIManager.getIcon("ICON_PENCIL_16")));
+    visualize.add(GUITools.createJMenuItem(al2,
+      TPAction.VISUALIZE_ENRICHMENT_PVALUES, UIManager.getIcon("ICON_PENCIL_16")));
     visualize.add(GUITools.createJMenuItem(this,
       TPAction.ADD_MIRNAS, UIManager.getIcon("ICON_PENCIL_16")));
     bar.add(new JDropDownButton(UIManager.getIcon("ICON_PENCIL_16"), visualize));

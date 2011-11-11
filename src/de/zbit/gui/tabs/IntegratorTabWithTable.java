@@ -36,11 +36,15 @@ import javax.swing.JMenuBar;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 
+import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal;
+import de.zbit.data.Signal.SignalType;
 import de.zbit.data.TableResult;
 import de.zbit.gui.BaseFrame.BaseAction;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.customcomponents.TableResultTableModel;
+import de.zbit.gui.table.JTableFilter;
 import de.zbit.io.CSVWriter;
 import de.zbit.io.SBFileFilter;
 import de.zbit.parser.Species;
@@ -269,5 +273,34 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
     if (nsTab.equals(this)) return; // do not accept yourself
     if (tableChangeListeners == null) tableChangeListeners = new HashSet<IntegratorTabWithTable>();
     tableChangeListeners.add(nsTab);
+  }
+  
+  /**
+   * Try to put a resonable intial selection into a {@link JTableFilter}.
+   * @param f
+   */
+  public void setDefaultInitialSelectionOfJTableFilter(JTableFilter f) {
+    if (getExampleData() instanceof NameAndSignals) {
+      NameAndSignals ns = ((NameAndSignals)getExampleData());
+      List<Signal> signals = ns.getSignals();
+      if (signals!=null && signals.size()>0) {
+        Signal preselection = signals.get(0);
+        // Search fold change
+        Iterator<Signal> it = signals.iterator();
+        while (it.hasNext() && !(preselection=it.next()).getType().equals(SignalType.FoldChange));
+        if (!preselection.getType().equals(SignalType.FoldChange)) {
+          // look for p-value
+          it = signals.iterator();
+          while (it.hasNext() && !(preselection=it.next()).getType().equals(SignalType.pValue));
+        }
+        
+        // Set initial selection
+        if (preselection.getType().equals(SignalType.pValue)) {
+          f.setInitialSelection(NameAndSignals.signal2columnName(preselection), "<", "0.05");
+        } else {
+          f.setInitialSelection(NameAndSignals.signal2columnName(preselection), "|>=|", "1.7");
+        }
+      }
+    }
   }
 }

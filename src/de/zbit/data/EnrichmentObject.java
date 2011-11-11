@@ -87,6 +87,11 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
   public final static String idKey = "id";
   
   /**
+   * This name is used as experiment name in signals.
+   */
+  public final static String signalNameForPvalues = "Enrichment";
+  
+  /**
    * @see #EnrichmentObject(String, String, int, int, int, int, double, double, Collection)
    * @param name
    */
@@ -179,7 +184,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    */
   public Number getPValue() {
     // Try to get the cached pValue
-    Signal sig = getSignal(SignalType.pValue, defaultExperimentName);
+    Signal sig = getSignal(SignalType.pValue, signalNameForPvalues);
     Double pVal = sig!=null?sig.getSignal().doubleValue():null;
     
     // Calculate the pValue if it is not cached
@@ -210,14 +215,14 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    */
   private void setPValue(double pValue) {
     unsetPValue();
-    addSignal(pValue, defaultExperimentName, SignalType.pValue);
+    addSignal(pValue, signalNameForPvalues, SignalType.pValue);
   }
 
   private void unsetPValue() {
-    removeSignals(defaultExperimentName, SignalType.pValue);
+    removeSignals(signalNameForPvalues, SignalType.pValue);
   }
   private void unsetQValue() {
-    removeSignals(defaultExperimentName, SignalType.qValue);
+    removeSignals(signalNameForPvalues, SignalType.qValue);
   }
   
   /**
@@ -253,7 +258,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    * @return the qValue
    */
   public Number getQValue() {
-    return getSignalValue(SignalType.qValue, defaultExperimentName);
+    return getSignalValue(SignalType.qValue, signalNameForPvalues);
   }
 
   /**
@@ -262,7 +267,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    */
   public void setQValue(double qValue) {
     unsetQValue();
-    addSignal(qValue, defaultExperimentName, SignalType.qValue);
+    addSignal(qValue, signalNameForPvalues, SignalType.qValue);
   }
 
   /**
@@ -327,7 +332,8 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    */
   @Override
   public String toString() {
-    return Arrays.deepToString(toArray());
+    return getSignals().toString();
+    //return Arrays.deepToString(toArray());
   }
   
   public Object[] toArray() {

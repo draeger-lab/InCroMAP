@@ -360,14 +360,18 @@ public class NameAndSignal2PWTools {
     // Get GeneID 2 Node map
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
     Map<String, List<Node>> mi2n_map = tools.getRNA2NodeMap();
+    Map<String, List<Node>> pw2n_map = tools.getPathwayReferenceNodeMap();
     
     // If pathway-centered, preprocess data
     Map<T, Node> ns2n = null;
-    if (pathwayCentered) {
+    if (pathwayCentered && !EnrichmentObject.class.isAssignableFrom(NameAndSignals.getType(nsList))) {
+      // On node may stand for multiple genes => Pathway center them.
+      // We can NOT merge EnrichmentObjects...
+      
       // 1. Merge all lists according to mergeType to get one NS for each node
       ns2n = new HashMap<T, Node>();
       Map<Node, Set<T>> n2ns_raw = getNodeToNameAndSignalMapping(nsList);
-      for ( Entry<Node, Set<T>> e : n2ns_raw.entrySet()) {
+      for (Entry<Node, Set<T>> e : n2ns_raw.entrySet()) {
         ns2n.put(NameAndSignals.merge(e.getValue(), sigMerge), e.getKey());
       }
       // 2. Remember map and change nsList pointer. Use map for "Get Node(s) for current NameAndSignals"
@@ -388,6 +392,10 @@ public class NameAndSignal2PWTools {
         Node miNode = VisualizeMicroRNAdata.getMicroRNAnode(mi2n_map, (miRNA) ns, graph);
         if (miNode==null) continue; // Contains no node in the current graph 
         node = Arrays.asList(new Node[]{miNode});
+      } else if (ns instanceof EnrichmentObject) {
+        Object keggID = ns.getData(EnrichmentObject.idKey);
+        if (keggID==null) continue;
+        node = pw2n_map.get(keggID.toString().toLowerCase().trim());
       } else {
         // Get Node(s) for mRNA
         node = getNodesForNameAndSignal(gi2n_map, ns);
@@ -408,7 +416,7 @@ public class NameAndSignal2PWTools {
                 // Take "NODE_BELONGS_TO", because raw miRNA have 1)NameAndSignal and 2)isMiRNA
                 // annotated after addition, BUT they dont't belong to any visualized signal.
                 Object nBelongsTo = tools.getInfo(n, GraphMLmapsExtended.NODE_BELONGS_TO);
-                if (nBelongsTo!=null || nIsCopy!=null) {
+                if ((nBelongsTo!=null || nIsCopy!=null)&& false ) { // &&false because node splitting has forcecully removed.
                   // Node already belongs to any nameAndSignal or even is already a splitted group node
                   Node groupNode = n;
                   if (nIsCopy!=null && ((Boolean)nIsCopy) ) {
@@ -491,6 +499,9 @@ public class NameAndSignal2PWTools {
         identifier = tools.getInfo(n, GraphMLmaps.NODE_GENE_ID);
       } else if (desiredIdentifier==0) { //Names        
         identifier = tools.getInfo(n, GraphMLmaps.NODE_LABEL);
+      } else if (desiredIdentifier==3) { //Names        
+        identifier = tools.getInfo(n, GraphMLmaps.NODE_KEGG_ID);
+        if (identifier!=null) identifier = identifier.toString().toLowerCase().trim();
       }
       
       // Split and and to identifiers list
@@ -502,6 +513,8 @@ public class NameAndSignal2PWTools {
             Object toAdd = id;
             if (desiredIdentifier==1) { //GeneIDs 
               toAdd = Integer.parseInt(id);
+            } else if (desiredIdentifier==3) { //KEGG Ids lowercased and trimmed 
+              toAdd = id.toLowerCase().trim();
             }
             identifiers.add(toAdd);
           } catch (NumberFormatException e) {
@@ -537,16 +550,16 @@ public class NameAndSignal2PWTools {
    * the corresponding genes in enrichment object.
    * @param <T>
    * @param ns
-   * @return a list with signals conained in <code>ns</code>
+   * @return a list with signals contained in <code>ns</code>
    */
   @SuppressWarnings("rawtypes")
   public static <T extends NameAndSignals> List<Signal> getSignals(T ns) {
-    List<Signal> signals = ns.getSignals();
+    List<Signal> signals = new ArrayList<Signal>(ns.getSignals()); // CLONE the list!
     if (ns instanceof EnrichmentObject) {
-      // In case of enrichment objects, get signals of source (mRNAs).
+      // In case of enrichment objects, get signals of source (mRNAs) - in addition.
       Collection c = ((EnrichmentObject)ns).getGenesInClass();
       if (c!=null && c.size()>0 && c.iterator().next() instanceof NameAndSignals) {
-        signals.clear();
+//        signals.clear();
         for (Object nas : c) {
           signals.addAll(((NameAndSignals)nas).getSignals());
         }

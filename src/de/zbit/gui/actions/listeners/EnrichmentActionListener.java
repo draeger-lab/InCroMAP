@@ -251,6 +251,7 @@ public class EnrichmentActionListener implements ActionListener {
     
     // Create tab
     String eName = Enrichments.valueOf(e.getActionCommand()).getName();
+    eName = StringUtil.makeUnique(IntegratorUI.getInstance().getTabNames(), eName);
     NameAndSignalsTab tab = new NameAndSignalsTab(IntegratorUI.getInstance(), worker, loadingString, species);
     String tip = eName + " for " + geneList.size() + " objects";
     if (source!=null && source.getName()!=null) tip+= " from \"" + source.getName() + "\".";
@@ -315,8 +316,8 @@ public class EnrichmentActionListener implements ActionListener {
         }
       }
       if (showFilterDialog) {
-        JTableFilter filt = JTableFilter.showDialog(source, (JTable) source.getVisualization(),
-            "Apply filter to table to select genes for enrichment");
+        JTableFilter filt = showJTableFilter(source);
+        
         if (filt==null) return null;
         geneList = source.getSelectedItems(filt.getSelectedRows());
       }
@@ -365,14 +366,8 @@ public class EnrichmentActionListener implements ActionListener {
         for (Object ta : tabs) {
           IntegratorTabWithTable tab = (IntegratorTabWithTable) ta;
           
-          String typeName = IntegratorUI.getShortTypeNameForNS(tab.getDataContentType());
-          if (typeName==null) typeName = ""; else typeName += "-";
-          String fileName = tab.getName();
-          if (fileName==null) fileName = ""; else fileName = " (\"" + fileName + "\")";
-          String moreTableInfoString = String.format("%stable%s", typeName, fileName); 
+          JTableFilter filt = showJTableFilter(tab);
           
-          JTableFilter filt = JTableFilter.showDialog(tab, (JTable) tab.getVisualization(),
-          String.format("Apply filter to %s to select genes for enrichment", moreTableInfoString));
           if (filt==null) return null;
           List<?> newItems = tab.getSelectedItems(filt.getSelectedRows());
           // Check for missing miRNA targets and annotate
@@ -398,6 +393,21 @@ public class EnrichmentActionListener implements ActionListener {
     }
     
     return geneList;
+  }
+
+  public JTableFilter showJTableFilter(IntegratorTabWithTable tab) {
+    String typeName = IntegratorUI.getShortTypeNameForNS(tab.getDataContentType());
+    if (typeName==null) typeName = ""; else typeName += "-";
+    String fileName = tab.getName();
+    if (fileName==null) fileName = ""; else fileName = " (\"" + fileName + "\")";
+    String moreTableInfoString = String.format("%stable%s", typeName, fileName);
+    String title = String.format("Apply filter to %s to select genes for enrichment", moreTableInfoString);
+    
+    JTableFilter filt = new JTableFilter((JTable) tab.getVisualization());
+    source.setDefaultInitialSelectionOfJTableFilter(filt);
+    filt.setDescribingLabel(title);
+    filt = JTableFilter.showDialog(tab, filt,title);
+    return filt;
   }
 
   /**

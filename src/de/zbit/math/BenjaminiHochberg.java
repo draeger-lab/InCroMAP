@@ -86,7 +86,7 @@ public class BenjaminiHochberg implements FDRCorrection {
    */
   public <EnrichIDType> void setQvalue(List<EnrichmentObject<EnrichIDType>> enrichments) {
     // Sort ascending
-    Collections.sort(enrichments, Signal.getComparator(EnrichmentObject.defaultExperimentName, SignalType.pValue));
+    Collections.sort(enrichments, Signal.getComparator(EnrichmentObject.signalNameForPvalues, SignalType.pValue));
     int m = enrichments.size();
     
     // Biggest value doesn't change

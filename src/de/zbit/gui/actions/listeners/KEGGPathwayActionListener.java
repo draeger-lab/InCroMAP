@@ -156,8 +156,18 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       // Coming mostly from a click on the toolbar-button in TranslatorPanelTabs
       Species spec = TranslatorTabActions.getSpeciesOfPathway((TranslatorPanel) source, IntegratorUITools.organisms);
       ValueTriplet<NameAndSignalsTab, String, SignalType>  vt
-        = IntegratorUITools.showSelectExperimentBox(IntegratorUI.getInstance(), null,
+        = IntegratorUITools.showSelectExperimentBox(null,
             "Please select an observation to visualize in this pathway.", spec);
+       if (vt!=null) {
+         visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
+       }
+       
+    } else if (e.getActionCommand().equals(TPAction.VISUALIZE_ENRICHMENT_PVALUES.toString()) &&
+        source instanceof TranslatorPanel) {
+      // Coming mostly from a click on the toolbar-button in TranslatorPanelTabs
+      Species spec = TranslatorTabActions.getSpeciesOfPathway((TranslatorPanel) source, IntegratorUITools.organisms);
+      ValueTriplet<NameAndSignalsTab, String, SignalType>  vt 
+      = IntegratorUITools.showSelectPathwayEnrichmentBox(spec, "Please select an observation to visualize in this pathway.");
        if (vt!=null) {
          visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
        }
@@ -221,7 +231,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
               }
             }
             Species spec = TranslatorTabActions.getSpeciesOfPathway(source, IntegratorUITools.organisms);
-            vt = IntegratorUITools.showSelectExperimentBox(IntegratorUI.getInstance(), st,
+            vt = IntegratorUITools.showSelectExperimentBox(st,
               "Please select an observation to visualize in this pathway.", spec);
           }
           

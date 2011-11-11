@@ -113,7 +113,7 @@ public class BonferroniHolm implements FDRCorrection {
     if (enrichments.size()<1) return;
     
     // Sort ascending
-    Collections.sort(enrichments, Signal.getComparator(EnrichmentObject.defaultExperimentName, SignalType.pValue));
+    Collections.sort(enrichments, Signal.getComparator(EnrichmentObject.signalNameForPvalues, SignalType.pValue));
     int m = sourceListSize==0?enrichments.size():Math.max(sourceListSize, enrichments.size());
     
     // Apply (pVal*N/Rank) BH correction

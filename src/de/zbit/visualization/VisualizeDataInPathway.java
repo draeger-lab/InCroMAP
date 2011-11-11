@@ -46,6 +46,7 @@ import y.base.NodeMap;
 import y.view.Graph2D;
 import y.view.NodeLabel;
 import y.view.NodeRealizer;
+import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
@@ -203,7 +204,7 @@ public class VisualizeDataInPathway {
    */
   public boolean[] getVisualizedDataTypes() {
     // Init array with default values
-    boolean[] visualizedDataTypes = new boolean[4];
+    boolean[] visualizedDataTypes = new boolean[5];
     Arrays.fill(visualizedDataTypes, Boolean.FALSE);
     
     // Get list of visualized data
@@ -221,6 +222,8 @@ public class VisualizeDataInPathway {
         visualizedDataTypes[2]=true;
       } else if (DNAmethylation.class.isAssignableFrom(t)) {
         visualizedDataTypes[3]=true;
+      } else if (EnrichmentObject.class.isAssignableFrom(t)) {
+        visualizedDataTypes[4]=true;
       } else {
         // EVERYTHING ELSE IS ALSO VISUALIZED AS NODE COLOR
         visualizedDataTypes[0]=true;
@@ -260,6 +263,8 @@ public class VisualizeDataInPathway {
       return visualizedDataTypes[2];
     } else if (DNAmethylation.class.isAssignableFrom(dt)) {
       return visualizedDataTypes[3];
+    } else if (EnrichmentObject.class.isAssignableFrom(dt)) {
+      return visualizedDataTypes[4];
     } else {
       // In doubt, return false.
       //return false;
@@ -824,7 +829,11 @@ public class VisualizeDataInPathway {
         // Override with a fixed merge type for DNA methylation data
         merge = MergeType.NormalizedSumOfLog2Values;
       }
-      nsList = NameAndSignals.geneCentered(nsList, merge);
+      
+      // Gene-center everything BUT enrichment objects.
+      if (!EnrichmentObject.class.isAssignableFrom(inputType)) {
+        nsList = NameAndSignals.geneCentered(nsList, merge);
+      }
     }
     
     // Branch between mRNA and miRNA (=> Node color) and other types (=> labels)
@@ -839,7 +848,7 @@ public class VisualizeDataInPathway {
       
     } else {
       if (!(mRNA.class.isAssignableFrom(inputType) || miRNA.class.isAssignableFrom(inputType)
-          || PairedNS.class.isAssignableFrom(inputType))) {
+          || PairedNS.class.isAssignableFrom(inputType) || EnrichmentObject.class.isAssignableFrom(inputType))) {
         log.warning("No visualization method implemented for " + inputType.getSimpleName() + ". Using node-color-visualization.");
       }
     
@@ -1136,7 +1145,15 @@ public class VisualizeDataInPathway {
         if (ns==null) continue;
         if (ns instanceof miRNA) inputContainedMicroRNAnodes=true;
         else inputContainedmRNAnodes=true;
-        double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
+        
+        // Novel: Also consider referenced things
+        List<Signal> signals = NameAndSignal2PWTools.getSignals(ns);
+        Signal sig = Signal.mergeSignal(signals, sigMerge, experimentName, type);
+        if (sig==null) continue;
+        double signalValue = sig.getSignal().doubleValue();
+        //---
+        
+        //double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
         if (Double.isNaN(signalValue)) continue;
         Color newColor;
         if ((type.equals(SignalType.FoldChange)) && Math.abs(signalValue)<ignoreFC) {

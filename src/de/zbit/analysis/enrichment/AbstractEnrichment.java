@@ -428,7 +428,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     }
     
     // Initially sort returned list by pValue
-    Collections.sort(ret, Signal.getComparator(NameAndSignals.defaultExperimentName, SignalType.pValue));
+    Collections.sort(ret, Signal.getComparator(EnrichmentObject.signalNameForPvalues, SignalType.pValue));
     
     return ret;
   }

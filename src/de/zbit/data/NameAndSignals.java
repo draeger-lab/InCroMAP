@@ -211,6 +211,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
+   * Be careful, this returns the internal data structure
+   * and changes to it also change this ns!!!
    * @return the list of signals.
    * @see #signals
    */
@@ -223,6 +225,15 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @return
    */
   public Collection<ValuePair<String, SignalType>> getSignalNames() {
+    return getSignalNames(signals);
+  }
+  
+  /**
+   * Returns a list of available Signal Names and Types.
+   * @param signals
+   * @return
+   */
+  public static Collection<ValuePair<String, SignalType>> getSignalNames(Iterable<Signal> signals) {
     Set<ValuePair<String, SignalType>> sn = new HashSet<ValuePair<String, SignalType>>();
     if (signals==null) return sn;
     for (Signal sig : signals) {
@@ -440,6 +451,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   /**
    * Merge a collection of objects to one, e.g., by concatenating strings
    * and taking the {@link MergeType} (e.g. mean) of all numeric values.
+   * <p>CAREFULL: FAILS for classes that have private variables OTHER
+   * than signals and additional data  (e.g. {@link EnrichmentObject})!
    * @param <T> the implementing class ({@link NameAndSignals} derived)
    * @param c collection of objects to merge
    * @param m {@link MergeType} describing how to merge the signals.
@@ -457,10 +470,12 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     // Collect all Signals, Names and additional data
     for (T ns : c) {
       // Create a new instance of T (if not yet done so)
-      if (newObject==null) try {
-        newObject = (T) ns.clone();
-      } catch (CloneNotSupportedException e) {
-        log.log(Level.SEVERE,"Could not clone extending object.", e);
+      if (newObject==null) {
+        try {
+          newObject = (T) ns.clone();
+        } catch (CloneNotSupportedException e) {
+          log.log(Level.SEVERE,"Could not clone extending object.", e);
+        }
       }
       
       // Collect names and signals
@@ -530,6 +545,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     int idType = getIdentifierType(ns);
     if (idType==1) {
       return ((GeneID)ns).getGeneID();
+    } else if (idType==3) {
+      return ns.getData(EnrichmentObject.idKey);
     } else {
       return ns.getName();
     }
@@ -558,12 +575,17 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   public static int getIdentifierType(Class<? extends NameAndSignals> nsClass) {
     if (GeneID.class.isAssignableFrom(nsClass) &&
         !miRNA.class.isAssignableFrom(nsClass)) {
+      // Label
       return 1;
       // Method is called to identify corresponding genes in a pathway
       // => We need the geneID for ProteinModificationExpression
 //    } else if (ProteinModificationExpression.class.isAssignableFrom(nsClass)) {
 //      return 2;
+    } else if (EnrichmentObject.class.isAssignableFrom(nsClass)) {
+      // enrichment (e.g. kegg) id
+      return 3;
     } else {
+      // GeneID
       return 0;
     }
   }
@@ -970,7 +992,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       return StringUtil.formatOptionName(extensionNames[columnIndex-1]);
     else if (columnIndex >= signalStart && columnIndex<afterSignals) {
       Signal sig = signals.get(columnIndex-signalStart);
-      return sig.getName() + " [" + sig.getType().toString() + "]";
+      return signal2columnName(sig);
     } else if (columnIndex >= afterSignals && columnIndex<afterSignals+getNumberOfAdditionalData()) {
       columnIndex-=afterSignals;
       Iterator<String> it = additional_data.keySet().iterator();
@@ -984,6 +1006,15 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       }
     }
     return "";
+  }
+
+  /**
+   * Makes a string out of a signal. Usually "SignalName [type]"
+   * @param sig
+   * @return
+   */
+  public static String signal2columnName(Signal sig) {
+    return sig.getName() + " [" + sig.getType().toString() + "]";
   }
   
   /* (non-Javadoc)
@@ -1310,7 +1341,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @param o any iterable, array or combinations of both over {@link NameAndSignals} or derived classes.
    * @return any {@link NameAndSignals} derived class or {@link NameAndSignals#getClass()} if unknown.
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings({ "unchecked" })
   public static Class<? extends NameAndSignals> getType(Object o) {
     
     if (o==null) {
@@ -1326,9 +1357,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         return (getType(Array.get(o, 0)));
       }
       
-    } else if (o instanceof EnrichmentObject || EnrichmentObject.class.isAssignableFrom(o.getClass())) {
-      // Recurse into enriched objects
-      return getType(((EnrichmentObject)o).getGenesInClass());
+      // EnrichmentObjects now can be used to color pathway-reference nodes
+//    } else if (o instanceof EnrichmentObject || EnrichmentObject.class.isAssignableFrom(o.getClass())) {
+//      // Recurse into enriched objects
+//      return getType(((EnrichmentObject)o).getGenesInClass());
       
     } else if (o instanceof NameAndSignals || NameAndSignals.class.isAssignableFrom(o.getClass())) {
       return (Class<? extends NameAndSignals>) o.getClass();

@@ -96,6 +96,7 @@ import de.zbit.gui.prefs.MergeTypeOptions;
 import de.zbit.gui.prefs.SignalOptionPanel;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
+import de.zbit.integrator.NameAndSignal2PWTools;
 import de.zbit.io.DNAMethylationReader;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.OpenFile;
@@ -471,6 +472,9 @@ public class IntegratorUITools {
    */
   public static <T extends NameAndSignals> JLabeledComponent createSelectExperimentBox(JLabeledComponent jc, T ns) {
     Collection<ValuePair<String, SignalType>> c = ns.getSignalNames();
+    if (ns instanceof EnrichmentObject) {
+      c = NameAndSignals.getSignalNames(NameAndSignal2PWTools.getSignals(ns));
+    }
     jc.setHeaders(c);
     return jc;
   }
@@ -499,23 +503,21 @@ public class IntegratorUITools {
    * Shows a signal selection box.
    * <p>Note: {@link DNAmethylation} is filtered for p-values only!</p>
    * @param <T>
-   * @param ui
    * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.  
    */
-  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorUI ui) {
-    return showSelectExperimentBox(ui, null);
+  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox() {
+    return showSelectExperimentBox( null);
   }
   /**
    * Shows a signal selection box.
    * <p>Note: {@link DNAmethylation} is filtered for p-values only!</p>
    * @param <T>
-   * @param ui
    * @param initialSelection
    * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.
    */
   @SuppressWarnings("rawtypes")
-  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorUI ui, IntegratorTab initialSelection) {
-    return showSelectExperimentBox(ui, initialSelection, null, null);
+  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorTab initialSelection) {
+    return showSelectExperimentBox(initialSelection, null, (Species)null);
   }
   
 
@@ -546,10 +548,12 @@ public class IntegratorUITools {
    * data types will be returned.
    * @return
    */
+  @SuppressWarnings("rawtypes")
   public static List<LabeledObject<NameAndSignalsTab>> getNameAndSignalTabs(Species species, boolean onlyWithSignals, Class<? extends NameAndSignals>... onlyDataTypes) {
-    if (onlyDataTypes!=null && onlyDataTypes.length==1 && onlyDataTypes[0]==null) onlyDataTypes = null;
+    if (onlyDataTypes!=null && ((onlyDataTypes.length==1 && onlyDataTypes[0]==null) || onlyDataTypes.length==0 )) onlyDataTypes = null;
     IntegratorUI ui = IntegratorUI.getInstance();
     List<LabeledObject<NameAndSignalsTab>> datasets = new LinkedList<LabeledObject<NameAndSignalsTab>>();
+    boolean containsEnrichment = ArrayUtils.contains(onlyDataTypes, EnrichmentObject.class);
     for (int i=0; i<ui.getTabbedPane().getTabCount(); i++) {
       Component c = ui.getTabbedPane().getComponentAt(i);
       if (c instanceof NameAndSignalsTab) {
@@ -562,11 +566,20 @@ public class IntegratorUITools {
         
         //Class<?> cl = ((NameAndSignalsTab)c).getDataContentType(); 
         //if (cl.equals(mRNA.class) || cl.equals(miRNA.class)) {
-        if (((NameAndSignalsTab)c).getSourceTab()==null && // Data has not been derived, but read from disk!
-            ((NameAndSignals)((NameAndSignalsTab)c).getExampleData())!=null &&
+        if ((((NameAndSignalsTab)c).getSourceTab()==null || containsEnrichment) && // Data has not been derived, but read from disk!
+            ((NameAndSignals)((NameAndSignalsTab)c).getExampleData())!=null && // is not currently reading data
             (!onlyWithSignals || (onlyWithSignals && ((NameAndSignals)((NameAndSignalsTab)c).getExampleData()).hasSignals()))) {
+          String title = ui.getTabbedPane().getTitleAt(i);
+          // Unfortunately is misleading for integrated enrichments
+//          if (((NameAndSignalsTab)c).getDataContentType().equals(EnrichmentObject.class)) {
+//            // For enrichment-tabs, create label like "Pathway enrichment of 'mRNA-tab1'".
+//            if (((NameAndSignalsTab) c).getSourceTab()!=null) {
+//              String otherTitle = ((IntegratorTab)((NameAndSignalsTab) c).getSourceTab()).getTabName();
+//              title = String.format("%s of '%s'", title, otherTitle);
+//            }
+//          }
           datasets.add(new LabeledObject<NameAndSignalsTab>(
-              ui.getTabbedPane().getTitleAt(i), (NameAndSignalsTab) c));
+              title, (NameAndSignalsTab) c));
         }
       }
     }
@@ -672,7 +685,7 @@ public class IntegratorUITools {
   
   /**
    * Shows a signal selection box.
-   * <p>Note: {@link DNAmethylation} is filtered for p-values only!</p>
+   *
    * @param <T>
    * @param ui
    * @param initialSelection
@@ -680,19 +693,38 @@ public class IntegratorUITools {
    * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.
    */
   @SuppressWarnings("rawtypes")
-  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorUI ui, IntegratorTab initialSelection, String dialogTitle, Species filterForSpecies) {
+  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorTab initialSelection, String dialogTitle, Species filterForSpecies) {
+    // Create a list of available datasets
+    List<LabeledObject<NameAndSignalsTab>> datasets = getNameAndSignalTabsWithSignals(filterForSpecies);
+    
+    // Remove all DNA methylation datasets that contain no p-value signals
+    //IntegratorUITools.filterNSTabs(datasets, DNAmethylation.class, SignalType.pValue);//Keyword: DNAm-pValue
+    
+    return showSelectExperimentBox(initialSelection, dialogTitle, datasets);
+  }
+  /**
+   * Shows a signal selection box.
+   * 
+   * @param <T>
+   * @param initialSelection
+   * @param dialogTitle
+   * @param datasets datasets to show in selection box
+   * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.
+   */
+  @SuppressWarnings("rawtypes")
+  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorTab initialSelection, String dialogTitle, List<LabeledObject<NameAndSignalsTab>> datasets) {
+    IntegratorUI ui = IntegratorUI.getInstance();
     final JPanel jp = new JPanel(new BorderLayout());
     int initialSelIdx=0;
     
-    // Create a list of available datasets and get initial selection.
-    List<LabeledObject<NameAndSignalsTab>> datasets = getNameAndSignalTabsWithSignals();
-    // Remove all DNA methylation datasets that contain no p-value signals
-    //IntegratorUITools.filterNSTabs(datasets, DNAmethylation.class, SignalType.pValue);//Keyword: DNAm-pValue
-    for (int i=0; i<datasets.size(); i++) {
-      Component c = datasets.get(i).getObject();
-      if (initialSelection!=null && c.equals(initialSelection)) {
-        initialSelIdx=i;
-        break;
+    // Get initial selection.
+    if (initialSelection!=null) {
+      for (int i=0; i<datasets.size(); i++) {
+        Component c = datasets.get(i).getObject();
+        if (c.equals(initialSelection)) {
+          initialSelIdx=i;
+          break;
+        }
       }
     }
     
@@ -709,7 +741,7 @@ public class IntegratorUITools {
       // Add action listener to let user choose experiment from dataset
       NameAndSignals ns = (NameAndSignals)((NameAndSignalsTab)datasets.get(initialSelIdx).getObject()).getExampleData();
       final JLabeledComponent selExpBox = createSelectExperimentBox(ns);
-      IntegratorUITools.modifyExperimentBoxForDNAMethylation(selExpBox, ns);// <- Only show p-values for DNA methylation data
+      IntegratorUITools.modifyExperimentBoxForDNAMethylation(selExpBox, ns);// <- E.g. only show p-values for DNA methylation data
       jp.add(selExpBox, BorderLayout.SOUTH);
       dataSelect.addActionListener(new ActionListener() {
         @Override
@@ -717,7 +749,7 @@ public class IntegratorUITools {
           NameAndSignalsTab tab = (NameAndSignalsTab) ((LabeledObject)dataSelect.getSelectedItem()).getObject();
           NameAndSignals ns = (NameAndSignals)tab.getExampleData();
           createSelectExperimentBox(selExpBox, ns);
-          IntegratorUITools.modifyExperimentBoxForDNAMethylation(selExpBox, ns);// <- Only show p-values for DNA methylation data
+          IntegratorUITools.modifyExperimentBoxForDNAMethylation(selExpBox, ns);// <- E.g. only show p-values for DNA methylation data
         }
       });
       
@@ -1282,6 +1314,21 @@ public class IntegratorUITools {
     // Only show p-values for DNA methylation data
     if (ns instanceof DNAmethylation) IntegratorUITools.createSelectExperimentBox(expSel,ns,SignalType.pValue);
     //if (expSel.getHeaders()==null || expSel.getHeaders().length<1) expSel = null;
+  }
+
+  /**
+   * Let's the user choose a pathway-enrichment tab and p-value. 
+   * @param spec
+   * @param dialogTitle
+   * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.
+   */
+  public static ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectPathwayEnrichmentBox(Species spec, String dialogTitle) {
+    List<LabeledObject<NameAndSignalsTab>> tabs = IntegratorUITools.getNameAndSignalTabsWithSignals(spec, EnrichmentObject.class);
+    if (tabs==null || tabs.size()<1) {
+      GUITools.showMessage("Could not find any pathway enrichment tabs. Please perform a pathway enrichment first.", IntegratorUI.appName);
+      return null;
+    }
+    return IntegratorUITools.showSelectExperimentBox(null, dialogTitle,tabs);
   }
     
   

@@ -34,10 +34,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
@@ -1069,6 +1072,18 @@ public class IntegratorUI extends BaseFrame {
     // If it is a webstart application, then reflections don't
     // work => include a static list as fallback.
     return new Class[]{mRNAReader.class, miRNAReader.class, DNAMethylationReader.class, ProteinModificationReader.class};
+  }
+
+  /**
+   * @return all (unique) labels of open tabs.
+   */
+  public Collection<String> getTabNames() {
+    Set<String> titles = new HashSet<String>();
+    for (int i=0; i<getTabbedPane().getTabCount(); i++) {
+      titles.add(getTabbedPane().getTitleAt(i));
+    }
+    
+    return titles;
   }
   
 }
