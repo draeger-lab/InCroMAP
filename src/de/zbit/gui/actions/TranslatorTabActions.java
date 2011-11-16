@@ -39,6 +39,7 @@ import javax.swing.UIManager;
 
 import y.base.Node;
 import y.view.Graph2D;
+import de.zbit.data.EnrichmentObject;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -110,8 +111,8 @@ public class TranslatorTabActions implements ActionListener{
     REMOVE_MIRNA_NODES,
     REMOVE_PROTEIN_MODIFICATION_BOXES,
     REMOVE_MRNA_VISUALIZATION,
-    REMOVE_DNA_METHYLATION_BOXES;
-    // TODO: remove enrichment-p-value coloring
+    REMOVE_DNA_METHYLATION_BOXES,
+    REMOVE_ENRICHMENT_PVALUES;
     
     /*
      * (non-Javadoc)
@@ -126,6 +127,8 @@ public class TranslatorTabActions implements ActionListener{
         return "Add miRNAs";
       case VISUALIZE_ENRICHMENT_PVALUES:
         return "Color pathway-references according enrichment"; //"Visualize enrichment p-values";
+      case REMOVE_ENRICHMENT_PVALUES:
+        return "Reset colored pathway-reference nodes";
         
       case REMOVE_MIRNA_NODES:
         return "Remove miRNA nodes";
@@ -152,6 +155,8 @@ public class TranslatorTabActions implements ActionListener{
           return "Color nodes accoring to fold changes or p-values.";
         case VISUALIZE_ENRICHMENT_PVALUES:
           return "Color pathway-reference nodes accoring to p-values or signals of enriched genes.";
+        case REMOVE_ENRICHMENT_PVALUES:
+          return "Removes all changes made while coloring pathway-reference-nodes.";
         case HIGHLIGHT_ENRICHED_GENES:
           return "Highlight genes from source enrichment.";
         case SEARCH_GRAPH:
@@ -214,9 +219,10 @@ public class TranslatorTabActions implements ActionListener{
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MIRNA_NODES, UIManager.getIcon("ICON_TRASH_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES, UIManager.getIcon("ICON_TRASH_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_DNA_METHYLATION_BOXES, UIManager.getIcon("ICON_TRASH_16")));
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_ENRICHMENT_PVALUES, UIManager.getIcon("ICON_TRASH_16")));
     // Set by default all to disabled. enableRemoveButtonsAsRequired() does the enabling job.
     GUITools.setEnabled(false, remove, TPAction.REMOVE_MIRNA_NODES, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES,
-      TPAction.REMOVE_MRNA_VISUALIZATION,TPAction.REMOVE_DNA_METHYLATION_BOXES);
+      TPAction.REMOVE_MRNA_VISUALIZATION,TPAction.REMOVE_DNA_METHYLATION_BOXES, TPAction.REMOVE_ENRICHMENT_PVALUES);
     
     removeButton = new JDropDownButton(remove.getLabel(), UIManager.getIcon("ICON_TRASH_16"), remove);
     bar.add(removeButton);
@@ -241,6 +247,7 @@ public class TranslatorTabActions implements ActionListener{
         GUITools.setEnabled(visData[0], removeButton.getPopUpMenu(), TPAction.REMOVE_MRNA_VISUALIZATION);
         GUITools.setEnabled(visData[2], removeButton.getPopUpMenu(), TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES);
         GUITools.setEnabled(visData[3], removeButton.getPopUpMenu(), TPAction.REMOVE_DNA_METHYLATION_BOXES);
+        GUITools.setEnabled(visData[4], removeButton.getPopUpMenu(), TPAction.REMOVE_ENRICHMENT_PVALUES);
         
         
         // Test for RNA nodes
@@ -249,7 +256,7 @@ public class TranslatorTabActions implements ActionListener{
         GUITools.setEnabled(containsMiRNA, removeButton.getPopUpMenu(), TPAction.REMOVE_MIRNA_NODES);
         
         // Eventually disable the whole DropDownButton.
-        removeButton.setEnabled(containsMiRNA || visData[0] || visData[2] || visData[3]);
+        removeButton.setEnabled(containsMiRNA || visData[0] || visData[2] || visData[3] || visData[4]);
         return null;
       }
     };
@@ -290,6 +297,11 @@ public class TranslatorTabActions implements ActionListener{
       enableRemoveButtonsAsRequired(removeButton);
       parent.repaint();
 
+    } else if (command.equals(TPAction.REMOVE_ENRICHMENT_PVALUES.toString())) {
+      new VisualizeDataInPathway(parent).removeVisualization(EnrichmentObject.class);
+      enableRemoveButtonsAsRequired(removeButton);
+      parent.repaint();
+      
     }
   }
 

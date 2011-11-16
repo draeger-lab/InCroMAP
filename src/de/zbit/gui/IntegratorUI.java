@@ -318,12 +318,14 @@ public class IntegratorUI extends BaseFrame {
    * @param args
    * @throws IOException 
    */
-  public static void main(String[] args) throws IOException {    
+  public static void main(String[] args) throws IOException {
     LogUtil.initializeLogging(Level.INFO,(String[])null);
     
     // Set default values for KEGGtranslator
     KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
+    KEGGtranslatorOptions.SBML_OPTIONS.setVisible(false);
+    KEGGtranslatorOptions.AUTOCOMPLETE_REACTIONS.setVisible(false);
     // SBProperties props = 
     SBPreferences.analyzeCommandLineArguments(getStaticCommandLineOptions(), args);
         

@@ -298,7 +298,7 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
         if (preselection.getType().equals(SignalType.pValue)) {
           f.setInitialSelection(NameAndSignals.signal2columnName(preselection), "<", "0.05");
         } else {
-          f.setInitialSelection(NameAndSignals.signal2columnName(preselection), "|>=|", "1.7");
+          f.setInitialSelection(NameAndSignals.signal2columnName(preselection), "|>=|", "1.0");
         }
       }
     }

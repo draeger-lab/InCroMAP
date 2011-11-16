@@ -30,7 +30,9 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
-import de.zbit.math.LinearRescale;
+import de.zbit.math.rescale.AbstractRescale;
+import de.zbit.math.rescale.LinearRescale;
+import de.zbit.math.rescale.LogarithmicRescale;
 import de.zbit.util.prefs.SBPreferences;
 
 /**
@@ -48,15 +50,15 @@ public class SignalColor {
   /**
    * Rescaler to rescale the red color component
    */
-  LinearRescale lred;
+  AbstractRescale lred;
   /**
    * Rescaler to rescale the green color component
    */
-  LinearRescale lgreen;
+  AbstractRescale lgreen;
   /**
    * Rescaler to rescale the blue color component
    */
-  LinearRescale lblue;
+  AbstractRescale lblue;
   
   /**
    * Initiate a color gradient scale, based on the {@link Signal} values from 
@@ -101,50 +103,73 @@ public class SignalColor {
    * one for the maximum fold change. Set to null to load from preferences.
    */
   public <T extends NameAndSignals> SignalColor(Collection<T> nsList, String experimentName, SignalType type, Float valueForMaximumColor, Color... gradientColors) {
+    boolean isPvalue = (type.equals(SignalType.pValue) || type.equals(SignalType.qValue));
+    
     // Load default from config (e.g., blue-white-red).
     if (gradientColors==null || gradientColors.length<1) {
-      gradientColors = new Color[]{PathwayVisualizationOptions.COLOR_FOR_MINIMUM_FOLD_CHANGE.getValue(prefs),
-          PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs),
-          PathwayVisualizationOptions.COLOR_FOR_MAXIMUM_FOLD_CHANGE.getValue(prefs)};
+      if (!isPvalue) {
+        gradientColors = new Color[]{PathwayVisualizationOptions.COLOR_FOR_MINIMUM_FOLD_CHANGE.getValue(prefs),
+            PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs),
+            PathwayVisualizationOptions.COLOR_FOR_MAXIMUM_FOLD_CHANGE.getValue(prefs)};
+      } else {
+        gradientColors = new Color[]{PathwayVisualizationOptions.COLOR_FOR_MINIMUM_FOLD_CHANGE.getValue(prefs),
+            PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs)};
+      }
     }
     
     // Load value for full color
-    Float maxFC = valueForMaximumColor;
-    if (maxFC==null || Float.isNaN(maxFC)) {
-      maxFC = PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR.getValue(prefs);
-    }
-    
-    
-    // Get min max signals and determine logarithmized (negative) fcs or not.
-    double[] minMax;
-    if (nsList!=null) {
-      minMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
+    Double maxFC = null;
+    if (valueForMaximumColor==null || Float.isNaN(valueForMaximumColor)) {
+      if (isPvalue) {
+        maxFC = PathwayVisualizationOptions.P_VALUE_FOR_MAXIMUM_COLOR.getValue(prefs);
+      } else {
+        maxFC = PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR.getValue(prefs).doubleValue();
+      }
     } else {
-      minMax = new double[]{-maxFC, maxFC};
+      maxFC = valueForMaximumColor.doubleValue();
     }
     
-    // Make a symmetric min and max (-3 to +3) instead of -2.9 to + 3.2 because of better coloring then.
-    double minFCthreshold = minMax[0]<0?(maxFC*-1):1/maxFC.doubleValue();
-    if (maxFC<minFCthreshold) {
-      double temp = minFCthreshold;
-      minFCthreshold = maxFC;
-      maxFC = (float) temp;
-    }
-    minMax = new double[]{minFCthreshold,maxFC.doubleValue()};
     
-    // Infere value for "nothing happend", (i.e. no fold change observed)
-    Double middleValue=Double.NaN; //NaN means "auto infere"
-    if (minFCthreshold<0) {
-      middleValue = 0d; // log FCs
-    } else if (minFCthreshold<1) {
-      // >0 & <1 => non-logarithmmized FCs
-      middleValue = 1d;
+    if (!isPvalue) {      
+      // Determine logarithmized (negative) fcs or not.
+      double[] minMax;
+      boolean dataIsLogarithmized = true;
+      if (nsList!=null) {
+        double[] realMinMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
+        if (realMinMax[0]<0) dataIsLogarithmized=true;
+        else dataIsLogarithmized=false;
+      }
+      
+      // Make a symmetric min and max (-3 to +3) instead of -2.9 to + 3.2 because of better coloring then.
+      minMax = new double[]{-maxFC.doubleValue(), maxFC.doubleValue()};
+      
+      // Initiate color rescalers
+      if (dataIsLogarithmized) {
+        // input fold changes are logarithmized
+        lred = new LinearRescale(minMax[0], minMax[1], getColorChannel(0, gradientColors));
+        lgreen = new LinearRescale(minMax[0], minMax[1], getColorChannel(1, gradientColors));
+        lblue = new LinearRescale(minMax[0], minMax[1], getColorChannel(2, gradientColors));
+      } else {
+        // input fold changes are not logarithmized
+        minMax[0] = Math.pow(2, minMax[0]);
+        minMax[1] = Math.pow(2, minMax[1]);
+        lred = new LogarithmicRescale(minMax[0], minMax[1], 2, getColorChannel(0, gradientColors));
+        lgreen = new LogarithmicRescale(minMax[0], minMax[1], 2, getColorChannel(1, gradientColors));
+        lblue = new LogarithmicRescale(minMax[0], minMax[1], 2, getColorChannel(2, gradientColors));
+      }
+      
+    } else {
+      // Ensure a valid number for p-values 
+      if (isPvalue && (maxFC<0 || maxFC>1)) {maxFC = 0.0005;}
+      
+      // Initiate color rescalers for P-values 
+      lred = new LogarithmicRescale(maxFC, 1, 10, getColorChannel(0, gradientColors));
+      lgreen = new LogarithmicRescale(maxFC, 1, 10, getColorChannel(1, gradientColors));
+      lblue = new LogarithmicRescale(maxFC, 1, 10, getColorChannel(2, gradientColors));
     }
     
-    // Initiate color rescalers
-    lred = new LinearRescale(minMax[0], minMax[1], getColorChannel(0, gradientColors), middleValue);
-    lgreen = new LinearRescale(minMax[0], minMax[1], getColorChannel(1, gradientColors), middleValue);
-    lblue = new LinearRescale(minMax[0], minMax[1], getColorChannel(2, gradientColors), middleValue);
+    
+
   }
   
   
@@ -165,7 +190,7 @@ public class SignalColor {
    * @param oldValue old experimental value (e.g., fold change)
    * @return color code of the corresponding color part (r,g or b) of the new color.
    */
-  public static int rescaleColorPart(LinearRescale lcolor, double oldValue) {
+  public static int rescaleColorPart(AbstractRescale lcolor, double oldValue) {
     return Math.max(0, Math.min(255, lcolor.rescale(oldValue).intValue()));
   }
   

@@ -93,7 +93,7 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
       }
     }
     
-    c = panel.getComponentForOption(PathwayVisualizationOptions.DONT_VISUALIZED_FOLD_CHANGES);
+    c = panel.getComponentForOption(PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES);
     if (c!=null && c instanceof JLabeledComponent) {
       Object c2 = ((JLabeledComponent)c).getColumnChooser();
       if (c2 instanceof JSpinner) {

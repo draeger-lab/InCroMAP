@@ -75,7 +75,7 @@ import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.BatchKEGGtranslator;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
-import de.zbit.math.LinearRescale;
+import de.zbit.math.rescale.LinearRescale;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.FileTools;
@@ -910,7 +910,7 @@ public class VisualizeDataInPathway {
     MergeType sigMerge = IntegratorUITools.getMergeTypeSilent(type);
     Map<Node, Set<T>> n2ns = nsTools.getNodeToNameAndSignalMapping(nsList);
     SignalColor recolorer = new SignalColor(nsList, experimentName, type);
-    Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZED_FOLD_CHANGES.getValue(prefs);
+    Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES.getValue(prefs);
     Color forNothing = PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs);
     if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
@@ -999,7 +999,7 @@ public class VisualizeDataInPathway {
     // The protein mod. box height is required to calc. the dna methylation bar height
     int protBoxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     float maxFC = PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR.getValue(prefs);
-    Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZED_FOLD_CHANGES.getValue(prefs);
+    Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES.getValue(prefs);
     if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
     
     // Prepare maps and required classes
@@ -1020,7 +1020,9 @@ public class VisualizeDataInPathway {
     
     // TODO: Better show pValue AND fold-change!
     // (via position: left/right of node OR color).
-    LinearRescale rescale = new LinearRescale(0, maxFC, 0, halfWidth);
+    
+    // Rescaler only required for fold change visualization
+    LinearRescale rescale = new LinearRescale(0, maxFC, 0d, halfWidth);
     
     int changedNodes=0;
     for (Node n: n2ns.keySet()) {
@@ -1124,7 +1126,7 @@ public class VisualizeDataInPathway {
     boolean inputContainedMicroRNAnodes=false;
     boolean inputContainedmRNAnodes=false;
     MergeType sigMerge = IntegratorUITools.getMergeTypeSilent(type);
-    Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZED_FOLD_CHANGES.getValue(prefs);
+    Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES.getValue(prefs);
     Color forNothing = PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs);
     if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
     
