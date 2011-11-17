@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -552,19 +553,19 @@ public class NameAndSignal2PWTools {
    * @param ns
    * @return a list with signals contained in <code>ns</code>
    */
-  @SuppressWarnings("rawtypes")
   public static <T extends NameAndSignals> List<Signal> getSignals(T ns) {
     List<Signal> signals = new ArrayList<Signal>(ns.getSignals()); // CLONE the list!
-    if (ns instanceof EnrichmentObject) {
-      // In case of enrichment objects, get signals of source (mRNAs) - in addition.
-      Collection c = ((EnrichmentObject)ns).getGenesInClass();
-      if (c!=null && c.size()>0 && c.iterator().next() instanceof NameAndSignals) {
-//        signals.clear();
-        for (Object nas : c) {
-          signals.addAll(((NameAndSignals)nas).getSignals());
-        }
-      }
-    }
+    Collections.sort(signals);
+//    if (ns instanceof EnrichmentObject) {
+//      // In case of enrichment objects, get signals of source (mRNAs) - in addition.
+//      Collection c = ((EnrichmentObject)ns).getGenesInClass();
+//      if (c!=null && c.size()>0 && c.iterator().next() instanceof NameAndSignals) {
+////        signals.clear();
+//        for (Object nas : c) {
+//          signals.addAll(((NameAndSignals)nas).getSignals());
+//        }
+//      }
+//    }
     return signals;
   }
   

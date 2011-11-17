@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1324,6 +1325,14 @@ public class IntegratorUITools {
    */
   public static ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectPathwayEnrichmentBox(Species spec, String dialogTitle) {
     List<LabeledObject<NameAndSignalsTab>> tabs = IntegratorUITools.getNameAndSignalTabsWithSignals(spec, EnrichmentObject.class);
+    Iterator<LabeledObject<NameAndSignalsTab>> it = tabs.iterator();
+    while (it.hasNext()) {
+      try {
+        if (!((EnrichmentObject<?>)it.next().getObject().getExampleData()).isKEGGenrichment()) {
+          it.remove();
+        }
+      } catch (Exception e ){} // not important
+    }
     if (tabs==null || tabs.size()<1) {
       GUITools.showMessage("Could not find any pathway enrichment tabs. Please perform a pathway enrichment first.", IntegratorUI.appName);
       return null;

@@ -49,12 +49,16 @@ public interface PathwayVisualizationOptions extends KeyProvider {
       new Range<Float>(Float.class, "{[0.0,1000.0]}"),1.5f);
 
   public static Option<Float> DONT_VISUALIZE_FOLD_CHANGES = new Option<Float>("DONT_VISUALIZE_FOLD_CHANGES", Float.class,
-      "Fold changes between 0 and this fold change are not visualized at all (log2-value, DOES NOT WORK FOR UN-LOGGED FOLD CHANGES)",
+      "Fold changes between 0 and this fold change are not visualized at all (log2-value, DOES NOT WORK FOR UN-LOGGED FOLD CHANGES).",
       new Range<Float>(Float.class, "{[0.0,1000.0]}"),0.5f, "Don't visualize fold changes between ±");
 
   public static Option<Double> P_VALUE_FOR_MAXIMUM_COLOR = new Option<Double>("P_VALUE_FOR_MAXIMUM_COLOR", Double.class,
       "P-value required for full \"minimum fold change\" color. In contrast, a p-value of 0 is assigned to \"color for no fold change\".",
-      new Range<Double>(Double.class, "{(0.0,1.0]}"),0.005,"P-value threshold for maximum color");
+      new Range<Double>(Double.class, "{(0.0,1.0]}"),0.0005,"P-value threshold for maximum color");
+  
+  public static Option<Double> DONT_VISUALIZE_P_VALUES = new Option<Double>("DONT_VISUALIZE_P_VALUES", Double.class,
+      "P-values greater than this value are not visualized at all.",
+      new Range<Double>(Double.class, "{(0.0,1.0]}"),0.05d, "Don't visualize p-values >");
   
   public static Option<Color> COLOR_FOR_MINIMUM_FOLD_CHANGE = new Option<Color>("COLOR_FOR_MINIMUM_FOLD_CHANGE", Color.class,
       "Color for minimum fold change.", IntegratorUI.LIGHT_BLUE); // Color.BLUE.brighter() is too dark to read black captions
@@ -85,7 +89,7 @@ public interface PathwayVisualizationOptions extends KeyProvider {
   public static final OptionGroup PATHWAY_COLORING_OPTIONS = new OptionGroup(
     "Pathway coloring options",
     "Define various options that control the fold-change dependent coloring of pathway nodes.",
-    FOLD_CHANGE_FOR_MAXIMUM_COLOR, DONT_VISUALIZE_FOLD_CHANGES, P_VALUE_FOR_MAXIMUM_COLOR,
+    FOLD_CHANGE_FOR_MAXIMUM_COLOR, DONT_VISUALIZE_FOLD_CHANGES, P_VALUE_FOR_MAXIMUM_COLOR, DONT_VISUALIZE_P_VALUES,
     COLOR_FOR_MINIMUM_FOLD_CHANGE, COLOR_FOR_NO_FOLD_CHANGE, COLOR_FOR_MAXIMUM_FOLD_CHANGE, COLOR_FOR_NO_VALUE,
     CHANGE_NODE_SHAPE);
   

@@ -165,7 +165,7 @@ public class Signal implements Serializable, Comparable<Object>  {
     } else if (o instanceof Signal) {
       Signal o2 = (Signal)o;
       r = name.compareTo(o2.name);
-      if (r==0) r = type.compareTo(o2.type);
+      if (r==0) r = type.toString().compareTo(o2.type.toString());
       //if (r==0) r = Float.compare(signal, o2.signal);
       if (r==0) r = Double.compare(signal.doubleValue(), o2.signal.doubleValue());
       

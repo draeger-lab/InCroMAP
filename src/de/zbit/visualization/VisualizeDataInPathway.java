@@ -913,6 +913,8 @@ public class VisualizeDataInPathway {
     Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES.getValue(prefs);
     Color forNothing = PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs);
     if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
+    Double ignorePV = PathwayVisualizationOptions.DONT_VISUALIZE_P_VALUES.getValue(prefs);
+    if (ignorePV==null||Double.isNaN(ignorePV.doubleValue())) ignorePV=1d;
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
     
     int changedNodes = 0;
@@ -949,7 +951,7 @@ public class VisualizeDataInPathway {
         nl.setModel(NodeLabel.SIDES);
         nl.setPosition(NodeLabel.S);
         Color color;
-        if ((type.equals(SignalType.FoldChange)) && Math.abs(signalValue)<ignoreFC) {
+        if (!considerSignal(signalValue, type, ignoreFC, ignorePV)) {
           color = forNothing;
         } else {
           color = recolorer.getColor(signalValue);
@@ -1001,6 +1003,8 @@ public class VisualizeDataInPathway {
     float maxFC = PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR.getValue(prefs);
     Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES.getValue(prefs);
     if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
+    Double ignorePV = PathwayVisualizationOptions.DONT_VISUALIZE_P_VALUES.getValue(prefs);
+    if (ignorePV==null||Double.isNaN(ignorePV.doubleValue())) ignorePV=1d;
     
     // Prepare maps and required classes
     // XXX: Fixed MergeType for DNA-m data. Must be pValues in here.
@@ -1042,7 +1046,7 @@ public class VisualizeDataInPathway {
         ValuePair<VisualizedData, NameAndSignals> visNS = new ValuePair<VisualizedData, NameAndSignals>(visData, ns);
         
         NodeLabel nl = null;
-        if (!(type.equals(SignalType.FoldChange)) || Math.abs(signalValue)>=ignoreFC) {
+        if (considerSignal(signalValue, type, ignoreFC, ignorePV)) {
           nl = nr.createNodeLabel();
           nl.setUserData(visNS);
           
@@ -1107,6 +1111,36 @@ public class VisualizeDataInPathway {
     
     return changedNodes;
   }
+
+  /**
+   * Checks if we should consider or ignore a signal, according
+   * to signal type/value and defined cutoffs.
+   * <p>Method does NOT auto-detect unlogged fold-changes!
+   * @param signalValue actual value
+   * @param type {@link SignalType} of actual value
+   * @param ignoreFC symmetric log2 fold-change 
+   * @param ignorePV pvalue upper threshold
+   * @return true if methods should consider/paint this signal.
+   * False, if the signal should be skipped.
+   */
+  public boolean considerSignal(double signalValue, SignalType type,
+    float ignoreFC, double ignorePV) {
+    if (type!=null) {
+      if (type.equals(SignalType.FoldChange)) {
+        // Absolute value must be greater than threshold.
+        // This does NOT work for unlogged fold-changes!
+        return Math.abs(signalValue)>=ignoreFC;
+      } else if (type.equals(SignalType.pValue)||type.equals(SignalType.qValue)) {
+        // There are methods that sum up the -log2 p-values. Thus, this is no
+        // actual p-value anymore and we should not filter those values.
+        // This should not be a problem, since no real p-value is >1
+        if (signalValue>1) return true;
+        // Else, simply look if p-value is below our defined threshold.
+        return signalValue<=ignorePV;
+      }
+    }
+    return true;
+  }
   
   /**
    * Color nodes according to signals.
@@ -1128,6 +1162,8 @@ public class VisualizeDataInPathway {
     MergeType sigMerge = IntegratorUITools.getMergeTypeSilent(type);
     Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES.getValue(prefs);
     Color forNothing = PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs);
+    Double ignorePV = PathwayVisualizationOptions.DONT_VISUALIZE_P_VALUES.getValue(prefs);
+    if (ignorePV==null||Double.isNaN(ignorePV.doubleValue())) ignorePV=1d;
     if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
     
     DataMap nsMapper     = tools.getMap(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
@@ -1158,7 +1194,7 @@ public class VisualizeDataInPathway {
         //double signalValue = ns.getSignalMergedValue(type, experimentName, sigMerge);
         if (Double.isNaN(signalValue)) continue;
         Color newColor;
-        if ((type.equals(SignalType.FoldChange)) && Math.abs(signalValue)<ignoreFC) {
+        if (!considerSignal(signalValue, type, ignoreFC, ignorePV)) {
           newColor = forNothing;
           if (graph.getRealizer(n) instanceof LineNodeRealizer && forNothing.equals(Color.WHITE)) {
             // Lines are completely invisible when white...
@@ -1184,9 +1220,18 @@ public class VisualizeDataInPathway {
     Color colorForUnaffectedNodes = PathwayVisualizationOptions.COLOR_FOR_NO_VALUE.getValue(prefs);
     if (colorForUnaffectedNodes==null) colorForUnaffectedNodes = Color.LIGHT_GRAY;
     for (Node n: nodesToResetColor) {
-      Object kgId = TranslatorTools.getKeggIDs(n);
       // kgId is defined for all KEGG nodes, but NULL for all miRNA nodes.
-      if (kgId!=null && kgId.toString().toLowerCase().trim().startsWith("path:")) continue; // Title node
+      Object kgId = TranslatorTools.getKeggIDs(n);
+      // Look if it is the Title/ a PW-reference node
+      boolean isPathwayReferenceNode = (kgId!=null && kgId.toString().toLowerCase().trim().startsWith("path:"));
+      
+      if (isPathwayReferenceNode) {
+        // Node is a pw-reference, but we just want to color genes
+        if (!experimentName.equals(EnrichmentObject.signalNameForPvalues)) continue;
+      } else {
+        // Node is a gene, but we just want to color pw-references
+        if (experimentName.equals(EnrichmentObject.signalNameForPvalues)) continue;
+      }
       
       // If input is miRNA, remove all non-miRNA nodes from colorForUnaffectedNodes and via versa.
       if (!inputContainedMicroRNAnodes && tools.getBoolInfo(n, GraphMLmapsExtended.NODE_IS_MIRNA)) {

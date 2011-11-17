@@ -36,6 +36,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 
+import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
@@ -295,10 +296,12 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
         }
         
         // Set initial selection
+        String signalColumnName = NameAndSignals.signal2columnName(preselection);
+        if (ns instanceof EnrichmentObject) signalColumnName = ((EnrichmentObject<?>)ns).getColumnName(5);
         if (preselection.getType().equals(SignalType.pValue)) {
-          f.setInitialSelection(NameAndSignals.signal2columnName(preselection), "<", "0.05");
+          f.setInitialSelection(signalColumnName, "<", "0.05");
         } else {
-          f.setInitialSelection(NameAndSignals.signal2columnName(preselection), "|>=|", "1.0");
+          f.setInitialSelection(signalColumnName, "|>=|", "1.0");
         }
       }
     }

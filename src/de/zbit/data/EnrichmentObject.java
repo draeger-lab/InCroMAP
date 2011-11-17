@@ -22,7 +22,6 @@
 package de.zbit.data;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -447,7 +446,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
     else if (columnIndex==2) return "List ratio";
     else if (columnIndex==3) return "BG ratio";
     else if (columnIndex==4) return "P-value";
-    else if (columnIndex==5) return "Q-value";
+    else if (columnIndex==5) return "Q-value";// Number 5 is hard coded in "setDefaultInitialSelectionOfJTableFilter()"
     else if (columnIndex==6) return "Genes";
     else return null;
   }
