@@ -45,6 +45,8 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.Preferences;
+import java.util.regex.Pattern;
 
 import javax.swing.AbstractListModel;
 import javax.swing.BorderFactory;
@@ -1020,6 +1022,10 @@ public class IntegratorUITools {
     pathways.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     pathways.setEnabled(false);
     
+    // Allow writing and restoring a pathway selection
+    final Preferences prefs = Preferences.userRoot().node(IntegratorUITools.class.getName());
+    final String selectionKey = "LAST_BATCH_SELECTION";
+    
     JScrollPane pwScroll = new JScrollPane(pathways);
     pwScroll.setMaximumSize(new Dimension(320,240));
     pwScroll.setBorder(BorderFactory.createTitledBorder("Select pathways(s)"));
@@ -1053,6 +1059,21 @@ public class IntegratorUITools {
             public int getSize() { return pwName.size(); }
             public Object getElementAt(int i) { return pwName.get(i); }
           });
+          
+          // Try to restore some previous selection
+          String last = prefs.get(selectionKey, null);
+          if (last!=null &&last.length()>0) {
+            String[] sel = last.split(Pattern.quote("|"));
+            List<Integer> selIndices = new ArrayList<Integer>();
+            for (String s: sel ){
+              int pos = Collections.binarySearch(pwName, new LabeledObject<String>(s, null));
+              if (pos>=0) selIndices.add(pos);
+            }
+            if (selIndices.size()>0) {
+              pathways.setSelectedIndices(ArrayUtils.toIntArray(selIndices.toArray(new Integer[0])));
+            }
+          }
+          
         }
         
         pathways.setEnabled(pwName.size()>0);
@@ -1070,29 +1091,50 @@ public class IntegratorUITools {
     
     // Ask user
     int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), p, 
-        "Please select the data to visualize", JOptionPane.OK_CANCEL_OPTION);
+      "Please select the data to visualize", JOptionPane.OK_CANCEL_OPTION);
     if (ret==JOptionPane.OK_OPTION) {
       if (pathways.isEnabled() && pathways.getSelectedIndices().length>0 &&
-        experiments.getSelectedIndices().length>0 && fileFormat.getSelectedIndex()>=0) {
-      File outputDir = GUITools.saveFileDialog(IntegratorUI.getInstance(), IntegratorUI.saveDir, false, false, true, 
-        JFileChooser.DIRECTORIES_ONLY, (FileFilter[])null);
-      if (outputDir!=null) {
-        // Create result arrays
-        ValuePair<?, ?>[] exps = new ValuePair<?, ?>[experiments.getSelectedIndices().length];
-        for (int i=0; i<exps.length; i++)
-          exps[i] = labeledSignals.get(experiments.getSelectedIndices()[i]).getObject();
+          experiments.getSelectedIndices().length>0 && fileFormat.getSelectedIndex()>=0) {
         
-        String[] refPWids = new String[pathways.getSelectedIndices().length];
-        for (int i=0; i<refPWids.length; i++)
-          refPWids[i] = pwName.get(pathways.getSelectedIndices()[i]).getObject();
+        // Store pathway selection
+        Runnable store = new Runnable() {
+          @Override
+          public void run() {
+            try {
+              StringBuilder b = new StringBuilder();
+              for (int i: pathways.getSelectedIndices()) {
+                if (b.length()>0) b.append('|');
+                b.append(pwName.get(i).getLabel());
+              }
+              prefs.put(selectionKey, b.toString());
+              prefs.flush();
+            } catch (Exception e) {
+              log.log(Level.WARNING,"Could not store custom selection prefs.",e);
+            }
+          }
+        };
+        new Thread(store).start();
+        //----
         
-        VisualizeDataInPathway.batchCreatePictures(
-          (ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>>[]) exps,
-          refPWids,
-          ((SBFileFilter)fileFormat.getSelectedItem()).getExtension(),
-          outputDir);
-        
-      }
+        // Get output directory
+        File outputDir = GUITools.saveFileDialog(IntegratorUI.getInstance(), IntegratorUI.saveDir, false, false, true, 
+          JFileChooser.DIRECTORIES_ONLY, (FileFilter[])null);
+        if (outputDir!=null) {
+          // Create result arrays
+          ValuePair<?, ?>[] exps = new ValuePair<?, ?>[experiments.getSelectedIndices().length];
+          for (int i=0; i<exps.length; i++)
+            exps[i] = labeledSignals.get(experiments.getSelectedIndices()[i]).getObject();
+          
+          String[] refPWids = new String[pathways.getSelectedIndices().length];
+          for (int i=0; i<refPWids.length; i++)
+            refPWids[i] = pwName.get(pathways.getSelectedIndices()[i]).getObject();
+          
+          VisualizeDataInPathway.batchCreatePictures(
+            (ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>>[]) exps,
+            refPWids,
+            ((SBFileFilter)fileFormat.getSelectedItem()).getExtension(),
+            outputDir);
+        }
       } else {
         GUITools.showMessage("Could not continue: invalid selection.", IntegratorUI.appName);
       }

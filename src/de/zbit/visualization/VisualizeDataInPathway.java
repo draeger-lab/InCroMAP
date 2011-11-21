@@ -131,6 +131,11 @@ public class VisualizeDataInPathway {
    * split nodes, etc.
    */
   protected NameAndSignal2PWTools nsTools;
+
+  /**
+   * If false, no SWING Dialog messages will be issued
+   */
+  protected boolean isInteractive;
   
   /**
    * Key to store the {@link IntegratorTab#hashCode()} of all tabs
@@ -167,14 +172,23 @@ public class VisualizeDataInPathway {
    * @param graph
    */
   private VisualizeDataInPathway(Graph2D graph){
+    this(graph, true);
+  }
+  
+  /**
+   * @param graph
+   * @param isInteractive if false, no SWING Dialog messages will be issued
+   */
+  private VisualizeDataInPathway(Graph2D graph, boolean isInteractive) {
     super();
     this.graph=graph;
+    this.isInteractive = isInteractive;
     panelContainingGraph = null;
     if (this.graph==null) log.warning("Graph is null!");
     this.nsTools = new NameAndSignal2PWTools(graph);
     tools = nsTools.getTranslatorTools();
   }
-  
+
   /**
    * @param visData class, containing various properties to
    * re-identify visualized data
@@ -812,6 +826,7 @@ public class VisualizeDataInPathway {
     // First, disallow invalid data selections
   //Keyword: DNAm-pValue
 //    if (DNAmethylation.class.isAssignableFrom(inputType) && !type.equals(SignalType.pValue)) {
+    // && if (isInteractive) ???
 //      GUITools.showErrorMessage(null, "Only p-values of DNA methylation data can be visualized.");
 //      return -1;
 //    }
@@ -880,7 +895,9 @@ public class VisualizeDataInPathway {
       if(!miRNA.class.isAssignableFrom(inputType)) { // miRNA has its own warning.
         String noNodesMatchString = "Could not find any graph nodes that match to the input data.";
         log.warning(noNodesMatchString);
-        GUITools.showErrorMessage(null, noNodesMatchString);
+        if (isInteractive) {
+          GUITools.showErrorMessage(null, noNodesMatchString);
+        }
       }
     }
     
@@ -1198,7 +1215,7 @@ public class VisualizeDataInPathway {
           newColor = forNothing;
           if (graph.getRealizer(n) instanceof LineNodeRealizer && forNothing.equals(Color.WHITE)) {
             // Lines are completely invisible when white...
-            newColor = Color.BLACK;
+            newColor = Color.GRAY;
           }
         } else {
           newColor = recolorer.getColor(signalValue);
@@ -1321,7 +1338,7 @@ public class VisualizeDataInPathway {
               String inputFileName = FileTools.trimExtension(observation.getA().getName());
               String obsExpName = observation.getB().getA();
               SignalType obsExpType = observation.getB().getB();
-              VisualizeDataInPathway instance = new VisualizeDataInPathway(graph);
+              VisualizeDataInPathway instance = new VisualizeDataInPathway(graph, false);
               boolean addedMiRNAnode = false;
               if (NameAndSignals.isMicroRNA(observation.getA().getData())) {
                 KEGGPathwayActionListener.addMicroRNAs(graph, observation.getA());
@@ -1350,6 +1367,7 @@ public class VisualizeDataInPathway {
                 String outFile = Utils.ensureSlash(outputDir.getPath()) +
                 StringUtil.removeAllNonFileSystemCharacters(
                   pathwayID + '.' + obsExpName + '.' + obsExpType  + '.' + inputFileName + '.' + outputFormat);
+                // The next line will also eventually download a KEGG picture from online
                 translator.writeToFile(graph, outFile, outputFormat);
                 success++;
               } catch (Throwable e) {

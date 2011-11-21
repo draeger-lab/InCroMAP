@@ -122,9 +122,16 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     List<ExpectedColumn> additional = getAdditionalExpectedColumns();
     if (additional!=null) list.addAll(additional);
     
-    Collection<ExpectedColumn> ec = getExpectedSignalColumnsOverridable(10);
+    Collection<ExpectedColumn> ec = getExpectedSignalColumnsOverridable(getMaximumNumberOfSignalColumns());
     if (ec!=null) list.addAll(ec);
     return list.toArray(new ExpectedColumn[0]);
+  }
+
+  /**
+   * @return number of observation/ signal columns to be available to the user.
+   */
+  protected int getMaximumNumberOfSignalColumns() {
+    return 30;
   }
   
   /**
@@ -137,7 +144,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
    */
   protected Collection<ExpectedColumn> getExpectedSignalColumnsOverridable(int maxNumberOfObservations) {
     // Note: Extending classes can override this method!
-    return NameAndSignalReader.getExpectedSignalColumns(10);
+    return NameAndSignalReader.getExpectedSignalColumns(maxNumberOfObservations);
   }
 
   /**
@@ -185,7 +192,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
           offset+=additional.size();
         }
         
-        // Signal columns
+        // Signal columns (assumes all leftover columns are signal columns!)
         for (int i=offset; i<exCol.length; i++) {
           if (exCol[i].hasAssignedColumns()) {
             for (int j=0; j<exCol[i].getAssignedColumns().size(); j++) {
