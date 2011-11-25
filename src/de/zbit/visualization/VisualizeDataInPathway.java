@@ -1350,12 +1350,13 @@ public class VisualizeDataInPathway {
               
               // Adjust title node
               Node n = TranslatorTools.getTitleNode(graph, pathwayID);
-              double oldHeight = 0; String oldText = "";
+              double oldHeight = 0; String oldText = ""; double oldCY = 0;
               if (n!=null) {
                 NodeRealizer nr = graph.getRealizer(n);
                 oldHeight = nr.getHeight();
+                oldCY = nr.getCenterY();
                 nr.setHeight(oldHeight*2);
-                nr.setY(nr.getY()-oldHeight);
+                nr.setCenterY(oldCY-oldHeight/2); // /2 is intentionally (even though not logically).
                 
                 oldText = graph.getLabelText(n);
                 graph.setLabelText(n, String.format("%s\n%s [%s]", oldText, obsExpName, obsExpType));
@@ -1378,7 +1379,7 @@ public class VisualizeDataInPathway {
               if (n!=null) {
                 NodeRealizer nr = graph.getRealizer(n);
                 nr.setHeight(oldHeight);
-                nr.setY(nr.getY()+oldHeight);
+                nr.setCenterY(oldCY);
                 graph.setLabelText(n, oldText);
               }
               // Only works for mRNA (or any unknown)

@@ -551,7 +551,6 @@ public class IntegratorUITools {
    * data types will be returned.
    * @return
    */
-  @SuppressWarnings("rawtypes")
   public static List<LabeledObject<NameAndSignalsTab>> getNameAndSignalTabs(Species species, boolean onlyWithSignals, Class<? extends NameAndSignals>... onlyDataTypes) {
     if (onlyDataTypes!=null && ((onlyDataTypes.length==1 && onlyDataTypes[0]==null) || onlyDataTypes.length==0 )) onlyDataTypes = null;
     IntegratorUI ui = IntegratorUI.getInstance();
