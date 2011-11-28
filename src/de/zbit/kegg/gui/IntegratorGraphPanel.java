@@ -23,8 +23,6 @@ package de.zbit.kegg.gui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.GridLayout;
-import java.awt.Stroke;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,11 +42,15 @@ import javax.swing.SwingConstants;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
+import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.ui.Layer;
 
@@ -57,6 +59,7 @@ import y.base.Edge;
 import y.base.NodeMap;
 import y.view.Graph2D;
 import y.view.HitInfo;
+import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
@@ -64,6 +67,7 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.data.VisualizedData;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.customcomponents.TableResultTableModel;
@@ -159,6 +163,9 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
     // Show a nice ToolTipText for every node.
     GenericDataMap<DataMap, String> mapDescriptionMap = (GenericDataMap<DataMap, String>) graph.getDataProvider(KEGG2yGraph.mapDescription);
     if (nodeOrEdge==null || mapDescriptionMap==null) return null;
+    List<LabeledObject<List<Double>>> experimentalData = new ArrayList<LabeledObject<List<Double>>>();
+    // TODO Create map from pval to list / fc to list and separate plots.
+    String signalLabel = ""; // TODO: in map von oben aufnhemnen? oder eigene klasse?
     
     // Get nodeLabel, description and eventually an image for the ToolTipText
     String nodeLabel = null;
@@ -210,8 +217,11 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
                 // Get Signals, if 1 show, else summary.
                 List<Signal> signals = NameAndSignals.getSignals((Collection<? extends NameAndSignals>)ns, vd.getExperimentName(), vd.getSigType());
                 if (signals!=null && signals.size()>0) {
+                  List<Number> signalNumbers = Signal.toNumberList(signals);
+                  experimentalData.add(new LabeledObject(IntegratorUI.getShortTypeNameForNS(vd.getNsType()), signalNumbers));
+                  signalLabel = vd.getNiceSignalName();
                   JLabel label = new JLabel(String.format("<html><body><b><h3>%s:</h3></b><font size=\"-1\">%s</font></body></html>",
-                    vd.toNiceString(), (signals.size()==1?signals.get(0).toNiceString():Utils.summary(Signal.toNumberList(signals), 2)) ));
+                    vd.toNiceString(), (signals.size()==1?signals.get(0).toNiceString():Utils.summary(signalNumbers, 2)) ));
                   label.setHorizontalAlignment(SwingConstants.LEFT);
                   lh.addSpacer();
                   lh.add(label);
@@ -309,12 +319,45 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
 //      tooltip.append(StringUtil.insertLineBreaks(additional.toString(), GUITools.TOOLTIP_LINE_LENGTH, "<br/>"));
 //    }
     
+    
+
+    
     // Append html and return toString.
     JPanel p = new JPanel();
     LayoutHelper ph = new LayoutHelper(p);
     JLabel label = new JLabel(String.format("<html><body>%s</body></html>", tooltip.toString()));
-    //label.setHorizontalAlignment(SwingConstants.LEFT);
     ph.add(label);
+    
+    // Create summary box plots
+    if (experimentalData!=null && experimentalData.size()>0) {
+      //DefaultBoxAndWhiskerXYDataset dataset = new DefaultBoxAndWhiskerXYDataset("Microarray data assigned to this node");
+      DefaultBoxAndWhiskerCategoryDataset dataset = new DefaultBoxAndWhiskerCategoryDataset();
+      boolean includePlot = false;
+      for (LabeledObject<List<Double>> exp : experimentalData) {
+        dataset.add(exp.getObject(), exp.getLabel(), exp.getLabel());
+        includePlot |= exp.getObject().size()>1;
+      }
+      includePlot |= experimentalData.size()>1;
+
+      if (includePlot) {
+        CategoryAxis xAxis = new CategoryAxis("Type");
+        NumberAxis yAxis = new NumberAxis(signalLabel);
+        yAxis.setAutoRange(true);
+        yAxis.setAutoRangeIncludesZero(false);
+
+        BoxAndWhiskerRenderer renderer = new BoxAndWhiskerRenderer();
+        renderer.setMeanVisible(false);
+        CategoryPlot plot = new CategoryPlot(dataset, xAxis, yAxis, renderer);
+        // TODO: gestrichelte 0 linie rein?
+        final ChartPanel chartPanel = new ChartPanel(new JFreeChart(plot));
+        chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
+
+      
+        ph.add(new JLabel("<html><body><b><h3>Microarray data assigned to this node:</h3></b></body></html>"));
+        ph.add(chartPanel);
+      }
+    }
+    
     if (additional!=null && additional.getComponentCount()>0) {
       ph.add(additional);
     }

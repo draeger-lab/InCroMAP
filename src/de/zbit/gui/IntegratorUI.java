@@ -793,7 +793,8 @@ public class IntegratorUI extends BaseFrame {
   public static String getShortTypeNameForNS(Class<?> cl) {
     String panelDataContent;
     // Translate class name to a nice and simple data type name.
-    if (EnrichmentObject.class.isAssignableFrom(cl)) panelDataContent = null;
+    if (cl==null) panelDataContent = null; 
+    else if (EnrichmentObject.class.isAssignableFrom(cl)) panelDataContent = null;
     else if (PairedNS.class.isAssignableFrom(cl)) panelDataContent = null;
     else if (HeterogeneousNS.class.isAssignableFrom(cl)) panelDataContent = null;
     else if (cl.equals(NameAndSignals.class)) panelDataContent = null; // Temp panels return NS

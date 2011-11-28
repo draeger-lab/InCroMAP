@@ -208,6 +208,15 @@ public class VisualizedData implements Serializable, Comparable<VisualizedData>{
    * @return
    */
   public String toNiceString() {
+    return toNiceString(true);
+  }
+  /**
+   * Generates a nice string, representing this object.
+   * @param includeSourceTabNme if false, does not
+   * include source tab name.
+   * @return
+   */
+  public String toNiceString(boolean includeSourceTabNme) {
     StringBuilder sb = new StringBuilder();
     if (nsType!=null) {
       sb.append(String.format("%s data", IntegratorUI.getShortTypeNameForNS(nsType)));
