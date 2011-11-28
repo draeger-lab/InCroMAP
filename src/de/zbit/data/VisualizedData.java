@@ -24,6 +24,7 @@ package de.zbit.data;
 import java.io.Serializable;
 
 import de.zbit.data.Signal.SignalType;
+import de.zbit.gui.IntegratorUI;
 import de.zbit.util.ValueTriplet;
 
 /**
@@ -202,6 +203,45 @@ public class VisualizedData implements Serializable, Comparable<VisualizedData>{
         + experimentName + ", sigType=" + sigType + ", nsType=" + nsType + "]";
   }
 
+  /**
+   * Generates a nice string, representing this object.
+   * @return
+   */
+  public String toNiceString() {
+    StringBuilder sb = new StringBuilder();
+    if (nsType!=null) {
+      sb.append(String.format("%s data", IntegratorUI.getShortTypeNameForNS(nsType)));
+    }
+    boolean closeBraket = false;
+    if (experimentName!=null || sigType!=null || tabName!=null) {
+      if (sb.length()>0) {
+        sb.append(" (");
+        closeBraket = true;
+      }
+      
+      if (experimentName!=null) {
+        sb.append(experimentName);
+        if (sigType!=null) {
+          sb.append(String.format(" [%s]", sigType.toString()));
+        }
+      } else if (sigType!=null) {
+        sb.append(sigType.toString());
+      }
+      
+      if (tabName!=null) {
+        if (sb.length()>0) {
+          sb.append(String.format(" from \"%s\"", tabName.toString()));
+        } else {
+          sb.append(tabName.toString());
+        }
+      }
+      
+      if (closeBraket) sb.append(")");
+    }
+    
+    return sb.toString();
+  }
+
   /* (non-Javadoc)
    * @see java.lang.Comparable#compareTo(java.lang.Object)
    */
@@ -237,6 +277,43 @@ public class VisualizedData implements Serializable, Comparable<VisualizedData>{
     }
     
     return ret;
+  }
+
+  /**
+   * Test if this matches a specified input
+   * @param tabName
+   * @param experimentName
+   * @param type
+   * @return <code>TRUE</code> if given values match values of this
+   * class. Thereby, <code>NULL</code> is taken as wildcard symbol,
+   * i.e. always matches!
+   */
+  public boolean matches(String tabName, String experimentName, SignalType type) {
+    if ((tabName==null || getTabName().equals(tabName))
+        && (experimentName==null || getExperimentName().equals(experimentName))
+        && (type==null || getSigType().equals(type))) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * @return a string consisting of {@link #experimentName}
+   * and {@link #sigType}.
+   */
+  public String getNiceSignalName() {
+    StringBuilder sb = new StringBuilder();
+    
+    if (experimentName!=null) {
+      sb.append(experimentName);
+      if (sigType!=null) {
+        sb.append(String.format(" [%s]", sigType.toString()));
+      }
+    } else if (sigType!=null) {
+      sb.append(sigType.toString());
+    }
+    
+    return sb.toString();
   }
   
   

@@ -47,6 +47,7 @@ import y.view.hierarchy.HierarchyManager;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
+import de.zbit.data.VisualizedData;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
@@ -126,6 +127,7 @@ public class NameAndSignal2PWTools {
   
 
   /**
+   * <p><b>NOTE: Only wokrs for mRNA!</b></p>
    * @param tabName any unique identifier for the input dataset. E.g., 
    * the tab or the filename or anything else.
    * @param experimentName to describe the signal
@@ -707,6 +709,32 @@ public class NameAndSignal2PWTools {
     
     // Paint above other nodes.
     graph.moveToLast(child);
+  }
+  
+  /**
+   * Puts all {@link NameAndSignals} matching a node into
+   * the node annotation with Key <code>vd</code>.
+   * You can retrieve them later with {@link GraphMLmapsExtended#NODE_VISUALIZED_RAW_NS}.
+   * @param <T>
+   * @param nsList
+   * @param vd
+   */
+  public <T extends NameAndSignals> void writeRawNStoNodeAnnotation(Collection<T> nsList, VisualizedData vd) {
+    DataMap rawNsMap = tools.getMap(GraphMLmapsExtended.NODE_VISUALIZED_RAW_NS);
+    if (rawNsMap==null ) {
+      rawNsMap = tools.createMap(GraphMLmapsExtended.NODE_VISUALIZED_RAW_NS, true);
+    }
+    
+    Map<Node, Set<T>> node2Ns = getNodeToNameAndSignalMapping(nsList);
+    for (Node node: node2Ns.keySet()) {
+      Map<VisualizedData, Collection<?>> rawNs = (Map<VisualizedData, Collection<?>>) rawNsMap.get(node);
+      if (rawNs==null) {
+        rawNs = new HashMap<VisualizedData, Collection<?>>();
+        rawNsMap.set(node, rawNs);
+      }
+      rawNs.put(vd, node2Ns.get(node));
+    }
+
   }
 
 

@@ -192,6 +192,22 @@ public class Signal implements Serializable, Comparable<Object>  {
     return r.toString();
   }
   
+  public String toNiceString() {
+    StringBuffer r = new StringBuffer();
+    if (name!=null && name.length()>0 && !name.equals(NameAndSignals.defaultExperimentName)) {
+      r.append(name);
+    }
+    if (!type.equals(SignalType.Unknown)) {
+      if (r.length()>0) {
+        r.append(String.format(" [%s]: ", type.toString()));
+      } else {
+        r.append(type.toString()+": ");
+      }
+    }
+    r.append(signal);
+    return r.toString();
+  }
+  
   /**
    * Create a {@link Comparator} that compares {@link NameAndSignals} objects, based
    * on defined {@link Signal}s.
@@ -436,6 +452,20 @@ public class Signal implements Serializable, Comparable<Object>  {
       log.severe("Please implement calculation for " + m.toString() + "!");
       return 0;
     }
+  }
+  /**
+   * @param signals
+   * @return a list of numeric signals
+   */
+  public static List<Number> toNumberList(Iterable<Signal> signals) {
+    List<Number> ret = new ArrayList<Number>();
+    if (signals!=null) {
+      Iterator<Signal> it = signals.iterator();
+      while (it.hasNext()) {
+        ret.add(it.next().signal);
+      }
+    }
+    return ret;
   }
   
 }

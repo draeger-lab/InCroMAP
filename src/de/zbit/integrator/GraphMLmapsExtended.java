@@ -21,7 +21,11 @@
  */
 package de.zbit.integrator;
 
+import java.util.Collection;
+import java.util.Map;
+
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.VisualizedData;
 import de.zbit.kegg.ext.GraphMLmaps;
 import de.zbit.util.ValueTriplet;
 
@@ -57,6 +61,13 @@ public interface GraphMLmapsExtended extends GraphMLmaps {
    * this map stores the instance that corresponds to this node.
    */
   public static final String NODE_NAME_AND_SIGNALS = "_NameAndSignals";
+  
+  /**
+   * {@link Map} from any {@link VisualizedData}
+   * that maps to a {@link Collection} of actual raw (not gene-centered)
+   * NameAndSignals matching to this node.
+   */
+  public static final String NODE_VISUALIZED_RAW_NS = "_RawNameAndSignals";
 
   /**
    * If this node has been colored for a specific signal/observation,

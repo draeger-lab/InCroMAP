@@ -227,6 +227,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     } else {
       list = new ArrayList<TableResult>(tab.getData());
     }
+    
     if (tab.getDataContentType().equals(PairedNS.class)) {
       jc = buildJTableWithBoldBorders(new TableResultTableModel(list), tab.getSpecies(), ((PairedNS)tab.getExampleData()).getBoldBorders() );
     } else {

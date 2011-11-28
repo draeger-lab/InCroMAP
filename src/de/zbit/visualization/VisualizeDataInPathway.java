@@ -390,18 +390,19 @@ public class VisualizeDataInPathway {
    * @param type to describe the signal
    * @see #removeVisualization(String, String, SignalType)
    */
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public void removeVisualizedLabels(String tabName, String experimentName, SignalType type) {
     log.finer("Removing node labels for a given visualization.");
     
     // Inspect all labels of all nodes
     int removedCounter=0;
+    DataMap rawNsMap = tools.getMap(GraphMLmapsExtended.NODE_VISUALIZED_RAW_NS);
     for (NodeCursor nc = graph.nodes(); nc.ok(); nc.next()) {
       Node n = nc.node();  
       NodeRealizer nr = graph.getRealizer(n);
       
       double shiftSideLabelsBy = 0;
-      for (int i=0; i<nr.labelCount(); i++) {        
+      for (int i=0; i<nr.labelCount(); i++) {
         NodeLabel label = nr.getLabel(i);
         if (shiftSideLabelsBy>0 && label.getModel()==NodeLabel.SIDES) {
           // If we remove those stacking protein boxes, we might need to shift exising ones
@@ -423,18 +424,24 @@ public class VisualizeDataInPathway {
           }
         }
         
+        
         // Look if we should remove this
-        if (vd!=null && (tabName==null || vd.getTabName().equals(tabName))
-            && (experimentName==null || vd.getExperimentName().equals(experimentName))
-            && (type==null || vd.getSigType().equals(type))) {
+        if (vd!=null && vd.matches(tabName, experimentName, type)) {
           if (label.getModel()==NodeLabel.SIDES) {
             shiftSideLabelsBy+=label.getHeight();
           }
-          nr.removeLabel(label);
+          // Remove raw NS from nodes
+          if (rawNsMap!=null) {
+              Map<VisualizedData, Collection<?>> rawNs = (Map<VisualizedData, Collection<?>>) rawNsMap.get(n);
+              if (rawNs!=null) rawNs.remove(vd);
+          }
+          nr.removeLabel(label); // <- main
+          
           i--;
           removedCounter++;
         }
       }
+      
     }
     log.finer("Removed " + removedCounter + " node labels.");
     
@@ -461,12 +468,15 @@ public class VisualizeDataInPathway {
    * @param type to describe the signal
    * @see #removeVisualizedLabels(String, String, SignalType)
    */
-  public void removeVisualization(String tabName, String experimentName, SignalType type) {
+  @SuppressWarnings("unchecked")
+  private void removeVisualization(String tabName, String experimentName, SignalType type) {
     // 1. Get all nodes for experiment
     log.finer("Getting all nodes for given experiment and NODE_IS_COPY map.");
     Collection<Node> nodes = nsTools.getAllNodesForExperiment(tabName, experimentName, type);
     if (nodes.size()<1) return;
     DataMap isCopyMap = tools.getMap(GraphMLmapsExtended.NODE_IS_COPY);
+    DataMap rawNsMap = tools.getMap(GraphMLmapsExtended.NODE_VISUALIZED_RAW_NS);
+    VisualizedData vd = new VisualizedData(tabName, experimentName, type);
     
     // 2. Remove cloned nodes and ungroup parents (if group size = 1)
     log.finer("Removing cloned nodes and ungrouping parent nodes.");
@@ -488,6 +498,12 @@ public class VisualizeDataInPathway {
             //  is a copy node
             nsTools.removeNode(n);
           } // Group and simple nodes will be treated later.
+        }
+        
+        // Remove raw NS from nodes
+        if (rawNsMap!=null) {
+          Map<VisualizedData, Collection<?>> rawNs = (Map<VisualizedData, Collection<?>>) rawNsMap.get(n);
+          if (rawNs!=null) rawNs.remove(vd);
         }
       }
     }
@@ -716,7 +732,7 @@ public class VisualizeDataInPathway {
    * @return generated key to identify the map.
    * @see #getSignalMapIdentifier(VisualizedData)
    */
-  private String getSignalMapIdentifier(
+  public static String getSignalMapIdentifier(
     ValueTriplet<String, String, SignalType> identifier) {
     String key = String.format("[%s] %s (from \"%s\")", 
       identifier.getC().toString(), identifier.getB(), identifier.getA());
@@ -836,6 +852,9 @@ public class VisualizeDataInPathway {
     if (isDataVisualized(visData)) {
       removeVisualization(tabName, experimentName, type);
     }
+    
+    // Write the ns probe-based to annotation
+    nsTools.writeRawNStoNodeAnnotation(nsList, visData);
     
     // 0.5 Preprocessing: GENE-CENTER data if requested.
     if (!SignalOptions.PROBE_CENTERED.getValue(prefs)) {

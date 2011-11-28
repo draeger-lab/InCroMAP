@@ -330,8 +330,9 @@ public class IntegratorUI extends BaseFrame {
     SBPreferences.analyzeCommandLineArguments(getStaticCommandLineOptions(), args);
         
     // Set the often used KeggTranslator methods to use this appName as application name
-    Translator.APPLICATION_NAME = appName;
-    Translator.VERSION_NUMBER = appVersion;
+//    Translator.APPLICATION_NAME = appName;
+//    Translator.VERSION_NUMBER = appVersion;
+    
     TranslatorPanel.logoResourcePath = "img/logo.png";
     
     /*
