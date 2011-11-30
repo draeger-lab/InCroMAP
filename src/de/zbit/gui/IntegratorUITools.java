@@ -419,7 +419,7 @@ public class IntegratorUITools {
         try {
           r.run();
         } catch (Throwable t) {
-          GUITools.showErrorMessage(null, t);
+          GUITools.showErrorMessage(IntegratorUI.getInstance(), t);
         }
         return null;
       }

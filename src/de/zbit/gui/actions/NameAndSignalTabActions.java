@@ -39,6 +39,8 @@ import javax.swing.JToolBar;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
+import org.jfree.chart.JFreeChart;
+
 import de.zbit.analysis.PairData;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.HeterogeneousNS;
@@ -61,6 +63,7 @@ import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.dialogs.IntegratedEnrichmentDialog;
 import de.zbit.gui.dialogs.IntegrationDialog;
 import de.zbit.gui.dialogs.MergedSignalDialog;
+import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NameAndSignalsTab;
@@ -119,6 +122,7 @@ public class NameAndSignalTabActions implements ActionListener {
     SEARCH_TABLE,
     PAIR_DATA,
     ADD_GENE_SYMBOLS,
+    PLOT_REGION,
     ANNOTATE_TARGETS,
     REMOVE_TARGETS,
     FDR_CORRECTION_BH,
@@ -263,6 +267,10 @@ public class NameAndSignalTabActions implements ActionListener {
       //|| tableContent.equals(miRNAandTarget.class) || tableContent.equals(miRNA.class)) {
       bar.add(GUITools.createJButton(this,
           NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_PENCIL_16")));
+    
+    } if (tableContent.equals(DNAmethylation.class)) {
+      bar.add(GUITools.createJButton(this,
+        NSAction.PLOT_REGION, UIManager.getIcon("ICON_PENCIL_16")));
       
     } if (tableContent.equals(miRNA.class)) {
       // Annotate and Remove targets
@@ -360,6 +368,18 @@ public class NameAndSignalTabActions implements ActionListener {
     } else if (command.equals(NSAction.ADD_GENE_SYMBOLS.toString())) {
       log.info("Converting GeneIDs to Gene symbols.");
       showGeneSymbols();
+
+    } else if (command.equals(NSAction.PLOT_REGION.toString())) {
+      IntegratorTab<?> parent = this.parent;
+      if (parent.getDataContentType().equals(EnrichmentObject.class)) {
+        while (parent.getSourceTab()!=null) {
+          parent = parent.getSourceTab();
+        }
+      }
+      JFreeChart chart = IntegratorChartTab.createAndShowDialog(parent);
+      IntegratorUI.getInstance().addTab(new IntegratorChartTab(IntegratorUI.getInstance(), chart, parent.getSpecies()), "TEMP");
+      // TODO: Create dialog and let also choose how to visualize others.
+      //log.info("Plotting region...");
       
     } else if (command.equals(NSAction.ANNOTATE_TARGETS.toString())) {
       annotateMiRNAtargets();

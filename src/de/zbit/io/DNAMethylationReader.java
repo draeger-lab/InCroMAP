@@ -24,6 +24,7 @@ package de.zbit.io;
 import java.util.LinkedList;
 import java.util.List;
 
+import de.zbit.data.Chromosome;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.csv.ExpectedColumn;
 
@@ -51,6 +52,11 @@ public class DNAMethylationReader extends AbstractGeneBasedNSreader<DNAmethylati
   private int probeNameCol=-1;
   
   /**
+   * Column containining chromosome information
+   */
+  private int chromosomeCol=-1;
+  
+  /**
    * Integer to set if {@link #probeStartCol} or {@link #probeEndCol}
    * is >=0 (set), but the column contains invalid data.
    */
@@ -65,6 +71,7 @@ public class DNAMethylationReader extends AbstractGeneBasedNSreader<DNAmethylati
     list.add(new ExpectedColumn("Probe name", false));
     list.add(new ExpectedColumn("Probe position (start)", false));
     list.add(new ExpectedColumn("Probe position (end)", false));
+    list.add(new ExpectedColumn("Chromosome", false, Chromosome.chromosome_regex.pattern()));
     return list;
   }
 
@@ -91,6 +98,12 @@ public class DNAMethylationReader extends AbstractGeneBasedNSreader<DNAmethylati
       } else {
         probeEndCol = probeEnd.getAssignedColumn();
       }
+    }
+    
+    // Assign probe start/ end. If only one is assigned, assign to start!
+    ExpectedColumn chromosome = additional.get(3);
+    if (chromosome.hasAssignedColumns()) {
+      chromosomeCol = chromosome.getAssignedColumn();
     }
   }
 
@@ -133,6 +146,13 @@ public class DNAMethylationReader extends AbstractGeneBasedNSreader<DNAmethylati
       m.setProbeEnd(s);
     } else {
       m.unsetProbeEnd();
+    }
+    
+    // Set Chromosome
+    if (chromosomeCol>=0) {
+      m.setChromosome(line[chromosomeCol]);
+    } else {
+      m.unsetChromosome();
     }
     
     return m;

@@ -21,15 +21,13 @@
  */
 package de.zbit.kegg.gui;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -45,25 +43,16 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.Marker;
-import org.jfree.chart.plot.ValueMarker;
-import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
-import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
-import org.jfree.data.xy.DefaultXYDataset;
-import org.jfree.ui.Layer;
 
 import y.base.DataMap;
 import y.base.Edge;
 import y.base.NodeMap;
 import y.view.Graph2D;
 import y.view.HitInfo;
-import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
-import de.zbit.data.Signal.MergeType;
-import de.zbit.data.Signal.SignalType;
 import de.zbit.data.VisualizedData;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.GUITools;
@@ -71,6 +60,7 @@ import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.customcomponents.TableResultTableModel;
+import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.integrator.GraphMLmapsExtended;
 import de.zbit.kegg.ext.GenericDataMap;
 import de.zbit.kegg.ext.GraphMLmaps;
@@ -82,7 +72,6 @@ import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.TranslatorTools;
 import de.zbit.util.Utils;
-import de.zbit.util.ValuePair;
 
 /**
  * The panel that is used to display pathways.
@@ -97,11 +86,20 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
   private Species species=null;
   
   /**
+   * 
+   * @param pathwayID
+   * @param format
+   */
+  public IntegratorGraphPanel(String pathwayID, Format format, ActionListener translationResult) {
+    super(pathwayID, format, translationResult);
+  }
+  
+  /**
    * @param pathwayID
    * @param translationResult
    */
   public IntegratorGraphPanel(String pathwayID, ActionListener translationResult) {
-    super(pathwayID, Format.JPG, translationResult);
+    this (pathwayID, Format.JPG, translationResult);
   }
   
   
@@ -163,11 +161,13 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
     // Show a nice ToolTipText for every node.
     GenericDataMap<DataMap, String> mapDescriptionMap = (GenericDataMap<DataMap, String>) graph.getDataProvider(KEGG2yGraph.mapDescription);
     if (nodeOrEdge==null || mapDescriptionMap==null) return null;
-    List<LabeledObject<List<Double>>> experimentalData = new ArrayList<LabeledObject<List<Double>>>();
-    // TODO Create map from pval to list / fc to list and separate plots.
-    String signalLabel = ""; // TODO: in map von oben aufnhemnen? oder eigene klasse?
+    
+    // Create a box plot of all visualized experimental data.
+    Map<Class<? extends NameAndSignals>, List<Number>> experimentalData = new HashMap<Class<? extends NameAndSignals>, List<Number>>();
+    StringBuilder boxPlotYaxisLabel = new StringBuilder();
     
     // Get nodeLabel, description and eventually an image for the ToolTipText
+    int numberOfGenesInNode = 1;
     String nodeLabel = null;
     String description = null;
     String image = "";
@@ -190,7 +190,19 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
         
         // Get Node label, description and pictures
         if (mapDescription.equals(GraphMLmaps.NODE_LABEL)) {
-          nodeLabel = "<b><h2>"+c.toString().replace(",", ",<br/>")+"</h2></b><br/>";
+          if (c.toString().contains(",")) {
+            String[] splitt = c.toString().split(",");
+            numberOfGenesInNode = splitt.length;
+            StringBuilder sb = new StringBuilder();
+            for (String s: splitt) {
+              formatGeneSynonyms(sb, s);
+            }
+            c = sb.toString();
+          } else {
+            c = formatGeneSynonyms(new StringBuilder(), c.toString()).toString();
+          }
+          nodeLabel = "<font size=\"4\">"+c.toString()+"</font><br/>"; // .replace(",", ",<br/>")
+          
         } else if (mapDescription.equals(GraphMLmaps.EDGE_TYPE)) {
           nodeLabel = "<b><h2>asd"+c.toString().replace(",", ",<br/>")+"</h2></b><br/>";
         } else if (mapDescription.equals(GraphMLmaps.NODE_DESCRIPTION)) {
@@ -218,8 +230,14 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
                 List<Signal> signals = NameAndSignals.getSignals((Collection<? extends NameAndSignals>)ns, vd.getExperimentName(), vd.getSigType());
                 if (signals!=null && signals.size()>0) {
                   List<Number> signalNumbers = Signal.toNumberList(signals);
-                  experimentalData.add(new LabeledObject(IntegratorUI.getShortTypeNameForNS(vd.getNsType()), signalNumbers));
-                  signalLabel = vd.getNiceSignalName();
+                  // Well... we put pValues and fold-changes all in one list... maybe not that good!
+                  experimentalData.put(vd.getNsType(), signalNumbers);
+                  String niceSigName = vd.getNiceSignalName();
+                  if (boxPlotYaxisLabel.indexOf(niceSigName)<0) {
+                    if (boxPlotYaxisLabel.length()>0) boxPlotYaxisLabel.append("\n");
+                    boxPlotYaxisLabel.append(niceSigName);
+                  }
+                  
                   JLabel label = new JLabel(String.format("<html><body><b><h3>%s:</h3></b><font size=\"-1\">%s</font></body></html>",
                     vd.toNiceString(), (signals.size()==1?signals.get(0).toNiceString():Utils.summary(signalNumbers, 2)) ));
                   label.setHorizontalAlignment(SwingConstants.LEFT);
@@ -242,16 +260,10 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
                       mapper = IntegratorUITools.get2GeneSymbolMapping(species);
                     }
                     
-                    // Create marker at 0 or 0.05
-                    double makerPosition = 0;
-                    if (vd.getSigType().equals(SignalType.pValue) || vd.getSigType().equals(SignalType.qValue)) {
-                      makerPosition = 0.05;
-                    }
-                    Marker zeroMarker = new ValueMarker(makerPosition,Color.LIGHT_GRAY, new BasicStroke(3f, BasicStroke.JOIN_ROUND, BasicStroke.JOIN_BEVEL, 1.0f, new float[] {10.0f, 6.0f}, 0.0f));
-                    
-                    //XYSplineRenderer graph = new XYSplineRenderer();
+                    // Create one graph for every gene in this node
                     Map<String, Collection<NameAndSignals>> geneGroupedList = NameAndSignals.group_by_name((Collection<NameAndSignals>)ns, false, false);
                     for (java.util.Map.Entry<String, Collection<NameAndSignals>> entry : geneGroupedList.entrySet()) {
+                      
                       // Try to get a nice name
                       String gene = entry.getKey();
                       if (mapper!=null) {
@@ -262,26 +274,13 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
                           }
                         } catch (Exception e1 ){};
                       }
-                      String seriesName = String.format("Gene \"%s\" (%s).", gene, vd.getNiceSignalName());
+                      String seriesName = String.format("Gene \"%s\".", gene);
                       
-                      // Create data series
-                      DefaultXYDataset dataset = new DefaultXYDataset();
-                      double[][] XYdata = getXYdata(entry.getValue(), vd);
-                      dataset.addSeries(seriesName, XYdata);
+                      // Create plot
+                      final ChartPanel chartPanel = new ChartPanel(IntegratorChartTab.createChart(seriesName,
+                        entry.getValue(), vd.getSignalAndType(), IntegratorChartTab.INCLUDE_OTHER_SERIES_WITH_LIGHT_COLORS));
                       
-                      final NumberAxis signalValueAxis = new NumberAxis(vd.getNiceSignalName());
-                      //domainAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-                      final NumberAxis xAxis = new NumberAxis("Location");
-                      xAxis.setAutoRange(true);
-                      xAxis.setAutoRangeIncludesZero(false);
-                      final XYSplineRenderer renderer = new XYSplineRenderer();
-                      
-                      final XYPlot plot = new XYPlot(dataset, xAxis, signalValueAxis, renderer);
-                      
-                      // Add line at 0
-                      plot.addRangeMarker(zeroMarker, Layer.BACKGROUND);
-                      
-                      final ChartPanel chartPanel = new ChartPanel(new JFreeChart(plot));
+                      // Add to panel
                       chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
                       lh.add(chartPanel);
                     }
@@ -305,6 +304,12 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
     
     // Merge the three strings to a single tooltip
     StringBuffer tooltip = new StringBuffer();
+    if (numberOfGenesInNode>1) {
+      tooltip.append("<h2>Node consists of " + numberOfGenesInNode + " elements:</h2>");
+    } else {
+      // XXX: Change element to real "thing", based on KGID and isMiRNA.
+      tooltip.append("<h2>Node consists of one element:</h2>");
+    }
     if (nodeLabel!=null) {
       tooltip.append(nodeLabel);
     }
@@ -333,22 +338,23 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
       //DefaultBoxAndWhiskerXYDataset dataset = new DefaultBoxAndWhiskerXYDataset("Microarray data assigned to this node");
       DefaultBoxAndWhiskerCategoryDataset dataset = new DefaultBoxAndWhiskerCategoryDataset();
       boolean includePlot = false;
-      for (LabeledObject<List<Double>> exp : experimentalData) {
-        dataset.add(exp.getObject(), exp.getLabel(), exp.getLabel());
-        includePlot |= exp.getObject().size()>1;
+      for (Entry<Class<? extends NameAndSignals>, List<Number>> exp : experimentalData.entrySet()) {
+        String dataLabel = IntegratorUI.getShortTypeNameForNS(exp.getKey());
+        dataset.add(exp.getValue(), dataLabel, dataLabel);
+        includePlot |= exp.getValue().size()>1;
       }
       includePlot |= experimentalData.size()>1;
 
       if (includePlot) {
         CategoryAxis xAxis = new CategoryAxis("Type");
-        NumberAxis yAxis = new NumberAxis(signalLabel);
+        NumberAxis yAxis = new NumberAxis(boxPlotYaxisLabel.toString());
         yAxis.setAutoRange(true);
         yAxis.setAutoRangeIncludesZero(false);
 
         BoxAndWhiskerRenderer renderer = new BoxAndWhiskerRenderer();
         renderer.setMeanVisible(false);
         CategoryPlot plot = new CategoryPlot(dataset, xAxis, yAxis, renderer);
-        // TODO: gestrichelte 0 linie rein?
+        
         final ChartPanel chartPanel = new ChartPanel(new JFreeChart(plot));
         chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
 
@@ -370,54 +376,24 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
 
 
   /**
-   * @param ns
-   * @param vd
+   * @param sb
+   * @param s
    * @return
    */
-  private double[][] getXYdata(Collection<?> ns, VisualizedData vd) {
-    double[][] XYdata = new double[2][];
-    XYdata[0] = new double[ns.size()];
-    XYdata[1] = new double[ns.size()];
-    
-    // Get Location and signal
-    Iterator<?> it = ns.iterator();
-    int i=-1;
-    List<ValuePair<Double, Double>> xy = new ArrayList<ValuePair<Double,Double>>(ns.size());
-    while (it.hasNext()) {
-      i++;
-      double x = i;
-      NameAndSignals n = (NameAndSignals) it.next();
-      if (n instanceof DNAmethylation) {
-        Integer start = ((DNAmethylation) n).getProbeStart();
-        Integer end = ((DNAmethylation) n).getProbeStart();
-        if (start!=null && start.intValue()>0 &&
-            end!=null && end.intValue()>0) {
-          x = start+end/2; // build mean
-        } else if (start!=null && start.intValue()>0) {
-          x = start;
-        } else if (end!=null && end.intValue()>0) {
-          x = end;
-        }
-      }
-      
-      double y = n.getSignalMergedValue(vd.getSigType(), vd.getExperimentName(), MergeType.Mean);
-      
-      xy.add(new ValuePair<Double, Double>(x, y));
+  protected StringBuilder formatGeneSynonyms(StringBuilder sb, String s) {
+    s = s.trim();
+    int pos = s.indexOf(' ');
+    if (sb.length()>0) sb.append("<br/>");
+    if (pos<=0) {
+      sb.append(s);
+    } else {
+      sb.append("<b>");
+      sb.append(s.substring(0, pos));
+      sb.append("</b> (other names: ");
+      sb.append(s.substring(pos+1).replace(" ", ", "));
+      sb.append(")");
     }
-    
-    // Sort by location
-    if (i>0) {
-      Collections.sort(xy, xy.iterator().next().getComparator_OnlyCompareA());
-    }
-    
-    // Write to array
-    i=-1;
-    for (ValuePair<Double, Double> vp : xy) {
-      i++;
-      XYdata[0][i] = vp.getA();
-      XYdata[1][i] = vp.getB();
-    }
-    return XYdata;
+    return sb;
   }
   
   /**

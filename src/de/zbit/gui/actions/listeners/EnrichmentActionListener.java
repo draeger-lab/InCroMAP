@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.Icon;
@@ -190,7 +191,9 @@ public class EnrichmentActionListener implements ActionListener {
     final String loadingString = "Performing enrichment analysis...";
     
     // Log this action.
-    log.fine(loadingString + e.getActionCommand() + " on " + Arrays.deepToString(geneList.toArray()));
+    if (log.isLoggable(Level.FINER)) {
+      log.finer(loadingString + e.getActionCommand() + " on " + Arrays.deepToString(geneList.toArray()));
+    }
     
     // Create a worker to execute everything in a new thread.
     if (species==null && source!=null) this.species = source.getSpecies();
@@ -404,7 +407,7 @@ public class EnrichmentActionListener implements ActionListener {
     String title = String.format("Apply filter to %s to select genes for enrichment", moreTableInfoString);
     
     JTableFilter filt = new JTableFilter((JTable) tab.getVisualization());
-    source.setDefaultInitialSelectionOfJTableFilter(filt);
+    if(source!=null)source.setDefaultInitialSelectionOfJTableFilter(filt);
     filt.setDescribingLabel(title);
     filt = JTableFilter.showDialog(tab, filt,title);
     return filt;

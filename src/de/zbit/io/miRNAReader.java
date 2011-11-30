@@ -112,6 +112,7 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
         nameCol = exCol[0].getAssignedColumn();
         probeNameCol = exCol[1].getAssignedColumn();
         for (int i=2; i<exCol.length; i++) {
+          // Signals are left-over
           if (exCol[i].hasAssignedColumns()) {
             for (int j=0; j<exCol[i].getAssignedColumns().size(); i++) {
               addSignalColumn(exCol[i].getAssignedColumns().get(j), 

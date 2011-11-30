@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
+import de.zbit.data.Chromosome;
+import de.zbit.data.ChromosomeTools;
 import de.zbit.data.GeneID;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
@@ -38,7 +40,7 @@ import de.zbit.util.Utils;
  * @author Clemens Wrzodek
  * @version $Rev$
  */
-public class DNAmethylation extends NSwithProbes {
+public class DNAmethylation extends NSwithProbes implements Chromosome {
   private static final long serialVersionUID = -6002300790004775432L;
   public static final transient Logger log = Logger.getLogger(DNAmethylation.class.getName());
   
@@ -178,6 +180,45 @@ public class DNAmethylation extends NSwithProbes {
     
     
   }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.Chromosome#setChromosome(java.lang.String)
+   */
+  @Override
+  public void setChromosome(String chromosome) {
+    super.addData(chromosome_key, ChromosomeTools.getChromosomeByteRepresentation(chromosome));
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.data.Chromosome#getChromosome()
+   */
+  @Override
+  public String getChromosome() {
+    Byte b = (Byte) super.getData(chromosome_key);
+    if (b==null) return Chromosome.default_Chromosome_string;
+    
+    return ChromosomeTools.getChromosomeStringRepresentation(b);
+  }
   
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#additionalDataToString(java.lang.String, java.lang.Object)
+   */
+  @Override
+  protected Object additionalDataToString(String key, Object value) {
+    if (value==null) return super.additionalDataToString(key, value);
+    if (key.equals(chromosome_key) && value instanceof Byte) {
+      return ChromosomeTools.getChromosomeStringRepresentation((Byte)value);
+    } else {
+      return super.additionalDataToString(key, value);
+    }
+  }
+  
+  /**
+   * Remove the chromosome
+   */
+  public void unsetChromosome() {
+    super.removeData(chromosome_key);
+  }
+
   
 }

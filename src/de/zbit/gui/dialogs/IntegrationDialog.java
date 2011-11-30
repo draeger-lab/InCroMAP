@@ -400,7 +400,9 @@ public class IntegrationDialog extends JPanel implements ActionListener {
         private static final long serialVersionUID = 7415047130386194731L;
         @Override
         protected void createTable() {
-          super.table = new JTreeTable(visualizer, true);
+          synchronized (super.table==null?this:super.table) {
+            super.table = new JTreeTable(visualizer, true);
+          }
           data = (List<? extends TableResult>) ((JTreeTable)table).getFirstRowAsList();
           
           // Set Renderers and add search capabilities

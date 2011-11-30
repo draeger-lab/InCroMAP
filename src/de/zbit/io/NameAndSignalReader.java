@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -87,6 +88,28 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * input file reading progress, OR if this is null.
    */
   protected AbstractProgressBar secondaryProgress;
+  
+  /**
+   * Decimal separator used to parse Numbers
+   */
+  private char decimalSeparator = '.';
+  
+  /**
+   * Number of Signals that could not parse the number
+   * (possibly wrong decimal separator).
+   */
+  private int errornousNumbersInSignals=0;
+  /**
+   * Number of Signals that could not parse the number,
+   * but could possibly get fixed by changing to
+   * {@link #getOtherDecimalSeparator()}.
+   */
+  private int errornousNumbersThatCouldBeFixed=0;
+  /**
+   * Total number of signals that could succesfully parse
+   * a number.
+   */
+  private int totalNumbersParsed=0;
   
   /**
    * Import a file with a GUI. There are many helper methods that allow to quickly
@@ -175,6 +198,21 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     signalColumns = new ArrayList<ValueTriplet<Integer, SignalType, String>>();
   }
   
+  /**
+   * @return the (unmodifiable) list of signal columns
+   */
+  public Collection<ValueTriplet<Integer, SignalType, String>> getSignalColumns() {
+    if (signalColumns==null) return null;
+    return Collections.unmodifiableCollection(signalColumns);
+  }
+  
+  /**
+   * @return the numbert of signal columns
+   */
+  public int getNumberOfSignalColumns() {
+    return signalColumns==null?0:signalColumns.size();
+  }
+  
   public void addAdditionalData(int col, String key) {
     if (additionalDataToRead==null) additionalDataToRead = new ArrayList<ValuePair<Integer, String>>();
     additionalDataToRead.add(new ValuePair<Integer, String>(col,key));
@@ -209,6 +247,48 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
   }
   
   /**
+   * Parses the first 25 lines and checks wether to use
+   * {@link #getDecimalSeparator()} or {@link #getOtherDecimalSeparator()}
+   * to parse numbers. Takes the one that occures more often.
+   * @param r
+   * @throws IOException
+   */
+  public void guessDecimalSeparator(CSVReader r) throws IOException {
+    if (getNumberOfSignalColumns()>0) {
+      // Peek in file
+      r.open();
+      String[] line;
+      char decimalSeparator = getDecimalSeparator();
+      char other = getOtherDecimalSeparator();
+      int stringContainsDecSep=0;
+      int stringContainsOtherDecSep=0;
+      int counter = 0;
+      while ((line=r.getNextLine())!=null) {
+        
+        // Check for separators
+        for (ValueTriplet<Integer, SignalType, String> vp: signalColumns) {
+          if (line.length>vp.getA()) {
+            String s = line[vp.getA()];
+            if (s.indexOf(decimalSeparator)>-1) {
+              stringContainsDecSep++;
+            }
+            if (s.indexOf(other)>-1) {
+              stringContainsOtherDecSep++;
+            }
+          }
+        }
+        
+        if (counter>25) break; // is enough!
+        counter++;
+      }
+      if (stringContainsOtherDecSep>stringContainsDecSep) {
+        log.info(String.format("Changing decimal separator from '%s' to '%s'.", getDecimalSeparator(), getOtherDecimalSeparator()));
+        setDecimalSeparator(getOtherDecimalSeparator());
+      }
+    }
+  }
+  
+  /**
    * Read {@link NameAndSignals} data from given CSV file.
    * 
    * <p>Remark:<br/>
@@ -224,19 +304,36 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * reading the input data to the desired format impossible.
    */
   public Collection<T> read(CSVReader r) throws IOException, Exception {
+    // Guess decimal separator
+    guessDecimalSeparator(r);
+    
+    // Initialize everything
     init();
     r.setProgressBar(getProgressBar());
     r.setDisplayProgress(getProgressBar()!=null);
     r.open();
-    //Map<T, T> ret = new HashMap<T, T>();
-    Collection<T> ret = new ArrayList<T>(128);
+    Collection<T> ret = new ArrayList<T>(256);
     
+    // Read all data
     String[] line;
     while ((line=r.getNextLine())!=null) {
       processLine(line, ret);
     }
     
-    return ret; //.values();
+    // check if we should rather change the decimal separator and re-read
+    if (isNumberParsingErrorsOccured() && isUsefulToChangeDecimalSeparator()) {
+      log.info(String.format("Changing decimal separator from '%s' to '%s'.", getDecimalSeparator(), getOtherDecimalSeparator()));
+      setDecimalSeparator(getOtherDecimalSeparator());
+      ret.clear();
+      r.open();
+      while ((line=r.getNextLine())!=null) {
+        processLine(line, ret);
+      }
+    }
+    // ---
+    
+    ((ArrayList<T>)ret).trimToSize();
+    return ret;
   }
   
   
@@ -300,20 +397,96 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     T mi = m;
     ret.add(m);
     
+    parseSignals(line, mi);
+  }
+
+  /**
+   * Parses the {@link Signal}s from the current csv-files line.
+   * @param line current line
+   * @param mi target object for writing the signal to
+   */
+  private void parseSignals(String[] line, NameAndSignals mi) {
     // Add signals
+    char decimalSeparator = getDecimalSeparator();
     if (signalColumns!=null) {
       for (ValueTriplet<Integer, SignalType, String> vp: signalColumns) {
         if (line.length>vp.getA()) {
+          if (decimalSeparator!='.') {
+            line[vp.getA()]=line[vp.getA()].replace(decimalSeparator, '.');
+          }
+          // Float is sufficient for nearly all files and saves 50% heap space to doubles
           Float signal = Float.NaN;
           try {
             signal = Float.parseFloat(line[vp.getA()]);
           } catch (NumberFormatException e) {
             log.log(Level.WARNING, "Error while parsing signal number.", e);
+            errornousNumbersInSignals++;
+            if (line[vp.getA()].indexOf(getOtherDecimalSeparator())>=0){
+              // Count errors that could poentiatlly get fixed
+              errornousNumbersThatCouldBeFixed++;
+            }
           }
           mi.addSignal(signal, vp.getC(), vp.getB());
         }
       }
+      totalNumbersParsed+=mi.getSignals().size();
     }
+  }
+  
+  /**
+   * @return <code>TRUE</code> if there were signals that could not
+   * parse a number, for some reason ({@link NumberFormatException}
+   * occured).
+   * @see #errornousNumbersInSignals
+   */
+  public boolean isNumberParsingErrorsOccured() {
+    return errornousNumbersInSignals>0;
+  }
+  
+  /**
+   * Analyzes the statistics for {@link NumberFormatException}s
+   * and if those strings contained {@link #getOtherDecimalSeparator()}.
+   * If this method returns true, you should change the {@link #decimalSeparator}
+   * to {@link #getOtherDecimalSeparator()} and re-read the data.
+   * @return true if you should change the decimal separator
+   * and re-read all signals.
+   */
+  public boolean isUsefulToChangeDecimalSeparator() {
+    if (totalNumbersParsed<10) return false; // dataset to small...
+    // Check if we can fix errors by changing the decimal separator
+    if (errornousNumbersInSignals>0 && errornousNumbersThatCouldBeFixed>0) {
+      if ((errornousNumbersInSignals/(double)totalNumbersParsed)>=0.25) {
+        // Only suggest to fix if we had at least 25% errors
+        if ((errornousNumbersThatCouldBeFixed/(double)errornousNumbersInSignals)>=0.75) {
+          // We could fix at least 75% of those errors
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @return
+   */
+  public char getOtherDecimalSeparator() {
+    return getDecimalSeparator()=='.'?',':'.';
+  }
+
+  /**
+   * @return character used to separate decimals
+   * ('.' in english, ',' in german).
+   */
+  public char getDecimalSeparator() {
+    return decimalSeparator;
+  }
+  
+  /**
+   * Change the decimal separator.
+   * @param d
+   */
+  public void setDecimalSeparator(char d) {
+    decimalSeparator = d;
   }
 
   /*
@@ -326,7 +499,9 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * CSV file can be parsed here. Else, the return is simply
    * <pre>
    * return new MyClass(name);
-   * </pre> 
+   * </pre>
+   * <p>If you have to parse numbers, please use {@link #getDecimalSeparator()}
+   * as decimal separator.</p>
    * @throws Exception only critical exceptions should be thrown that really
    * make reading the data impossible.
    */

@@ -926,7 +926,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       while (it.hasNext()) {
         String key = it.next();
         //if (additional_data_is_invisible.contains(key)) continue; // Output everything here
-        r.append(key + ":" + additional_data.get(key));
+        r.append(key + ":" + additionalDataToString(key, additional_data.get(key)));
         if (it.hasNext()) r.append(implodeString);
       }
       r.append("] ");
@@ -1049,6 +1049,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         if (additional_data_is_invisible.contains(key)) continue;
         if (columnIndex==i++) {
           Object add =  additional_data.get(key);
+          add = additionalDataToString(key, add);
           // Do not return null. Number of cols must be solid and thus,
           // must not be null for unset additional data.
           return (add!=null?add:"");
@@ -1057,6 +1058,20 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       }
     }
     return null;
+  }
+
+  /**
+   * Use this method to create a separate toString() method
+   * for all items you might have put into {@link #additional_data}.
+   * Simply return <code>value</code> again to use the normal
+   * toString() method of the object.
+   * @param key
+   * @param value
+   * @return
+   */
+  protected Object additionalDataToString(String key, Object value) {
+    // Intentionally left blank
+    return value;
   }
 
   /* (non-Javadoc)

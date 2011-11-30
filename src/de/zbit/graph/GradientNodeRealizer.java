@@ -22,6 +22,7 @@
 package de.zbit.graph;
 
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,9 @@ import y.view.NodeRealizer;
  * can not be found by using the class name.<br/> If you can provide us
  * with a proof of possessing a yFiles license yourself, we can send you
  * an unobfuscated release of Integrator.</i></p>
+ * 
+ * XXX: Isn't this supported by default?
+ * Also, consider using {@link GradientPaint}.
  * 
  * @author Clemens Wrzodek
  * @version $Rev$

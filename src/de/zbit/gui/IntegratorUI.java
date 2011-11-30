@@ -44,6 +44,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -86,6 +88,7 @@ import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.kegg.KEGGtranslatorOptions;
 import de.zbit.kegg.Translator;
+import de.zbit.kegg.gui.IntegratorGraphPanel;
 import de.zbit.kegg.gui.TranslatePathwayDialog;
 import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorPanel;
@@ -319,7 +322,7 @@ public class IntegratorUI extends BaseFrame {
    * @throws IOException 
    */
   public static void main(String[] args) throws IOException {
-    LogUtil.initializeLogging(Level.INFO,(String[])null);
+    LogUtil.initializeLogging(Level.FINE,(String[])null);
     
     // Set default values for KEGGtranslator
     KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
@@ -713,7 +716,9 @@ public class IntegratorUI extends BaseFrame {
 //    TranslatorPanel pwTab = new TranslatorPanel(Format.JPG, kpal);
 //    pwTab.addPropertyChangeListener(kpal);
 //    addTab(pwTab, "Pathway"); 
-    TranslatePathwayDialog.showAndEvaluateDialog(tabbedPane, kpal, Format.JPG);   
+    TranslatePathwayDialog d = new TranslatePathwayDialog(Format.JPG);
+    d.setTranslatorPanelClassToInitialize(IntegratorGraphPanel.class);
+    TranslatePathwayDialog.showAndEvaluateDialog(tabbedPane, kpal, d);   
   }
   
   /* (non-Javadoc)
@@ -798,7 +803,7 @@ public class IntegratorUI extends BaseFrame {
     else if (PairedNS.class.isAssignableFrom(cl)) panelDataContent = null;
     else if (HeterogeneousNS.class.isAssignableFrom(cl)) panelDataContent = null;
     else if (cl.equals(NameAndSignals.class)) panelDataContent = null; // Temp panels return NS
-    else if (ProteinModificationExpression.class.isAssignableFrom(cl)) panelDataContent = "protein";
+    else if (ProteinModificationExpression.class.isAssignableFrom(cl)) panelDataContent = "Protein";
     else if (DNAmethylation.class.isAssignableFrom(cl)) panelDataContent = "DNA methylation";
     else if (miRNA.class.isAssignableFrom(cl)) panelDataContent = "miRNA"; // Also includes derivates (miRNAandTarget)
     else if (NameAndSignals.class.isAssignableFrom(cl)) panelDataContent = cl.getSimpleName();

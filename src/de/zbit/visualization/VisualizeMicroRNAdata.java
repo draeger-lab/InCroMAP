@@ -186,8 +186,8 @@ public class VisualizeMicroRNAdata {
     }
     if (count>=30) {
       int a =GUITools.showQuestionMessage(IntegratorUI.getInstance(), 
-        String.format("WARNING: %s nodes will be added for the selected microRNA data.\n" +
-          "This %s result in a confusing graph.\n\nDo you want to continue?", count,
+        String.format("WARNING: %s nodes will be added for the selected microRNA data.\n\n" +
+          "This %s result in a confusing graph. If you visualize miRNA expression later, it is recommended to remove not differentially expressed miRNA nodes.\n\nDo you want to continue?", count,
           count>150?"will":"might"), "Add microRNA nodes", JOptionPane.YES_NO_OPTION);
       if (a!=JOptionPane.YES_OPTION) return false;
     }

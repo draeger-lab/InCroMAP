@@ -25,6 +25,7 @@ import java.io.Serializable;
 
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.IntegratorUI;
+import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 
 /**
@@ -61,7 +62,7 @@ public class VisualizedData implements Serializable, Comparable<VisualizedData>{
    * Actual class of any visualized {@link NameAndSignals} instance.
    * E.g., mRNA, miRNA or ProteinModificationExpression.
    */
-  Class<?> nsType;
+  Class<? extends NameAndSignals> nsType;
 
   
   /**
@@ -75,7 +76,7 @@ public class VisualizedData implements Serializable, Comparable<VisualizedData>{
    * {@link #hashCode()} or {@link #compareTo(VisualizedData)} methods!
    */
   public VisualizedData(Object tabName, String experimentName,
-    SignalType sigType, Class<?> nsType) {
+    SignalType sigType, Class<? extends NameAndSignals> nsType) {
     super();
     this.tabName = tabName;
     this.experimentName = experimentName;
@@ -146,14 +147,14 @@ public class VisualizedData implements Serializable, Comparable<VisualizedData>{
   /**
    * @return the nsType
    */
-  public Class<?> getNsType() {
+  public Class<? extends NameAndSignals> getNsType() {
     return nsType;
   }
 
   /**
    * @param nsType the nsType to set
    */
-  public void setNsType(Class<?> nsType) {
+  public void setNsType(Class<? extends NameAndSignals> nsType) {
     this.nsType = nsType;
   }
 
@@ -311,9 +312,19 @@ public class VisualizedData implements Serializable, Comparable<VisualizedData>{
    * and {@link #sigType}.
    */
   public String getNiceSignalName() {
+    return getNiceSignalName(getSignalAndType());
+  }
+  
+  /**
+   * @return a string consisting of {@link #experimentName}
+   * and {@link #sigType}.
+   */
+  public static String getNiceSignalName(ValuePair<String, SignalType> vp) {
     StringBuilder sb = new StringBuilder();
+    String experimentName = vp.getA();
+    SignalType sigType = vp.getB();
     
-    if (experimentName!=null) {
+    if (experimentName!=null && experimentName.length()>0) {
       sb.append(experimentName);
       if (sigType!=null) {
         sb.append(String.format(" [%s]", sigType.toString()));
@@ -323,6 +334,15 @@ public class VisualizedData implements Serializable, Comparable<VisualizedData>{
     }
     
     return sb.toString();
+  }
+
+  /**
+   * @return {@link ValuePair} of experiment Name and
+   * {@link SignalType} (same formatting as in
+   * {@link NameAndSignals}).
+   */
+  public ValuePair<String, SignalType> getSignalAndType() {
+    return new ValuePair<String, SignalType>(getExperimentName(), getSigType());
   }
   
   

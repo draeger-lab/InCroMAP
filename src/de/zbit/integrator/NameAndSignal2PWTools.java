@@ -21,6 +21,7 @@
  */
 package de.zbit.integrator;
 
+import java.awt.Color;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,16 +48,18 @@ import y.view.hierarchy.HierarchyManager;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
-import de.zbit.data.VisualizedData;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.VisualizedData;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.kegg.ext.GraphMLmaps;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.util.TranslatorTools;
 import de.zbit.util.ValuePairUncomparable;
 import de.zbit.util.ValueTriplet;
+import de.zbit.util.prefs.SBPreferences;
 import de.zbit.visualization.VisualizeMicroRNAdata;
 
 
@@ -744,6 +747,70 @@ public class NameAndSignal2PWTools {
    */
   public TranslatorTools getTranslatorTools() {
     return tools;
+  }
+
+
+
+  /**
+   * @param tools
+   * @return <code>TRUE</code> if graph contains any miRNA node
+   * that has annotated expression data and is not differentially
+   * expressed.
+   */
+  public static boolean containsNotDifferentiallyExpressedMiRNA(TranslatorTools tools) {
+    return containsNotDifferentiallyExpressedMiRNA(tools, false);
+  }
+  /**
+   * @see #containsNotDifferentiallyExpressedMiRNA(TranslatorTools)
+   * @param tools
+   * @param remove if true, removes all those nodes.
+   * @return
+   */
+  public static boolean containsNotDifferentiallyExpressedMiRNA(TranslatorTools tools, boolean remove) {
+    Graph2D graph = tools.getGraph();
+    
+      // Get Type map
+      NodeMap typeMap = (NodeMap) tools.getMap(GraphMLmaps.NODE_TYPE);
+      DataMap rawNsMap = tools.getMap(GraphMLmapsExtended.NODE_VISUALIZED_RAW_NS);
+      if (typeMap==null || rawNsMap==null) {
+        return false;
+      }
+      
+      // Get color for no fc
+      SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
+      Color forNothing = PathwayVisualizationOptions.COLOR_FOR_NO_FOLD_CHANGE.getValue(prefs);
+      
+      // Check all nodes
+      Set<Node> toRemove = new HashSet<Node>();
+      for (Node n : tools.getGraph().getNodeArray()) {
+        Object type = typeMap.get(n);
+        if (type!=null && type.equals(TranslatorTools.RNA_TYPE)) {
+          // Has any signal?
+          Map<?,?> rawNS = (Map<?, ?>) rawNsMap.get(n);
+          if (rawNS!=null && rawNS.size()>0) {
+            // Has noFoldChange color
+            if (graph.getRealizer(n).getFillColor().equals(forNothing)) {
+              if (remove) {
+                toRemove.add(n);
+              } else {
+                return true;
+              }
+            }
+          }
+        }
+      }
+      
+      // Maybe Remove given nodes
+      synchronized (graph) {
+        if (remove) {
+          for (Node n: toRemove) {
+            graph.removeNode(n);
+          }
+          return (toRemove.size()>0);
+        }
+      }
+      
+      return false;
   }
   
 }

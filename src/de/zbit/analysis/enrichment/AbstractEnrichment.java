@@ -412,7 +412,8 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       int subsetOfList = entry.getValue().size();
       if (NameAndSignals.containsMicroRNA(entry.getValue()) && countMicroRNAs) {
         // display number of microRNAs with targets in pw/ total # miRNAs
-        subsetOfList = NameAndSignals.geneCentered((Collection<NameAndSignals>)entry.getValue()).size();
+        subsetOfList = NameAndSignals.geneCentered((Collection<NameAndSignals>)entry.getValue(),
+          IntegratorUITools.getMergeTypeSilent()).size();
       }
       
       // Create result object

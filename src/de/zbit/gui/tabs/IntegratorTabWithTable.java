@@ -44,6 +44,7 @@ import de.zbit.data.TableResult;
 import de.zbit.gui.BaseFrame.BaseAction;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.gui.table.JTableFilter;
 import de.zbit.io.CSVWriter;
@@ -96,19 +97,28 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
    */
   @Override
   public File saveToFile() {
-    File f = GUITools.showSaveFileChooser(this, IntegratorUI.saveDir, SBFileFilter.createTSVFileFilter());
+    final File f = GUITools.showSaveFileChooser(this, IntegratorUI.saveDir, SBFileFilter.createTSVFileFilter());
     if (f==null) return null;
     
-    try {
-      //CSVwriteableIO.write(getData(), f.getAbsolutePath());
-      CSVWriter w = new CSVWriter();
-      w.write(table, f);
-      GUITools.showMessage("Saved table successfully to \"" + f.getPath() + "\".", IntegratorUI.appName);
-      return f;
-    } catch (Throwable e) {
-      GUITools.showErrorMessage(this, e);
-    }
-    return null;
+    Runnable r = new Runnable() {
+      @Override
+      public void run() {
+        try {
+          //CSVwriteableIO.write(getData(), f.getAbsolutePath());
+          synchronized (table) {
+            final CSVWriter w = new CSVWriter(IntegratorUI.getInstance().getStatusBar().showProgress());
+            w.write(table, f);
+          }
+          GUITools.showMessage("Saved table successfully to \"" + f.getPath() + "\".", IntegratorUI.appName);
+        } catch (Throwable e) {
+          GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
+        }
+      }
+    };
+    IntegratorUITools.runInSwingWorker(r);
+    
+    // Unfortunately we can not check anymore wether it failed or succeeded.
+    return f;
   }
 
   /* (non-Javadoc)
@@ -195,14 +205,16 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
   @Override
   public int[] getSelectedIndices() {
     // Get selected items
-    int[] selRows = table.getSelectedRows();
-    
-    // Map to view rows (account for sorted tables!)
-    for (int i=0; i<selRows.length; i++) {
-      selRows[i] = table.convertRowIndexToModel(selRows[i]);
+    synchronized (table) {
+      int[] selRows = table.getSelectedRows();
+      
+      // Map to view rows (account for sorted tables!)
+      for (int i=0; i<selRows.length; i++) {
+        selRows[i] = table.convertRowIndexToModel(selRows[i]);
+      }
+      
+      return selRows;
     }
-    
-    return selRows;
   }
   
   /**
@@ -214,19 +226,23 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
     // Get selected rows
     if (selectedIndices==null) return null;
     
-    List<Object> geneList = new ArrayList<Object>(selectedIndices.size());
-    for (int i=0; i<selectedIndices.size(); i++) {
-      geneList.add(getObjectAt(table.convertRowIndexToModel(selectedIndices.get(i))));
+    synchronized (table) {
+      List<Object> geneList = new ArrayList<Object>(selectedIndices.size());
+      for (int i=0; i<selectedIndices.size(); i++) {
+        geneList.add(getObjectAt(table.convertRowIndexToModel(selectedIndices.get(i))));
+      }
+      
+      return geneList;
     }
-    
-    return geneList;
   }
 
   protected void createTable() {
     if (data==null) return;
     
     // Also adds the enrichment right mouse menu
-    table = TableResultTableModel.buildJTable(this);
+    synchronized (table==null?this:table) {
+      table = TableResultTableModel.buildJTable(this);
+    }
   }
 
   /**

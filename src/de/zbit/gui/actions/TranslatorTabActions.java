@@ -51,6 +51,7 @@ import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JDropDownButton;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.integrator.NameAndSignal2PWTools;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.parser.Species;
 import de.zbit.util.StringUtil;
@@ -109,6 +110,7 @@ public class TranslatorTabActions implements ActionListener{
     SEARCH_GRAPH,
     
     REMOVE_MIRNA_NODES,
+    REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES,
     REMOVE_PROTEIN_MODIFICATION_BOXES,
     REMOVE_MRNA_VISUALIZATION,
     REMOVE_DNA_METHYLATION_BOXES,
@@ -132,6 +134,8 @@ public class TranslatorTabActions implements ActionListener{
         
       case REMOVE_MIRNA_NODES:
         return "Remove miRNA nodes";
+      case REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES:
+        return "Remove not differentially expressed miRNA nodes";
       case REMOVE_PROTEIN_MODIFICATION_BOXES:
         return "Remove protein modification boxes";
       case REMOVE_MRNA_VISUALIZATION:
@@ -217,11 +221,12 @@ public class TranslatorTabActions implements ActionListener{
     JPopupMenu remove = new JPopupMenu("Remove");
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MRNA_VISUALIZATION, UIManager.getIcon("ICON_TRASH_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MIRNA_NODES, UIManager.getIcon("ICON_TRASH_16")));
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES, UIManager.getIcon("ICON_TRASH_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES, UIManager.getIcon("ICON_TRASH_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_DNA_METHYLATION_BOXES, UIManager.getIcon("ICON_TRASH_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_ENRICHMENT_PVALUES, UIManager.getIcon("ICON_TRASH_16")));
     // Set by default all to disabled. enableRemoveButtonsAsRequired() does the enabling job.
-    GUITools.setEnabled(false, remove, TPAction.REMOVE_MIRNA_NODES, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES,
+    GUITools.setEnabled(false, remove, TPAction.REMOVE_MIRNA_NODES, TPAction.REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES,
       TPAction.REMOVE_MRNA_VISUALIZATION,TPAction.REMOVE_DNA_METHYLATION_BOXES, TPAction.REMOVE_ENRICHMENT_PVALUES);
     
     removeButton = new JDropDownButton(remove.getLabel(), UIManager.getIcon("ICON_TRASH_16"), remove);
@@ -255,6 +260,10 @@ public class TranslatorTabActions implements ActionListener{
         boolean containsMiRNA = tools.containsRNAnodes();
         GUITools.setEnabled(containsMiRNA, removeButton.getPopUpMenu(), TPAction.REMOVE_MIRNA_NODES);
         
+        // Test for expression
+        GUITools.setEnabled((containsMiRNA && NameAndSignal2PWTools.containsNotDifferentiallyExpressedMiRNA(tools)),
+          removeButton.getPopUpMenu(), TPAction.REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES);
+        
         // Eventually disable the whole DropDownButton.
         removeButton.setEnabled(containsMiRNA || visData[0] || visData[2] || visData[3] || visData[4]);
         return null;
@@ -278,6 +287,9 @@ public class TranslatorTabActions implements ActionListener{
       
     } else if (command.equals(TPAction.REMOVE_MIRNA_NODES.toString())) {
       removeMicroRNAnodes();
+      
+    } else if (command.equals(TPAction.REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES.toString())) {  
+      removeNotDifferentiallyExpressedMicroRNAnodes();
     
     } else if (command.equals(TPAction.ADD_MIRNAS.toString())) {
       addMicroRNAnodes();
@@ -396,6 +408,27 @@ public class TranslatorTabActions implements ActionListener{
     enableRemoveButtonsAsRequired(removeButton);
     parent.repaint();
   }
+  
+  /**
+   * Removes all nodes with type "RNA", that have signals
+   * marked as not differentially expressed (in properties)
+   *  from the parent graph.
+   */
+  public void removeNotDifferentiallyExpressedMicroRNAnodes() {
+    
+    // Remove miRNA nodes
+    TranslatorTools tools = new TranslatorTools(parent);
+    NameAndSignal2PWTools.containsNotDifferentiallyExpressedMiRNA(tools, true);
+    
+    // Check if we removed all nodes and reflect this change
+    if (!tools.containsRNAnodes()) {
+      new VisualizeDataInPathway(parent).removeVisualization(miRNA.class);
+    }
+    
+    // Disable the "remove" button now
+    enableRemoveButtonsAsRequired(removeButton);
+    parent.repaint();
+  }
 
 
   /**
@@ -404,10 +437,12 @@ public class TranslatorTabActions implements ActionListener{
    * @param tools
    */
   public static void removeMicroRNAnodes(TranslatorTools tools) {
-    Map<String, List<Node>> mi2node = tools.getRNA2NodeMap();
-    for (List<Node> nl: mi2node.values()) {
-      for (Node n: nl) {
-        tools.getGraph().removeNode(n);
+    synchronized (tools.getGraph()) {
+      Map<String, List<Node>> mi2node = tools.getRNA2NodeMap();
+      for (List<Node> nl: mi2node.values()) {
+        for (Node n: nl) {
+          tools.getGraph().removeNode(n);
+        }
       }
     }
   }
