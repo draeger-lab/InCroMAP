@@ -24,9 +24,10 @@ package de.zbit.io;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.zbit.data.Chromosome;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.csv.ExpectedColumn;
+import de.zbit.sequence.region.Chromosome;
+import de.zbit.sequence.region.Region;
 
 
 /**
@@ -60,7 +61,7 @@ public class DNAMethylationReader extends AbstractGeneBasedNSreader<DNAmethylati
    * Integer to set if {@link #probeStartCol} or {@link #probeEndCol}
    * is >=0 (set), but the column contains invalid data.
    */
-  private final static Integer invalidOrMissingPosition = -1;
+  private final static Integer invalidOrMissingPosition = Region.DEFAULT_START;
   
   /* (non-Javadoc)
    * @see de.zbit.io.AbstractGeneBasedNSreader#getAdditionalExpectedColumns()
@@ -71,7 +72,7 @@ public class DNAMethylationReader extends AbstractGeneBasedNSreader<DNAmethylati
     list.add(new ExpectedColumn("Probe name", false));
     list.add(new ExpectedColumn("Probe position (start)", false));
     list.add(new ExpectedColumn("Probe position (end)", false));
-    list.add(new ExpectedColumn("Chromosome", false, Chromosome.chromosome_regex.pattern()));
+    list.add(new ExpectedColumn("Chromosome", false, Chromosome.chromosome_regex_with_forced_prefix));
     return list;
   }
 
@@ -130,7 +131,7 @@ public class DNAMethylationReader extends AbstractGeneBasedNSreader<DNAmethylati
       } catch (NumberFormatException e) {
         s=invalidOrMissingPosition;
       }
-      m.setProbeStart(s);
+      m.setStart(s);
     } else {
       m.unsetProbeStart();
     }
@@ -143,7 +144,7 @@ public class DNAMethylationReader extends AbstractGeneBasedNSreader<DNAmethylati
       } catch (NumberFormatException e) {
         s=invalidOrMissingPosition;
       }
-      m.setProbeEnd(s);
+      m.setEnd(s);
     } else {
       m.unsetProbeEnd();
     }

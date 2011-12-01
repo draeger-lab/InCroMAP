@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
@@ -45,13 +46,16 @@ import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.table.DefaultTableCellTwoRowHeaderRenderer;
 import de.zbit.gui.table.TableRowSorterMixed;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
+import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.parser.Species;
+import de.zbit.sequence.region.Region;
 import de.zbit.util.BooleanRendererYesNo;
 import de.zbit.util.JTableTools;
 import de.zbit.util.ScientificNumberRenderer;
@@ -66,6 +70,8 @@ import de.zbit.util.SortedArrayList;
  */
 public class TableResultTableModel<T extends TableResult> extends AbstractTableModel {
   private static final long serialVersionUID = -6542792109889449114L;
+  
+  public static final transient Logger log = Logger.getLogger(NameAndSignalTabActions.class.getName());
   
   /**
    * The {@link NameAndSignals} that should be represented by this {@link TableModel}.
@@ -251,6 +257,17 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
           IntegratorUITools.addRightMousePopup(jc, IntegratorUITools.createKeggPathwayPopup(al2, popUp));
         }
       } else {
+        if (Region.class.isAssignableFrom(tab.getDataContentType())) {
+          NameAndSignalTabActions alNS;
+          if (tab instanceof NameAndSignalsTab) {
+            if (tab.getExampleData()!=null && ((NameAndSignals)tab.getExampleData()).hasSignals()) {
+              alNS = ((NameAndSignalsTab) tab).getActions();
+              IntegratorUITools.addRightMousePopup(jc, IntegratorUITools.createVisualizeGenomicRegionPopup(alNS, popUp));
+            }
+          } else {
+            log.warning(String.format("Can not create 'Plot genome region' popup on %s.", tab.getClass().getSimpleName()));
+          }
+        }
         // Add "Visualize (only) selected data in pathway"
         // DISABLED, because would be much work:
         /* Limit vis. on selected data must be implemented in dialogs and

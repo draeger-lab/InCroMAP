@@ -144,7 +144,8 @@ public class DNAmethRawData {
       // Generate instance and calc. values
       // TODO: Setting "null" to name IS TEMPORARY AND *MUST* BE CHANGED
       DNAmethylation bin = new DNAmethylation(null, window.geneID);
-      bin.setProbeStart(window.position);
+      // TODO: window.position may not be null!
+      bin.setStart(window.position);
       for (int i=0; i<matched_observation_names.size(); i++) {
         
         // Get treatment/ control and eventually logarithmize

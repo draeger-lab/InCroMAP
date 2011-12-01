@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.util.ScientificNumberRenderer;
 import de.zbit.util.Utils;
@@ -466,6 +467,13 @@ public class Signal implements Serializable, Comparable<Object>  {
       }
     }
     return ret;
+  }
+  
+  /**
+   * @return {@link ValuePair} of {@link #getName()} and {@link #getType()}
+   */
+  public ValuePair<String, SignalType> getSignalAndName() {
+    return new ValuePair<String, SignalType> (getName(), getType());
   }
   
 }

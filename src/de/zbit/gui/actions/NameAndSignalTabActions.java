@@ -47,6 +47,7 @@ import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
+import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
@@ -71,6 +72,7 @@ import de.zbit.math.BenjaminiHochberg;
 import de.zbit.math.Bonferroni;
 import de.zbit.math.BonferroniHolm;
 import de.zbit.parser.Species;
+import de.zbit.sequence.region.Region;
 import de.zbit.util.StringUtil;
 import de.zbit.util.ValuePair;
 
@@ -122,6 +124,11 @@ public class NameAndSignalTabActions implements ActionListener {
     SEARCH_TABLE,
     PAIR_DATA,
     ADD_GENE_SYMBOLS,
+    /**
+     * Plot genome region for all {@link Region} implementing
+     * {@link NameAndSignals}. Please do not offer this action
+     * to users if your ns does not contain any {@link Signal}s!
+     */
     PLOT_REGION,
     ANNOTATE_TARGETS,
     REMOVE_TARGETS,
@@ -143,6 +150,9 @@ public class NameAndSignalTabActions implements ActionListener {
         return "Search";
       case ADD_GENE_SYMBOLS:
         return "Show gene symbols";
+      case PLOT_REGION:
+        return "Plot genome region";
+        
         
       case FDR_CORRECTION_BH:
         return "Benjamini Hochberg";
@@ -268,7 +278,7 @@ public class NameAndSignalTabActions implements ActionListener {
       bar.add(GUITools.createJButton(this,
           NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_PENCIL_16")));
     
-    } if (tableContent.equals(DNAmethylation.class)) {
+    } if (Region.class.isAssignableFrom(tableContent)) {
       bar.add(GUITools.createJButton(this,
         NSAction.PLOT_REGION, UIManager.getIcon("ICON_PENCIL_16")));
       
@@ -370,16 +380,33 @@ public class NameAndSignalTabActions implements ActionListener {
       showGeneSymbols();
 
     } else if (command.equals(NSAction.PLOT_REGION.toString())) {
+      JFreeChart chart=null;
+      // By right-click popup => take directly clicked on gene
+      if (e.getSource() instanceof JMenuItem) {
+        List<?> sel = parent.getSelectedItems();
+        if (sel.size()==1) {
+          chart = IntegratorChartTab.createChart(parent.getData(), (NameAndSignals)sel.get(0));
+        }
+      }
+      // Get source data
       IntegratorTab<?> parent = this.parent;
       if (parent.getDataContentType().equals(EnrichmentObject.class)) {
         while (parent.getSourceTab()!=null) {
           parent = parent.getSourceTab();
         }
       }
-      JFreeChart chart = IntegratorChartTab.createAndShowDialog(parent);
-      IntegratorUI.getInstance().addTab(new IntegratorChartTab(IntegratorUI.getInstance(), chart, parent.getSpecies()), "TEMP");
-      // TODO: Create dialog and let also choose how to visualize others.
-      //log.info("Plotting region...");
+      // Let use choose what to plot
+      if (chart==null) {
+        chart = IntegratorChartTab.createAndShowDialog(parent);
+      }
+      if (chart!=null) {
+        // If not canceled, show plot in a new tab
+        String name = chart.getTitle().getText();
+        if (name.indexOf("\n")>0) name = name.substring(0, name.indexOf("\n"));
+        IntegratorChartTab newTab = new IntegratorChartTab(IntegratorUI.getInstance(), chart, parent.getSpecies());
+        newTab.setSourceTab(parent);
+        IntegratorUI.getInstance().addTab(newTab, name, null, UIManager.getIcon("ICON_PENCIL_16"));
+      }
       
     } else if (command.equals(NSAction.ANNOTATE_TARGETS.toString())) {
       annotateMiRNAtargets();
@@ -498,6 +525,13 @@ public class NameAndSignalTabActions implements ActionListener {
     }
     // Example usage for single state change:
     //GUITools.setEnabled(state, toolBar, TPAction.HIGHLIGHT_ENRICHED_GENES);
+    boolean enableRegionPlot = false;
+    if (parent.getExampleData()!=null && parent.getExampleData() instanceof Region
+        && parent.getExampleData() instanceof NameAndSignals && 
+        ((NameAndSignals)parent.getExampleData()).hasSignals()) {
+      enableRegionPlot = true;
+    }
+    GUITools.setEnabled(enableRegionPlot, toolBar, NSAction.PLOT_REGION);
   }
 
   

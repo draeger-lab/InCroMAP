@@ -87,6 +87,7 @@ import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.data.protein.ProteinModificationExpression;
+import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
@@ -367,6 +368,15 @@ public class IntegratorUITools {
         KEGGPathwayActionListener.VISUALIZE_PATHWAY,
         UIManager.getIcon("ICON_PATHWAY_16"));
     
+    append.add(showPathway);
+    
+    return append;
+  }
+  
+  public static JPopupMenu createVisualizeGenomicRegionPopup(NameAndSignalTabActions l, JPopupMenu append) {
+    JMenuItem showPathway = GUITools.createJMenuItem(l,
+      NameAndSignalTabActions.NSAction.PLOT_REGION,
+        UIManager.getIcon("ICON_PENCIL_16"));
     append.add(showPathway);
     
     return append;

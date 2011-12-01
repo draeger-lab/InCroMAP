@@ -53,12 +53,13 @@ import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.ui.Layer;
 
-import de.zbit.data.Chromosome;
+import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.VisualizedData;
 import de.zbit.data.methylation.DNAmethylation;
+import de.zbit.gui.BaseFrame.BaseAction;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
@@ -66,15 +67,21 @@ import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.LayoutHelper;
 import de.zbit.io.SBFileFilter;
 import de.zbit.parser.Species;
+import de.zbit.sequence.region.BasicRegion;
+import de.zbit.sequence.region.Chromosome;
+import de.zbit.sequence.region.Region;
 import de.zbit.util.ValuePair;
-import de.zbit.util.liftOver.util.Interval;
 
 /**
+ * Region-based plot of {@link NameAndSignals} data, implementing the
+ * {@link Region} interface.
+ * 
  * @author Clemens Wrzodek
  * @version $Rev$
  */
 public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
-  
+  private static final long serialVersionUID = 4674576376048996302L;
+
   /**
    * A set of very light colors
    */
@@ -144,7 +151,17 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
    */
   @Override
   public void updateButtons(JMenuBar menuBar, JToolBar toolbar) {
-    // TODO Auto-generated method stub
+    // Update the toolbar.
+    if (toolbar!=null) {
+      createJToolBarItems(toolbar);
+    }
+    
+    // Enable and disable items
+    if (isReady()) {
+      GUITools.setEnabled(true, menuBar, BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
+    } else {
+      GUITools.setEnabled(false, menuBar, BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
+    }
   }
   
   /* (non-Javadoc)
@@ -152,7 +169,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
    */
   @Override
   public void createJToolBarItems(JToolBar bar) {
-    // TODO Auto-generated method stub
+    // TODO Add genes / color gene markers / Save ....
   }
   
   /* (non-Javadoc)
@@ -204,7 +221,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     Marker zeroMarker = new ValueMarker(makerPosition,Color.LIGHT_GRAY, new BasicStroke(3f, BasicStroke.JOIN_ROUND, BasicStroke.JOIN_BEVEL, 1.0f, new float[] {10.0f, 6.0f}, 0.0f));
     
     // Try to get a nice name
-    String seriesName = getSeriesName(name, signalAndName);
+    String seriesName = signalAndName.getA();//getSeriesName(null, signalAndName);
     
     // Create data series
     final XYSplineRenderer renderer = new XYSplineRenderer();
@@ -218,7 +235,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
         // Not twice and only same type.
         if (sVd.equals(signalAndName) || !sVd.getB().equals(sigType)) continue;
         
-        dataset.addSeries(getSeriesName(name, sVd), getXYdata(nsList, sVd));
+        dataset.addSeries(sVd.getA(), getXYdata(nsList, sVd)); // getSeriesName(null, sVd)
         if (includeOthers==INCLUDE_OTHER_SERIES_WITH_LIGHT_COLORS) {
           renderer.setSeriesPaint(seriesNumber, veryLightColors[(seriesNumber-1)%veryLightColors.length] );
         }
@@ -227,7 +244,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     }
     
     // Configure both axes
-    final NumberAxis signalValueAxis = new NumberAxis(VisualizedData.getNiceSignalName(signalAndName));
+    final NumberAxis signalValueAxis = new NumberAxis(signalAndName.getB().toString());
     if (sigType.equals(SignalType.FoldChange)) {
       signalValueAxis.setAutoRangeMinimumSize(2);
     }
@@ -241,9 +258,25 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     final XYPlot plot = new XYPlot(dataset, xAxis, signalValueAxis, renderer);
     plot.addRangeMarker(zeroMarker, Layer.BACKGROUND);
     
-    return new JFreeChart(plot);
+    JFreeChart jfc = new JFreeChart(plot);
+    jfc.setTitle(getChartName(name, nsList.iterator().hasNext()?nsList.iterator().next():null));
+    return jfc;
   }
   
+  /**
+   * Create a nice name for the chart.
+   * @param name
+   * @param ns
+   * @return
+   */
+  private static String getChartName(String name, NameAndSignals ns) {
+    if (name!=null) {
+      return String.format("%s\n%s", name, IntegratorUI.getShortTypeNameForNS(ns.getClass()));
+    } else {
+      return IntegratorUI.getShortTypeNameForNS(ns.getClass());  
+    }
+  }
+
   /**
    * @param name
    * @param signalAndName
@@ -285,15 +318,14 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
       i++;
       double x = i;
       NameAndSignals n = (NameAndSignals) it.next();
-      if (n instanceof DNAmethylation) {
-        Integer start = ((DNAmethylation) n).getProbeStart();
-        Integer end = ((DNAmethylation) n).getProbeStart();
-        if (start!=null && start.intValue()>0 &&
-            end!=null && end.intValue()>0) {
+      if (n instanceof Region) {
+        int start = ((Region) n).getStart();
+        int end = ((Region) n).getEnd();
+        if (start!=Region.DEFAULT_START && end!=Region.DEFAULT_START) {
           x = start+end/2; // build mean
-        } else if (start!=null && start.intValue()>0) {
+        } else if (start!=Region.DEFAULT_START) {
           x = start;
-        } else if (end!=null && end.intValue()>0) {
+        } else if (end!=Region.DEFAULT_START) {
           x = end;
         }
       }
@@ -319,9 +351,13 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
   }
 
   /**
+   * Create a region-based XY plot for the given {@link IntegratorTab}.
+   * Currently, only {@link DNAmethylation} data is supported, but actually, all
+   * {@link NameAndSignals} implementing {@link Region} could be used!
    * @param parent
    * @return
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static JFreeChart createAndShowDialog(final IntegratorTab<?> parent) {
     JPanel panel = new JPanel();
     LayoutHelper lh = new LayoutHelper(panel);
@@ -376,21 +412,20 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     
     // Parse gene names
     Runnable collectGeneNames = new Runnable() {
-      @SuppressWarnings("unchecked")
       @Override
       public void run() {
-        Set<String> headers = new HashSet<String>();
+        Set<String> names = new HashSet<String>();
         Set<String> chromosomes = new HashSet<String>();
         Iterator<NameAndSignals> l = ((Iterable<NameAndSignals>)parent.getData()).iterator();
         while (l.hasNext()) {
           NameAndSignals ns = l.next();
-          headers.add(ns.getName());
+          names.add(ns.getName());
           if (ns instanceof Chromosome) {
             chromosomes.add(((Chromosome) ns).getChromosome());
           }
         }
         
-        gene.setHeaders(headers);
+        gene.setHeaders(names);
         gene.setEnabled(geneBased.isSelected());
         if (chromosomes.size()>0) {
           chr.setHeaders(chromosomes);
@@ -415,9 +450,9 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     
     int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), panel, "Select data to visualize", JOptionPane.OK_CANCEL_OPTION);
     if (ret==JOptionPane.OK_OPTION) {
-      // TODO: ...
+      
       String name;
-      List<NameAndSignals> nsList = new ArrayList<NameAndSignals>();
+      List nsList = new ArrayList();
       if (region.isSelected()) {
         // REGION-BASED
         String chro; int starto=0; int endo=0;
@@ -427,42 +462,28 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
           endo = Integer.parseInt(end.getSelectedItem().toString());
           name = String.format("%s:%s-%s", chro, starto, endo);
         } catch (Exception e) {
-          // TODO: number format e
+          GUITools.showErrorMessage(null, String.format("Invalid genome region \"%s-%s\".", 
+            start.getSelectedItem().toString(), end.getSelectedItem().toString()));
           return null;
         }
         
-        Interval i = new Interval(chro, starto, endo);
-        Iterator<NameAndSignals> l = ((Iterable<NameAndSignals>)parent.getData()).iterator();
-        while (l.hasNext()) {
-          NameAndSignals ns = l.next();
-          if (ns instanceof Chromosome && ((Chromosome) ns).getChromosome().equals(chro)) {
-            // TODO: actual an interface "region based" would be nice
-            if (ns instanceof DNAmethylation) {
-              Interval other = new Interval(chro, ((DNAmethylation) ns).getProbeStart(), ((DNAmethylation) ns).getProbeEnd());
-              if (other.intersects(i)) {
-                nsList.add(ns);
-              }
-            }
-          }
-        }
+        nsList = (List<? extends NameAndSignals>) BasicRegion.getAllIntersections((Iterable<Region>)parent.getData(), new BasicRegion(chro, starto, endo));
         
       } else {
         // GENE-BASED
         String geneName = gene.getSelectedItem().toString();
         name = String.format("Gene \"%s\".", geneName);
         
-        Iterator<NameAndSignals> l = ((Iterable<NameAndSignals>)parent.getData()).iterator();
-        while (l.hasNext()) {
-          NameAndSignals ns = l.next();
-          if (ns.getName().equals(geneName)) {
-            nsList.add(ns);
-          }
-        }
-
+        nsList = getAllNSbelongingToSameGene((Iterable<NameAndSignals>)parent.getData(), geneName);
       }
       
-      // TODO: Warn when nslist is 0
+      // Warn when nslist is 0
+      if (nsList.size()<1) {
+        GUITools.showErrorMessage(null, "No probes for the selected region!");
+        return null;
+      }
       
+      // Create Chart
       byte includeOthers=0;
       if (onOthers.isSelected()) includeOthers = INCLUDE_OTHER_SERIES_WITH_LIGHT_COLORS;
       if (alOthers.isSelected()) includeOthers = INCLUDE_OTHER_SERIES;
@@ -471,5 +492,79 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     
     return null;
   }
+  
+  /**
+   * Gene-based method to create a chart. Plots all probes, that
+   * are associated with the same geneId or name (if template does
+   * not implement {@link GeneID}) as the <code>template</code>.
+   * @param <T>
+   * @param allNS all {@link NameAndSignals}
+   * @param template one probe of the GeneSet that should get visualized.
+   * @return genome region plot
+   */
+  public static <T extends NameAndSignals> JFreeChart createChart(final Iterable<T> allNS, NameAndSignals template) {
+    List<T> nsList = getAllNSbelongingToSameGene(allNS, template);
+    if (nsList.size()<1) {
+      return null;
+    }
+    String name = String.format("Gene \"%s\".", template.getName());
+    return createChart(name, nsList, template.getSignals().get(0).getSignalAndName(), INCLUDE_OTHER_SERIES);
+  }
+  
+  /**
+   * Get all {@link NameAndSignals} from <code>allNS</code> that belong to
+   * the same gene as <code>template</code>. Take the {@link GeneID} if the
+   * interface is implemented and valid for <code>template</code>, else the name.
+   * @param <T>
+   * @param allNS
+   * @param template
+   * @return
+   */
+  public static <T extends NameAndSignals> List<T> getAllNSbelongingToSameGene(final Iterable<T> allNS, NameAndSignals template) {
+    List<T> nsList = new ArrayList<T>();
+    if (template==null || allNS==null) return nsList;
+    String templateName = template.getName();
+    
+    int geneID=-1;
+    if (template instanceof GeneID) {
+      geneID = ((GeneID) template).getGeneID();
+    }
+    boolean hasGeneID = geneID>0;
+    
+    Iterator<T> l = allNS.iterator();
+    while (l.hasNext()) {
+      T ns = l.next();
+      if (hasGeneID) {
+        if (geneID==((GeneID)ns).getGeneID()) {
+          nsList.add(ns);
+        }
+      } else {
+        if (ns.getName().equals(templateName)) {
+          nsList.add(ns);
+        }
+      }
+    }
+    
+    return nsList;
+  }
+  
+  /**
+   * Simple wrapper for {@link #getAllNSbelongingToSameGene(Iterable, NameAndSignals)}.
+   * @param <T>
+   * @param allNS
+   * @param name
+   * @return
+   */
+  public static <T extends NameAndSignals> List<T> getAllNSbelongingToSameGene(final Iterable<T> allNS, String name) {
+    return getAllNSbelongingToSameGene(allNS, new NameAndSignals(name) {
+      private static final long serialVersionUID = 1L;
+      @Override
+      protected <L extends NameAndSignals> void merge(Collection<L> source,
+        L target, MergeType m) {}
+      @Override
+      public String getUniqueLabel() {return getName();}
+    });
+  }
+
   
 }

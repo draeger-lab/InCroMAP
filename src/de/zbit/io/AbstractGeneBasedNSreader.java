@@ -113,10 +113,15 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   public ExpectedColumn[] getExpectedColumns() {
     List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
     List<IdentifierType> idTypes = new ArrayList<IdentifierType>(Arrays.asList(IdentifierType.values()));
+    List<String> regExForIdTypes = new ArrayList<String>(Arrays.asList(MappingUtils.identifierTypeRegEx));
+    // Remove unknown
+    regExForIdTypes.remove(idTypes.indexOf(IdentifierType.Unknown));
     idTypes.remove(IdentifierType.Unknown);
+    // Do not set the gene id regex (simple number... to unspecific)
+    regExForIdTypes.set(idTypes.indexOf(IdentifierType.NCBI_GeneID), null);
     
     // The user may choose multiple identifier columns
-    ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),true,true,true,false,null);
+    ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),true,true,true,false,regExForIdTypes.toArray(new String[0]));
     list.add(e);
     
     List<ExpectedColumn> additional = getAdditionalExpectedColumns();
