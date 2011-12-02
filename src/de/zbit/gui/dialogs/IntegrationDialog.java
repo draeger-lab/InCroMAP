@@ -36,7 +36,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.treetable.JTreeTable;
 
 import de.zbit.data.HeterogeneousData;
-import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal.MergeType;
@@ -62,6 +61,7 @@ import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.parser.Species;
 import de.zbit.util.ArrayUtils;
+import de.zbit.util.LabeledObject;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 

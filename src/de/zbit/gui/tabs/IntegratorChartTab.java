@@ -21,6 +21,7 @@
  */
 package de.zbit.gui.tabs;
 
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.io.File;
@@ -32,6 +33,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
 import javax.swing.JComponent;
 import javax.swing.JMenuBar;
@@ -46,19 +48,33 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.SymbolAxis;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.labels.IntervalXYItemLabelGenerator;
+import org.jfree.chart.labels.ItemLabelAnchor;
+import org.jfree.chart.labels.ItemLabelPosition;
+import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
+import org.jfree.data.Range;
+import org.jfree.data.xy.DefaultIntervalXYDataset;
 import org.jfree.data.xy.DefaultXYDataset;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.ui.Layer;
+import org.jfree.ui.TextAnchor;
 
 import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.VisualizedData;
+import de.zbit.data.genes.GenericGene;
 import de.zbit.data.methylation.DNAmethylation;
+import de.zbit.graph.SymbolAxisWithArbitraryStart;
 import de.zbit.gui.BaseFrame.BaseAction;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
@@ -210,7 +226,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
    * @return
    */
   public static JFreeChart createChart(String name, Collection<? extends NameAndSignals> nsList,
-    ValuePair<String, SignalType> signalAndName, byte includeOthers) {
+    ValuePair<String, SignalType> signalAndName, byte includeOthers, Species species) {
     final SignalType sigType = signalAndName.getB();
     
     // Create marker at 0 or 0.05
@@ -244,25 +260,222 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     }
     
     // Configure both axes
-    final NumberAxis signalValueAxis = new NumberAxis(signalAndName.getB().toString());
+    final NumberAxis yAxis = new NumberAxis(signalAndName.getB().toString());
     if (sigType.equals(SignalType.FoldChange)) {
-      signalValueAxis.setAutoRangeMinimumSize(2);
+      yAxis.setAutoRangeMinimumSize(2);
     }
-    signalValueAxis.setAutoRangeIncludesZero(true);
+    yAxis.setAutoRangeIncludesZero(true);
     //domainAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-    final NumberAxis xAxis = new NumberAxis("Location");
+    String xAxisLabel = "Location";
+    String chromsome = getChromosome(nsList);
+    if (chromsome!=null) xAxisLabel+=" ("+ chromsome + ")";
+    final NumberAxis xAxis = new NumberAxis(xAxisLabel);
     xAxis.setAutoRange(true);
     xAxis.setAutoRangeIncludesZero(false);
     
     // Create plot, add marker baseline and return chart
-    final XYPlot plot = new XYPlot(dataset, xAxis, signalValueAxis, renderer);
+    final XYPlot plot = new XYPlot(dataset, xAxis, yAxis, renderer);
     plot.addRangeMarker(zeroMarker, Layer.BACKGROUND);
     
-    JFreeChart jfc = new JFreeChart(plot);
+    // Allow adding a second plot with combined x-xis
+    CombinedDomainXYPlot localCombinedDomainXYPlot = new CombinedDomainXYPlot(xAxis);
+    localCombinedDomainXYPlot.setGap(0);
+    localCombinedDomainXYPlot.add(plot,85);
+
+    JFreeChart jfc = new JFreeChart(localCombinedDomainXYPlot);
     jfc.setTitle(getChartName(name, nsList.iterator().hasNext()?nsList.iterator().next():null));
+    
+    // TODO: This leads to an extensive resource usage, since genes
+    // are not cached!
+    if (XYdata[0].length>0) {
+      Region target = new BasicRegion(getChromosomeAsByte(nsList), (int)XYdata[0][0], (int)XYdata[0][XYdata[0].length-1]);
+      addGenes(localCombinedDomainXYPlot, target, species);
+    }
+    
+    
     return jfc;
   }
   
+  
+  public static void addGenes(final CombinedDomainXYPlot plot, final Region target, final Species species) {
+    Runnable r = new Runnable() {
+      @Override
+      public void run() {
+        XYPlot other = (XYPlot) plot.getSubplots().get(0);
+        
+        List<GenericGene> genesInRegion;
+        try {
+          genesInRegion = GenericGene.getAllGenesForRegion(target, species);
+        } catch (Exception e) {
+          log.log(Level.SEVERE, "Could not add gene-view.", e);
+          return;
+        }
+        if (Thread.currentThread().isInterrupted()) return;
+        
+        // Domain is X, Range is Y
+        double[][] genesAsArray = new double[6][genesInRegion.size()];
+        final String[] geneNames = new String[genesInRegion.size()];
+        final String[] geneDescriptions = new String[genesInRegion.size()];
+        
+        // Convert formatting and add series
+        DefaultIntervalXYDataset genes = new DefaultIntervalXYDataset();
+        for (int i=0; i<genesInRegion.size(); i++) {
+          GenericGene g = genesInRegion.get(i);
+          genesAsArray[0][i] = g.getStart();
+          genesAsArray[1][i] = g.getStart();
+          genesAsArray[2][i] = g.getEnd();
+          if (g.isOnForwardStrand()) {
+            genesAsArray[3][i] = 2;
+            genesAsArray[4][i] = 0;
+            genesAsArray[5][i] = genesAsArray[3][i];
+          } else {
+            genesAsArray[3][i] = -2;
+            genesAsArray[4][i] = 0;
+            genesAsArray[5][i] = genesAsArray[3][i];
+          }
+          
+          geneNames[i] = g.getName();
+          geneDescriptions[i] = g.getDescription();
+        }
+        genes.addSeries("Genes", genesAsArray);
+        
+        // Configure Axes
+        XYBarRenderer localXYBarRenderer = new XYBarRenderer();
+        localXYBarRenderer.setSeriesVisibleInLegend(0, false);
+        localXYBarRenderer.setUseYInterval(true);
+        createItemLabelsAndToolTips(geneNames, geneDescriptions, localXYBarRenderer, genesInRegion, target);
+        
+        ValueAxis xAxis = other.getDomainAxis();
+        ValueAxis xxAxis = new NumberAxis(xAxis.getLabel());
+        xxAxis.setAutoRange(false);
+        xxAxis.setRange(xAxis.getRange());
+
+        SymbolAxis yyAxis = new SymbolAxisWithArbitraryStart("Strand", new String[] {"Reverse", "", "Forward"},-1);
+        yyAxis.setGridBandsVisible(false);
+        yyAxis.setTickMarksVisible(false);
+        Range yTarget = new Range(-2,2);
+        yyAxis.setAutoRange(false);
+        yyAxis.setRangeWithMargins(yTarget);
+        yyAxis.setDefaultAutoRange(yTarget);
+        yyAxis.setFixedAutoRange(yTarget.getLength());
+        yyAxis.setLowerMargin(yyAxis.getUpperMargin());
+        
+        XYPlot geneBoxesPlot = new XYPlot(genes,(ValueAxis) xxAxis, yyAxis, localXYBarRenderer);
+        //geneBoxesPlot.setRangeGridlinesVisible(false);
+        geneBoxesPlot.addDomainMarker(new ValueMarker(0,Color.BLACK, new BasicStroke(3f)));
+        
+        // Center X-Axis on meth-data, not on genes
+        xAxis.setAutoRange(false);
+        XYDataset dataset = other.getDataset();
+        Range targetRange = new Range(dataset.getXValue(0, 0), dataset.getXValue(0, dataset.getItemCount(0)-1));
+        xAxis.setRangeWithMargins(targetRange);
+        xAxis.setDefaultAutoRange(targetRange);
+        xAxis.setFixedAutoRange(targetRange.getLength());
+        
+        
+        //JFreeChart jfc = new JFreeChart(localCombinedDomainXYPlot);
+        plot.add(geneBoxesPlot,15);
+        //----
+      }
+    
+    };
+    new Thread(r).start();
+    
+  }
+
+  /**
+   * 
+   * @param geneNames
+   * @param geneDescriptions
+   * @param localXYBarRenderer
+   * @param genesInRegion all
+   * @param target whole visible area (x-axis)
+   */
+  private static void createItemLabelsAndToolTips(final String[] geneNames,
+    final String[] geneDescriptions, XYBarRenderer localXYBarRenderer,
+    List<GenericGene> genesInRegion, Region target) {
+    localXYBarRenderer.setBaseItemLabelGenerator(new IntervalXYItemLabelGenerator(){
+      private static final long serialVersionUID = 1L;
+      /* (non-Javadoc)
+       * @see org.jfree.chart.labels.AbstractXYItemLabelGenerator#generateLabelString(org.jfree.data.xy.XYDataset, int, int)
+       */
+      @Override
+      public String generateLabelString(XYDataset dataset, int series, int item) {
+        return geneNames[item];
+      }
+    });
+    localXYBarRenderer.setBaseToolTipGenerator(new XYToolTipGenerator() {
+      @Override
+      public String generateToolTip(XYDataset dataset, int series, int item) {
+        return geneDescriptions[item];
+      }
+    });
+    localXYBarRenderer.setBaseItemLabelsVisible(true);
+    //localXYBarRenderer.setBaseItemLabelFont(new Font("Dialog", Font.BOLD, 14));
+    /*
+     * Wenn start sichtbar
+     *   Wenn Ende sichtbar, dann center
+     *   sonst links
+     * Else Wenn Ende sichtbar
+     *   dann rechts
+     * else
+     *   CENTER //Hopefully... 
+     */
+    
+    /* Try to place labels on genes as visible as possible.
+     * Default is centered, change if only one ranges into visible area */
+    ItemLabelPosition pos = new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER);
+    if (genesInRegion.size()==1) {
+      Region r = genesInRegion.get(0);
+      if (r.getStart() >= target.getStart() && r.getEnd()<=target.getEnd()) {
+        // Kepp default centering
+      } else {
+        // is going out of range somewhere
+        int middle = r.getMiddle();
+        if (middle<target.getMiddle()) {
+          //Unfortunately this is relative to the middle, so
+          // right means "right of middle", but not "on right side" :-(
+          pos =  new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER_RIGHT);
+        } else {
+          pos =  new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER_LEFT);
+        }
+      }
+    }
+    localXYBarRenderer.setBaseNegativeItemLabelPosition(pos);
+    localXYBarRenderer.setBasePositiveItemLabelPosition(pos);
+  }
+  
+  /**
+   * @param nsList
+   * @return
+   */
+  private static String getChromosome(
+    Collection<? extends NameAndSignals> nsList) {
+    if (nsList!=null && nsList.size()>0) {
+      NameAndSignals o = nsList.iterator().next();
+      if (o instanceof Chromosome) {
+        return ((Chromosome) o).getChromosome();
+      }
+    }
+    return null;
+  }
+  
+  /**
+   * 
+   * @param nsList
+   * @return
+   */
+  private static Byte getChromosomeAsByte(
+    Collection<? extends NameAndSignals> nsList) {
+    if (nsList!=null && nsList.size()>0) {
+      NameAndSignals o = nsList.iterator().next();
+      if (o instanceof Chromosome) {
+        return ((Chromosome) o).getChromosomeAsByteRepresentation();
+      }
+    }
+    return null;
+  }
+
   /**
    * Create a nice name for the chart.
    * @param name
@@ -319,17 +532,8 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
       double x = i;
       NameAndSignals n = (NameAndSignals) it.next();
       if (n instanceof Region) {
-        int start = ((Region) n).getStart();
-        int end = ((Region) n).getEnd();
-        if (start!=Region.DEFAULT_START && end!=Region.DEFAULT_START) {
-          x = start+end/2; // build mean
-        } else if (start!=Region.DEFAULT_START) {
-          x = start;
-        } else if (end!=Region.DEFAULT_START) {
-          x = end;
-        }
+        x = ((Region) n).getMiddle();
       }
-      
       double y = n.getSignalMergedValue(vd.getB(), vd.getA(), MergeType.Mean);
       
       xy.add(new ValuePair<Double, Double>(x, y));
@@ -358,7 +562,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
    * @return
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static JFreeChart createAndShowDialog(final IntegratorTab<?> parent) {
+  public static JFreeChart createAndShowDialog(final IntegratorTab<?> parent, Species species) {
     JPanel panel = new JPanel();
     LayoutHelper lh = new LayoutHelper(panel);
     
@@ -487,7 +691,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
       byte includeOthers=0;
       if (onOthers.isSelected()) includeOthers = INCLUDE_OTHER_SERIES_WITH_LIGHT_COLORS;
       if (alOthers.isSelected()) includeOthers = INCLUDE_OTHER_SERIES;
-      return createChart(name, nsList, (ValuePair<String, SignalType>) selExp.getSelectedItem(), includeOthers);
+      return createChart(name, nsList, (ValuePair<String, SignalType>) selExp.getSelectedItem(), includeOthers, species);
     }
     
     return null;
@@ -502,13 +706,14 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
    * @param template one probe of the GeneSet that should get visualized.
    * @return genome region plot
    */
-  public static <T extends NameAndSignals> JFreeChart createChart(final Iterable<T> allNS, NameAndSignals template) {
+  public static <T extends NameAndSignals> JFreeChart createChart(final Iterable<T> allNS,
+    NameAndSignals template, Species species) {
     List<T> nsList = getAllNSbelongingToSameGene(allNS, template);
     if (nsList.size()<1) {
       return null;
     }
     String name = String.format("Gene \"%s\".", template.getName());
-    return createChart(name, nsList, template.getSignals().get(0).getSignalAndName(), INCLUDE_OTHER_SERIES);
+    return createChart(name, nsList, template.getSignals().get(0).getSignalAndName(), INCLUDE_OTHER_SERIES, species);
   }
   
   /**

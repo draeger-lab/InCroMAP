@@ -83,6 +83,17 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   private AbstractMapper<String, Integer> mapper = null;
   
   /**
+   * If true, this class will not try to initialize the
+   * {@link #mapper}.
+   */
+  private boolean doNotInitializeTheMapper = false;
+  
+  /**
+   * If true, will supress all warnings.
+   */
+  private boolean supressWarnings = false;
+  
+  /**
    * A second identifier that is used as Backup, <B>only if the
    * first identifier is the GeneID</B>.
    * Assigns this identifier as name, instead of the GeneID.
@@ -242,6 +253,26 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   }
   
   /**
+   * If you don't want to initialize any 2GeneID mapper, set
+   * this to true (only makes sense if you
+   * {@link #addSecondIdentifier(int, IdentifierType)} and
+   * read primary the geneID already).
+   * @param dontInitilize
+   */
+  public void setDontInitializeToGeneIDmapper(boolean dontInitilize) {
+    this.doNotInitializeTheMapper = dontInitilize;
+  }
+  
+  /**
+   * If true, will not warn, e.g. when an integer
+   * could not ger parsed from a string.
+   * @param b
+   */
+  public void setSupressWarnings(boolean b) {
+    supressWarnings = b;
+  }
+  
+  /**
    * Evaluates the selected identifiers and builds the reader according
    * to the priority of selected identifiers.
    * @param expectedColumn
@@ -326,14 +357,16 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   @Override
   public Collection<T> read(CSVReader inputCSV) throws IOException, Exception {
     // Init Mapper (primary for idType)
-    if (!idType.equals(IdentifierType.NCBI_GeneID)) {
-      mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
-    } else if (secondID!=null) {
-      // Only if primary identifier does not require a mapper,
-      // init one for the secondary identifier
-      mapper = MappingUtils.initialize2GeneIDMapper(secondID.getB(), getSecondaryProgressBar(), species);
+    if (!doNotInitializeTheMapper) {
+      if (!idType.equals(IdentifierType.NCBI_GeneID)) {
+        mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
+      } else if (secondID!=null) {
+        // Only if primary identifier does not require a mapper,
+        // init one for the secondary identifier
+        mapper = MappingUtils.initialize2GeneIDMapper(secondID.getB(), getSecondaryProgressBar(), species);
+      }
+      if (mapper!=null) mapper.readMappingData();
     }
-    if (mapper!=null) mapper.readMappingData();
     
     // Read file
     Collection<T> ret =  super.read(inputCSV);
@@ -349,10 +382,12 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   @Override
   public Collection<T> read(String[] identifiers) throws IOException, Exception {
     // Init Mapper (primary for idType)
-    if (!idType.equals(IdentifierType.NCBI_GeneID)) {
-      mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
+    if (!doNotInitializeTheMapper) {
+      if (!idType.equals(IdentifierType.NCBI_GeneID)) {
+        mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
+      }
+      if (mapper!=null) mapper.readMappingData();
     }
-    if (mapper!=null) mapper.readMappingData();
     
     // Read file
     Collection<T> ret =  super.read(identifiers);
@@ -378,7 +413,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
         if (geneID<=0) geneID=null;
       } catch (NumberFormatException e) {
         String warning = String.format("Could not parse GeneID from String '%s'.", name);
-        if (!issuedWarnings.contains(warning)) {
+        if (!supressWarnings && !issuedWarnings.contains(warning)) {
           log.warning(warning);
           issuedWarnings.add(warning);
         }
@@ -411,7 +446,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     
     // SecondID is normally the name. If not, still keep this
     // information as additional information.
-    if (addSecondIDasAdditionalInfo) {
+    if (addSecondIDasAdditionalInfo && m!=null) {
       m.addData(secondID.getB().toString(), line[secondID.getA()]);
     }
     

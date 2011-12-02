@@ -40,7 +40,6 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import de.zbit.data.GeneID;
-import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.gui.ActionCommandRenderer;
 import de.zbit.gui.GUITools;
@@ -52,6 +51,7 @@ import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.OrganismSelector;
 import de.zbit.parser.Species;
+import de.zbit.util.LabeledObject;
 import de.zbit.util.ResourceManager;
 import de.zbit.util.StringUtil;
 

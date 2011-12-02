@@ -278,7 +278,7 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
                       
                       // Create plot
                       final ChartPanel chartPanel = new ChartPanel(IntegratorChartTab.createChart(seriesName,
-                        entry.getValue(), vd.getSignalAndType(), IntegratorChartTab.INCLUDE_OTHER_SERIES_WITH_LIGHT_COLORS));
+                        entry.getValue(), vd.getSignalAndType(), IntegratorChartTab.INCLUDE_OTHER_SERIES_WITH_LIGHT_COLORS, species));
                       
                       // Add to panel
                       chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
@@ -356,7 +356,7 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
         CategoryPlot plot = new CategoryPlot(dataset, xAxis, yAxis, renderer);
         
         final ChartPanel chartPanel = new ChartPanel(new JFreeChart(plot));
-        chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
+        chartPanel.setPreferredSize(new java.awt.Dimension(500, 350)); // TODO:..
 
       
         ph.add(new JLabel("<html><body><b><h3>Microarray data assigned to this node:</h3></b></body></html>"));

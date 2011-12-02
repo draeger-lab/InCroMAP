@@ -317,16 +317,18 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     // Read all data
     String[] line;
     while ((line=r.getNextLine())!=null) {
+      if (Thread.currentThread().isInterrupted()) break;
       processLine(line, ret);
     }
     
     // check if we should rather change the decimal separator and re-read
-    if (isNumberParsingErrorsOccured() && isUsefulToChangeDecimalSeparator()) {
+    if (isNumberParsingErrorsOccured() && isUsefulToChangeDecimalSeparator() && !Thread.currentThread().isInterrupted()) {
       log.info(String.format("Changing decimal separator from '%s' to '%s'.", getDecimalSeparator(), getOtherDecimalSeparator()));
       setDecimalSeparator(getOtherDecimalSeparator());
       ret.clear();
       r.open();
       while ((line=r.getNextLine())!=null) {
+        if (Thread.currentThread().isInterrupted()) break;
         processLine(line, ret);
       }
     }

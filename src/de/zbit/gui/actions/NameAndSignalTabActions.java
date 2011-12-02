@@ -385,7 +385,7 @@ public class NameAndSignalTabActions implements ActionListener {
       if (e.getSource() instanceof JMenuItem) {
         List<?> sel = parent.getSelectedItems();
         if (sel.size()==1) {
-          chart = IntegratorChartTab.createChart(parent.getData(), (NameAndSignals)sel.get(0));
+          chart = IntegratorChartTab.createChart(parent.getData(), (NameAndSignals)sel.get(0), parent.getSpecies());
         }
       }
       // Get source data
@@ -397,7 +397,7 @@ public class NameAndSignalTabActions implements ActionListener {
       }
       // Let use choose what to plot
       if (chart==null) {
-        chart = IntegratorChartTab.createAndShowDialog(parent);
+        chart = IntegratorChartTab.createAndShowDialog(parent, parent.getSpecies());
       }
       if (chart!=null) {
         // If not canceled, show plot in a new tab

@@ -32,7 +32,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import de.zbit.data.EnrichmentObject;
-import de.zbit.data.LabeledObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
@@ -49,6 +48,7 @@ import de.zbit.gui.dialogs.MergedSignalDialog.MergeTypeForTwo;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.parser.Species;
+import de.zbit.util.LabeledObject;
 import de.zbit.util.ValuePair;
 
 /**

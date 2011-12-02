@@ -52,6 +52,9 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
   
   public NSwithProbesAndRegion(String probeName, String geneName, Integer geneID, String chromosome, int start, int end) {
     super(probeName, geneName, geneID);
+    setStart(start);
+    setEnd(end);
+    setChromosome(chromosome);
   }
   
   
@@ -84,6 +87,25 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
   public int getEnd() {
     Object probeEnd = getData(Region.endKey);
     return probeEnd==null?Region.DEFAULT_START:(Integer)probeEnd;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.sequence.region.Region#getMiddle()
+   */
+  @Override
+  public int getMiddle() {
+    int start = getStart();
+    int end = getEnd();
+    
+    if (start!=Region.DEFAULT_START && end!=Region.DEFAULT_START) {
+      return start+((end-start)/2); // get middle
+    } else if (start!=Region.DEFAULT_START) {
+      return start;
+    } else if (end!=Region.DEFAULT_START) {
+      return end;
+    } else {
+      return Region.DEFAULT_START;
+    }
   }
   
   /**
@@ -240,8 +262,7 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
     int start = getStart(); int end = getEnd();
     int start2 = other.getStart(); int end2 = other.getEnd();
     return  (getChromosomeAsByteRepresentation()==other.getChromosomeAsByteRepresentation()) &&
-        ((start2 >= start && start2 <= end) || (end2 >=start && end2 <= end) || // "a overlaps b", "b overlaps a"
-        (start >= start2 && end <= end2)); // "a encloses b", ("b encloses a" is covered by "a overlaps b" code).
+    ((start2 >= start && start2 <= end) || (start >= start2 && start <= end2));
   }
 
 

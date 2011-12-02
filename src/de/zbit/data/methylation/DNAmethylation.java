@@ -51,6 +51,21 @@ public class DNAmethylation extends NSwithProbesAndRegion {
     unsetProbeName();
   }
   
+  /**
+   * @param geneName
+   * @param geneID
+   * @param start
+   * @param end
+   * @param chromosome
+   */
+  public DNAmethylation(String geneName, Integer geneID, Integer start,
+    Integer end, String chromosome) {
+    this(geneName,geneID);
+    if (start!=null) setStart(start);
+    if (end!=null) setEnd(end);
+    if (chromosome!=null) setChromosome(chromosome);
+  }
+
   /* (non-Javadoc)
    * @see java.lang.Object#clone()
    */
