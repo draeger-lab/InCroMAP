@@ -44,8 +44,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -88,7 +86,7 @@ import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.kegg.KEGGtranslatorOptions;
 import de.zbit.kegg.Translator;
-import de.zbit.kegg.gui.IntegratorGraphPanel;
+import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.kegg.gui.TranslatePathwayDialog;
 import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorPanel;
@@ -717,7 +715,7 @@ public class IntegratorUI extends BaseFrame {
 //    pwTab.addPropertyChangeListener(kpal);
 //    addTab(pwTab, "Pathway"); 
     TranslatePathwayDialog d = new TranslatePathwayDialog(Format.JPG);
-    d.setTranslatorPanelClassToInitialize(IntegratorGraphPanel.class);
+    d.setTranslatorPanelClassToInitialize(IntegratorPathwayPanel.class);
     TranslatePathwayDialog.showAndEvaluateDialog(tabbedPane, kpal, d);   
   }
   

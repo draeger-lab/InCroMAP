@@ -21,6 +21,11 @@
 
   <!-- define some properties that are used throughout the tasks -->
   <target name="init">
+    <echo>
+       PLESE MAKE SURE LOG LEVEL IN IntegratorUI.java MAIN METHOD IS SET TO INFO!
+    	 ALSO Ensure that list of "yFiles-using-classes to obfuscate" is complete!
+    </echo>
+  	
     <!-- the base directory of the Integrator repository -->
     <property name="base" location=".."/>
   	
@@ -74,8 +79,11 @@
             	<exclude name="**/package.html"/>
             </fileset>
     	      <filelist dir="${base}" files="libquaqua.jnilib,libquaqua64.jnilib"/>
-
-<!-- Uncomment for SysBio classes instead of compiled jar. -->
+    	     
+           <!-- JFREECHART -->
+    	     <zipfileset excludes="META-INF/*" src="${base}/lib/JFreeChart/jfreechart-1.0.14.jar"/>
+    	     <zipfileset excludes="META-INF/*" src="${base}/lib/JFreeChart/jcommon-1.0.17.jar"/>
+    	
            <fileset dir="${SysBioPath}/bin">
               <exclude name="de/zbit/resources/liftover/*"/>
             	<exclude name="**/package.html"/>

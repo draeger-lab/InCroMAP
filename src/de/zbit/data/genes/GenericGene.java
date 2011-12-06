@@ -34,7 +34,7 @@ import de.zbit.io.CSVReader;
 import de.zbit.io.GenericGeneReader;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
-import de.zbit.sequence.region.BasicRegion;
+import de.zbit.sequence.region.SimpleRegion;
 import de.zbit.sequence.region.Region;
 import de.zbit.sequence.region.Strand;
 
@@ -145,7 +145,7 @@ public class GenericGene extends NSwithProbesAndRegion implements Strand {
     } else {
       ret = new ArrayList<GenericGene>(content);
     }
-    Collections.sort(ret, BasicRegion.getComparator());
+    Collections.sort(ret, SimpleRegion.getComparator());
     
     return ret;
   }

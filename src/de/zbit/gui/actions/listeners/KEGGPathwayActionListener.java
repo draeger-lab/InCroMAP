@@ -63,7 +63,7 @@ import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
-import de.zbit.kegg.gui.IntegratorGraphPanel;
+import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorPanel;
@@ -471,7 +471,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    */
    TranslatorPanel<Graph2D> visualizePathway(String pwId, EnrichmentObject<?> pwo) {
     //Create the translator panel
-     IntegratorGraphPanel pwTab = new IntegratorGraphPanel(pwId, this);
+     IntegratorPathwayPanel pwTab = new IntegratorPathwayPanel(pwId, this);
     String name = pwId;
     if (pwo!=null) {
       pwTab.setData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString(), pwo);
@@ -502,7 +502,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
      //Create the translator panel
      String pwId = pwSel.getSelectedPathwayID();
      if (pwId==null) return null;
-     IntegratorGraphPanel pwTab = new IntegratorGraphPanel(pwId, this);
+     IntegratorPathwayPanel pwTab = new IntegratorPathwayPanel(pwId, this);
      
      // Try to get species
      Species spec = TranslatorTabActions.getSpeciesOfPathway(pwTab, IntegratorUITools.organisms);

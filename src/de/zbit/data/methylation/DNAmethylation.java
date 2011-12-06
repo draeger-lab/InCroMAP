@@ -61,8 +61,15 @@ public class DNAmethylation extends NSwithProbesAndRegion {
   public DNAmethylation(String geneName, Integer geneID, Integer start,
     Integer end, String chromosome) {
     this(geneName,geneID);
-    if (start!=null) setStart(start);
-    if (end!=null) setEnd(end);
+    if (start!=null) setStart(start>-1?start:end);
+    if (end!=null) {
+      try {
+        setEnd(end);
+      } catch (Exception e) {
+        // Only if we set end prior to start. Since we
+        // Don't do that, we can ignore this error.
+      }
+    }
     if (chromosome!=null) setChromosome(chromosome);
   }
 

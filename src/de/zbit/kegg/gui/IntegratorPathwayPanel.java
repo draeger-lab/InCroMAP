@@ -48,6 +48,7 @@ import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 
 import y.base.DataMap;
 import y.base.Edge;
+import y.base.Node;
 import y.base.NodeMap;
 import y.view.Graph2D;
 import y.view.HitInfo;
@@ -78,7 +79,7 @@ import de.zbit.util.Utils;
  * @author Clemens Wrzodek
  * @version $Rev$
  */
-public class IntegratorGraphPanel extends TranslatorGraphPanel {
+public class IntegratorPathwayPanel extends TranslatorGraphPanel {
   private static final long serialVersionUID = -981908109792103420L;
   /**
    * {@link Species} for this panel.
@@ -90,7 +91,7 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
    * @param pathwayID
    * @param format
    */
-  public IntegratorGraphPanel(String pathwayID, Format format, ActionListener translationResult) {
+  public IntegratorPathwayPanel(String pathwayID, Format format, ActionListener translationResult) {
     super(pathwayID, format, translationResult);
   }
   
@@ -98,7 +99,7 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
    * @param pathwayID
    * @param translationResult
    */
-  public IntegratorGraphPanel(String pathwayID, ActionListener translationResult) {
+  public IntegratorPathwayPanel(String pathwayID, ActionListener translationResult) {
     this (pathwayID, Format.JPG, translationResult);
   }
   
@@ -134,16 +135,20 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
         if (base!=null) {
           lh.add(base);
         }
-      }
-      
-      // Add final panel
-      if (Thread.currentThread().isInterrupted()) return;
-      if (p.getComponentCount()>0) {
+        
+        // Add final panel
+        if (Thread.currentThread().isInterrupted()) return;
         synchronized (detailPanel) {
-          ((JScrollPane) detailPanel).setViewportView(p);
-
-          // Scroll to top.
-          GUITools.scrollToTop(detailPanel);
+          if (p.getComponentCount()>0) {
+            
+            ((JScrollPane) detailPanel).setViewportView(p);
+            
+            // Scroll to top.
+            GUITools.scrollToTop(detailPanel);
+          } else {
+            // Remove an eventual loading bar
+            ((JScrollPane) detailPanel).setViewportView(null);
+          }
         }
       }
     }
@@ -190,8 +195,11 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
         
         // Get Node label, description and pictures
         if (mapDescription.equals(GraphMLmaps.NODE_LABEL)) {
-          if (c.toString().contains(",")) {
-            String[] splitt = c.toString().split(",");
+          if (nodeOrEdge instanceof Node && TranslatorTools.isPathwayReference((Node)nodeOrEdge)) {
+            // Not multiples, just a reference
+          } else if (c.toString().contains(", ")) { // the space is important!
+            // Multiple genes in one node
+            String[] splitt = c.toString().split(", ");
             numberOfGenesInNode = splitt.length;
             StringBuilder sb = new StringBuilder();
             for (String s: splitt) {
@@ -199,6 +207,7 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
             }
             c = sb.toString();
           } else {
+            // Single gene
             c = formatGeneSynonyms(new StringBuilder(), c.toString()).toString();
           }
           nodeLabel = "<font size=\"4\">"+c.toString()+"</font><br/>"; // .replace(",", ",<br/>")
@@ -206,7 +215,15 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
         } else if (mapDescription.equals(GraphMLmaps.EDGE_TYPE)) {
           nodeLabel = "<b><h2>asd"+c.toString().replace(",", ",<br/>")+"</h2></b><br/>";
         } else if (mapDescription.equals(GraphMLmaps.NODE_DESCRIPTION)) {
-          description = "<i><font size=\"-1\">"+c.toString().replace(",", ",<br/>")+"</font></i><br/>";
+          // Nice idea, unfortunately descriptions come before names...
+//          String[] descriptions = c.toString().split(",");
+//          if (numberOfGenesInNode>1 && descriptions.length==numberOfGenesInNode) {
+//            // Show each description below the name
+//            nodeLabel = appendDescriptions(nodeLabel, descriptions);
+//          } else {
+            description = "<i><font size=\"-1\">"+c.toString().replace(",", ",<br/>")+"</font></i><br/>";
+//          }
+          
         } else if (mapDescription.equals(GraphMLmaps.NODE_KEGG_ID)) {
           for (String s: c.toString().split(",")) {
             s=s.toUpperCase().trim();
@@ -227,7 +244,8 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
               VisualizedData vd = e.getKey();
               if (ns!=null && ns.size()>0) {
                 // Get Signals, if 1 show, else summary.
-                List<Signal> signals = NameAndSignals.getSignals((Collection<? extends NameAndSignals>)ns, vd.getExperimentName(), vd.getSigType());
+                List<Signal> signals = NameAndSignals.getSignals(
+                  (Collection<? extends NameAndSignals>)ns, vd.getExperimentName(), vd.getSigType());
                 if (signals!=null && signals.size()>0) {
                   List<Number> signalNumbers = Signal.toNumberList(signals);
                   // Well... we put pValues and fold-changes all in one list... maybe not that good!
@@ -356,7 +374,7 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
         CategoryPlot plot = new CategoryPlot(dataset, xAxis, yAxis, renderer);
         
         final ChartPanel chartPanel = new ChartPanel(new JFreeChart(plot));
-        chartPanel.setPreferredSize(new java.awt.Dimension(500, 350)); // TODO:..
+        chartPanel.setPreferredSize(new java.awt.Dimension(500, 350));
 
       
         ph.add(new JLabel("<html><body><b><h3>Microarray data assigned to this node:</h3></b></body></html>"));
@@ -374,7 +392,6 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
     return centered;
   }
 
-
   /**
    * @param sb
    * @param s
@@ -385,7 +402,9 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
     int pos = s.indexOf(' ');
     if (sb.length()>0) sb.append("<br/>");
     if (pos<=0) {
+      sb.append("<b>");
       sb.append(s);
+      sb.append("</b>");
     } else {
       sb.append("<b>");
       sb.append(s.substring(0, pos));
@@ -394,6 +413,32 @@ public class IntegratorGraphPanel extends TranslatorGraphPanel {
       sb.append(")");
     }
     return sb;
+  }
+  
+  /**
+   * @param nodeLabel String formatted by {@link #createDetailPanel(Object)}
+   * @param descriptions description strings with exactly the same length
+   * as if one would split nodeLable by "&ltbr/>".
+   * @return one string containing both
+   */
+  @SuppressWarnings("unused")
+  private String appendDescriptions(String nodeLabel, String[] descriptions) {
+    StringBuilder newLabel = new StringBuilder();
+    int pos = -1;
+    int lastPos = 0;
+    int i=0;
+    while ((pos=nodeLabel.indexOf("<br/>", ++pos))>=0) {
+      newLabel.append(nodeLabel.substring(lastPos, pos));
+      newLabel.append("<br/>");
+      newLabel.append("<i><font size=\"-1\">");
+      newLabel.append(descriptions[i++]);
+      newLabel.append("</font></i>");
+      
+      lastPos = pos;
+    }
+    newLabel.append(nodeLabel.substring(lastPos));
+    
+    return newLabel.toString();
   }
   
   /**

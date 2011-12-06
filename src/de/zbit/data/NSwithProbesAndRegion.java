@@ -52,8 +52,13 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
   
   public NSwithProbesAndRegion(String probeName, String geneName, Integer geneID, String chromosome, int start, int end) {
     super(probeName, geneName, geneID);
-    setStart(start);
-    setEnd(end);
+    setStart(start>-1?start:end);
+    try {
+      setEnd(end);
+    } catch (Exception e) {
+      // Only if we set end prior to start. Since we
+      // Don't do that, we can ignore this error.
+    }
     setChromosome(chromosome);
   }
   
@@ -85,8 +90,17 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
    * @return the probe end (or {@link Region#DEFAULT_START}).
    */
   public int getEnd() {
-    Object probeEnd = getData(Region.endKey);
-    return probeEnd==null?Region.DEFAULT_START:(Integer)probeEnd;
+    // Important: We store the LENGTH not the real end position.
+    return getStart()+getLength();
+  }
+  
+  /**
+   * @return the length of the probe
+   */
+  public int getLength() {
+    Object probeLength = getData(Region.endKey);
+    // Important: We store the LENGTH not the real end position.
+    return probeLength==null?0:((Number)probeLength).intValue();
   }
   
   /* (non-Javadoc)
@@ -110,9 +124,26 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
   
   /**
    * Set the corresponding probe end.
+   * @throws Exception 
    */
-  public void setEnd(int probeEnd) {
-    super.addData(Region.endKey, probeEnd);
+  public void setEnd(int probeEnd) throws Exception {
+    int start = getStart();
+    if (start==Region.DEFAULT_START) throw new Exception("Can not set end position prior to start position.");
+    
+    /* Store the lenth. This is always a smaller number than
+     * end, so we can save precious memory here. */
+    long diff = probeEnd-start;
+    if (diff==0) {
+      // default value of getLength() is already 0.
+    } else if (diff<=Byte.MAX_VALUE) {
+      super.addData(Region.endKey, (byte)diff);
+    } else if (diff<=Short.MAX_VALUE) {
+      super.addData(Region.endKey, (short)diff);
+    } else if (diff<=Integer.MAX_VALUE) {
+      super.addData(Region.endKey, (int)diff);
+    } else {
+      super.addData(Region.endKey, (long)diff);
+    }
   }
   
   /**
@@ -177,7 +208,12 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
     }
     if (positions.size()>0) {
       double averagePosition = Utils.max(positions);
-      ((Region) target).setEnd((int)(averagePosition));
+      try {
+        ((Region) target).setEnd((int)(averagePosition));
+      } catch (Exception e) {
+        // Only if we set end prior to start. Since we
+        // Don't do that, we can ignore this error.
+      }
     }
     
     
@@ -249,6 +285,8 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
     if (value==null) return super.additionalDataToString(key, value);
     if (key.equals(chromosome_key) && value instanceof Byte) {
       return ChromosomeTools.getChromosomeStringRepresentation((Byte)value);
+    } else if (key.equals(Region.endKey)) {
+      return getEnd();
     } else {
       return super.additionalDataToString(key, value);
     }

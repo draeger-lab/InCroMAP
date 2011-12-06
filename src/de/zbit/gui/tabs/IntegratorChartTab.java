@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -83,9 +84,10 @@ import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.LayoutHelper;
 import de.zbit.io.SBFileFilter;
 import de.zbit.parser.Species;
-import de.zbit.sequence.region.BasicRegion;
+import de.zbit.sequence.region.AbstractRegion;
 import de.zbit.sequence.region.Chromosome;
 import de.zbit.sequence.region.Region;
+import de.zbit.sequence.region.SimpleRegion;
 import de.zbit.util.ValuePair;
 
 /**
@@ -185,7 +187,14 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
    */
   @Override
   public void createJToolBarItems(JToolBar bar) {
+    if (bar.getName().equals(getClass().getSimpleName())) return; //Already done.
+    bar.setName(getClass().getSimpleName());
+    
+    bar.removeAll();
     // TODO Add genes / color gene markers / Save ....
+    bar.add(new JLabel("Work in progress, coming soon..."));
+    
+    GUITools.setOpaqueForAllElements(bar, false);
   }
   
   /* (non-Javadoc)
@@ -288,7 +297,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     // TODO: This leads to an extensive resource usage, since genes
     // are not cached!
     if (XYdata[0].length>0) {
-      Region target = new BasicRegion(getChromosomeAsByte(nsList), (int)XYdata[0][0], (int)XYdata[0][XYdata[0].length-1]);
+      Region target = AbstractRegion.createRegion(getChromosomeAsByte(nsList), (int)XYdata[0][0], (int)XYdata[0][XYdata[0].length-1]);
       addGenes(localCombinedDomainXYPlot, target, species);
     }
     
@@ -337,11 +346,14 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
           geneNames[i] = g.getName();
           geneDescriptions[i] = g.getDescription();
         }
-        genes.addSeries("Genes", genesAsArray);
+        genes.addSeries(genesInRegion.size()==1?
+            String.format("Gene: \"%s\"", geneNames[0]):"Genes", genesAsArray);
         
         // Configure Axes
         XYBarRenderer localXYBarRenderer = new XYBarRenderer();
-        localXYBarRenderer.setSeriesVisibleInLegend(0, false);
+        if (genesInRegion.size()!=1) {
+          localXYBarRenderer.setSeriesVisibleInLegend(0, false);
+        }
         localXYBarRenderer.setUseYInterval(true);
         createItemLabelsAndToolTips(geneNames, geneDescriptions, localXYBarRenderer, genesInRegion, target);
         
@@ -361,7 +373,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
         yyAxis.setLowerMargin(yyAxis.getUpperMargin());
         
         XYPlot geneBoxesPlot = new XYPlot(genes,(ValueAxis) xxAxis, yyAxis, localXYBarRenderer);
-        //geneBoxesPlot.setRangeGridlinesVisible(false);
+        geneBoxesPlot.setRangeGridlinesVisible(false);
         geneBoxesPlot.addDomainMarker(new ValueMarker(0,Color.BLACK, new BasicStroke(3f)));
         
         // Center X-Axis on meth-data, not on genes
@@ -370,7 +382,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
         Range targetRange = new Range(dataset.getXValue(0, 0), dataset.getXValue(0, dataset.getItemCount(0)-1));
         xAxis.setRangeWithMargins(targetRange);
         xAxis.setDefaultAutoRange(targetRange);
-        xAxis.setFixedAutoRange(targetRange.getLength());
+        //xAxis.setFixedAutoRange(targetRange.getLength());
         
         
         //JFreeChart jfc = new JFreeChart(localCombinedDomainXYPlot);
@@ -431,14 +443,15 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
         // Kepp default centering
       } else {
         // is going out of range somewhere
-        int middle = r.getMiddle();
-        if (middle<target.getMiddle()) {
-          //Unfortunately this is relative to the middle, so
-          // right means "right of middle", but not "on right side" :-(
-          pos =  new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER_RIGHT);
-        } else {
-          pos =  new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER_LEFT);
-        }
+        
+        //Unfortunately this is relative to the middle, so
+        // right means "right of middle", but not "on right side" :-(
+//        int middle = r.getMiddle();
+//        if (middle<target.getMiddle()) {
+//          pos =  new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER_RIGHT);
+//        } else {
+//          pos =  new ItemLabelPosition(ItemLabelAnchor.CENTER, TextAnchor.CENTER_LEFT);
+//        }
       }
     }
     localXYBarRenderer.setBaseNegativeItemLabelPosition(pos);
@@ -671,7 +684,8 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
           return null;
         }
         
-        nsList = (List<? extends NameAndSignals>) BasicRegion.getAllIntersections((Iterable<Region>)parent.getData(), new BasicRegion(chro, starto, endo));
+        nsList = (List<? extends NameAndSignals>) SimpleRegion.getAllIntersections((Iterable<Region>)parent.getData(),
+          AbstractRegion.createRegion(chro, starto, endo));
         
       } else {
         // GENE-BASED

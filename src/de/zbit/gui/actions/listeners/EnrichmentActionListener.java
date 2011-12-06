@@ -46,6 +46,7 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.ActionCommandWithIcon;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
@@ -407,7 +408,7 @@ public class EnrichmentActionListener implements ActionListener {
     String title = String.format("Apply filter to %s to select genes for enrichment", moreTableInfoString);
     
     JTableFilter filt = new JTableFilter((JTable) tab.getVisualization());
-    if(source!=null)source.setDefaultInitialSelectionOfJTableFilter(filt);
+    tab.setDefaultInitialSelectionOfJTableFilter(filt);
     filt.setDescribingLabel(title);
     filt = JTableFilter.showDialog(tab, filt,title);
     return filt;
@@ -429,7 +430,19 @@ public class EnrichmentActionListener implements ActionListener {
     Set<Integer> newItemsGeneIDs = NameAndSignals.getGeneIds(newItems);
     while (e.hasNext()) {
       Object item = e.next();
-      if (item instanceof GeneID) {
+      if (item instanceof miRNA) {
+        boolean oneTargetIsInList = false;
+        for (miRNAtarget target : ((miRNA) item).getTargets()) {
+          if (newItemsGeneIDs.contains(target.getTarget())) {
+            oneTargetIsInList = true;
+            break;
+          }
+        }
+        if (!oneTargetIsInList) {
+          e.remove();
+          modified = true;
+        }
+      } else if (item instanceof GeneID) {
         if (!newItemsGeneIDs.contains(((GeneID) item).getGeneID())) {
           e.remove();
           modified = true;

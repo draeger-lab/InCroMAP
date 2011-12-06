@@ -102,7 +102,7 @@ public class miRNAtarget implements Comparable<miRNAtarget>, Serializable, CSVwr
   }
 
   /**
-   * @return the target
+   * @return the target gene id
    * @see #target
    */
   public int getTarget() {
