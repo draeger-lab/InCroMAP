@@ -29,13 +29,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 import de.zbit.data.NSwithProbesAndRegion;
-import de.zbit.gui.IntegratorUITools;
 import de.zbit.io.CSVReader;
 import de.zbit.io.GenericGeneReader;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
-import de.zbit.sequence.region.SimpleRegion;
 import de.zbit.sequence.region.Region;
+import de.zbit.sequence.region.SimpleRegion;
 import de.zbit.sequence.region.Strand;
 
 /**

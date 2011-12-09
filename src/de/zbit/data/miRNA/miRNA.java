@@ -144,7 +144,7 @@ public class miRNA extends NSwithProbes {
    * @param key
    * @param listItem
    */
-  private static <K, V> void addToList(Map<K, List<V>> map, K key, V listItem) {
+  public static <K, V> void addToList(Map<K, List<V>> map, K key, V listItem) {
     List<V> list = map.get(key);
     if (list==null) {
       list = new LinkedList<V>();

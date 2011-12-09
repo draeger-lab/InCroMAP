@@ -297,6 +297,7 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
    */
   @Override
   public boolean intersects(Region other) {
+    if (other==null) return false;
     int start = getStart(); int end = getEnd();
     int start2 = other.getStart(); int end2 = other.getEnd();
     return  (getChromosomeAsByteRepresentation()==other.getChromosomeAsByteRepresentation()) &&

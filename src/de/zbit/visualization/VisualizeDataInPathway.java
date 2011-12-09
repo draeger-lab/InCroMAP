@@ -1159,7 +1159,7 @@ public class VisualizeDataInPathway {
    * @return true if methods should consider/paint this signal.
    * False, if the signal should be skipped.
    */
-  public boolean considerSignal(double signalValue, SignalType type,
+  public static boolean considerSignal(double signalValue, SignalType type,
     float ignoreFC, double ignorePV) {
     if (type!=null) {
       if (type.equals(SignalType.FoldChange)) {
