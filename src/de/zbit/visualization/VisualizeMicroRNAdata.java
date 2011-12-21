@@ -99,6 +99,16 @@ public class VisualizeMicroRNAdata {
    * corresponding to the <code>data</code>.
    */
   public int addMicroRNAsToGraph(Collection<? extends miRNA> data) {
+    return addMicroRNAsToGraph(data, false);
+  }
+  /**
+   * 
+   * @param data
+   * @param silent
+   * @return
+   * @see #addMicroRNAsToGraph(Collection)
+   */
+  public int addMicroRNAsToGraph(Collection<? extends miRNA> data, boolean silent) {
     // MergeType does NOT make any difference, because signals of input data are not processed
     data = NameAndSignals.geneCentered(data, IntegratorUITools.getMergeTypeSilent());
     
@@ -111,7 +121,7 @@ public class VisualizeMicroRNAdata {
     // Optional step: count number of nodes to add
     // and warn user if more than 30 nodes!
     // Return -1, so the parent method does not ask for target annotation
-    if (!countNodesAndIssueWarning(data, gi2n_map, 30)) return -1;
+    if (!silent && !countNodesAndIssueWarning(data, gi2n_map, 30)) return -1;
     
     // Add a node for each miRNA to the graph.
     int visualizedMiRNAs = 0;
@@ -184,8 +194,8 @@ public class VisualizeMicroRNAdata {
         }
       }
     }
-    if (count>=30) {
-      int a =GUITools.showQuestionMessage(IntegratorUI.getInstance(), 
+    if (count>=thresholdForWarning) {
+      int a = GUITools.showQuestionMessage(IntegratorUI.getInstance(), 
         String.format("WARNING: %s nodes will be added for the selected microRNA data.\n\n" +
           "This %s result in a confusing graph. If you visualize miRNA expression later, it is recommended to remove not differentially expressed miRNA nodes.\n\nDo you want to continue?", count,
           count>150?"will":"might"), "Add microRNA nodes", JOptionPane.YES_NO_OPTION);

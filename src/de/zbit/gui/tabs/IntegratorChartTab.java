@@ -92,9 +92,9 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
   /**
    * A set of very light colors
    */
-  private static Color[] veryLightColors = new Color[]{new Color(220,220,255), 
-    new Color(220,255,220), new Color(220,255,255),
-    new Color(255,220,255), new Color(255,255,220), new Color(255,220,220)};
+  private static Color[] veryLightColors = new Color[]{new Color(200,200,255), 
+    new Color(200,255,200), new Color(185,255,255),
+    new Color(255,185,255), new Color(255,255,185), new Color(255,200,200)};
   
   /**
    * Flag for including also other series with light colors.

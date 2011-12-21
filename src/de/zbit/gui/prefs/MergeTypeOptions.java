@@ -50,7 +50,7 @@ public interface MergeTypeOptions extends KeyProvider {
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static final OptionGroup GENE_CENTER_OPTIONS = new OptionGroup(
-      "Gene center options",null,
+      "Gene center options",(String)null,
       GENE_CENTER_SIGNALS_BY, REMEMBER_GENE_CENTER_DECISION);
   
   

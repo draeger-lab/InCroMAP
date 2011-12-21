@@ -448,5 +448,12 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
   public void setSpecies(Species species) {
     this.species = species;
   }
+
+  /**
+   * @return
+   */
+  public Species getSpecies() {
+    return species;
+  }
   
 }

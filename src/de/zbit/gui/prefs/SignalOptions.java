@@ -105,8 +105,11 @@ public interface SignalOptions extends KeyProvider {
   * Select how to merge multiple probes to one.
   */
  public static Option<MergeType> GENE_CENTER_SIGNALS_BY = new Option<MergeType>("GENE_CENTER_SIGNALS_BY", MergeType.class,
-     "Select how to merge multiple probes to a gene centric dataset.", MergeType.Automatic,
-     PROBE_CENTERED, Option.buildRange(Boolean.FALSE));
+     "Select how to merge multiple probes to a gene centric dataset.", MergeType.Automatic);
+ 
+ // XXX: REMOVED dependencies because other options are not visible.
+     //PROBE_CENTERED, Option.buildRange(Boolean.FALSE));
+ 
 //     MERGE_DEPTH, Option.buildRange(DepthChoices.PATHWAY, DepthChoices.GENE));
 
  

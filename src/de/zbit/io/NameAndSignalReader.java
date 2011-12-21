@@ -522,7 +522,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
     
     Collection<ExpectedColumn> r = new ArrayList<ExpectedColumn>(maxNumberOfObservations); 
     for (int i=1; i<=maxNumberOfObservations; i++) {
-      ExpectedColumn e = new ExpectedColumn("Observation " + i, types, false, true,true,true,null);
+      ExpectedColumn e = new ExpectedColumn("Observation " + i, types, false, true,true,true);
       r.add(e);
     }
     return r;

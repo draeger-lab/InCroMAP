@@ -79,7 +79,7 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
     list.add(new ExpectedColumn("miRNA systematic name",null,true,false,false,false,miRNATargetReader.miRNAidentifierRegEx));
     list.add(new ExpectedColumn("Probe name",false));
     
-    list.addAll(NameAndSignalReader.getExpectedSignalColumns(10));
+    list.addAll(NameAndSignalReader.getExpectedSignalColumns(15));
     return list.toArray(new ExpectedColumn[0]);
   }
   
@@ -114,7 +114,7 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
         for (int i=2; i<exCol.length; i++) {
           // Signals are left-over
           if (exCol[i].hasAssignedColumns()) {
-            for (int j=0; j<exCol[i].getAssignedColumns().size(); i++) {
+            for (int j=0; j<exCol[i].getAssignedColumns().size(); j++) {
               addSignalColumn(exCol[i].getAssignedColumns().get(j), 
                 (SignalType) exCol[i].getAssignedType(j), exCol[i].getName().toString());
             }

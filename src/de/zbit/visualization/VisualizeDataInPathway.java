@@ -78,6 +78,7 @@ import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.math.rescale.LinearRescale;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
+import de.zbit.util.ArrayUtils;
 import de.zbit.util.FileTools;
 import de.zbit.util.StringUtil;
 import de.zbit.util.TranslatorTools;
@@ -479,6 +480,7 @@ public class VisualizeDataInPathway {
     VisualizedData vd = new VisualizedData(tabName, experimentName, type);
     
     // 2. Remove cloned nodes and ungroup parents (if group size = 1)
+    // ONLY IF NOT PATHWAY_CENTRIC!
     log.finer("Removing cloned nodes and ungrouping parent nodes.");
     Set<Node> toLayout = new HashSet<Node>();
     if (isCopyMap!=null) {
@@ -498,12 +500,6 @@ public class VisualizeDataInPathway {
             //  is a copy node
             nsTools.removeNode(n);
           } // Group and simple nodes will be treated later.
-        }
-        
-        // Remove raw NS from nodes
-        if (rawNsMap!=null) {
-          Map<VisualizedData, Collection<?>> rawNs = (Map<VisualizedData, Collection<?>>) rawNsMap.get(n);
-          if (rawNs!=null) rawNs.remove(vd);
         }
       }
     }
@@ -527,6 +523,12 @@ public class VisualizeDataInPathway {
       }
       tools.setInfo(n, GraphMLmapsExtended.NODE_BELONGS_TO, null);
       tools.setInfo(n, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, null);
+      
+      // Remove raw NS from nodes
+      if (rawNsMap!=null) {
+        Map<VisualizedData, Collection<?>> rawNs = (Map<VisualizedData, Collection<?>>) rawNsMap.get(n);
+        if (rawNs!=null) rawNs.remove(vd);
+      }
     }
     
     // 3.5 layout group node contents. Does not move the group node,
@@ -1310,19 +1312,24 @@ public class VisualizeDataInPathway {
           return 0;
         }
         
+        // Group observations into compatible groups
+        Collection<List<ValueTriplet<NameAndSignalsTab, String, SignalType>>> grouped = 
+          IntegratorUITools.groupCompatibleSignals(Arrays.asList(observations));
+        
         // Color every pathway and signal combination
         Map<String, Graph2D> pathwayCache = new HashMap<String, Graph2D>();
         AbstractProgressBar bar = IntegratorUI.getInstance().getStatusBar().showProgress();
-        bar.setNumberOfTotalCalls(pathwayIDs.length*observations.length);
+        bar.setNumberOfTotalCalls(pathwayIDs.length*grouped.size());
         int success=0;
+        boolean askedToAnnotateMiRNAs = false;
         for (String pw : pathwayIDs) {
           String pwNumber = Utils.getNumberFromStringRevAsString(pw.length(), pw);
-          for (ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>> observation : observations) {
+          for (List<ValueTriplet<NameAndSignalsTab, String, SignalType>> obs: grouped) {
             bar.DisplayBar();
             
             try {
               // Get species and complete kegg pathway id.
-              Species species = observation.getA().getSpecies();
+              Species species = obs.get(0).getA().getSpecies();
               String keggAbbr = "ko";
               if (species!=null && species.getKeggAbbr()!=null) keggAbbr = species.getKeggAbbr();
               
@@ -1337,7 +1344,7 @@ public class VisualizeDataInPathway {
                 } catch (Throwable t) {
                   GUITools.showErrorMessage(null, t);
                   // Do not display error again for every observation.
-                  bar.setCallNr(bar.getCallNumber()+(observations.length-1));
+                  bar.setCallNr(bar.getCallNumber()+(grouped.size()-1));
                   break;
                 }
                 try {
@@ -1354,18 +1361,32 @@ public class VisualizeDataInPathway {
               }
               
               // Color nodes
-              String inputFileName = FileTools.trimExtension(observation.getA().getName());
-              String obsExpName = observation.getB().getA();
-              SignalType obsExpType = observation.getB().getB();
+              String inputFileName = "multiple";
+              if (obs.size()<2) {
+                inputFileName = FileTools.trimExtension(obs.get(0).getA().getName());
+              }
+              String obsExpName = obs.get(0).getB();
+              if (obsExpName.toLowerCase().trim().endsWith("_foldchange")) {
+                // Dirty hardcoded solution for johannes column headers ;-)
+                obsExpName = obsExpName.substring(0, obsExpName.length()-11);
+              }
+              
+              String obsExpType = mergeTypeStrings(obs);
               VisualizeDataInPathway instance = new VisualizeDataInPathway(graph, false);
               boolean addedMiRNAnode = false;
-              if (NameAndSignals.isMicroRNA(observation.getA().getData())) {
-                KEGGPathwayActionListener.addMicroRNAs(graph, observation.getA());
-                addedMiRNAnode = true;
+              for (ValueTriplet<NameAndSignalsTab, String, SignalType> vt : obs) {
+                // Visualize each dataset
+                if (NameAndSignals.isMicroRNA(vt.getA().getData())) {
+                  if (!askedToAnnotateMiRNAs) {
+                    addedMiRNAnode = KEGGPathwayActionListener.addMicroRNAs(graph, vt.getA());
+                  } else {
+                    addedMiRNAnode = KEGGPathwayActionListener.addMicroRNAs(graph, (Collection<? extends miRNA>) vt.getA().getData(), true)>0;
+                  }
+                  askedToAnnotateMiRNAs = true;
+                }
+                
+                instance.visualizeData(vt.getA(), vt.getB(), vt.getC());
               }
-//              instance.colorNodesAccordingToSignals((Collection<? extends NameAndSignals>)observation.getA().getData(),
-//                obsExpName, obsExpType, (Color[]) null);
-              instance.visualizeData(observation.getA(), obsExpName, obsExpType);
               
               // Adjust title node
               Node n = TranslatorTools.getTitleNode(graph, pathwayID);
@@ -1401,10 +1422,14 @@ public class VisualizeDataInPathway {
                 nr.setCenterY(oldCY);
                 graph.setLabelText(n, oldText);
               }
-              // Only works for mRNA (or any unknown)
-              instance.removeVisualization(observation.getA().getName(), obsExpName, obsExpType);
-              // Only works for Phospho or DNA methylation
-              instance.removeVisualizedLabels(observation.getA().getName(), obsExpName, obsExpType);
+              
+              // Remove modifications
+              for (ValueTriplet<NameAndSignalsTab, String, SignalType> vt : obs) {
+                // Only works for mRNA (or any unknown)
+                instance.removeVisualization(vt.getA().getName(),vt.getB(), vt.getC());
+                // Only works for Phospho or DNA methylation
+                instance.removeVisualizedLabels(vt.getA().getName(),vt.getB(), vt.getC());
+              }
               // Doesn't work if we don't initialize with TranslatorPanel
               //instance.removeVisualization(NameAndSignals.getType(observation.getA().getData()));
               if (addedMiRNAnode) {
@@ -1419,6 +1444,20 @@ public class VisualizeDataInPathway {
         return success;
       }
       
+      /**
+       * Concatenates all SignalTypes with a plus symbol.
+       * @param obs
+       * @return
+       */
+      private String mergeTypeStrings(
+        List<ValueTriplet<NameAndSignalsTab, String, SignalType>> obs) {
+        Set<SignalType> st = new HashSet<Signal.SignalType>();
+        for (ValueTriplet<NameAndSignalsTab, String, SignalType> vt : obs) {
+          st.add(vt.getC());
+        }
+        return ArrayUtils.implode(st, "+");
+      }
+
       @Override
       protected void done() {
         super.done();

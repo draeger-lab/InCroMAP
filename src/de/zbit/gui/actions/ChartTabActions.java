@@ -109,14 +109,16 @@ public class ChartTabActions implements ActionListener {
     }
   }
   
-  
-  
-  
+
+  /**
+   * Create the buttons on the toolbar.
+   * @param bar
+   */
   public void createJToolBarItems(JToolBar bar) {
-    if (bar.getName().equals(getClass().getSimpleName())) return; //Already done.
-    bar.setName(getClass().getSimpleName());
-    
+    String uniqueName = parent.getClass().getSimpleName() + parent.hashCode();
+    if (bar.getName().equals(uniqueName)) return;
     bar.removeAll();
+    bar.setName(uniqueName);
     // If we have too much space, we could add "Save" ....
     
     bar.add(GUITools.createJButton(this,

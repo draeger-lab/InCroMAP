@@ -65,10 +65,8 @@ import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.kegg.gui.PathwaySelector;
-import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.gui.TranslatorUI;
-import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.TranslatorTools;
@@ -151,28 +149,28 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
       } catch (Exception e1) {
         GUITools.showErrorMessage(null, e1);
       }
-            
+      
     } else if (e.getActionCommand().equals(TPAction.VISUALIZE_DATA.toString()) &&
         source instanceof TranslatorPanel) {
       // Coming mostly from a click on the toolbar-button in TranslatorPanelTabs
-      Species spec = TranslatorTabActions.getSpeciesOfPathway((TranslatorPanel) source, IntegratorUITools.organisms);
-      ValueTriplet<NameAndSignalsTab, String, SignalType>  vt
-        = IntegratorUITools.showSelectExperimentBox(null,
-            "Please select an observation to visualize in this pathway.", spec);
-       if (vt!=null) {
-         visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
-       }
-       
+      Species spec = getSpecies();
+      ValueTriplet<NameAndSignalsTab, String, SignalType>  vt =
+        IntegratorUITools.showSelectExperimentBox(null,
+        "Please select an observation to visualize in this pathway.", spec);
+      if (vt!=null) {
+        visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
+      }
+      
     } else if (e.getActionCommand().equals(TPAction.VISUALIZE_ENRICHMENT_PVALUES.toString()) &&
         source instanceof TranslatorPanel) {
       // Coming mostly from a click on the toolbar-button in TranslatorPanelTabs
-      Species spec = TranslatorTabActions.getSpeciesOfPathway((TranslatorPanel) source, IntegratorUITools.organisms);
-      ValueTriplet<NameAndSignalsTab, String, SignalType>  vt 
-      = IntegratorUITools.showSelectPathwayEnrichmentBox(spec, "Please select an observation to visualize in this pathway.");
-       if (vt!=null) {
-         visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
-       }
-       
+      Species spec = getSpecies();
+      ValueTriplet<NameAndSignalsTab, String, SignalType>  vt =
+        IntegratorUITools.showSelectPathwayEnrichmentBox(spec, "Please select an observation to visualize in this pathway.");
+      if (vt!=null) {
+        visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
+      }
+      
     } else if (e.getActionCommand().equals(TPAction.HIGHLIGHT_ENRICHED_GENES.toString()) &&
         source instanceof TranslatorPanel) {
       TranslatorPanel source = (TranslatorPanel) this.source;
@@ -231,7 +229,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
                 st = st.getSourceTab();
               }
             }
-            Species spec = TranslatorTabActions.getSpeciesOfPathway(source, IntegratorUITools.organisms);
+            Species spec = getSpecies(source);
             vt = IntegratorUITools.showSelectExperimentBox(st,
               "Please select an observation to visualize in this pathway.", spec);
           }
@@ -257,6 +255,37 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     }
   }
 
+  /**
+   * @return
+   */
+  public Species getSpecies() {
+    return getSpecies(this.source);
+  }
+  
+  /**
+   * 
+   * @param source
+   * @return
+   */
+  public static Species getSpecies(BaseFrameTab source) {
+    Species spec=null;
+    if (source==null) return null;
+    
+    if (source instanceof IntegratorPathwayPanel) {
+      spec = ((IntegratorPathwayPanel)source).getSpecies();
+    }
+    
+    if (spec==null) {
+      if (source instanceof TranslatorPanel<?>) {
+        spec = TranslatorTabActions.getSpeciesOfPathway((TranslatorPanel<?>) source, IntegratorUITools.organisms);
+      } else if (source instanceof IntegratorTab<?>) {
+        spec = ((IntegratorTab<?>) source).getSpecies();
+      }
+        
+    }
+    return spec;
+  }
+  
   /**
    * Color the pathway in <code>tp</code> according to the experiment
    * described by <code>experimentName</code> and <code>signalType</code>
@@ -298,39 +327,39 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     SwingWorker<Integer, Void> visData = new SwingWorker<Integer, Void>() {
       @Override
       protected Integer doInBackground() throws Exception {
-          try {
-            int coloredNodes=0;
-            synchronized (tp.getDocument()) { // don't visualize multiple data at the same time
-              // Adds the microRNA NODES to the graph and automatically asks
-              // the user to annotate targets to his miRNA data if not already done.
-              if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
-                if (!addMicroRNAs((Graph2D)tp.getDocument(), dataSource)) {
-                  log.warning("Could not detect any miRNA targets in the graph.");
-                  return 0;
-                }
+        try {
+          int coloredNodes=0;
+          synchronized (tp.getDocument()) { // don't visualize multiple data at the same time
+            // Adds the microRNA NODES to the graph and automatically asks
+            // the user to annotate targets to his miRNA data if not already done.
+            if (miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
+              if (!addMicroRNAs((Graph2D)tp.getDocument(), dataSource)) {
+                log.warning("Could not detect any miRNA targets in the graph.");
+                return 0;
               }
-              
-              // Perform visualization
-              VisualizeDataInPathway visData = new VisualizeDataInPathway(tp);
-              Class<? extends NameAndSignals> dataType = NameAndSignals.getType(dataSource.getData());
-              // Check if there is already this data type visualized and remove old visualization first.
-              if (visData.isDataTypeVisualized(dataType)) {
-                int answer = GUITools.showQuestionMessage(tp, "The pathway already contains visualized data of the same type (" + 
-                  dataType.getSimpleName() + "). Do you want to replace the currently visualized data with the given one?", "Visualize data", JOptionPane.YES_NO_OPTION);
-                if (answer==JOptionPane.NO_OPTION) return 0;
-                visData.removeVisualization(dataType);
-              }
-              
-              coloredNodes = visData.visualizeData(dataSource, experimentName,signalType);
             }
-            // Repaint and hide loading screens
-            //tp.repaint();
-            //tp.hideTemporaryLoadingBar();
-            return coloredNodes;
-          } catch (Exception e) {
-            throw e;
+            
+            // Perform visualization
+            VisualizeDataInPathway visData = new VisualizeDataInPathway(tp);
+            Class<? extends NameAndSignals> dataType = NameAndSignals.getType(dataSource.getData());
+            // Check if there is already this data type visualized and remove old visualization first.
+            if (visData.isDataTypeVisualized(dataType)) {
+              int answer = GUITools.showQuestionMessage(tp, "The pathway already contains visualized data of the same type (" + 
+                dataType.getSimpleName() + "). Do you want to replace the currently visualized data with the given one?", "Visualize data", JOptionPane.YES_NO_OPTION);
+              if (answer==JOptionPane.NO_OPTION) return 0;
+              visData.removeVisualization(dataType);
+            }
+            
+            coloredNodes = visData.visualizeData(dataSource, experimentName,signalType);
           }
-          //return -1;
+          // Repaint and hide loading screens
+          //tp.repaint();
+          //tp.hideTemporaryLoadingBar();
+          return coloredNodes;
+        } catch (Exception e) {
+          throw e;
+        }
+        //return -1;
         
       }
       
@@ -364,15 +393,19 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @return true if the graph should contain at least one miRNA that belongs
    * to the given input data
    */
-  @SuppressWarnings("unchecked")
   public static boolean addMicroRNAs(Graph2D graph, NameAndSignalsTab dataSource) {
+    return addMicroRNAs(graph, dataSource, true);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public static boolean addMicroRNAs(Graph2D graph, NameAndSignalsTab dataSource, boolean askUserToAnnotateDataset) {
     if (!miRNA.class.isAssignableFrom(dataSource.getDataContentType())) {
       log.severe("Can not add miRNA targets when source is " + dataSource.getDataContentType());
       return false;
     }
     
     int addedNodes = addMicroRNAs(graph, (Collection<? extends miRNA>) dataSource.getData());
-    if (addedNodes==0) {
+    if (addedNodes==0 && askUserToAnnotateDataset) {
       // if no nodes have been colored, look if it was due to missing miRNA target annotations
       int a = GUITools.showQuestionMessage(IntegratorUI.getInstance(), "No microRNA had an annotated target within this graph. " +
         "Do you want to (re-)annotate your microRNA data with targets?", IntegratorUI.appName, JOptionPane.YES_NO_OPTION);
@@ -397,6 +430,18 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @return number of nodes created or -1 if an error occurred.
    */
   public static int addMicroRNAs(Graph2D graph, Collection<? extends miRNA> dataSource) {
+    return addMicroRNAs(graph, dataSource, false);
+  }
+  /**
+   * 
+   * @param graph
+   * @param dataSource
+   * @param silent
+   * @return
+   * @see #addMicroRNAs(Graph2D, Collection)
+   */
+  public static int addMicroRNAs(Graph2D graph, Collection<? extends miRNA> dataSource,
+      boolean silent) {
     if (!NameAndSignals.isMicroRNA(dataSource)) {
       log.severe("Can not add miRNA targets when source is not miRNA.");
       return -1;
@@ -406,7 +451,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     }
     
     VisualizeMicroRNAdata vis = new VisualizeMicroRNAdata(graph);
-    int addedNodes = vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource);
+    int addedNodes = vis.addMicroRNAsToGraph((Collection<? extends miRNA>) dataSource, silent);
     if (addedNodes>0) {
       // The "Remove miRNA-nodes" button must be enabled.
       IntegratorUI.getInstance().updateButtons();
@@ -469,9 +514,9 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
    * @param pwId pathway id to visualized (e.g., "hsa00130").
    * @param pwo optional parent {@link EnrichmentObject} (if applicable, may be null).
    */
-   TranslatorPanel<Graph2D> visualizePathway(String pwId, EnrichmentObject<?> pwo) {
+  TranslatorPanel<Graph2D> visualizePathway(String pwId, EnrichmentObject<?> pwo) {
     //Create the translator panel
-     IntegratorPathwayPanel pwTab = new IntegratorPathwayPanel(pwId, this);
+    IntegratorPathwayPanel pwTab = new IntegratorPathwayPanel(pwId, this);
     String name = pwId;
     if (pwo!=null) {
       pwTab.setData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString(), pwo);
@@ -479,9 +524,9 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     }
     
     // Try to get species
-    Species spec = TranslatorTabActions.getSpeciesOfPathway(pwTab, IntegratorUITools.organisms);
+    Species spec = getSpecies(pwTab);
     if (spec==null && source!=null && (source instanceof IntegratorTab)) {
-      spec = ((IntegratorTab<?>)source).getSpecies();
+      spec = getSpecies(source);
     }
     pwTab.setSpecies(spec);
     
@@ -489,34 +534,36 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     IntegratorUI.getInstance().addTab(pwTab, name, "Pathway: '" + name + "'" + extra + ".");
     return pwTab;
   }
-   
-   /**
-    * Evaluates the {@link PathwaySelector} <code>pwSel</code> and
-    * adds the corresponding tab to the current 
-    * {@link IntegratorUI#instance}.
-    * 
-    * @param pwSel
-    * @return the created tab or null, if selection was not valid.
-    */
-   public TranslatorPanel<Graph2D> visualizePathway(PathwaySelector pwSel) {
-     //Create the translator panel
-     String pwId = pwSel.getSelectedPathwayID();
-     if (pwId==null) return null;
-     IntegratorPathwayPanel pwTab = new IntegratorPathwayPanel(pwId, this);
-     
-     // Try to get species
-     Species spec = TranslatorTabActions.getSpeciesOfPathway(pwTab, IntegratorUITools.organisms);
-     if (spec==null && source!=null && (source instanceof IntegratorTab)) {
-       spec = ((IntegratorTab<?>)source).getSpecies();
-     }
-     pwTab.setSpecies(spec);
-     
-     // Add tab and create ToolTip
-     String name = pwSel.getSelectedPathway();
-     IntegratorUI.getInstance().addTab(pwTab, name,
-       String.format("Pathway: '%s' for %s.", name, pwSel.getOrganismSelector().getSelectedOrganism()));
-     return pwTab;
-   }
+  
+  /**
+   * Evaluates the {@link PathwaySelector} <code>pwSel</code> and
+   * adds the corresponding tab to the current 
+   * {@link IntegratorUI#instance}.
+   * 
+   * @param pwSel
+   * @return the created tab or null, if selection was not valid.
+   */
+  public TranslatorPanel<Graph2D> visualizePathway(PathwaySelector pwSel) {
+    //Create the translator panel
+    String pwId = pwSel.getSelectedPathwayID();
+    if (pwId==null) return null;
+    IntegratorPathwayPanel pwTab = new IntegratorPathwayPanel(pwId, this);
+    
+    // Try to get species
+    Species spec = IntegratorUITools.getSpeciesFromSelector(pwSel.getOrganismSelector());
+    if (spec==null) {
+     spec = getSpecies(pwTab);
+    } if (spec==null && source!=null && (source instanceof IntegratorTab)) {
+      spec = getSpecies(source);
+    }
+    pwTab.setSpecies(spec);
+    
+    // Add tab and create ToolTip
+    String name = pwSel.getSelectedPathway();
+    IntegratorUI.getInstance().addTab(pwTab, name,
+      String.format("Pathway: '%s' for %s.", name, pwSel.getOrganismSelector().getSelectedOrganism()));
+    return pwTab;
+  }
   
   /**
    * Builds a pathway selector and downloads and visualizes a
@@ -559,7 +606,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     } else {
       expSel = null;
     }
-
+    
     // Make one panel of both selectors
     JPanel ret = new JPanel(new BorderLayout());
     ret.add(selector, BorderLayout.CENTER);
@@ -571,20 +618,20 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     /* If one has time, this could be implemented.
      * TO-DO then: Pathway-tabs need to be filtered to allow only
      * same species as data tab.*/
-//    JLabeledComponent tabSelect = IntegratorGUITools.createSelectPathwayTabBox(IntegratorUI.getInstance());
-//    if (tabSelect!=null && tabSelect.getColumnChooser()!=null && (tabSelect.getColumnChooser() instanceof JComboBox)
-//        && ((JComboBox) tabSelect.getColumnChooser()).getItemCount()>0) {
-//      JComboBox box = (JComboBox) tabSelect.getColumnChooser();
-//      box.addItem("<Create a new pathway tab>");
-//      box.addActionListener(new ActionListener() {
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//          System.out.println(e);
-//        }
-//      });
-//      ret.add(tabSelect, BorderLayout.NORTH);
-//    }
-
+    //    JLabeledComponent tabSelect = IntegratorGUITools.createSelectPathwayTabBox(IntegratorUI.getInstance());
+    //    if (tabSelect!=null && tabSelect.getColumnChooser()!=null && (tabSelect.getColumnChooser() instanceof JComboBox)
+    //        && ((JComboBox) tabSelect.getColumnChooser()).getItemCount()>0) {
+    //      JComboBox box = (JComboBox) tabSelect.getColumnChooser();
+    //      box.addItem("<Create a new pathway tab>");
+    //      box.addActionListener(new ActionListener() {
+    //        @Override
+    //        public void actionPerformed(ActionEvent e) {
+    //          System.out.println(e);
+    //        }
+    //      });
+    //      ret.add(tabSelect, BorderLayout.NORTH);
+    //    }
+    
     // Evaluate and eventually open new tab.
     final boolean setAfinal = setA;
     final JLabeledComponent expSelFinal = expSel;
@@ -603,7 +650,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
             // Will show the selector later (in TranslationDone).
             dataSource = new ValueTriplet<NameAndSignalsTab, String, SignalType>(a, null, null);
           }
-
+          
           // Open pathway and set experiment to visualize.
           TranslatorPanel<?> tp = visualizePathway(selector.getSelectedPathwayID(), null);
           tp.setData(TPAction.VISUALIZE_DATA.toString(), dataSource);
@@ -612,11 +659,11 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     };
     
     // Let user chooser
-    GUITools.showOkCancelDialogInNewThred(ret, UIManager.getString("OptionPane.titleText"), okAction, null);
+    GUITools.showOkCancelDialogInNewThread(ret, UIManager.getString("OptionPane.titleText"), okAction, null);
     selector.autoActivateOkButton(ret);
-
+    
   }
-
+  
   /* (non-Javadoc)
    * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
    */

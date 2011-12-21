@@ -142,8 +142,11 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
   }
   
   public void createJToolBarItems(JToolBar bar) {
-    if (bar.getName().equals(getClass().getSimpleName())) return; //Already done.
-    bar.setName(getClass().getSimpleName());
+    String uniqueName = parent.getClass().getSimpleName() + parent.hashCode();
+    if (bar.getName().equals(uniqueName)) return;
+    bar.removeAll();
+    bar.setName(uniqueName);
+    
     createJToolBarItems(bar, true);
     GUITools.setOpaqueForAllElements(bar, false);
   }

@@ -156,6 +156,11 @@ public class GenericGene extends NSwithProbesAndRegion implements Strand {
    * @return
    */
   private static CSVReader getStaticFileForSpecies(Species species) {
+    if (species==null || species.getKeggAbbr()==null) {
+      log.warning(String.format("Could not get gene TSS positions for unknown species \"%s\".", species==null?"NULL":species));
+      return null;
+    }
+    
     if (species.getKeggAbbr().equals("mmu")) {
       return new CSVReader("mmu_NCBIM37.gz");
     } else if (species.getKeggAbbr().equals("rno")) {

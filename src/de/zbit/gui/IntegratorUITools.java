@@ -38,10 +38,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -97,6 +100,7 @@ import de.zbit.gui.dialogs.IntegrationDialog;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.MergeTypeOptions;
 import de.zbit.gui.prefs.SignalOptionPanel;
+import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.NameAndSignal2PWTools;
@@ -109,6 +113,7 @@ import de.zbit.io.SNPReader;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.kegg.Translator;
+import de.zbit.kegg.gui.OrganismSelector;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorPanel;
@@ -176,6 +181,14 @@ public class IntegratorUITools {
     l.setPreferredSize(null);
     GUITools.createTitledPanel(l, "Organism selection");
     return l;
+  }
+  
+  /**
+   * @return {@link Species} from current selector or null if none selected
+   */
+  public static Species getSpeciesFromSelector(OrganismSelector orgSel) {
+    String abbr = orgSel==null?null:orgSel.getSelectedOrganismAbbreviation();
+    return Species.search(IntegratorUITools.organisms, abbr, Species.KEGG_ABBR);
   }
   
   public static Species showOrganismSelectorDialog(Component parent) {
@@ -1326,6 +1339,9 @@ public class IntegratorUITools {
     if (tab instanceof TranslatorPanel) {
       return UIManager.getIcon("ICON_PATHWAY_16");
       
+    } else if (tab instanceof IntegratorChartTab) {
+      return UIManager.getIcon("ICON_PENCIL_16");
+      
     } else if (tab instanceof IntegratorTab &&
         ((IntegratorTab<?>)tab).isReady() ) {
       Class<?> type = ((IntegratorTab<?>) tab).getDataContentType();
@@ -1389,6 +1405,55 @@ public class IntegratorUITools {
       return null;
     }
     return IntegratorUITools.showSelectExperimentBox(null, dialogTitle,tabs);
+  }
+
+  /**
+   * Groups signals with same organism and name. Also checks
+   * that each data type one occurs once per grouped instance.
+   * @param observations
+   * @return
+   */
+  public static Collection<List<ValueTriplet<NameAndSignalsTab, String, SignalType>>> groupCompatibleSignals(
+    List<ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>>> observations) {
+    
+    // Create a map to map all signals with same species and signal Name to one slot
+    Map<Integer, List<ValueTriplet<NameAndSignalsTab, String, SignalType>>> groups =
+      new HashMap<Integer, List<ValueTriplet<NameAndSignalsTab, String, SignalType>>>();
+    // Do not add the same data type twice
+    Set<ValueTriplet<NameAndSignalsTab, String, SignalType>> duplicates =
+      new HashSet<ValueTriplet<NameAndSignalsTab, String, SignalType>>();
+    for (ValuePair<NameAndSignalsTab, ValuePair<String, SignalType>> obs : observations) {
+      int key = obs.getA().getSpecies().getKeggAbbr().hashCode() + obs.getB().getA().hashCode();
+      ValueTriplet<NameAndSignalsTab, String, SignalType> triplet = new ValueTriplet<NameAndSignalsTab, String, SignalType>(
+          obs.getA(),obs.getB().getA(),obs.getB().getB());
+      
+      // is data type already contained?
+      boolean added = false;
+      if (groups.get(key)!=null) {
+        Class<?> content = obs.getA().getDataContentType();
+        for (ValueTriplet<NameAndSignalsTab, ?, ?> vt : groups.get(key)) {
+          if (vt.getA().getDataContentType().equals(content)) {
+            duplicates.add(triplet);
+            added = true;
+            break;
+          }
+        }
+      }
+      // data type is not yet contained.
+      if (!added) miRNA.addToList(groups, key, triplet);
+    }
+    
+    // Merge with duplicates / add duplicates as single items...
+    ArrayList<List<ValueTriplet<NameAndSignalsTab, String, SignalType>>> l = 
+      new ArrayList<List<ValueTriplet<NameAndSignalsTab, String, SignalType>>> (groups.values());
+    for (ValueTriplet<NameAndSignalsTab, String, SignalType> vt: duplicates) {
+      List<ValueTriplet<NameAndSignalsTab, String, SignalType>> item = 
+        new LinkedList<ValueTriplet<NameAndSignalsTab, String, SignalType>>();
+      item.add(vt);
+      l.add(item);
+    }
+    
+    return l;
   }
     
   
