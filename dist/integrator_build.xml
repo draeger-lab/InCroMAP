@@ -22,9 +22,12 @@
   <!-- define some properties that are used throughout the tasks -->
   <target name="init">
     <echo>
-       PLESE MAKE SURE LOG LEVEL IN IntegratorUI.java MAIN METHOD IS SET TO INFO!
+       PLESE MAKE SURE LOG LEVEL IN Integrator.java MAIN METHOD IS SET TO INFO!
     	 ALSO Ensure that list of "yFiles-using-classes to obfuscate" is complete!
     </echo>
+  	
+    <!-- the main class -->
+    <property name="main" value="de.zbit.Integrator"/>
   	
     <!-- the base directory of the Integrator repository -->
     <property name="base" location=".."/>
@@ -63,7 +66,7 @@
     <delete file="${appJar}"/>
     <jar jarfile="${appJar}">
             <manifest>
-              <attribute name="Main-Class" value="de.zbit.gui.IntegratorUI"/>
+              <attribute name="Main-Class" value="${main}"/>
             	<attribute name="Built-By" value="Center for Bioinformatics Tuebingen (ZBIT)"/>
               <attribute name="SplashScreen-Image" value="de/zbit/gui/img/splash.gif"/>
             	<!-- Die folgenden 2 Attribute sind leider keine gültigen manifest attribute. -->
@@ -130,7 +133,7 @@
         </patternset>
       </attribute>
 
-      <rename logfile="${obfuscationLog}" replaceClassNameStrings="true" mainclass="de.zbit.gui.IntegratorUI">
+      <rename logfile="${obfuscationLog}" replaceClassNameStrings="true" mainclass="${main}">
         <!-- conservemanifest="true" -->
         <!-- use some unique package prefix for obfuscated classes to avoid name clashes -->
         <property name="obfuscation-prefix" value="obfuscatedintegrator"/>
@@ -205,7 +208,7 @@
 	
   <!-- executes the obfuscated application -->
   <target name="run" depends="obfuscate">
-    <java classname="de.zbit.gui.IntegratorUI" fork="true">
+    <java classname="${main}" fork="true">
       <classpath>
         	<!-- <pathelement location="${yJarObf}"/> -->
         <pathelement location="${appJarObf}"/>

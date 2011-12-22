@@ -31,8 +31,6 @@ import java.awt.Image;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -56,13 +54,13 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
+import de.zbit.AppConf;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NameAndSignals;
@@ -97,7 +95,6 @@ import de.zbit.util.Reflect;
 import de.zbit.util.StringUtil;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
-import de.zbit.util.logging.LogUtil;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.SBPreferences;
 import de.zbit.util.prefs.SBProperties;
@@ -314,55 +311,24 @@ public class IntegratorUI extends BaseFrame {
     configList.add(PathwayVisualizationOptions.class);
     return configList;
   }
-  
+
   /**
-   * @param args
-   * @throws IOException 
+   * This method changes some default values of KEGGtranslator,
+   * option visibilities, logos, etc. to look like it would be
+   * the {@link IntegratorUI} application.
    */
-  public static void main(String[] args) throws IOException {
-    LogUtil.initializeLogging(Level.FINE,(String[])null);
-    
+  public static void integrateIntoKEGGtranslator() {
     // Set default values for KEGGtranslator
     KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
     KEGGtranslatorOptions.SBML_OPTIONS.setVisible(false);
     KEGGtranslatorOptions.AUTOCOMPLETE_REACTIONS.setVisible(false);
-    // SBProperties props = 
-    SBPreferences.analyzeCommandLineArguments(getStaticCommandLineOptions(), args);
         
     // Set the often used KeggTranslator methods to use this appName as application name
 //    Translator.APPLICATION_NAME = appName;
 //    Translator.VERSION_NUMBER = appVersion;
     
     TranslatorPanel.logoResourcePath = "img/logo.png";
-    
-    /*
-     * Many tooltips contain descriptions that must be shown
-     * longer than the system default. Let's show them 30 seconds!
-     */
-    ToolTipManager.sharedInstance().setDismissDelay(30000);
-    
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run() {
-        IntegratorUI ui = new IntegratorUI();
-        ui.setVisible(true);
-        GUITools.hideSplashScreen();
-        ui.toFront();
-        
-        try {
-//          mRNAReader r = mRNAReader.getExampleReader();
-//          ui.addTab(new NameAndSignalsTab(ui, r.read("mRNA_data_new.txt"), IntegratorUITools.organisms.get(1)), "Example_mRNA");
-//          
-//          miRNAReader r2 = new miRNAReader(1,0);
-//          r2.addSignalColumn(25, SignalType.FoldChange, "Ctnnb1"); // 25-28 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-//          r2.addSignalColumn(29, SignalType.pValue, "Ctnnb1"); // 29-32 = Cat/Ras/Cat_vs_Ras/Cat_vs_Ras_KONTROLLEN
-//          ui.addTab(new NameAndSignalsTab(ui, r2.read("miRNA_data.txt"), IntegratorUITools.organisms.get(1)), "Example_miRNA");
-          
-        } catch (Exception e) {e.printStackTrace();}
-        
-      }
-    });
-    
   }
   
   /**
@@ -382,20 +348,21 @@ public class IntegratorUI extends BaseFrame {
   }
   
   public IntegratorUI() {
-    super();
+    this(null);
+  }
+  
+  /**
+   * @param appConf
+   */
+  public IntegratorUI(AppConf appConf) {
+    super (appConf);
     
     // init preferences
     initPreferences();
     
     // Load reader cache
     ReaderCache.getCache();
-    
-    // TODO: preferences
-    /*File file = new File(prefsIO.get(KEGGtranslatorIOOptions.INPUT));
-    openDir = file.isDirectory() ? file.getAbsolutePath() : file.getParent();
-    file = new File(prefsIO.get(KEGGtranslatorIOOptions.OUTPUT));
-    saveDir = file.isDirectory() ? file.getAbsolutePath() : file.getParent();*/
-    
+        
     // Depending on the current OS, we should add the following image
     // icons: 16x16, 32x32, 48x48, 128x128 (MAC), 256x256 (Vista).
     int[] resolutions=new int[]{16,32,48,128,256};
@@ -411,9 +378,15 @@ public class IntegratorUI extends BaseFrame {
     // Adds a label for the species and data type of the current tab to the status bar.
     initStatusBarSpeciesLabel();
     
+    /*
+     * Many tooltips contain descriptions that must be shown
+     * longer than the system default. Let's show them 30 seconds!
+     */
+    ToolTipManager.sharedInstance().setDismissDelay(30000);
+    
     instance = this;
   }
-  
+
   /**
    * Init preferences, if not already done.
    */
@@ -741,7 +714,7 @@ public class IntegratorUI extends BaseFrame {
    * pane content.
    */
   public void updateButtons() {
-    GUITools.setEnabled(false, getJMenuBar(), BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
+    GUITools.setEnabled(false, getJMenuBar(), BaseAction.FILE_SAVE_AS, BaseAction.FILE_CLOSE);
     BaseFrameTab o = getCurrentlySelectedPanel();
     Species currentSpecies = null;
     String panelDataContent = null; // E.g., "mRNA"
@@ -861,39 +834,6 @@ public class IntegratorUI extends BaseFrame {
     
   }
   
-  /* (non-Javadoc)
-   * @see de.zbit.gui.BaseFrame#getApplicationName()
-   */
-  @Override
-  public String getApplicationName() {
-    return appName;
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.gui.BaseFrame#getCommandLineOptions()
-   */
-  @SuppressWarnings("unchecked")
-  @Override
-  public Class<? extends KeyProvider>[] getCommandLineOptions() {
-    return getStaticCommandLineOptions().toArray(new Class[0]);
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.gui.BaseFrame#getDottedVersionNumber()
-   */
-  @Override
-  public String getDottedVersionNumber() {
-    return appVersion;
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.gui.BaseFrame#getMaximalFileHistorySize()
-   */
-  @Override
-  public short getMaximalFileHistorySize() {
-    return 10;
-  }
-  
   /*
    * (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#getURLAboutMessage()
@@ -916,19 +856,6 @@ public class IntegratorUI extends BaseFrame {
    */
   public URL getURLOnlineHelp() {
     return IntegratorUI.class.getResource("html/help.html");
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.gui.BaseFrame#getURLOnlineUpdate()
-   */
-  @Override
-  public URL getURLOnlineUpdate() {
-    try {
-      return new URL("http://www.cogsys.cs.uni-tuebingen.de/software/Integrator/downloads/");
-    } catch (MalformedURLException e) {
-      GUITools.showErrorMessage(this, e);
-    }
-    return null;
   }
   
   /* (non-Javadoc)

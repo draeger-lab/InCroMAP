@@ -182,9 +182,9 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     
     // Enable and disable items
     if (isReady()) {
-      GUITools.setEnabled(true, menuBar, BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
+      GUITools.setEnabled(true, menuBar, BaseAction.FILE_SAVE_AS, BaseAction.FILE_CLOSE);
     } else {
-      GUITools.setEnabled(false, menuBar, BaseAction.FILE_SAVE, BaseAction.FILE_CLOSE);
+      GUITools.setEnabled(false, menuBar, BaseAction.FILE_SAVE_AS, BaseAction.FILE_CLOSE);
     }
   }
   
