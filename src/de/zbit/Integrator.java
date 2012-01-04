@@ -24,12 +24,19 @@ package de.zbit;
 import java.awt.Window;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import de.zbit.gui.GUIOptions;
 import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.prefs.EnrichmentOptions;
+import de.zbit.gui.prefs.IntegratorIOOptions;
+import de.zbit.gui.prefs.PathwayVisualizationOptions;
+import de.zbit.gui.prefs.SignalOptions;
+import de.zbit.kegg.KEGGtranslatorOptions;
+import de.zbit.kegg.ext.TranslatorPanelOptions;
 import de.zbit.util.prefs.KeyProvider;
 
 /**
@@ -106,8 +113,19 @@ public class Integrator extends Launcher {
   @Override
   public List<Class<? extends KeyProvider>> getInteractiveOptions() {
     // Return NULL here to only show options as dialog, that
-    // are defined in de.zbit.gui.prefsPreferencePanels
-    return null;
+    // are defined in de.zbit.gui.prefs.PreferencePanels
+    
+    // All options here are made persistent, in contrast to getCmdLineOptions()
+    List<Class<? extends KeyProvider>> configList = new LinkedList<Class<? extends KeyProvider>>();
+    configList.add(IntegratorIOOptions.class);
+    configList.add(PathwayVisualizationOptions.class);
+    configList.add(SignalOptions.class);
+    configList.add(EnrichmentOptions.class);
+    
+    configList.add(KEGGtranslatorOptions.class);
+    configList.add(TranslatorPanelOptions.class);
+    //configList.add(GUIOptions.class);
+    return configList;
   }
   
   /* (non-Javadoc)

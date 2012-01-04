@@ -100,6 +100,7 @@
             <!-- <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/keggapi.jar"/> -->
             <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/wsdl4j.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/axis.jar"/>
+    	      <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/sysbio-osx-support.jar"/>
             <!-- <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/Java5/saaj.jar"/>-->
             <!-- <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/WSDbfetch.jar"/>-->
             <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/commons-cli-1.1.jar"/>
