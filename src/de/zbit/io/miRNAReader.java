@@ -42,6 +42,7 @@ import de.zbit.integrator.ReaderCache;
 import de.zbit.integrator.ReaderCacheElement;
 import de.zbit.mapper.MicroRNAsn2GeneIDMapper;
 import de.zbit.parser.Species;
+import de.zbit.util.FileTools;
 import de.zbit.util.Utils;
 import de.zbit.util.ValueTriplet;
 
@@ -122,6 +123,7 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
         }
         
         try {
+          //Utils.saveObject(FileTools.removeFileExtension(c.getApprovedCSVReader().getFilename())+"-reader.dat", this);
           return read(c.getApprovedCSVReader());
         } catch (Exception e) {
           GUITools.showErrorMessage(parent, e, "Could not read input file.");

@@ -449,6 +449,33 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
+   * FORCES to gene-center any NS dataset by geneID.
+   * <p>You should use {@link #geneCentered(Collection)} if you are not sure which method
+   * to use!</p>
+   * @param <T>
+   * @param nameAndSignals
+   * @see #geneCentered(Collection, MergeType)
+   * @return
+   */
+  public static <T extends NameAndSignals> Collection<T> geneCenteredByGeneID(Collection<T> nameAndSignals, MergeType m) {
+    // Group data by name (or gene ID)
+    Map<String, Collection<T>> group = group_by_name(nameAndSignals, true, false);
+    
+    Collection<T> toReturn = new ArrayList<T>();
+    // => Merge data gene-centered
+    for (String mi : group.keySet()) {
+      Collection<T> col = group.get(mi);
+      T merged = merge(col, m);
+      if (merged instanceof NSwithProbes) {
+        ((NSwithProbes) merged).setGeneCentered(true);
+      }
+      toReturn.add(merged);
+    }
+    
+    return toReturn;
+  }
+  
+  /**
    * Merge a collection of objects to one, e.g., by concatenating strings
    * and taking the {@link MergeType} (e.g. mean) of all numeric values.
    * <p>CAREFULL: FAILS for classes that have private variables OTHER

@@ -48,6 +48,8 @@ import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
 import de.zbit.util.ArrayUtils;
+import de.zbit.util.FileTools;
+import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 
@@ -219,6 +221,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
         }
         
         try {
+          //Utils.saveObject(FileTools.removeFileExtension(c.getApprovedCSVReader().getFilename())+"-reader.dat", this);
           return read(c.getApprovedCSVReader());
         } catch (Exception e) {
           GUITools.showErrorMessage(parent, e, "Could not read input file.");

@@ -252,7 +252,7 @@ public class NameAndSignalTabActions implements ActionListener {
           NSAction.PAIR_DATA, UIManager.getIcon("IntegratorIcon_16_straight"));
       if (miRNA.class.isAssignableFrom(tableContent)) {
         String toolTip = "Integrate miRNA data with other (e.g. mRNA data) by mapping the miRNA targets to the other dataset.";
-        StringUtil.toHTML(toolTip, GUITools.TOOLTIP_LINE_LENGTH);
+        StringUtil.toHTML(toolTip, StringUtil.TOOLTIP_LINE_LENGTH);
         pairData.setToolTipText(toolTip);
       }
       integrate.add(pairData);

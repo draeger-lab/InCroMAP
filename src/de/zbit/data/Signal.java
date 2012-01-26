@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.util.ScientificNumberRenderer;
 import de.zbit.util.Utils;
@@ -49,7 +48,7 @@ import de.zbit.util.ValuePair;
  * @author Clemens Wrzodek
  * @version $Rev$
  */
-public class Signal implements Serializable, Comparable<Object>  {
+public class Signal implements Serializable, Comparable<Object>, Cloneable  {
   private static final long serialVersionUID = -6025922649069761114L;
   public static final transient Logger log = Logger.getLogger(Signal.class.getName());
 
@@ -474,6 +473,14 @@ public class Signal implements Serializable, Comparable<Object>  {
    */
   public ValuePair<String, SignalType> getSignalAndName() {
     return new ValuePair<String, SignalType> (getName(), getType());
+  }
+  
+  /* (non-Javadoc)
+   * @see java.lang.Object#clone()
+   */
+  @Override
+  public Signal clone() throws CloneNotSupportedException {
+    return new Signal(getSignal(), getName(), getType());
   }
   
 }

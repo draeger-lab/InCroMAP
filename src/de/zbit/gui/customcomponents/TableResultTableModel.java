@@ -50,6 +50,7 @@ import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.table.DefaultTableCellTwoRowHeaderRenderer;
+import de.zbit.gui.table.JTableTools;
 import de.zbit.gui.table.TableRowSorterMixed;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
@@ -57,7 +58,6 @@ import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.parser.Species;
 import de.zbit.sequence.region.Region;
 import de.zbit.util.BooleanRendererYesNo;
-import de.zbit.util.JTableTools;
 import de.zbit.util.ScientificNumberRenderer;
 import de.zbit.util.SortedArrayList;
 

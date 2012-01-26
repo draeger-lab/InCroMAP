@@ -65,7 +65,7 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
   private static final long serialVersionUID = 9089266583514540967L;
 
   /** Bundle to get localized Strings. **/
-  protected static ResourceBundle bundle = ResourceManager.getBundle(GUITools.RESOURCE_LOCATION_FOR_LABELS);
+  protected static ResourceBundle bundle = ResourceManager.getBundle(StringUtil.RESOURCE_LOCATION_FOR_LABELS);
   
   /**
    * A dirty static way to set an default selection on the dialog.

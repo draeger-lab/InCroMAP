@@ -1,11 +1,13 @@
 <body>
   <p>
-    Welcome to the API for <a href="http://www.cogsys.cs.uni-tuebingen.de/software/Integrator/index.htm">Integrator</a>, an application for integrated analysis of microarray data from different platforms. Please, feel free to use and include Integrator in your own applications.
+    Welcome to the API for <a href="http://www.cogsys.cs.uni-tuebingen.de/software/Integrator/index.htm">InCroMAP</a>, an application for integrated analysis of microarray data from different platforms. Please, feel free to use and include InCroMAP in your own applications.
     If you do so, please don't forget to <a href="http://www.cogsys.cs.uni-tuebingen.de/software/Integrator/index.htm#cite">cite us</a>.
   </p>
   
-  <h2>Examples of how to use the Integrator JAR in your application</h2>
-    <h3>1. Adding a new data type to Integrator:</h3>
+  <p><i>Note: this application was previously called &quot;Integrator&quot;, so you might still see the old name in related documents.</i></p>
+  
+  <h2>Examples of how to use the InCroMAP JAR in your application</h2>
+    <h3>1. Adding a new data type to InCroMAP:</h3>
     <pre>
 public class siRNA extends NSwithProbes {
   public siRNA(String siRNA_ID) {
@@ -30,9 +32,9 @@ public class siRNA extends NSwithProbes {
     </pre>
   
     <h3>2. Added a Reader for a new data type:</h3>
-    The IntegratorUI automatically detects all available Readers which are in or below package <i>de.zbit.io</i> and thus, simply
+    The InCroMAP UI automatically detects all available Readers which are in or below package <i>de.zbit.io</i> and thus, simply
     adding a Reader that extends <i>NameAndSignalReader</i> to the mentioned package is sufficient to make a new
-    data type available in Integrator.
+    data type available in InCroMAP.
     <pre>
 public class siRNAReader extends AbstractGeneBasedNSreader<siRNA> {
 

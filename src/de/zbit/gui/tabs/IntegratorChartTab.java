@@ -353,7 +353,9 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     //domainAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
     String xAxisLabel = "Location";
     String chromsome = getChromosome(nsList);
-    if (chromsome!=null) xAxisLabel+=" ("+ chromsome + ")";
+    if (chromsome!=null && !chromsome.equals(Chromosome.default_Chromosome_string)) {
+      xAxisLabel+=" ("+ chromsome + ")";
+    }
     final NumberAxis xAxis = new NumberAxis(xAxisLabel);
     xAxis.setAutoRange(true);
     xAxis.setAutoRangeIncludesZero(false);
@@ -500,6 +502,8 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
       NameAndSignals n = (NameAndSignals) it.next();
       if (n instanceof Region) {
         x = ((Region) n).getMiddle();
+        // If no position is set, simply increment position
+        if (x == Region.DEFAULT_START) x=i;
       }
       double y = n.getSignalMergedValue(vd.getB(), vd.getA(), MergeType.Mean);
       

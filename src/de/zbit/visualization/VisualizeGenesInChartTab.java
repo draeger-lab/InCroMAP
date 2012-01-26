@@ -178,10 +178,11 @@ public class VisualizeGenesInChartTab {
         geneBoxesPlot.setRangeGridlinesVisible(false);
         geneBoxesPlot.addDomainMarker(new ValueMarker(0,Color.BLACK, new BasicStroke(3f)));
         
-        // Center X-Axis on meth-data, not on genes
+        // Center X-Axis on meth-data, not on genes (only if genes available)
         xAxis.setAutoRange(false);
         XYDataset dataset = other.getDataset();
         Range targetRange = new Range(dataset.getXValue(0, 0), dataset.getXValue(0, dataset.getItemCount(0)-1));
+        if (targetRange.getLength()==0) targetRange = new Range(dataset.getXValue(0, 0)-.5d, dataset.getXValue(0, 0)+.5d ); 
         xAxis.setRangeWithMargins(targetRange);
         xAxis.setDefaultAutoRange(targetRange);
         //xAxis.setFixedAutoRange(targetRange.getLength());

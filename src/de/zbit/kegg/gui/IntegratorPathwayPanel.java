@@ -332,14 +332,14 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
       tooltip.append(nodeLabel);
     }
     if (description!=null) {
-      tooltip.append(StringUtil.insertLineBreaks(description, GUITools.TOOLTIP_LINE_LENGTH*3, "<br/>"));
+      tooltip.append(StringUtil.insertLineBreaks(description, StringUtil.TOOLTIP_LINE_LENGTH*3, "<br/>"));
     }
     if (image!=null && image.length()>0) {
       tooltip.append("<div align=\"center\">"+image+"</div>");
     }
 //    if (additional!=null && additional.length()>0) {
 //      tooltip.append("<p>&nbsp;</p>");
-//      tooltip.append(StringUtil.insertLineBreaks(additional.toString(), GUITools.TOOLTIP_LINE_LENGTH, "<br/>"));
+//      tooltip.append(StringUtil.insertLineBreaks(additional.toString(), StringUtil.TOOLTIP_LINE_LENGTH, "<br/>"));
 //    }
     
     
@@ -358,6 +358,7 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
       boolean includePlot = false;
       for (Entry<Class<? extends NameAndSignals>, List<Number>> exp : experimentalData.entrySet()) {
         String dataLabel = IntegratorUI.getShortTypeNameForNS(exp.getKey());
+        if (dataLabel==null) dataLabel = exp.getKey().getSimpleName();
         dataset.add(exp.getValue(), dataLabel, dataLabel);
         includePlot |= exp.getValue().size()>1;
       }
@@ -374,7 +375,7 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
         CategoryPlot plot = new CategoryPlot(dataset, xAxis, yAxis, renderer);
         
         final ChartPanel chartPanel = new ChartPanel(new JFreeChart(plot));
-        chartPanel.setPreferredSize(new java.awt.Dimension(500, 350));
+        chartPanel.setPreferredSize(new java.awt.Dimension(500, 300));
 
       
         ph.add(new JLabel("<html><body><b><h3>Microarray data assigned to this node:</h3></b></body></html>"));

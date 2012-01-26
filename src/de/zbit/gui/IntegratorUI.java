@@ -110,9 +110,15 @@ public class IntegratorUI extends BaseFrame {
   public static final transient Logger log = Logger.getLogger(IntegratorUI.class.getName());
   
   /**
-   * The name of the application
+   * The name of the application.
+   * 
+   * <p>When renaming the application, also consider:
+   * <li> src/overview.html
+   * <li> resources/de/zbit/gui/html/about.html
+   * <li> resources/de/zbit/gui/html/help.html
+   * <li> various logo images
    */
-  public final static String appName = "Integrator";
+  public final static String appName = "InCroMAP";
   
   /**
    * The version of {@link #appName}
@@ -306,9 +312,9 @@ public class IntegratorUI extends BaseFrame {
    */
   public static List<Class<? extends KeyProvider>> getStaticCommandLineOptions() {
     List<Class<? extends KeyProvider>> configList = new LinkedList<Class<? extends KeyProvider>>();
-    configList.add(IntegratorIOOptions.class);
+    //configList.add(IntegratorIOOptions.class);
     configList.add(GUIOptions.class);
-    configList.add(PathwayVisualizationOptions.class);
+    //configList.add(PathwayVisualizationOptions.class);
     return configList;
   }
 
@@ -764,7 +770,7 @@ public class IntegratorUI extends BaseFrame {
 
   /**
    * @param cl should be any {@link NameAndSignals} derived class.
-   * @return a short name, describing the data type
+   * @return a short name, describing the data type, MAY ALSO RETURN NULL!
    */
   public static String getShortTypeNameForNS(Class<?> cl) {
     String panelDataContent;
@@ -964,9 +970,9 @@ public class IntegratorUI extends BaseFrame {
    * @see de.zbit.gui.BaseFrame#saveFile()
    */
   @Override
-  public void saveFile() {
+  public File saveFile() {
     Object o = getCurrentlySelectedPanel();
-    if (o==null) return;
+    if (o==null) return null;
     
     if (o instanceof BaseFrameTab) {
       File f = ((BaseFrameTab)o).saveToFile();
@@ -974,9 +980,11 @@ public class IntegratorUI extends BaseFrame {
         // Update saveDir.
         saveDir = f.getParent();
       }
+      return f;
       
     } else {
       log.severe("Please implement saveFile for " + o.getClass());
+      return null;
     }
   }
 

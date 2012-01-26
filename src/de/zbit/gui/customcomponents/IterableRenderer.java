@@ -176,6 +176,6 @@ public class IterableRenderer extends DefaultTableCellRenderer {
   public void setText(String text) {
     super.setText(text);
     setToolTipText(StringUtil.insertLineBreaksAndCount(text.replace("&nbsp;", " "), 
-      GUITools.TOOLTIP_LINE_LENGTH+20, text.startsWith("<html>")?"<br/>":"\n").getA());
+      StringUtil.TOOLTIP_LINE_LENGTH+20, text.startsWith("<html>")?"<br/>":"\n").getA());
   }
 }

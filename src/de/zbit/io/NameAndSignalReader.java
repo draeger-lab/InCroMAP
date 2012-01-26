@@ -26,6 +26,7 @@ import java.awt.Dialog;
 import java.awt.Frame;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,7 +56,7 @@ import de.zbit.util.ValueTriplet;
  * @author Clemens Wrzodek
  * @version $Rev$
  */
-public abstract class NameAndSignalReader<T extends NameAndSignals> {
+public abstract class NameAndSignalReader<T extends NameAndSignals> implements Serializable {
   public static final transient Logger log = Logger.getLogger(NameAndSignalReader.class.getName());
   
   /**
@@ -79,7 +80,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
   /**
    * This can also be used by extending classes.
    */
-  protected AbstractProgressBar progress;
+  protected transient AbstractProgressBar progress;
   
   /**
    * This should be used as a secondary progress bar. I.e.
@@ -87,7 +88,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> {
    * {@link #progress} should only be used for the real
    * input file reading progress, OR if this is null.
    */
-  protected AbstractProgressBar secondaryProgress;
+  protected transient AbstractProgressBar secondaryProgress;
   
   /**
    * Decimal separator used to parse Numbers
