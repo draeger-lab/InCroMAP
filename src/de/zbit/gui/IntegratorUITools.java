@@ -880,6 +880,7 @@ public class IntegratorUITools {
    * @return 
    */
   public static GeneID2GeneSymbolMapper get2GeneSymbolMapping(Species species) {
+    if (species==null) return null;
     String key = GeneID2GeneSymbolMapper.class.getSimpleName().concat(species.getCommonName());
     Object mapper = UIManager.get(key);
     if (mapper==null) {

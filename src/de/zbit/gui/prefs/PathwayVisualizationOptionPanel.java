@@ -28,6 +28,7 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 
+import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.customcomponents.NodeShapeSelector;
 
@@ -46,7 +47,7 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
   @SuppressWarnings("unchecked")
   public PathwayVisualizationOptionPanel()
     throws IOException {
-    super("Integrator options", SignalOptions.class, EnrichmentOptions.class, PathwayVisualizationOptions.class);
+    super(IntegratorUI.appName + " options", SignalOptions.class, EnrichmentOptions.class, PathwayVisualizationOptions.class);
   }
   
   /* (non-Javadoc)
