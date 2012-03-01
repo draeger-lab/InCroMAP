@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import de.zbit.data.ObjectAndScore;
 import de.zbit.exception.CorruptInputStreamException;
@@ -62,6 +63,27 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
   
   /** Intermediate variable that is required by {@link #toCSV(int)}. */
   private Iterator<String> currentCSVElement = null;
+  
+  
+  /**
+   * From http://en.wikipedia.org/wiki/MicroRNA#Nomenclature:
+   * 
+   * <p>Pre-miRNAs that lead to 100% identical mature miRNAs but that are
+   * located at different places in the genome are indicated with an
+   * additional dash-number suffix. For example, the pre-miRNAs
+   * hsa-mir-194-1 and hsa-mir-194-2 lead to an identical mature miRNA
+   * (hsa-miR-194) but are located in different regions of the genome.
+   */
+  static Pattern identicalMiRNAs = Pattern.compile(".*(MIR|LET)-\\d+[A-Z]{0,1}-\\d");
+  
+  /**
+   * From http://en.wikipedia.org/wiki/MicroRNA#Nomenclature:
+   * 
+   * <p>miRNAs with nearly identical sequences bar one or two nucleotides
+   * are annotated with an additional lower case letter. For example,
+   * miR-123a would be closely related to miR-123b.
+   */
+  static Pattern similarMiRNAs = Pattern.compile(".*(MIR|LET)-\\d+?[A-Z]");
   
   /**
    * Watch out for targets of different organisms! Take care of them
@@ -203,7 +225,33 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
    */
   public Collection<miRNAtarget> getTargets(String miRNA) {
     if (targets==null) return null;
-    return targets.get(format_miRNA(miRNA));
+    
+    String preMiRNAname = format_miRNA(miRNA);
+    Collection<miRNAtarget> t = targets.get(preMiRNAname);
+    
+    // If no targets found, try to remove "-1" or "a"
+    // but NOT "-3p" / "-5p"
+    // XXX: we could make an option here, if we only want unique exact matches
+    if ((t==null || t.size()<1) &&  (preMiRNAname.endsWith("*"))) {
+      // First, remove the *, indicating an expression level
+      preMiRNAname = preMiRNAname.substring(0, preMiRNAname.length()-1);
+      t = targets.get(preMiRNAname);
+    }
+    
+    if ((t==null || t.size()<1) &&  (identicalMiRNAs.matcher(preMiRNAname).matches())) {
+      // Identical miRNAs, coming from transcripts that are located
+      // in different parts of the genome
+      preMiRNAname = preMiRNAname.substring(0, preMiRNAname.lastIndexOf("-"));
+      t = targets.get(preMiRNAname);
+    }
+    
+    if ((t==null || t.size()<1) &&  ((similarMiRNAs.matcher(preMiRNAname).matches()))) {
+      // remove acdef suffix
+      preMiRNAname = preMiRNAname.substring(0, preMiRNAname.length()-1);
+      t = targets.get(preMiRNAname);
+    }
+    
+    return t;
   }
 
 

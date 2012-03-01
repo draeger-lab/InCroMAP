@@ -614,9 +614,9 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     JLabeledComponent selExp = IntegratorUITools.createSelectExperimentBox((NameAndSignals)parent.getExampleData());
     lh.add(selExp);
     
-    JRadioButton noOthers = new JRadioButton("Do not include other experiments", false);
-    JRadioButton onOthers = new JRadioButton("Include other experiments with same signal type with light colors", true);
-    JRadioButton alOthers = new JRadioButton("Include other experiments with same signal type", false);
+    JRadioButton noOthers = new JRadioButton("Do not include other observations", false);
+    JRadioButton onOthers = new JRadioButton("Include other observations with same signal type with light colors", true);
+    JRadioButton alOthers = new JRadioButton("Include other observations with same signal type", false);
     GUITools.createButtonGroup(noOthers, onOthers, alOthers);
     lh.add(noOthers);
     lh.add(onOthers);

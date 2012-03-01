@@ -85,9 +85,10 @@ public class miRNATargetReaderTARGETSCAN extends miRNATargetReader {
     int pos = source.indexOf('/');
     if (pos>0) {
       // Get common prefix
+      // Targetscan NEVER puts prefixes before "let-" or "miR-".
       int pos2 = source.lastIndexOf("miR-", pos);
       if (pos2>0) pos = pos2+"miR-".length();
-      else pos = source.lastIndexOf("-", pos)+1;
+      else pos = source.indexOf("-", pos)+1;
       
       String prefix = source.substring(0, pos);
       String[] splitt = source.substring(pos, source.length()).split(Pattern.quote("/"));

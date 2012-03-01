@@ -152,7 +152,8 @@ public class ReaderCacheElement implements Serializable, Comparable<ReaderCacheE
     for (int i=0; i<exCol.length; i++) {
       for (ExpectedColumn cache : this.expectedColumns) {
         if (cache.getOriginalName().equals(exCol[i].getOriginalName())) {
-          exCol[i] = cache;
+          //exCol[i] = cache;
+          exCol[i].copyAssignedValuesFrom(cache);
           break;
         }
       }

@@ -65,6 +65,8 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
   
 
   /**
+   * <i>Note: this value does not depend on the strand orientation. It will
+   * and should always be the lower one, i.e. end &gt; start !</i>
    * @return the probe start (or {@link Region#DEFAULT_START}).
    */
   public int getStart() {

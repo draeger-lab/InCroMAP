@@ -48,8 +48,6 @@ import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
 import de.zbit.util.ArrayUtils;
-import de.zbit.util.FileTools;
-import de.zbit.util.Utils;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
 
@@ -76,7 +74,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
    * Required for Ensembl or GeneSymbol 2 GeneID Mappers.
    * Else, this is not required and may be null.
    */
-  private Species species;
+  protected Species species;
   
   /**
    * Map the ID to an NCBI gene id. If this is null, the input is 
@@ -191,8 +189,14 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
       CSVReader inputReader = loadConfigurationFromCache(cache, file, exCol, spec);
       
       // Show the CSV Import dialog
-      final CSVImporterV2 c = new CSVImporterV2(inputReader, exCol);
-      boolean dialogConfirmed = IntegratorUITools.showCSVImportDialog(parent, c, spec);
+      CSVImporterV2 c = null;
+      boolean dialogConfirmed = true;
+      boolean manuallyCheckedAssignments = false;
+      while (dialogConfirmed && !manuallyCheckedAssignments) {
+        c = new CSVImporterV2(inputReader, exCol);
+        dialogConfirmed = IntegratorUITools.showCSVImportDialog(parent, c, spec);
+        manuallyCheckedAssignments = dialogConfirmed && additionalColumnAssignmentCheck(c);
+      }
       
       // Process user input and read data
       if (dialogConfirmed) {
@@ -204,7 +208,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
         setNameAndIdentifierTypes(exCol[0]);   
         
         int offset = 1;
-        List<ExpectedColumn> additional = getAdditionalExpectedColumns();
+        List<ExpectedColumn> additional = getAdditionalExpectedColumns(); // Just the size is required
         if (additional!=null && additional.size()>0) {
           processAdditionalExpectedColumns(ArrayUtils.asList(exCol, offset, (offset+additional.size()) ));
           offset+=additional.size();
@@ -238,6 +242,22 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   }
 
   
+  /**
+   * With this method, complex column assignment dependencies
+   * can be checked manually. E.g. if you have dependencies like
+   * Column A must be set if and only if B has a selection, this
+   * can only be checked manually, in this method.
+   * 
+   * <p>Please display a GUI error message directly to the user
+   * and return false, if some columns are not assigned correctly.
+   * @param c 
+   * @return <code>TRUE</code> if everything is allright.
+   */
+  protected boolean additionalColumnAssignmentCheck(CSVImporterV2 c) {
+    // Intentionaly does nothing
+    return true;
+  }
+
   /**
    * Process user selected assignments for {@link #getAdditionalExpectedColumns()}.
    * List should be the same as given by {@link #getAdditionalExpectedColumns()} (signal
@@ -295,6 +315,10 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
           idCol.getAssignedColumns().get(i), type, IntegratorUITools.getPriority(type)); 
       l.add(vp);
     }
+    
+    // No selection for identifer???
+    if (l.size()<1) return;
+    
     // Sort by priority
    Collections.sort(l, vp.getComparator_OnlyCompareC());
     
@@ -361,7 +385,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   public Collection<T> read(CSVReader inputCSV) throws IOException, Exception {
     // Init Mapper (primary for idType)
     if (!doNotInitializeTheMapper) {
-      if (!idType.equals(IdentifierType.NCBI_GeneID)) {
+      if (idType!=null && !idType.equals(IdentifierType.NCBI_GeneID)) {
         mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
       } else if (secondID!=null) {
         // Only if primary identifier does not require a mapper,
@@ -370,6 +394,10 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
       }
       if (mapper!=null) mapper.readMappingData();
     }
+    
+    /* If you want to initialize additional things, use the init()
+     * method! Do not put another method call in here!
+     */
     
     // Read file
     Collection<T> ret =  super.read(inputCSV);
@@ -407,7 +435,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   protected T createObject(String name, String[] line) throws Exception {
     // Map to GeneID
     Integer geneID = null;
-    if (!idType.equals(IdentifierType.NCBI_GeneID)) {
+    if (idType!=null && !idType.equals(IdentifierType.NCBI_GeneID)) {
       geneID = mapper.map(name);
     } else {
       // Primary identifier is a gene id.
@@ -416,10 +444,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
         if (geneID<=0) geneID=null;
       } catch (NumberFormatException e) {
         String warning = String.format("Could not parse GeneID from String '%s'.", name);
-        if (!supressWarnings && !issuedWarnings.contains(warning)) {
-          log.warning(warning);
-          issuedWarnings.add(warning);
-        }
+        logWarning(warning);
         
         geneID=null;
       }
@@ -454,6 +479,27 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     }
     
     return m;
+  }
+
+  /**
+   * Please use this method to log/ show any warning.
+   * It well keep track of warnings, avoid duplicates and
+   * stops logging if too many warnings occur.
+   * 
+   * @param warningMessage
+   */
+  public void logWarning(String warningMessage) {
+    if (issuedWarnings.size()>100) {
+      // Stop if a limit has been reached.
+      return;
+    }
+    if (!supressWarnings && !issuedWarnings.contains(warningMessage)) {
+      log.warning(warningMessage);
+      issuedWarnings.add(warningMessage);
+      if (issuedWarnings.size()>100) {
+        log.info("More than 100 warnings issued. Stopped sending further warnings.");
+      }
+    }
   }
   
   /**

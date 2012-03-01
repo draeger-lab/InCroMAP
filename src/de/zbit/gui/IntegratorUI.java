@@ -77,7 +77,7 @@ import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.ReaderCache;
-import de.zbit.io.DNAMethylationReader;
+import de.zbit.io.DNAmethylationReader;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.mRNAReader;
@@ -648,7 +648,7 @@ public class IntegratorUI extends BaseFrame {
   }
   
   public void openDNAmethylationFile() {
-    openFile(null, DNAMethylationReader.class);
+    openFile(null, DNAmethylationReader.class);
   }
   
   public void openMiRNAfile() {
@@ -1013,7 +1013,7 @@ public class IntegratorUI extends BaseFrame {
     
     // If it is a webstart application, then reflections don't
     // work => include a static list as fallback.
-    return new Class[]{mRNAReader.class, miRNAReader.class, DNAMethylationReader.class, ProteinModificationReader.class};
+    return new Class[]{mRNAReader.class, miRNAReader.class, DNAmethylationReader.class, ProteinModificationReader.class};
   }
 
   /**

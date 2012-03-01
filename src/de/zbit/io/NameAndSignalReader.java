@@ -335,6 +335,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
     }
     // ---
     
+    done(ret);
     ((ArrayList<T>)ret).trimToSize();
     return ret;
   }
@@ -348,6 +349,15 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
     // Intentionally left blank
   }
 
+  /**
+   * This method can be overwritten to un-initialize anything,
+   * after all reading has been done.
+   * @param ret 
+   */
+  protected void done(Collection<T> ret) {
+    // Intentionally left blank
+  }
+  
   /**
    * This will set the {@link #nameCol} to zero and simply create a data
    * structure using the given <code>identifiers</code> as names.
@@ -367,6 +377,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
       processLine(new String[]{id}, ret);
     }
     
+    done(ret);
     return ret; //.values();
   }
   
@@ -378,8 +389,10 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
    */
   private void processLine(String[] line, Collection<T> ret) throws Exception {
     if (nameCol>=line.length) return; // continue;
+    String name = getName(line);
+    if (name==null) return; // continue;
     
-    T m = createObject(line[nameCol], line);
+    T m = createObject(name, line);
     if (m==null) return;
     
     // Assign additional data
@@ -401,6 +414,16 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
     ret.add(m);
     
     parseSignals(line, mi);
+  }
+
+  /**
+   * An overridable method, for cases in which the {@link #nameCol}
+   * might not be required.
+   * @param line
+   * @return
+   */
+  protected String getName(String[] line) {
+    return line[nameCol];
   }
 
   /**

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.GUIOptions;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.prefs.EnrichmentOptions;

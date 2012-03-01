@@ -104,7 +104,7 @@ import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.NameAndSignal2PWTools;
-import de.zbit.io.DNAMethylationReader;
+import de.zbit.io.DNAmethylationReader;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.OpenFile;
 import de.zbit.io.ProteinModificationReader;
@@ -310,7 +310,7 @@ public class IntegratorUITools {
       } else if (value.equals(ProteinModificationReader.class)) {
         itemsForModel.add(Math.min(itemsForModel.size(), 2), new LabeledObject<Class<?>>("Protein modification data", value));
         hitwords.add(Math.min(hitwords.size(), 2), new String[]{"protein"});
-      } else if (value.equals(DNAMethylationReader.class)) {
+      } else if (value.equals(DNAmethylationReader.class)) {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("DNA methylation data", value));
         hitwords.add(hitwords.size(), new String[]{"dnam", "methylation"});
       } else if (value.equals(SNPReader.class)) {

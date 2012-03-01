@@ -45,17 +45,17 @@ public abstract class AbstractGeneAndRegionBasedNSreader<T extends NameAndSignal
   /**
    * Probe position start (or just "position").
    */
-  private int probeStartCol=-1;
+  protected int probeStartCol=-1;
   
   /**
    * Probe position end (in doubt, better set {@link #probeStartCol}).
    */
-  private int probeEndCol=-1;
+  protected int probeEndCol=-1;
   
   /**
    * Column containining chromosome information
    */
-  private int chromosomeCol=-1;
+  protected int chromosomeCol=-1;
   
   /**
    * Integer to set if {@link #probeStartCol} or {@link #probeEndCol}
@@ -106,9 +106,26 @@ public abstract class AbstractGeneAndRegionBasedNSreader<T extends NameAndSignal
     boolean required = isRangeRequired();
     List<ExpectedColumn> list = new LinkedList<ExpectedColumn>();
     list.add(new ExpectedColumn("Probe position (start)", required));
-    list.add(new ExpectedColumn("Probe position (end)", required));
+    list.add(new ExpectedColumn("Probe position (end)", false)); // we can always build a range with just start
     list.add(new ExpectedColumn("Chromosome", required, Chromosome.chromosome_regex_with_forced_prefix));
     return list;
+  }
+  
+  /**
+   * @param exps
+   * @return true if start and chromosome columns are assigned.
+   */
+  protected static boolean isStartAndChromosomeAssigned(List<ExpectedColumn> exps) {
+    boolean startIsAssigned = false;
+    boolean chromosomeIsAssigned = false;
+    for (ExpectedColumn e : exps) {
+      if (e.getName().equals("Probe position (start)") && e.hasAssignedColumns()) {
+        startIsAssigned = true;
+      } else if (e.getName().equals("Chromosome") && e.hasAssignedColumns()) {
+        chromosomeIsAssigned = true;
+      }
+    }
+    return chromosomeIsAssigned && startIsAssigned;
   }
 
   /* (non-Javadoc)

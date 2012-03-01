@@ -117,7 +117,8 @@ public class GenericGene extends NSwithProbesAndRegion implements Strand {
   }
   
   /**
-   * Get all genes lying in a certain region
+   * Get all genes lying in a certain region. The returned list is sorted
+   * according to {@link SimpleRegion#getComparator()}!
    * @param r filter for region (null to get all)
    * @param species
    * @return
