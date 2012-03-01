@@ -163,7 +163,7 @@ public class DNAmethylationDataMapper {
       takeOnlyUniqueHits, templateRegions, toMap, mapToPromoters?upstream:0);
     
     // Discard it or set GeneID
-    if (mappedOn == null ) {
+    if (mappedOn == null || mappedOn.getGeneID()==GeneID.default_geneID) {
       //toMap.setGeneID(GeneID.default_geneID);
       if (discardNonAssignableProbes) {
         return null;
