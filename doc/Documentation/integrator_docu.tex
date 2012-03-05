@@ -1,0 +1,114 @@
+\documentclass[
+  BCOR12mm,
+  letterpaper,
+  11pt,
+  headsepline,
+  pointlessnumbers,
+  tablecaptionabove,
+  onelinecaption,
+  headinclude,
+  appendixprefix,
+  idxtotoc,
+  bibtotoc,
+  twoside,
+  titlepage
+]{scrreprt}
+
+\usepackage{blueStyle}
+
+% booktabs is for toprule, bottomrule, etc. in tables.
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}   %stellt den Befehl \newcolumntype bereit
+
+\hypersetup{
+              bookmarks={true},
+              bookmarksopen={true},
+              bookmarksopenlevel={0},
+              bookmarksnumbered={true},
+              breaklinks={true},
+              colorlinks={false},
+              pdfpagemode={UseOutlines},
+              pdftitle={Documentation for Integrator},
+              pdfauthor={Clemens Wrzodek},
+              pdfsubject={Software guide},
+              pdfkeywords={InCroMAP} {Integrator} {DNA} {methylation} {mRNA} {expression} {miRNA} {microRNA} {messengerRNA} {DNAmethylation} {protein} {phosphoprotein} {modification} {zeptosens} {affymetrix} {agilent} {nimblegen} {guide} {documentation},
+              pdfview={FitV},
+              pdftex,
+              pdffitwindow={true},
+              pdfstartview={FitV},
+              pdfnewwindow={false},
+              pdfdisplaydoctitle={true},
+              pdfhighlight={/P},
+              plainpages={false},
+              unicode={true},
+              urlcolor={blue}
+}
+
+%HYPHENATION
+\hyphenation{
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Gestaltung der Titelseite     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+\newcolumntype{L}[1]{>{\centering\arraybackslash}p{#1}}
+
+\title{
+\centering
+\begin{tabular}{C{5cm}L{5cm}}
+\includegraphics[width=0.35\columnwidth]{figures/puzzle_logo.png} & Documentation for Integrator \\
+\end{tabular}
+\\ \vspace{5mm} \large{integrated analysis of microarray data from different platforms}\\
+}
+
+
+\author{Clemens Wrzodek}
+\date{\today}
+\publishers{}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beginn des Dokumentes         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Titelei                       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagenumbering{roman}		% kleine lateinische Seitenzahlen
+\maketitle
+\begin{abstract}
+\input{00_abstract}
+\end{abstract}
+
+\setcounter{tocdepth}{1}
+\tableofcontents		% Inhaltsverzeichnis
+% \listoffigures
+% \listoftables
+
+\cleardoublepage		% Erzeugt neue Leerseite. Muss ggf. auskommentiert werden.
+\pagenumbering{arabic}		% Ab hier mit arabischen Zahlen numerieren
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Beginn der eigentlichen Arbeit%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\input{01_docuBody}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Das Literaturverzeichnis      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{natbib}
+\bibliography{integrator}
+
+\end{document}
