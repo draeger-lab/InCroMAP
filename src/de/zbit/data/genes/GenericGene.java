@@ -50,6 +50,15 @@ public class GenericGene extends NSwithProbesAndRegion implements Strand {
    * Key to use for NameAndSignal
    */
   public final static String DescriptionKey = "DESCRIPTION";
+  
+  /**
+   * This is an estimated maximum gene length for any organism (7Mbp).
+   * The real values are (currently) as follows:
+   * [Species: Homo sapiens] => 5,379,013
+   * [Species: Mus musculus] => 4,434,881
+   * [Species: Rattus norvegicus] => 1,865,485
+   */
+  public final static int MAXIMUM_GENE_LENGTH = 7000000;
 
   /**
    * @param probeName
