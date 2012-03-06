@@ -238,17 +238,32 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
       t = targets.get(preMiRNAname);
     }
     
-    if ((t==null || t.size()<1) &&  (identicalMiRNAs.matcher(preMiRNAname).matches())) {
+    // Removed "(t==null || t.size()<1) &&  ", because here we really have identical miRNAs
+    if (identicalMiRNAs.matcher(preMiRNAname).matches()) {
       // Identical miRNAs, coming from transcripts that are located
       // in different parts of the genome
       preMiRNAname = preMiRNAname.substring(0, preMiRNAname.lastIndexOf("-"));
-      t = targets.get(preMiRNAname);
+      Collection<miRNAtarget> t2 = targets.get(preMiRNAname);
+      
+      if (t==null || t.size()<1) {
+        t = t2;
+      } else if (t2!=null && t2.size()>0){
+        t.addAll(t2);
+      }
     }
     
-    if ((t==null || t.size()<1) &&  ((similarMiRNAs.matcher(preMiRNAname).matches()))) {
+    // Removed "(t==null || t.size()<1) &&  ", because if source gives "let-7" we
+    // just don't know if they mean "let-7c" or "7f", etc. => take for all.
+    if ( ((similarMiRNAs.matcher(preMiRNAname).matches())) ) {
       // remove acdef suffix
       preMiRNAname = preMiRNAname.substring(0, preMiRNAname.length()-1);
-      t = targets.get(preMiRNAname);
+      Collection<miRNAtarget> t2 = targets.get(preMiRNAname);
+      
+      if (t==null || t.size()<1) {
+        t = t2;
+      } else if (t2!=null && t2.size()>0){
+        t.addAll(t2);
+      }
     }
     
     return t;
@@ -278,6 +293,8 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
 
 
   /**
+   * WARNING, CURRENTLY UNUSED AND EXPERIMENTAL IMPLEMENTATION!
+   * USE OTHER METHODS.
    * @param miRNAsymbol
    * @return 
    */
