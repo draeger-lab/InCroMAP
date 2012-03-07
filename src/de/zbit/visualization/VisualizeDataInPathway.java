@@ -75,7 +75,9 @@ import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.BatchKEGGtranslator;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
+import de.zbit.math.rescale.AbstractRescale;
 import de.zbit.math.rescale.LinearRescale;
+import de.zbit.math.rescale.LogarithmicRescale;
 import de.zbit.parser.Species;
 import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.ArrayUtils;
@@ -1034,11 +1036,12 @@ public class VisualizeDataInPathway {
     boolean showBorderForDNAmethylationBox = true;
     // Read max. box width from preferences (Default:10)
     SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
-    int maxWidth = PathwayVisualizationOptions.DNA_METHYLATION_MAXIMUM_BOX_WIDTH.getValue(prefs);
+    double maxWidth = PathwayVisualizationOptions.DNA_METHYLATION_MAXIMUM_BOX_WIDTH.getValue(prefs);
     double halfWidth = ((double)maxWidth/2);
     // The protein mod. box height is required to calc. the dna methylation bar height
     int protBoxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     float maxFC = PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR.getValue(prefs);
+    double minPV = PathwayVisualizationOptions.P_VALUE_FOR_MAXIMUM_COLOR.getValue(prefs);
     Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES.getValue(prefs);
     if (ignoreFC==null||Double.isNaN(ignoreFC.doubleValue())) ignoreFC=0f;
     Double ignorePV = PathwayVisualizationOptions.DONT_VISUALIZE_P_VALUES.getValue(prefs);
@@ -1064,7 +1067,13 @@ public class VisualizeDataInPathway {
     // (via position: left/right of node OR color).
     
     // Rescaler only required for fold change visualization
-    LinearRescale rescale = new LinearRescale(0, maxFC, 0d, halfWidth);
+    AbstractRescale rescale;
+    if (type.equals(SignalType.FoldChange)) {
+      rescale = new LinearRescale(0, maxFC, 0d, halfWidth);
+    } else {
+      // p-values
+      rescale = new LogarithmicRescale(minPV, ignorePV, 2, Arrays.asList(0d, maxWidth));
+    }
     
     int changedNodes=0;
     for (Node n: n2ns.keySet()) {
@@ -1115,8 +1124,9 @@ public class VisualizeDataInPathway {
             }
           } else {
             // pValues
-            nl.setContentWidth(Math.min(Math.max((signalValue+minMax[0])/maxSignalValue, 0), 1)*maxWidth); // =width
-            nl.setFreeOffset(-nl.getContentWidth(), 0); // =left border
+            //nl.setContentWidth(Math.min(Math.max((signalValue+minMax[0])/maxSignalValue, 0), 1)*maxWidth); // =width
+            nl.setFreeOffset(-maxWidth, 0); // =left border
+            nl.setContentWidth(maxWidth - rescale.rescale(signalValue).doubleValue()); // =width
           }
         }
         

@@ -34,13 +34,26 @@ import java.util.List;
 public class LogarithmicRescale extends AbstractRescale {
   
   /**
-   * Define the log-base (Math.log10(10) = 1)
+   * Define the log-base (default: 10 ( Math.log10(10) = 1 ))
    */
-  public double base = 1;
-
+  private final static double defaultUnloggedBase = 10;
   
+  /**
+   * Log-base
+   */
+  private double base = Math.log10(defaultUnloggedBase);
+  
+
+  /**
+   * 
+   * @param <T>
+   * @param min should be !=0 (log(0) is inifinity and you won't be satisfied with the result, though).
+   * @param max
+   * @param newMin
+   * @param newMax
+   */
   public <T extends Number  & Comparable<T>> LogarithmicRescale (Number min, Number max, T newMin, T newMax) {
-    super(min, max, newMin, newMax);
+    super (min, max, newMin, newMax);
   }
   
   public <T extends Number  & Comparable<T>> LogarithmicRescale (Number min, Number max, List<T> targetMinMax) {
@@ -64,6 +77,11 @@ public class LogarithmicRescale extends AbstractRescale {
    */
   @Override
   protected double transform(Number n) {
+    // It's really nasty, but the super() constructor in
+    // abstract super class calls this method and the
+    // base variable is not yet initialized...
+    if (base==0d) base = Math.log10(defaultUnloggedBase);
+    
     return Math.log10(n.doubleValue())/base;
 //    if (Double.isInfinite(d) || Double.isNaN(d)) {
 //      return Double.MIN_NORMAL;

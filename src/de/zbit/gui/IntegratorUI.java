@@ -91,7 +91,6 @@ import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.parser.Species;
-import de.zbit.util.Reflect;
 import de.zbit.util.StringUtil;
 import de.zbit.util.ValuePair;
 import de.zbit.util.ValueTriplet;
@@ -709,6 +708,14 @@ public class IntegratorUI extends BaseFrame {
     // Change active buttons, based on selection.
     tabbedPane.addChangeListener(new ChangeListener() {
       public void stateChanged(ChangeEvent e) {
+        // Sometimes, external methods (e.g. from KEGGtranslator) add tabs
+        // without Icons. Add them here, later on if they are missing.
+        int idx = tabbedPane.getSelectedIndex();
+        if (idx>=0 && tabbedPane.getIconAt(idx)==null) {
+          tabbedPane.setIconAt(idx, IntegratorUITools.inferIconForTab(tabbedPane.getComponentAt(idx)));
+        }
+        
+        // This is the real todo everytime the selected tab changes
         updateButtons();
       }
     });
@@ -1000,7 +1007,12 @@ public class IntegratorUI extends BaseFrame {
    */
   @SuppressWarnings("rawtypes")
   public static Class[] getAvailableReaders() {
+    
     // Try first with reflections. Allows more flexibility.
+    /*
+     * With reflection, we also incloude the "SNP / GWAS" and
+     * "GenericGene" readers. We might include them in later releases
+     * but for now, we should remove them.
     Class[] available_formats = null;
     try {
       available_formats = Reflect.getAllClassesInPackage("de.zbit.io", true, true, NameAndSignalReader.class,null,true);
@@ -1010,6 +1022,8 @@ public class IntegratorUI extends BaseFrame {
     if (available_formats!=null && available_formats.length>0) {
       return available_formats;
     }
+    
+    */
     
     // If it is a webstart application, then reflections don't
     // work => include a static list as fallback.

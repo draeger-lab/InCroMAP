@@ -501,7 +501,16 @@ public class IntegratorUITools {
     if (ns instanceof EnrichmentObject) {
       c = NameAndSignals.getSignalNames(NameAndSignal2PWTools.getSignals(ns));
     }
-    jc.setHeaders(c);
+    // Sort them
+    List<ValuePair<String, SignalType>> l;
+    if (c instanceof List) {
+      l = (List<ValuePair<String, SignalType>>) c;
+    } else {
+      l = new ArrayList<ValuePair<String,SignalType>>(c);
+    }
+    Collections.sort(l);
+    
+    jc.setHeaders(l);
     return jc;
   }
   

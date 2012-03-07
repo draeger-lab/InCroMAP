@@ -143,8 +143,15 @@ public class GenericGene extends NSwithProbesAndRegion implements Strand {
     reader.setDontInitializeToGeneIDmapper(true);
     reader.setSupressWarnings(true);
     
+    // Check input
+    CSVReader csvReader = getStaticFileForSpecies(species);
+    if (csvReader==null) {
+      log.info("No genome information available for " + species==null?"UNKNOWN":species.getScientificName() + ".");
+      return null;
+    }
+    
     // Read data
-    Collection<GenericGene> content = reader.read(getStaticFileForSpecies(species));
+    Collection<GenericGene> content = reader.read(csvReader);
     if (content==null || content.size()<1) return new LinkedList<GenericGene>();
     
     // Get as list and sort by region

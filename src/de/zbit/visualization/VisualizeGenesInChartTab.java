@@ -126,7 +126,7 @@ public class VisualizeGenesInChartTab {
           log.log(Level.SEVERE, "Could not add gene-view.", e);
           return;
         }
-        if (Thread.currentThread().isInterrupted()) return;
+        if (Thread.currentThread().isInterrupted() || genesInRegion==null) return;
         
         // Domain is X, Range is Y
         double[][] genesAsArray = new double[6][genesInRegion.size()];
