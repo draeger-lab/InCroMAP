@@ -195,7 +195,7 @@ ENSMUSG00000046567 100052169   100052221 CHR10FS100052169 0.08
 
 \subsection{Protein modification expression data}
 
-Protein expression datasets, as all other datasets, require a gene-identifier and columns with fold-changes or p-values. Furthermore, it is strongly recommended having a column, indicating the modification of the current protein (phosphorylation, cleavage, acetylation, methylation, etc). This is customized for, e.g. phosphoprotein datasets.
+Protein expression datasets, as all other datasets, require a gene-identifier and columns with fold-changes or p-values. Furthermore, it is strongly recommended having a column, indicating the modification of the current protein (phosphorylation, cleavage, acetylation, methylation, etc). This is customized for, e.g., phosphoprotein datasets. Nevertheless, the modification column is optional. Thus, one can simply read protein expression datasets by just specifying an identifier and the observation columns.
 
 Example:
 \begin{lstlisting}[caption={Input file example for protein modification expression data},label={lst:input:protein},numbers=none,captionpos=t,float=h]
@@ -206,9 +206,10 @@ PRKAA1      PRKAA1      basic        105787     0.07
 ...         ...         ...          ...        ...
 \end{lstlisting}
 
-The modification column indicates, if and how the protein is modified and at which site. For example, "P-S473" indicates a phosphorylation of the serine 473 site. The term "basic" refers to the unmodified protein. These modifications prevent InCroMAP from mixing different values of the same protein, but coming from different protein modifications (example input data may come from reverse-phase-protein-arrays, e.g., from Zeptosense). Moreover, for simple protein expression data (without modification expression information), one can simply omit the modification column.
+The modification column indicates, if and how the protein is modified and at which site. For example, "P-S473" indicates a phosphorylation of the serine 473 site. The term "basic" refers to the unmodified protein. These modifications prevent InCroMAP from mixing different values of the same protein, but coming from different protein modifications (example input data may come from reverse-phase-protein-arrays, e.g., from Zeptosense). But for simple protein expression data (without modification expression information), one can simply omit the modification column.
 
 \section{2. Open microarray data in the application}
+\label{sec:opendata}
 
 \begin{figure}[h]
 \centerline{\noindent\includegraphics[width=1.0\columnwidth]{figures/import_dialog.jpg}}
@@ -271,6 +272,7 @@ There are two ways of performing an enrichment analysis. On is, to manually sele
 The other way is to click the enrichment button in the Toolbar. Then, on needs to select an enrichment type and one will need to define a filter to select probes/genes for an enrichment. For example, in the upcoming dialog one can pick a fold-change column, select "$\mid>=\mid$" (which is the same as "$\geq\pm$") and enter $1.0$ in the last field. This example would lead to an enrichment on all genes that are differentially expressed, with a fold-change cutoff of $1.0$ (i.e. "$fold-change\geq\pm1.0$").
 
 \section{Pathway-based microarray data visualization (every platform)}
+\label{sec:visualizeanydatainpathway}
 There are multiple possibilities to visualize expression data in a pathway-plot, using InCroMAP. On is, for example, to select the tab, containing the table with the input dataset, and click on the "Visualize in pathway" button in the toolbar. In the upcoming dialog, one needs to pick the pathway of interest and an observation, that contains the microarray data that should be visualized in the pathway. This will result in a picture, similar to Figure~\ref{fig:mapkmrna}.
 
 \begin{figure}[htb]
@@ -332,8 +334,14 @@ This chapter describes analysis methods in the InCroMAP application, that are av
 
 \section{Integrated pathway-based visualization}
 
-TODO: TEXT SCHREIBEN
+\begin{figure}[htb]
+\centerline{\noindent\includegraphics[width=1.0\columnwidth]{figures/10.png}}
+\caption{
+Pathway-based integrated cross-platform microarray visualization. This example shows the "Wnt signaling pathway". The rectangular nodes correspond to genes or gene families and their color indicates mRNA expression (blue means downregulated, red means upregulated). The box left of those nodes indicates promoter DNA methylation. The largest peak is shown and an empty box indicates no differential methylation. A bar to the left indificates hypomethylation and a bar, which goes from the middle of the box to the right indicates hypermethylation. Small rectangular boxes below the mRNA nodes indicate protein and protein modification expression. E.g., the "CTNNB1" gene has associated data from two different phosphorylation sites and the basic proein expression. Every of those boxes is red, which indicates upregulation. MicroRNAs are visualized as triangles with edges to their mRNA targets. MiRNA node color indicates miRNA expression.
+}\label{fig:integratedWNTpw}
+\end{figure}
 
+Integrated pathway-based visualizations allow to visualize DNA methylation, mRNA expression, micro RNA expression and protein (modification) expression datasets in one pathway. See Figure~\ref{fig:integratedWNTpw} for an example. There are multiple ways to create such a visualization. You could just open any pathway and then visualize each of the datasets therein (see Section~\ref{sec:visualizeanydatainpathway}). Another easy way is to select "Tools" and "Integrated heterogeneous data visualization" from the menu bar. In the upcoming dialog, you first need to select the organism and the pathway of interest. For each data type is a checkbox in this dialog called, e.g., "Visualize mRNA data". Select the desired checkboxes and select a dataset and observation for each dataset (you need to have all datasets imported into InCroMAP, see Section~\ref{sec:opendata}). After clicking "Ok", a new tab with the pathway-based visualization of all your selected microarray datasets will show up.
 
 
 \section{Data pairing}
@@ -351,17 +359,114 @@ The data pairing with micro RNA datasets will lead to three additional columns. 
 
 \section{Integrated enrichment}
 
+Normal enrichment analyzes are just an interpretation of the current data type. For example, a pathway enrichment analysis on mRNA data will show pathways, that are altered in the mRNA dataset. Pathway enrichment analysis on DNA methylation data will show pathways, that contain genes with significantly altered DNA methylation in their promoter regions.
+
+With the integrated enrichment method in InCroMAP, the result of an enrichment analysis is not anymore just an interpretation of one platform - it's more close to what is really altered in the samples across multiple platforms. Therefore, the integrated enrichment is performed across multiple platforms and reflects alterations that occur on every (if datasets are connected with an AND) or any (if datasets are connected with an OR) platform.
+
+To perform such an enrichment, please select "Tools" and "Integrated enrichment" from the menu bar. Now select your organism and all currently opened datasets from this organism should show up in the box below the organism selection. Pick all datasets that should be integrated into this enrichment (you can pick multiples by press and hold the CRTL-key of your keyboard) and select an enrichment type (Gene Ontology, KEGG pathway, etc.).
+At the bottom of this dialog, you can select if all the probes/ genes from the datasets should get connected with an "AND" or "OR" operator. For example, if you choose "AND", every gene must be altered in all selected datasets to get selected for the enrichment analysis. We recommend selecting "OR", because, e.g., an alteration in DNA methylation must not always also show an alteration in mRNA expression.
+
+After confirming this dialog with "Ok", a threshold must be given for each dataset to define which genes should be picked for the enrichment analysis. If all thresholds are defined, the result of the enrichment will show up.
+
 \section{Gene-based tabular integration of data from multiple platforms}
 
+\begin{figure}[htbp]
+\centerline{\noindent\includegraphics[width=1.0\columnwidth]{figures/7.png}}
+\caption{
+Example of an expandable, gene-based tabular view of microarray data from different platforms. Each top root node is one gene (e.g., the second row "EGFR") and each columns shows the corresponding observation (in this example the fold-change) of each platform. If the node is expanded, novel nodes appear for each platform that contains data for this gene (e.g., the third row "mRNA"). If this is further expanded, the single values, associated to this gene on the particular platform show up (in this example, all mRNA probes). For miRNA datasets, all miRNAs targetting this gene are shown.
+}\label{fig:tabularintegration}
+\end{figure}
+
+Another method to get a cross-platform view of various samples is the expandable, gene-based tabular integration of heterogenous datasets. An example can be seen in Figure~\ref{fig:tabularintegration}. At the root level, each row corresponds to one gene. In the columns, the associated values of various platforms are denoted. If one gene is expanded, second-level nodes show up, that are named according to the platform (e.g., "mRNA"). If these nodes are expanded, the single probes associated to this gene appear. Thus, this integration methods gives a possibility to quickly examine expression data, coming from various different platforms if one already knows the some genes of interest.
+
+To create such a table, select "Tools" and "Integrate heterogeneous data" from the menu bar. In the upcoming dialog, please select your organism and set a checkmark on every platform you want to integrate. Then, pick a dataset and an observation for each platform. Please note that this is a gene-centric table. Thus, each dataset needs to be converted to contain gene-centric values. Therefore, you can select if you want to do this by calculating the mean, median, maximum, etc. in another combobox below the observation selection. You can pick separate options here for each platform. After confirming this dialog, the result table like shown, e.g., in Figure~\ref{fig:tabularintegration} will show up.
+
+\chapter{Help for different tabs and methods}
+
+\section{Tabular tabs in general - searching, sorting and more}
+
+All input data from every platform is shown as a table. The first row is the header, which usually contains items like "\#" (which is a simple number counting from one to infinity for every row) or name. You can click on any of those column headers to sort the table according to this column.
+
+All tables in InCroMAP can be searched, by simply clicking on any row in the table (i.e. setting the focus on the table) and start typing. This will result in a textfield to show up at the top left edge of the table. The table selection will automatically change to select an object that contains what you searched for. If you want to search for the next element, containing the same string, you need to press "F3" on your keyboard. Pressing "F3" once more will again search for the next hit, etc.
+
+\section{Enrichments and enrichment tabs}
+
+\begin{figure}[htb]
+\centerline{\noindent\includegraphics[width=1.0\columnwidth]{figures/6.png}}
+\caption{
+InCroMAP screenshot that shows the result of a KEGG pathway enrichment. The "FDR correction" menu shows different methods to face the problem of multiple testing.
+}\label{fig:enrichmentExample}
+\end{figure}
+
+InCroMAP currently offers three different enrichments: KEGG pathway, Gene Ontology, and any enrichment using MSigDB files. For the first two, all required data will be obtained automatically. You just need to select genes for the enrichment (e.g., by setting a threshold for the fold-change or p-values). The MSigDB enrichment will require you to specify your enrichment files. You can download any gene set in GTM format from the molecular signatures database (MSigDB) at \url{http://www.broadinstitute.org/gsea/msigdb/} (see \cite{MSigDB}). On this homepage, please either download the "gene symbols" files or make sure that the "entrez genes ids" from the other files are valid for your current organism! For example, you can't perform an enrichment on a mouse dataset if the MSigDB file contains entrez gene ids from human. If you select "MSigDB enrichment" from within InCroMAP, the application will ask you to specify a path to any file, containing a gene set from the molecular signatures database as mentioned above.
 
 
 
+\subsection{How is the enrichment performed? And what are the columns?}
 
-TODO: Tabellen funktion, auf suche, DNAm plot \& enrichment eingehen und pw visualization einleiten
-enrichment, pw visualization separat.
-Integrated analysis methods.
+InCroMAP first creates a gene-pool and then calculates p-values for every pre-defined gene set (e.g., pathway or GO-term) for this gene-pool. The results are presented to the user in a new table. The mentioned gene-pool is created by the user, typically by picking all significant genes ($p-value<0.05$ or $abs(fold-change)>1.5$). The gene sets are predefined by KEGG, Gene Ontology or the MSigDB. Now for every gene-set, we investigate if it contains one or more genes from our gene-pool. The result is denoted in the "List ratio" column. This column denotes the number of genes from our gene-pool list that are in the gene-set, described by the row, and the total gene-pool size. The "BG ratio" column denotes the total number of genes in the gene-set and the total number of all genes in any gene set. From these values, the raw "p-value" is calculated using a hypergeometric test. The "q-value" column contains p-values, that have been corrected for multiple testing. By default, all p-values are being corrected using the "Benjamini \& Hochberg" FDR correction method (see \cite{BenjaminiHochberg}). This can be changed to "Bonferroni" or "Bonferroni Holm" by clicking on the "FDR correction" button in the toolbar (see Figure~\ref{fig:enrichmentExample}). The last column denotes the actual genes from the gene-pool that are in the current gene-set.
 
-- F3 Knopf bei suche
+\textbf{Example:} we have created a KEGG pathway enrichment with some p-value cutoff on an mRNA dataset. After applying the threshold, we had a total of 17 genes in our gene-pool. The results of the enrichment are depicted in Figure~\ref{fig:enrichmentExample}. The third row now denotes an enriched pathway (i.e., gene set) called "Arginine and proline metabolism". Two of our 17 genes in the gene-pool where contained in this pathway. The pathway has a total of 56 genes and the total number of genes occurring in any pathway is 18080. From these values, the p-value of 0.001225 is calculated with a hypergeometric test and, using Benjamini \& Hochberg, the corrected p-value is 0.009802. The two genes from our gene-pool that are in the pathway are "Gls2" and "Aldh1b1", what is denoted in the last column.
+
+\textbf{For micro RNA datasets}, the enrichment is a little bit more difficult. The gene-sets behind these enrichment are mostly referring to protein coding genes. Thus, they are not directly usable for micro RNAs. Thus, the enrichment on miRNA datasets is performed on the targets of the corresponding miRNAs. So first, you need to annotate your miRNA dataset with targets, using the "Targets" and "Annotate targets" button on the toolbar. Then, as with every other dataset you can define a threshold for the p-values of fold-changes. This will result in a microRNA pool, that meets the selected cutoff. This microRNA pool is now converted to a gene-pool by using all annotated targets from the microRNAs in the pool. The rest of the enrichment is the same procedure as described above. Except for the list ratio, which denotes the number of microRNAs that contain targets in this gene-set (i.e., pathway) and the total number of microRNAs. In the preferences, you can change the list ratio when performing a microRNA enrichment to be the number of targets in this gene-set, instead of the number of microRNAs that contain targets in the gene-set.
+
+
+\section{Pathways and the pathway visualization tabs}
+
+The InCroMAP pathways are graphs, that are layouted on top of an original KEGG pathway picture. In general, small circular nodes are small molecules, rectangular nodes with round corners describe referenced pathways (also called "pathway-reference nodes"), and rectangular-shaped nodes (smaller ones, without round corners) correspond to products of genes or gene families. Please note that KEGG sometimes puts multiple genes into a single node and if it's easier to visualize, a node can have multiple instances in a graph. Sometimes (e.g., in the "Metabolic pathways"-pathway), the proteins or enzymes are shown as big edges, connecting compounds. These are rare special cases that KEGG uses to enhance the quality of the overall picture. In these cases, only mRNA data can be visualized (resulting in a color-change of this big edge). In every pathway, you can double click on a pathway-reference node to open the corresponding pathway in InCroMAP or you can click on any other node or edge to get further information about it.
+
+You can search for certain genes or other strings in a pathway, by selecting "Search" from the toolbar. This will change the font- and border-color of all nodes matching your search to red.
+
+\subsection{Visualize expression data in a pathway}
+\label{sec:visdatainpw}
+When a pathway tab is currently visible, any opened expression dataset can be visualized in the pathway by selecting "Visualize data" and again "Visualize data" from the toolbar. Only one dataset per type(i.e., mRNA, miRNA, protein and DNA methylation) can be visualized at a time, but all types can be visualized in the same pathway. In the following part we are referring to the default properties. Many options (like the color or threshold for upregulation) can be changed in the preferences!
+
+\begin{figure}[htb]
+\centerline{\noindent\includegraphics[width=0.6\columnwidth]{figures/pw-dnam.jpg}}
+\caption{
+Examples of various fold-changes or p-values for DNA methylation data and their visualization in InCroMAP. These examples are only valid for the default settings. For example, the p-value required to fill the whole box can be changed in the preferences. Usually, the value visualized for a gene corresponds to the maximum peak in the gene promoter - but this can also be changed in the preferences.
+}\label{fig:dnampw}
+\end{figure}
+
+For all data types, except DNA methylation, if fold-changes are visualized, the color red means upregulation and blue means downregulation. The darker the color, the higher/lower is the fold-change. Default requirement for a node to get the darkest red/blue color is a fold-change of $\pm1.5$. White color indicates no differential expression (by default, fold-changes between $\pm0.5$) and grey color means, that no value from the input dataset could be associated to this node (e.g., gene was not on microarray, or removed by preprocessing, etc.). These properties are similar when visualizing p-values. A white color, by default, means that the p-value is $> 0.05$ and grey means, that no data is available. Significance is indicated by blue color on a log-scale, where $0.0005$ is the threshold for the darkest blue color. All these properties (thresholds, colors, etc.) can be changed in the properties.
+
+To visualize data in a pathway, only one value for a node in the pathway can be visualized. These "nodes" are mostly genes, but sometimes also gene families (e.g., in the "MAPK signalling pathway", "MAPK1" and "MAPK3" are summarized in one node). Thus, InCroMAP sometimes needs to merge multiple probes and values to a single value. In the preferences, you might want to remove the checkmark on the "Remember gene center decision" box. If this is unchecked, InCroMAP will ask every time how the input data should be gene centered. Therefore, several options are available: Mean, Median, Minimum, Maximum, Maximum distance to zero (i.e., $\max{|x|}$), NormalizesSumOfLog2Values (i.e., $\frac{\sum\limits_{i=1}^n\log_2 x}{n}$, useful for p-values), or Automatic. Automatic will take the minimum for p-values, "Maximum distance to zero" for fold-changes, and mean for all others. This corresponds to taking the most significantly probe (p-values) or the probe with maximum differential expression (fold-changes).
+
+\begin{figure}[htb]
+\centerline{\noindent\includegraphics[width=0.8\columnwidth]{figures/1-1.png}}
+\caption{
+Examples of an integrated pathway-based visualization. Here, three different data types (mRNA, protein and DNA methylation) have been visualized. The node "SFRP" has been selected and the bottom half shows a detailed view of all expression data associated with this node. The DNA methylation data is plotted in detail as genome region plot of this gene.
+}\label{fig:integratedpwdnamdetails}
+\end{figure}
+
+Messenger RNA is visualized by changing the color of the rectangle-shaped nodes, according to mRNA expression. MicroRNA is visualized, by changing the color of the triangle-shaped miRNA nodes, according to miRNA expression. Protein data is visualized, by adding small boxes below the rectangle-shaped nodes. DNA methylation data is visualized, by putting black boxed left of the rectangle-shaped nodes. For DNA methylation, the same thresholds as for all other data types are valid. But the expression is not encoded in a color, but in a black bar that goes from the middle to the left, if the gene is hypomethylated and to the right, if the gene is hypermethylated. For p-values, a black bar goes from the left border of this box to the right one, depending on the significance. See Figure~\ref{fig:dnampw} for examples and more details on the pathway-based visualization of DNA methylation data. With the default settings, the probe with maximum differential expression or maximum significance in the promoter determines the value for DNA methylation visualization of this gene. This is very similar to maximum peak detection approaches! But still, DNA methylation data is not very informative if it is summarized to a single value per gene and thus, we added a detail panel that contains a plot of the DNA methylation in the genomic and promoter region of the selected gene. The black bar, added to the pathway, should show in a very simplified view, which genes are interesting and important. For those genes then, the user can click on their boxes and in the lower half of the application, a new frame is shown with detailed information about the node and all expression values associated with it. Please see Figure~\ref{fig:integratedpwdnamdetails} for an example of the detailed DNA methylation visualization.
+
+\subsection{Other pathway-based visualization options}
+
+If you started by performing a KEGG pathway enrichment on your expression data and then selected and pathway from the enrichment and clicked "Visualize pathway", then the "Highlight enriched genes" option will become available in the toolbar. If this option is selected, each node in the pathway is colored grey, except for nodes that correspond to genes that were enriched in this pathway. These are highlighted in red (which is only a highlighting and does not express up- or downregulation). For example, Figure~\ref{fig:enrichmentExample} shows the result of an enrichment. If we would select the third row ("Arginine and proline metabolism") and click on "Visualize pathway", then the "GLS2" and "ALDH1B1" genes would be highlighted in red.
+
+Another visualization possibility (when a KEGG pathway enrichment has been performed) is coloring pathway-reference nodes according to the enrichment p-value. This can be done by selecting "Visualize data" and "Color pathway-references according enrichment" from the toolbar. This will change the color of all pathway-reference nodes (rectangular nodes with round corners) according to their p-value in the enrichment. The color scheme and requirements are the same as described in Section~\ref{sec:visdatainpw}. An example of such colored reference nodes can be seen in Figure~\ref{fig:metabolicpathways}.
+
+
+\section{DNA methylation plots}
+
+
+
+\subsection{Integrated mRNA expression and DNA methylation plots}
+PTPRT gen ist interessant
+
+
+
+TODO: Fold-change muss logarithmiert sein. Sonst wird er bei einfärbung logarithmiert (base: 2)! (Bei data input erwähnen).
+
+DONE? TODO: Tabellen funktion, auf suche, DNAm plot \& enrichment eingehen und pw visualization einleiten
+DONE? enrichment, pw visualization separat.
+DONE? Integrated analysis methods.
+
+DONE? - F3 Knopf bei suche
+
+Please note: in this section we refer to the default values. The colores for upregulation
+
 - Tutorial für ein downloadbares sample file, von import bis zur enrichment und data in pathway ansicht
 
 2. Open (webstart or download, simply double-click)
@@ -369,8 +474,10 @@ Integrated analysis methods.
 
 Important Notes (in FAQ?) erklärend das kegg merhere gene in 1 knoten zusammenfasst
 
-TODO:
-Create a ZIP for download, including start scripts.
+Jeden Screen noch mal erklären, inkl. aller columns (list ratio), MSigbDB enrichment
+In Analysis examples auf erklärungen verlinkgen
+Preferences erklären (formeln aus Vis.Expr.Data.In.PW hierher verschieben)
+DONE? Bei enrichment sagen wie es mit miRNA, DNAm usw. funktioniert.
 
 TODO PAPER:
 Abgrenzung zu GenMAPP und Ingenuity
@@ -417,6 +524,9 @@ Yes! Basically, everything than can be mapped to a gene can be imported. It is r
 
 \noindent \textbf{Where can I get the latest version?}\newline
 Go to \url{http://www.cogsys.cs.uni-tuebingen.de/software/Integrator/}.
+
+
+TODO: Can I save XY (pathway plot picture, etc). Erklärung: File and Save
 
 
 TODO: include items from KEGGtranslator FAQ (missing reactions and such).
