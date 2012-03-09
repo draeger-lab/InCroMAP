@@ -564,7 +564,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     
     
     // Gene based
-    final JRadioButton geneBased = new JRadioButton("Plot a region, associated to a gene", false);
+    final JRadioButton geneBased = new JRadioButton("Plot a region, associated with a gene", false);
     lh.add(geneBased);
     JPanel genePanel = new JPanel();
     GUITools.createTitledPanel(genePanel, "");
