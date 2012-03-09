@@ -1454,6 +1454,57 @@
   url = {http://dx.doi.org/10.1073/pnas.2037852100}
 }
 
+@ARTICLE{Targetscan,
+  author = {Robin C Friedman and Kyle Kai-How Farh and Christopher B Burge and
+	David P Bartel},
+  title = {Most mammalian mRNAs are conserved targets of microRNAs.},
+  journal = {Genome Res},
+  year = {2009},
+  volume = {19},
+  pages = {92--105},
+  number = {1},
+  month = {Jan},
+  abstract = {MicroRNAs (miRNAs) are small endogenous RNAs that pair to sites in
+	mRNAs to direct post-transcriptional repression. Many sites that
+	match the miRNA seed (nucleotides 2-7), particularly those in 3'
+	untranslated regions (3'UTRs), are preferentially conserved. Here,
+	we overhauled our tool for finding preferential conservation of sequence
+	motifs and applied it to the analysis of human 3'UTRs, increasing
+	by nearly threefold the detected number of preferentially conserved
+	miRNA target sites. The new tool more efficiently incorporates new
+	genomes and more completely controls for background conservation
+	by accounting for mutational biases, dinucleotide conservation rates,
+	and the conservation rates of individual UTRs. The improved background
+	model enabled preferential conservation of a new site type, the "offset
+	6mer," to be detected. In total, >45,000 miRNA target sites within
+	human 3'UTRs are conserved above background levels, and >60\% of
+	human protein-coding genes have been under selective pressure to
+	maintain pairing to miRNAs. Mammalian-specific miRNAs have far fewer
+	conserved targets than do the more broadly conserved miRNAs, even
+	when considering only more recently emerged targets. Although pairing
+	to the 3' end of miRNAs can compensate for seed mismatches, this
+	class of sites constitutes less than 2\% of all preferentially conserved
+	sites detected. The new tool enables statistically powerful analysis
+	of individual miRNA target sites, with the probability of preferentially
+	conserved targeting (P(CT)) correlating with experimental measurements
+	of repression. Our expanded set of target predictions (including
+	conserved 3'-compensatory sites), are available at the TargetScan
+	website, which displays the P(CT) for each site and each predicted
+	target.},
+  doi = {10.1101/gr.082701.108},
+  institution = {Department of Biology, Massachusetts Institute of Technology, Cambridge,
+	Massachusetts 02139, USA.},
+  keywords = {3' Untranslated Regions; Animals; Base Sequence; Conserved Sequence;
+	Evolution, Molecular; Humans; Mammals, genetics; MicroRNAs, genetics;
+	Phylogeny; RNA, Messenger, genetics; Sequence Alignment; Sequence
+	Homology, Nucleic Acid},
+  owner = {wrzodek},
+  pii = {gr.082701.108},
+  pmid = {18955434},
+  timestamp = {2012.03.09},
+  url = {http://dx.doi.org/10.1101/gr.082701.108}
+}
+
 @ARTICLE{Fuks2005,
   author = {François Fuks},
   title = {DNA methylation and histone modifications: teaming up to silence
@@ -1486,6 +1537,65 @@
   pmid = {16098738},
   timestamp = {2010.07.08},
   url = {http://dx.doi.org/10.1016/j.gde.2005.08.002}
+}
+
+@ARTICLE{ElMMo,
+  author = {Dimos Gaidatzis and Erik van Nimwegen and Jean Hausser and Mihaela
+	Zavolan},
+  title = {Inference of miRNA targets using evolutionary conservation and pathway
+	analysis.},
+  journal = {BMC Bioinformatics},
+  year = {2007},
+  volume = {8},
+  pages = {69},
+  abstract = {MicroRNAs have emerged as important regulatory genes in a variety
+	of cellular processes and, in recent years, hundreds of such genes
+	have been discovered in animals. In contrast, functional annotations
+	are available only for a very small fraction of these miRNAs, and
+	even in these cases only partially.We developed a general Bayesian
+	method for the inference of miRNA target sites, in which, for each
+	miRNA, we explicitly model the evolution of orthologous target sites
+	in a set of related species. Using this method we predict target
+	sites for all known miRNAs in flies, worms, fish, and mammals. By
+	comparing our predictions in fly with a reference set of experimentally
+	tested miRNA-mRNA interactions we show that our general method performs
+	at least as well as the most accurate methods available to date,
+	including ones specifically tailored for target prediction in fly.
+	An important novel feature of our model is that it explicitly infers
+	the phylogenetic distribution of functional target sites, independently
+	for each miRNA. This allows us to infer species-specific and clade-specific
+	miRNA targeting. We also show that, in long human 3' UTRs, miRNA
+	target sites occur preferentially near the start and near the end
+	of the 3' UTR. To characterize miRNA function beyond the predicted
+	lists of targets we further present a method to infer significant
+	associations between the sets of targets predicted for individual
+	miRNAs and specific biochemical pathways, in particular those of
+	the KEGG pathway database. We show that this approach retrieves several
+	known functional miRNA-mRNA associations, and predicts novel functions
+	for known miRNAs in cell growth and in development.We have presented
+	a Bayesian target prediction algorithm without any tunable parameters,
+	that can be applied to sequences from any clade of species. The algorithm
+	automatically infers the phylogenetic distribution of functional
+	sites for each miRNA, and assigns a posterior probability to each
+	putative target site. The results presented here indicate that our
+	general method achieves very good performance in predicting miRNA
+	target sites, providing at the same time insights into the evolution
+	of target sites for individual miRNAs. Moreover, by combining our
+	predictions with pathway analysis, we propose functions of specific
+	miRNAs in nervous system development, inter-cellular communication
+	and cell growth. The complete target site predictions as well as
+	the miRNA/pathway associations are accessible on the ElMMo web server.},
+  doi = {10.1186/1471-2105-8-69},
+  institution = {>},
+  keywords = {Animals; Base Sequence; Conserved Sequence, genetics; Evolution, Molecular;
+	Gene Targeting, methods; Humans; MicroRNAs, genetics; Molecular Sequence
+	Data; Phylogeny; Protein Biosynthesis, genetics; Sequence Alignment,
+	methods; Sequence Analysis, RNA, methods; Signal Transduction, genetics},
+  owner = {wrzodek},
+  pii = {1471-2105-8-69},
+  pmid = {17331257},
+  timestamp = {2012.03.09},
+  url = {http://dx.doi.org/10.1186/1471-2105-8-69}
 }
 
 @ARTICLE{DnaSecStruc,
@@ -1689,6 +1799,47 @@
   pmid = {19515852},
   timestamp = {2010.07.08},
   url = {http://dx.doi.org/10.1093/hmg/ddp277}
+}
+
+@ARTICLE{miRTarBase,
+  author = {Hsu, S. D. and Lin, F. M. and Wu, W. Y. and Liang, C. and Huang,
+	W. C. and Chan, W. L. and Tsai, W. T. and Chen, G. Z. and Lee, C.
+	J. and Chiu, C. M. and Chien, C. H. and Wu, M. C. and Huang, C. Y.
+	and Tsou, A. P. and Huang, H. D.},
+  title = {{miRTarBase: a database curates experimentally validated microRNA-target
+	interactions}},
+  journal = {Nucleic Acids Res},
+  year = {2011},
+  volume = {39},
+  pages = {D163-9},
+  number = {Database issue},
+  note = {Hsu, Sheng-Da Lin, Feng-Mao Wu, Wei-Yun Liang, Chao Huang, Wei-Chih
+	Chan, Wen-Ling Tsai, Wen-Ting Chen, Goun-Zhou Lee, Chia-Jung Chiu,
+	Chih-Min Chien, Chia-Hung Wu, Ming-Chia Huang, Chi-Ying Tsou, Ann-Ping
+	Huang, Hsien-Da England Nucleic Acids Res. 2011 Jan;39(Database issue):D163-9.
+	Epub 2010 Nov 10.},
+  abstract = {MicroRNAs (miRNAs), i.e. small non-coding RNA molecules ( approximately
+	22 nt), can bind to one or more target sites on a gene transcript
+	to negatively regulate protein expression, subsequently controlling
+	many cellular mechanisms. A current and curated collection of miRNA-target
+	interactions (MTIs) with experimental support is essential to thoroughly
+	elucidating miRNA functions under different conditions and in different
+	species. As a database, miRTarBase has accumulated more than 3500
+	MTIs by manually surveying pertinent literature after data mining
+	of the text systematically to filter research articles related to
+	functional studies of miRNAs. Generally, the collected MTIs are validated
+	experimentally by reporter assays, western blot, or microarray experiments
+	with overexpression or knockdown of miRNAs. miRTarBase curates 3576
+	experimentally verified MTIs between 657 miRNAs and 2297 target genes
+	among 17 species. miRTarBase contains the largest amount of validated
+	MTIs by comparing with other similar, previously developed databases.
+	The MTIs collected in the miRTarBase can also provide a large amount
+	of positive samples to develop computational methods capable of identifying
+	miRNA-target interactions. miRTarBase is now available on http://miRTarBase.mbc.nctu.edu.tw/,
+	and is updated frequently by continuously surveying research articles.},
+  keywords = {*Databases, Nucleic Acid Gene Expression Regulation MicroRNAs/*metabolism
+	RNA Interference RNA, Messenger/metabolism Reproducibility of Results
+	Systems Integration User-Computer Interface}
 }
 
 @ARTICLE{CorPeriodicCpG,
@@ -2190,6 +2341,42 @@
   timestamp = {2011.03.02}
 }
 
+@ARTICLE{DIANA,
+  author = {Maragkakis, M. and Vergoulis, T. and Alexiou, P. and Reczko, M. and
+	Plomaritou, K. and Gousis, M. and Kourtis, K. and Koziris, N. and
+	Dalamagas, T. and Hatzigeorgiou, A. G.},
+  title = {{DIANA-microT Web server upgrade supports Fly and Worm miRNA target
+	prediction and bibliographic miRNA to disease association}},
+  journal = {Nucleic Acids Res},
+  year = {2011},
+  volume = {39},
+  pages = {W145-8},
+  number = {Web Server issue},
+  note = {Maragkakis, Manolis Vergoulis, Thanasis Alexiou, Panagiotis Reczko,
+	Martin Plomaritou, Kyriaki Gousis, Mixail Kourtis, Kornilios Koziris,
+	Nectarios Dalamagas, Theodore Hatzigeorgiou, Artemis G England Nucleic
+	Acids Res. 2011 Jul;39(Web Server issue):W145-8. Epub 2011 May 6.},
+  abstract = {microRNAs (miRNAs) are small endogenous RNA molecules that are implicated
+	in many biological processes through post-transcriptional regulation
+	of gene expression. The DIANA-microT Web server provides a user-friendly
+	interface for comprehensive computational analysis of miRNA targets
+	in human and mouse. The server has now been extended to support predictions
+	for two widely studied species: Drosophila melanogaster and Caenorhabditis
+	elegans. In the updated version, the Web server enables the association
+	of miRNAs to diseases through bibliographic analysis and provides
+	insights for the potential involvement of miRNAs in biological processes.
+	The nomenclature used to describe mature miRNAs along different miRBase
+	versions has been extensively analyzed, and the naming history of
+	each miRNA has been extracted. This enables the identification of
+	miRNA publications regardless of possible nomenclature changes. User
+	interaction has been further refined allowing users to save results
+	that they wish to analyze further. A connection to the UCSC genome
+	browser is now provided, enabling users to easily preview predicted
+	binding sites in comparison to a wide array of genomic tracks, such
+	as single nucleotide polymorphisms. The Web server is publicly accessible
+	in www.microrna.gr/microT-v4.}
+}
+
 @ARTICLE{Meissner2008,
   author = {Alexander Meissner and Tarjei S Mikkelsen and Hongcang Gu and Marius
 	Wernig and Jacob Hanna and Andrey Sivachenko and Xiaolan Zhang and
@@ -2388,6 +2575,41 @@
   pmid = {17687327},
   timestamp = {2011.03.15},
   url = {http://dx.doi.org/10.1038/nature05987}
+}
+
+@ARTICLE{TarBase,
+  author = {Papadopoulos, G. L. and Reczko, M. and Simossis, V. A. and Sethupathy,
+	P. and Hatzigeorgiou, A. G.},
+  title = {{The database of experimentally supported targets: a functional update
+	of TarBase}},
+  journal = {Nucleic Acids Res},
+  year = {2009},
+  volume = {37},
+  pages = {D155-8},
+  number = {Database issue},
+  note = {Papadopoulos, Giorgos L Reczko, Martin Simossis, Victor A Sethupathy,
+	Praveen Hatzigeorgiou, Artemis G England Nucleic Acids Res. 2009
+	Jan;37(Database issue):D155-8. Epub 2008 Oct 27.},
+  abstract = {TarBase5.0 is a database which houses a manually curated collection
+	of experimentally supported microRNA (miRNA) targets in several animal
+	species of central scientific interest, plants and viruses. MiRNAs
+	are small non-coding RNA molecules that exhibit an inhibitory effect
+	on gene expression, interfering with the stability and translational
+	efficiency of the targeted mature messenger RNAs. Even though several
+	computational programs exist to predict miRNA targets, there is a
+	need for a comprehensive collection and description of miRNA targets
+	with experimental support. Here we introduce a substantially extended
+	version of this resource. The current version includes more than
+	1300 experimentally supported targets. Each target site is described
+	by the miRNA that binds it, the gene in which it occurs, the nature
+	of the experiments that were conducted to test it, the sufficiency
+	of the site to induce translational repression and/or cleavage, and
+	the paper from which all these data were extracted. Additionally,
+	the database is functionally linked to several other relevant and
+	useful databases such as Ensembl, Hugo, UCSC and SwissProt. The TarBase5.0
+	database can be queried or downloaded from http://microrna.gr/tarbase.},
+  keywords = {Animals *Databases, Nucleic Acid Gene Expression Regulation MicroRNAs/*metabolism
+	RNA, Messenger/metabolism}
 }
 
 @ARTICLE{ArrayExpress,
@@ -3308,6 +3530,44 @@
   url = {http://dx.doi.org/10.1093/bioinformatics/bth059}
 }
 
+@ARTICLE{KEGGtranslator,
+  author = {Clemens Wrzodek and Andreas Dräger and Andreas Zell},
+  title = {KEGGtranslator: visualizing and converting the KEGG PATHWAY database
+	to various formats.},
+  journal = {Bioinformatics},
+  year = {2011},
+  volume = {27},
+  pages = {2314--2315},
+  number = {16},
+  month = {Aug},
+  abstract = {The KEGG PATHWAY database provides a widely used service for metabolic
+	and nonmetabolic pathways. It contains manually drawn pathway maps
+	with information about the genes, reactions and relations contained
+	therein. To store these pathways, KEGG uses KGML, a proprietary XML-format.
+	Parsers and translators are needed to process the pathway maps for
+	usage in other applications and algorithms. We have developed KEGGtranslator,
+	an easy-to-use stand-alone application that can visualize and convert
+	KGML formatted XML-files into multiple output formats. Unlike other
+	translators, KEGGtranslator supports a plethora of output formats,
+	is able to augment the information in translated documents (e.g.
+	MIRIAM annotations) beyond the scope of the KGML document, and amends
+	missing components to fragmentary reactions within the pathway to
+	allow simulations on those.KEGGtranslator is freely available as
+	a Java(™) Web Start application and for download at http://www.cogsys.cs.uni-tuebingen.de/software/KEGGtranslator/.
+	KGML files can be downloaded from within the application.clemens.wrzodek@uni-tuebingen.deSupplementary
+	data are available at Bioinformatics online.},
+  doi = {10.1093/bioinformatics/btr377},
+  institution = {Center for Bioinformatics Tuebingen, University of Tuebingen, 72076
+	Tübingen, Germany. clemens.wrzodek@uni-tuebingen.de},
+  keywords = {Algorithms; Computer Graphics; Databases, Factual; Metabolic Networks
+	and Pathways; Software},
+  owner = {wrzodek},
+  pii = {btr377},
+  pmid = {21700675},
+  timestamp = {2012.03.08},
+  url = {http://dx.doi.org/10.1093/bioinformatics/btr377}
+}
+
 @ARTICLE{Wrzodek2010,
   author = {Wrzodek, Clemens and Schr{\"o}der, Adrian and Dr{\"a}ger, Andreas
 	and Wanke, Dierk and Berendzen, Kenneth W. and Kronfeld, Marcel and
@@ -3342,6 +3602,41 @@
   keywords = {Gene regulation, Cis-regulatory modules, Regulatory sequence analysis,
 	Matrix scan, Transcription factors},
   url = {http://dx.doi.org/10.1016/j.biosystems.2009.09.005}
+}
+
+@ARTICLE{miRecords,
+  author = {Xiao, F. and Zuo, Z. and Cai, G. and Kang, S. and Gao, X. and Li,
+	T.},
+  title = {{miRecords: an integrated resource for microRNA-target interactions}},
+  journal = {Nucleic Acids Res},
+  year = {2009},
+  volume = {37},
+  pages = {D105-10},
+  number = {Database issue},
+  note = {Xiao, Feifei Zuo, Zhixiang Cai, Guoshuai Kang, Shuli Gao, Xiaolian
+	Li, Tongbin 1R21CA126209/CA/NCI NIH HHS/ R43 GM076941/GM/NIGMS NIH
+	HHS/ England Nucleic Acids Res. 2009 Jan;37(Database issue):D105-10.
+	Epub 2008 Nov 7.},
+  abstract = {MicroRNAs (miRNAs) are an important class of small noncoding RNAs
+	capable of regulating other genes' expression. Much progress has
+	been made in computational target prediction of miRNAs in recent
+	years. More than 10 miRNA target prediction programs have been established,
+	yet, the prediction of animal miRNA targets remains a challenging
+	task. We have developed miRecords, an integrated resource for animal
+	miRNA-target interactions. The Validated Targets component of this
+	resource hosts a large, high-quality manually curated database of
+	experimentally validated miRNA-target interactions with systematic
+	documentation of experimental support for each interaction. The current
+	release of this database includes 1135 records of validated miRNA-target
+	interactions between 301 miRNAs and 902 target genes in seven animal
+	species. The Predicted Targets component of miRecords stores predicted
+	miRNA targets produced by 11 established miRNA target prediction
+	programs. miRecords is expected to serve as a useful resource not
+	only for experimental miRNA researchers, but also for informatics
+	scientists developing the next-generation miRNA target prediction
+	programs. The miRecords is available at http://miRecords.umn.edu/miRecords.},
+  keywords = {*Databases, Nucleic Acid *Gene Expression Regulation MicroRNAs/*metabolism
+	RNA, Messenger/chemistry/metabolism Systems Integration}
 }
 
 @ARTICLE{Name21,
