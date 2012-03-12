@@ -587,8 +587,18 @@ There are mainly two possible reasons for this error message. First, there reall
 \noindent \textbf{No targets could be annotated to my miRNA data?}\newline
 This often occurs when you selected the wrong organism during import of your data. Please double-check that you selected the correct organism in the open-file dialog.\newline
 
-\noindent \textbf{What does "Observation" or "Signal" mean?}\newline
-The terms "Observation" or also "Signal" always refer to fold-changes or p-values. For example, if you have an experiment with some wildtype mouse \emph{WT} that has a spontaneous tumor and a somehow treated mouse \emph{TM} that also has a tumor. Then, in this example the mRNA expression can be measured for \emph{WT healthy}, \emph{WT tumor}, \emph{MT healthy} and \emph{MT tumor}. You could now make several observations from this, e.g., "\emph{WT healthy vs. WT tumor}" or "\emph{WT healthy vs. MT healthy}", etc. Those observations are usually expressed as p-values or fold-changes and they are meant when talking of observations in InCroMAP.\newline
+\noindent \textbf{What does ``Observation" or ``Signal" mean?}\newline
+The terms ``Observation" or also ``Signal" always refer to fold-changes or p-values. For example, if you have an experiment with some wildtype mouse \emph{WT} that has a spontaneous tumor and a somehow treated mouse \emph{TM} that also has a tumor. Then, in this example the mRNA expression can be measured for \emph{WT healthy}, \emph{WT tumor}, \emph{MT healthy} and \emph{MT tumor}. You could now make several observations from this, e.g., "\emph{WT healthy vs. WT tumor}" or "\emph{WT healthy vs. MT healthy}", etc. Those observations are usually expressed as p-values or fold-changes and they are meant when talking of observations in InCroMAP.\newline
 
+\noindent \textbf{Why does InCroMAP not start on my Apple Macintosh?}\newline
+If you try to launch InCroMAP, but the application does not start and you receive the following error message on the command-line or Java console of your Mac, you need to update your Java installation:
+\begin{verbatim}
+Exception in thread "AWT-EventQueue-0" java.lang.NoClassDefFoundError:
+    com/apple/eawt/AboutHandler
+    at java.lang.ClassLoader.defineClass1(Native Method)
+    at java.lang.ClassLoader.defineClass(ClassLoader.java:703)
+    ...
+\end{verbatim}
+The interface \texttt{com.apple.eawt.AboutHandler} was introduced to Java for Mac OS X 10.6 Update 3. If you have an earlier version of Mac OS or Java, please update your OS or Java installation. Also see the Mac OS documentation about the \texttt{AboutHandler} for more information. On a Mac, you can update your Java installation through the Software Update menu item in the main Apple menu.\newline
 
 

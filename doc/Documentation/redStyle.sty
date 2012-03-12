@@ -49,6 +49,10 @@
 \definecolor{winered}{cmyk}{0,1,0.331,0.502}
 \definecolor{lightgray}{gray}{0.97}
 
+% Corporate design colors of university of tuebingen.
+\definecolor{caminered}{rgb}{.545098039, .141176471, .250980392}
+\definecolor{gold}{rgb}{.576470588, .458823529, .298039216}
+
 % Style definitions
 
 \def\TReg{\textsuperscript{\textregistered}\,}
@@ -56,7 +60,7 @@
 \def\TTra{\texttrademark\,}
 
 \selectlanguage{english}
-\addtokomafont{sectioning}{\color{royalblue}}
+\addtokomafont{sectioning}{\color{caminered}}
 \setkomafont{descriptionlabel}{\normalfont\bfseries}
 \pagestyle{scrheadings}
 %\ifoot{\includegraphics[width=50pt]{logo/JSBML_shaddow.pdf}}
@@ -109,18 +113,11 @@
 \def\TCop{\textsuperscript{\textcopyright}\,}
 \def\TTra{\textsuperscript{\texttrademark}\,}
 
-% Farbdefinitionen in der Präambel:
-\definecolor{royalblue}{cmyk}{.93, .79, 0, 0}
-\definecolor{darkgreen}{rgb}{0,.7,0}
-\definecolor{darkred}{rgb}{.7,0,0}
-\definecolor{lightgray}{gray}{0.97}
-
-
 \lstset{language=Java,
 captionpos=b,
 basicstyle=\footnotesize\ttfamily\bfseries,
-stringstyle=\color{darkred}\footnotesize\ttfamily,
-keywordstyle=\color{royalblue}\bfseries\ttfamily,
+stringstyle=\color{gold}\footnotesize\ttfamily,
+keywordstyle=\color{caminered}\bfseries\ttfamily,
 ndkeywordstyle=\color{forrestgreen},
 numbers=left,
 numberstyle=\footnotesize,

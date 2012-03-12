@@ -1,6 +1,6 @@
 @echo off
 echo Bilder werden falsch konvertiert. Also einmal konvertieren und
-echo images.tex öffnen. dann oben alle algorithmus pakete und html only
+echo images.tex öffnen. Dann oben alle algorithmus pakete und html only
 echo deklarationen entfernen. Datei schreibgeschützt machen und neu
 echo zu HTML konvertieren.
 echo.
@@ -11,8 +11,8 @@ echo 3.Stylesheet anpassen (siehe dieses Dokument, REM1)
 echo 4.index und mm_doc...html anpassen (siehe REM2, Titel H1 setzen).
 echo 5.Alles kopieren, PHP Skript appendLayout.php replaceFiles.bat ausführen.
 pause
-@cd C:\Dokume~1\wrzodek\Desktop\ModuleMaster_Documentation\
-@C:\Tools\latex2html\bin\latex2html.bat -split 3 -info 0 -t ModuleMaster mm_documentation
+@cd C:\Users\wrzodek\Desktop\workspace\Integrator\doc\Documentation\
+@C:\Users\wrzodek\Desktop\OLDPC\Tools\latex2html\bin\latex2html.bat -split 3 -info 0 -t InCroMAP integrator_docu
 REM -html_version 4.0+latin1+unicode
 pause
 
