@@ -28,7 +28,7 @@ import java.util.List;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.util.ValuePair;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * Implementation of the Bonferroni-Holm FDR correction method. Also known as

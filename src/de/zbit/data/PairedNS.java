@@ -40,7 +40,7 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.IntegratorUITools;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
  * An implementation of two paired {@link NameAndSignals}.

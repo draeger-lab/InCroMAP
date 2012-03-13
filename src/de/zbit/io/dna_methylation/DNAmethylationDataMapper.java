@@ -29,8 +29,8 @@ import de.zbit.data.GeneID;
 import de.zbit.data.genes.GenericGene;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.prefs.PreferencesDialog;
-import de.zbit.parser.Species;
 import de.zbit.sequence.region.Region;
+import de.zbit.util.Species;
 import de.zbit.util.prefs.SBPreferences;
 
 /**

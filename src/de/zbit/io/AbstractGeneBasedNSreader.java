@@ -43,13 +43,14 @@ import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.integrator.ReaderCacheElement;
+import de.zbit.io.csv.CSVReader;
 import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
-import de.zbit.parser.Species;
 import de.zbit.util.ArrayUtils;
-import de.zbit.util.ValuePair;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.ValuePair;
+import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
  * An Abstract extension of {@link NameAndSignalReader} to read
@@ -124,7 +125,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   public ExpectedColumn[] getExpectedColumns() {
     List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
     List<IdentifierType> idTypes = new ArrayList<IdentifierType>(Arrays.asList(IdentifierType.values()));
-    List<String> regExForIdTypes = new ArrayList<String>(Arrays.asList(MappingUtils.identifierTypeRegEx));
+    List<String> regExForIdTypes = new ArrayList<String>(Arrays.asList(MappingUtils.getRegularExpressionsForAllIdentifierTypes()));
     // Remove unknown
     regExForIdTypes.remove(idTypes.indexOf(IdentifierType.Unknown));
     idTypes.remove(IdentifierType.Unknown);

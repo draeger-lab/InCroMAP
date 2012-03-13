@@ -40,9 +40,10 @@ import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.integrator.ReaderCacheElement;
+import de.zbit.io.csv.CSVReader;
 import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.SNPid2GeneIDmapper;
-import de.zbit.parser.Species;
+import de.zbit.util.Species;
 
 /**
  * A generic reader to read {@link SNP} data.

@@ -32,7 +32,7 @@ import java.util.Map;
 
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.io.NameAndSignalReader;
-import de.zbit.util.Utils;
+import de.zbit.io.SerializableTools;
 
 /**
  * A cache for configurations for the {@link NameAndSignalReader}.
@@ -232,7 +232,7 @@ public class ReaderCache implements Serializable {
    * @throws IOException 
    */
   public static synchronized ReaderCache loadFromFilesystem(String filepath) throws IOException {
-    ReaderCache m = (ReaderCache) Utils.loadObjectAutoDetectZIP(filepath);
+    ReaderCache m = (ReaderCache) SerializableTools.loadObjectAutoDetectZIP(filepath);
     return m;
   }
 
@@ -243,7 +243,7 @@ public class ReaderCache implements Serializable {
    * @return true if and only if the file has been successfully saved.
    */
   public static synchronized boolean saveToFilesystem(String filepath, ReaderCache m) {
-    return Utils.saveGZippedObject(filepath, m);
+    return SerializableTools.saveGZippedObject(filepath, m);
   }
   
   /**

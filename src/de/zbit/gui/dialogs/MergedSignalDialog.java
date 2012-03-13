@@ -39,8 +39,8 @@ import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.tabs.NameAndSignalsTab;
-import de.zbit.util.LabeledObject;
-import de.zbit.util.ValuePair;
+import de.zbit.util.objectwrapper.LabeledObject;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * A dialog that requests all information to

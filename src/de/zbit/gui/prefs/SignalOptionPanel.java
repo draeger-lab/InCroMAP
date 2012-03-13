@@ -29,9 +29,9 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 
 import de.zbit.data.Signal.MergeType;
-import de.zbit.gui.ActionCommand;
-import de.zbit.gui.ActionCommandFactory;
 import de.zbit.gui.GUITools;
+import de.zbit.gui.actioncommand.ActionCommand;
+import de.zbit.gui.actioncommand.ActionCommandFactory;
 
 /**
  * Enables an option tab for the {@link MergeTypeOptions}.

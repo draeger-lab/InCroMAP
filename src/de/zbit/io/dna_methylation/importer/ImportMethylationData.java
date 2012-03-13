@@ -28,7 +28,7 @@ import java.util.List;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.io.AbstractGeneBasedNSreader;
-import de.zbit.util.ValuePairUncomparable;
+import de.zbit.util.objectwrapper.ValuePairUncomparable;
 
 /**
  * IDEA: Provide a class that performs our DNA methylation data processing method manually.

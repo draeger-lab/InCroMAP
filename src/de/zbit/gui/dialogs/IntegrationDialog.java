@@ -49,21 +49,21 @@ import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
-import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.actions.TranslatorTabActions.TPAction;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.customcomponents.TableResultTableModel;
+import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.gui.prefs.SignalOptionPanel;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.OrganismSelector;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorPanel;
-import de.zbit.parser.Species;
 import de.zbit.util.ArrayUtils;
-import de.zbit.util.LabeledObject;
-import de.zbit.util.ValuePair;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.LabeledObject;
+import de.zbit.util.objectwrapper.ValuePair;
+import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
  * Shows a dialog that lets the user chooser a Pathway

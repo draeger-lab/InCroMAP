@@ -42,16 +42,17 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.data.miRNA.miRNAtargets;
-import de.zbit.io.CSVWriter;
+import de.zbit.io.SerializableTools;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
+import de.zbit.io.csv.CSVWriter;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.enrichment.GeneID2ListOfKEGGpathways;
-import de.zbit.parser.Species;
+import de.zbit.math.MathUtils;
 import de.zbit.util.ArrayUtils;
+import de.zbit.util.Species;
 import de.zbit.util.Timer;
-import de.zbit.util.Utils;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
  * Class that allows to pair {@link mRNA} and {@link miRNA} data,
@@ -416,8 +417,8 @@ public class miRNA2mRNA_pair {
    * @return
    */
   public double getPairingScore(Number mirna_fc, Number mrna_fc) {
-    double n_mirna_fc = Utils.normalize(mirna_fc.doubleValue(), miRNA_minFC, miRNA_maxFC, -.5, .5);
-    double n_mrna_fc = Utils.normalize(mrna_fc.doubleValue(), mRNA_minFC, mRNA_maxFC, -.5, .5);
+    double n_mirna_fc = MathUtils.normalize(mirna_fc.doubleValue(), miRNA_minFC, miRNA_maxFC, -.5, .5);
+    double n_mrna_fc = MathUtils.normalize(mrna_fc.doubleValue(), mRNA_minFC, mRNA_maxFC, -.5, .5);
     return n_mirna_fc-n_mrna_fc;
   }
   
@@ -493,7 +494,7 @@ public class miRNA2mRNA_pair {
     
     // Read targets
     System.out.println("Reading targets");
-    miRNAtargets t_all = (miRNAtargets) Utils.loadGZippedObject("miRNAtargets_HC.dat");
+    miRNAtargets t_all = (miRNAtargets) SerializableTools.loadGZippedObject("miRNAtargets_HC.dat");
     System.out.println(t.getNiceAndReset());
     
     

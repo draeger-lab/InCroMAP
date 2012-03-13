@@ -32,9 +32,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import de.zbit.gui.IntegratorUITools;
-import de.zbit.util.ScientificNumberRenderer;
-import de.zbit.util.Utils;
-import de.zbit.util.ValuePair;
+import de.zbit.gui.table.renderer.ScientificNumberRenderer;
+import de.zbit.math.MathUtils;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * A signal. This can be almost anything... It holds a name
@@ -360,13 +360,13 @@ public class Signal implements Serializable, Comparable<Object>, Cloneable  {
     else if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(null); // Mean
     
     if (m.equals(MergeType.Mean)) {
-      return Utils.average(values);
+      return MathUtils.mean(values);
     } else if (m.equals(MergeType.Median)) {
-      return Utils.median(values);
+      return MathUtils.median(values);
     } else if (m.equals(MergeType.Minimum)) {
-      return Utils.min(values);
+      return MathUtils.min(values);
     } else if (m.equals(MergeType.Maximum)) {
-      return Utils.max(values);
+      return MathUtils.max(values);
     } else if (m.equals(MergeType.MaximumDistanceToZero)) {
       Iterator<? extends Number> it = values.iterator();
       double max = it.next().doubleValue();
@@ -385,7 +385,7 @@ public class Signal implements Serializable, Comparable<Object>, Cloneable  {
       while (it.hasNext()) {
         double value = it.next().doubleValue();
         // [p-values] are between 0 and 1 => the log is negative.
-        value = Math.abs(Utils.log2(value));
+        value = Math.abs(MathUtils.log2(value));
         if (!Double.isNaN(value)) {
           sum+=value;
           size++;
@@ -412,9 +412,9 @@ public class Signal implements Serializable, Comparable<Object>, Cloneable  {
     else if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(null); // Mean
     
     if (m.equals(MergeType.Mean)) {
-      return Utils.average(values);
+      return MathUtils.mean(values);
     } else if (m.equals(MergeType.Median)) {
-      return Utils.median(values);
+      return MathUtils.median(values);
     } else if (m.equals(MergeType.Minimum)) {
       if (values==null||values.length<1) return Double.NaN;
       double min = values[0];
@@ -439,7 +439,7 @@ public class Signal implements Serializable, Comparable<Object>, Cloneable  {
       double size=0;
       for (double value:values) {
         // [p-values] are between 0 and 1 => the log is negative.
-        value = Math.abs(Utils.log2(value));
+        value = Math.abs(MathUtils.log2(value));
         if (!Double.isNaN(value)) {
           sum+=value;
           size++;

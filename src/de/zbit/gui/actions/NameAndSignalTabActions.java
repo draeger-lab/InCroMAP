@@ -53,12 +53,12 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
-import de.zbit.gui.ActionCommand;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUI.Action;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JDropDownButton;
+import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.dialogs.IntegratedEnrichmentDialog;
@@ -71,10 +71,10 @@ import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.math.BenjaminiHochberg;
 import de.zbit.math.Bonferroni;
 import de.zbit.math.BonferroniHolm;
-import de.zbit.parser.Species;
 import de.zbit.sequence.region.Region;
+import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
-import de.zbit.util.ValuePair;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * Actions for the {@link JToolBar} in {@link IntegratorTabWithTable}

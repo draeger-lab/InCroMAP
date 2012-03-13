@@ -25,8 +25,8 @@ import java.io.Serializable;
 
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.IntegratorUI;
-import de.zbit.util.ValuePair;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.objectwrapper.ValuePair;
+import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
  * A class to remember required information to re-identify Signals,

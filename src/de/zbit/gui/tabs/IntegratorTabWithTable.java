@@ -47,10 +47,10 @@ import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.gui.table.JTableFilter;
-import de.zbit.io.CSVWriter;
-import de.zbit.io.SBFileFilter;
-import de.zbit.parser.Species;
-import de.zbit.util.ValuePairUncomparable;
+import de.zbit.io.csv.CSVWriter;
+import de.zbit.io.filefilter.SBFileFilter;
+import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.ValuePairUncomparable;
 
 /**
  * A generic Integrator tab with a table on top.

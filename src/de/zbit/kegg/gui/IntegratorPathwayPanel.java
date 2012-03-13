@@ -59,8 +59,8 @@ import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
-import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.customcomponents.TableResultTableModel;
+import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.integrator.GraphMLmapsExtended;
 import de.zbit.kegg.ext.GenericDataMap;
@@ -69,10 +69,10 @@ import de.zbit.kegg.io.KEGG2jSBML;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
-import de.zbit.parser.Species;
+import de.zbit.math.MathUtils;
+import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.TranslatorTools;
-import de.zbit.util.Utils;
 
 /**
  * The panel that is used to display pathways.
@@ -257,7 +257,7 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
                   }
                   
                   JLabel label = new JLabel(String.format("<html><body><b><h3>%s:</h3></b><font size=\"-1\">%s</font></body></html>",
-                    vd.toNiceString(), (signals.size()==1?signals.get(0).toNiceString():Utils.summary(signalNumbers, 2)) ));
+                    vd.toNiceString(), (signals.size()==1?signals.get(0).toNiceString():MathUtils.summary(signalNumbers, 2)) ));
                   label.setHorizontalAlignment(SwingConstants.LEFT);
                   lh.addSpacer();
                   lh.add(label);

@@ -40,8 +40,8 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
-import de.zbit.parser.Species;
-import de.zbit.util.ValuePair;
+import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * Builds a tree of various, Gene-Based {@link NameAndSignals}.

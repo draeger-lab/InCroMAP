@@ -24,7 +24,7 @@ package de.zbit.math;
 import java.util.List;
 
 import de.zbit.data.EnrichmentObject;
-import de.zbit.util.ValuePair;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * Generic interface for statistical corrections, i.e.,

@@ -24,7 +24,6 @@ package de.zbit.math;
 import java.util.Arrays;
 import java.util.List;
 
-import de.zbit.util.Utils;
 
 /**
  * Implementation of Welch's t test.
@@ -101,15 +100,15 @@ public class Ttest {
     Arrays.sort(arr2);
     
     // Calculate the nominator
-    double mean1 = Utils.average(arr1);
-    double mean2 = Utils.average(arr2);
+    double mean1 = MathUtils.mean(arr1);
+    double mean2 = MathUtils.mean(arr2);
     
     double nominator = mean1-mean2;
     
     
     // Calculate the denominator
-    double var1= Utils.variance(arr1, mean1);
-    double var2= Utils.variance(arr2, mean2);
+    double var1= MathUtils.variance(arr1, mean1);
+    double var2= MathUtils.variance(arr2, mean2);
     
     double denominator = Math.sqrt(var1/(double)arr1.length + var2/(double)arr2.length);
     

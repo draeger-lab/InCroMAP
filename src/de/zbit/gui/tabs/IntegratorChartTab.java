@@ -68,15 +68,15 @@ import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
-import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.actions.ChartTabActions;
-import de.zbit.io.SBFileFilter;
-import de.zbit.parser.Species;
+import de.zbit.gui.layout.LayoutHelper;
+import de.zbit.io.filefilter.SBFileFilter;
 import de.zbit.sequence.region.AbstractRegion;
 import de.zbit.sequence.region.Chromosome;
 import de.zbit.sequence.region.Region;
 import de.zbit.sequence.region.SimpleRegion;
-import de.zbit.util.ValuePair;
+import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.ValuePair;
 import de.zbit.visualization.VisualizeGenesInChartTab;
 
 /**

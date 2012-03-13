@@ -49,17 +49,17 @@ import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
-import de.zbit.gui.table.DefaultTableCellTwoRowHeaderRenderer;
-import de.zbit.gui.table.JTableTools;
+import de.zbit.gui.table.JTableSearch;
 import de.zbit.gui.table.TableRowSorterMixed;
+import de.zbit.gui.table.renderer.BooleanRendererYesNo;
+import de.zbit.gui.table.renderer.DefaultTableCellTwoRowHeaderRenderer;
+import de.zbit.gui.table.renderer.ScientificNumberRenderer;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NameAndSignalsTab;
-import de.zbit.parser.Species;
 import de.zbit.sequence.region.Region;
-import de.zbit.util.BooleanRendererYesNo;
-import de.zbit.util.ScientificNumberRenderer;
 import de.zbit.util.SortedArrayList;
+import de.zbit.util.Species;
 
 /**
  * A {@link TableModel} that can be used to visualize a {@link TableResult} class as {@link JTable}.
@@ -397,7 +397,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     //table.setDefaultRenderer(RowIndex.class, RowIndex.getRowHeaderRenderer(table));
     
     // Allow searching
-    JTableTools.setQuickSearch(table);
+    JTableSearch.setQuickSearch(table);
   }
 
 }

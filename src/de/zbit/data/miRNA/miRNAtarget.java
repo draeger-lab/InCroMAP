@@ -26,7 +26,7 @@ import java.util.Comparator;
 
 import de.zbit.data.TableResult;
 import de.zbit.exception.CorruptInputStreamException;
-import de.zbit.io.CSVwriteable;
+import de.zbit.io.csv.CSVwriteable;
 
 
 /**

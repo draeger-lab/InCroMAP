@@ -43,11 +43,11 @@ import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.integrator.ReaderCache;
+import de.zbit.io.FileTools;
 import de.zbit.io.NameAndSignalReader;
-import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
-import de.zbit.util.FileTools;
 import de.zbit.util.Reflect;
+import de.zbit.util.Species;
+import de.zbit.util.progressbar.AbstractProgressBar;
 
 /**
  * A special tab for the {@link IntegratorUI} for

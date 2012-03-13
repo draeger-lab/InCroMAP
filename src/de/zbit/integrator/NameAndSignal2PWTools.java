@@ -57,8 +57,8 @@ import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.kegg.ext.GraphMLmaps;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.util.TranslatorTools;
-import de.zbit.util.ValuePairUncomparable;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.objectwrapper.ValuePairUncomparable;
+import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
 import de.zbit.visualization.VisualizeMicroRNAdata;
 

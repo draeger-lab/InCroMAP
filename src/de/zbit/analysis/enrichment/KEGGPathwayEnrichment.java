@@ -36,9 +36,9 @@ import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.KeggPathwayID2PathwayName;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.enrichment.GeneID2ListOfKEGGpathways;
-import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
-import de.zbit.util.ProgressBar;
+import de.zbit.util.Species;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * Identifies enriched KEGG Pathways in a list of genes.

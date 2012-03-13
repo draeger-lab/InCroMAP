@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.zbit.data.EnrichmentObject;
-import de.zbit.util.ValuePair;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * Implementation of the Bonferroni FDR correction method.

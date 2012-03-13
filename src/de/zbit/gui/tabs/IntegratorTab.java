@@ -45,11 +45,11 @@ import de.zbit.gui.BaseFrameTab;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
-import de.zbit.gui.ProgressBarSwing;
-import de.zbit.gui.VerticalLayout;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
-import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
+import de.zbit.gui.layout.VerticalLayout;
+import de.zbit.util.Species;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.gui.ProgressBarSwing;
 
 /**
  * An abstract class for all tabs, that are displayed

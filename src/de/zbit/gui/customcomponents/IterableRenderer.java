@@ -36,7 +36,7 @@ import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
-import de.zbit.parser.Species;
+import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 
 /**

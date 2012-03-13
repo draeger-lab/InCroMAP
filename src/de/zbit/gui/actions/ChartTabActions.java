@@ -33,13 +33,13 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.Range;
 
 import de.zbit.data.Signal.SignalType;
-import de.zbit.gui.ActionCommand;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.util.StringUtil;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.visualization.VisualizeGenesInChartTab;
 
 /**

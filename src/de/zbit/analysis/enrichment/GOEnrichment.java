@@ -33,9 +33,9 @@ import de.zbit.mapper.GO_ID2GO_NameMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.enrichment.GeneID2GO_ID_Mapper;
 import de.zbit.math.Bonferroni;
-import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
-import de.zbit.util.ProgressBar;
+import de.zbit.util.Species;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * Identifies enriched GO Terms in a list of genes.

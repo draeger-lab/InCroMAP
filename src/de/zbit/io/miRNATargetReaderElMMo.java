@@ -28,8 +28,8 @@ import java.util.regex.Pattern;
 
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.mapper.AbstractMapper;
-import de.zbit.parser.Species;
-import de.zbit.util.ValuePair;
+import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * miRNA Target data reader for ElMMo target predictions

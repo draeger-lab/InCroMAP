@@ -30,10 +30,10 @@ import java.util.logging.Logger;
 
 import de.zbit.data.genes.GenericGene;
 import de.zbit.data.methylation.DNAmethylation;
-import de.zbit.parser.Species;
 import de.zbit.sequence.region.AbstractRegion;
 import de.zbit.sequence.region.Region;
 import de.zbit.sequence.region.SimpleRegion;
+import de.zbit.util.Species;
 
 /**
  * This class should contain tools that help importing/ reading

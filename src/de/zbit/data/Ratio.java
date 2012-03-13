@@ -28,7 +28,7 @@ import java.util.List;
 
 import de.zbit.data.Signal.MergeType;
 import de.zbit.gui.IntegratorUITools;
-import de.zbit.util.Utils;
+import de.zbit.math.MathUtils;
 
 /**
  * A ratio of two integers (e.g. 4/106).
@@ -183,8 +183,8 @@ public class Ratio extends Number implements Serializable, Comparable<Object> {
    */
   public static Ratio merge(Iterable<Ratio> c, MergeType m) {
     if (m.equals(MergeType.Automatic)) m = IntegratorUITools.autoInferMergeType(null); // Mean
-    int newA = (int) Utils.round(Signal.calculate(m, Ratio.getListOfA(c)), 0);
-    int newB = (int) Utils.round(Signal.calculate(m, Ratio.getListOfB(c)), 0);
+    int newA = (int) MathUtils.round(Signal.calculate(m, Ratio.getListOfA(c)), 0);
+    int newB = (int) MathUtils.round(Signal.calculate(m, Ratio.getListOfB(c)), 0);
     return new Ratio(newA, newB);
   }
   

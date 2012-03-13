@@ -46,17 +46,17 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.data.protein.ProteinModificationExpression;
-import de.zbit.gui.ActionCommand;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JDropDownButton;
+import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.integrator.NameAndSignal2PWTools;
 import de.zbit.kegg.gui.TranslatorPanel;
-import de.zbit.parser.Species;
+import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.TranslatorTools;
-import de.zbit.util.ValuePair;
+import de.zbit.util.objectwrapper.ValuePair;
 import de.zbit.visualization.VisualizeDataInPathway;
 
 /**

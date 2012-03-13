@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import de.zbit.util.Utils;
+import de.zbit.math.MathUtils;
 
 /**
  * Abstract superclass form transforming and putting numbers
@@ -145,7 +145,7 @@ public abstract class AbstractRescale {
     Double newMin=targetMinMax.get(interval);
     Double newMax=targetMinMax.get(upperInterval);
     
-    double ret = Utils.normalize(nCopy,oldMin,oldMax,newMin,newMax);
+    double ret = MathUtils.normalize(nCopy,oldMin,oldMax,newMin,newMax);
     // Don't do this! Might return in invalid values (because of middleValue and such)
     //ret = Math.max(Math.min(ret, newMax), newMin);
     

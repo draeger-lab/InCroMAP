@@ -41,19 +41,19 @@ import javax.swing.ListSelectionModel;
 
 import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
-import de.zbit.gui.ActionCommandRenderer;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
-import de.zbit.gui.LayoutHelper;
+import de.zbit.gui.actioncommand.ActionCommandRenderer;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
+import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.OrganismSelector;
-import de.zbit.parser.Species;
-import de.zbit.util.LabeledObject;
 import de.zbit.util.ResourceManager;
+import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
+import de.zbit.util.objectwrapper.LabeledObject;
 
 /**
  * Shows a dialog that let's the user choose datasets and options

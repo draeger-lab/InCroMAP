@@ -51,12 +51,13 @@ import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.exception.CorruptInputStreamException;
 import de.zbit.gui.IntegratorUITools;
-import de.zbit.io.CSVwriteable;
+import de.zbit.io.csv.CSVwriteable;
+import de.zbit.math.MathUtils;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Reflect;
 import de.zbit.util.StringUtil;
 import de.zbit.util.Utils;
-import de.zbit.util.ValuePair;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * An abstract class that handles something
@@ -654,7 +655,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @return
    */
   public static <T extends NameAndSignals> List<T> sortBySignificance(Iterable<T> nsList, final String experimentName, final SignalType type) {
-    List<T> l = Utils.IterableToList(nsList);
+    List<T> l = Utils.iterableToList(nsList);
     
     // Create comparator that does the desired sorting
     Comparator<T> sortByUniqueLabel = new Comparator<T>() {
@@ -1326,8 +1327,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       signalValues.add(sig);
     }
     
-    double upperQuant = Utils.quantile(signalValues, quantile, false);
-    double lowerQuant = Utils.quantile(signalValues, 100-quantile, true);
+    double upperQuant = MathUtils.quantile(signalValues, quantile, false);
+    double lowerQuant = MathUtils.quantile(signalValues, 100-quantile, true);
     return new double[]{lowerQuant, upperQuant};
   }
   

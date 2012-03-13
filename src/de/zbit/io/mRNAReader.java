@@ -31,8 +31,8 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.mapper.MappingUtils.IdentifierType;
-import de.zbit.parser.Species;
-import de.zbit.util.ProgressBar;
+import de.zbit.util.Species;
+import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * A generic reader to read {@link mRNA} data.

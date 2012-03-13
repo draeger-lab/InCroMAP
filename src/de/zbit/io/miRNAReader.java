@@ -40,11 +40,10 @@ import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.integrator.ReaderCacheElement;
+import de.zbit.io.csv.CSVReader;
 import de.zbit.mapper.MicroRNAsn2GeneIDMapper;
-import de.zbit.parser.Species;
-import de.zbit.util.FileTools;
-import de.zbit.util.Utils;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
  * A generic reader to read {@link miRNA} data.
@@ -226,7 +225,7 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
     
     
     // Read targets
-    miRNAtargets t_all = (miRNAtargets) Utils.loadGZippedObject("miRNAtargets_HC.dat");
+    miRNAtargets t_all = (miRNAtargets) SerializableTools.loadGZippedObject("miRNAtargets_HC.dat");
     //miRNAtargets t_all = (miRNAtargets) CSVwriteableIO.read(new miRNAtargets(), "miRNAtargets_HC.txt");
     int matched = miRNA.link_miRNA_and_targets(t_all, c);
     

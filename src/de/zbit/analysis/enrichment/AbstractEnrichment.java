@@ -53,9 +53,9 @@ import de.zbit.math.BenjaminiHochberg;
 import de.zbit.math.FDRCorrection;
 import de.zbit.math.EnrichmentPvalue;
 import de.zbit.math.HypergeometricTest;
-import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
+import de.zbit.util.Species;
 import de.zbit.util.prefs.SBPreferences;
+import de.zbit.util.progressbar.AbstractProgressBar;
 
 /**
  * Abstract enrichment class to test a list of genes for enrichments

@@ -37,8 +37,8 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.math.EnrichmentPvalue;
 import de.zbit.math.HypergeometricTest;
+import de.zbit.math.MathUtils;
 import de.zbit.util.StringUtil;
-import de.zbit.util.Utils;
 
 /**
  * An EnrichmentObject is a result of an enrichment analysis
@@ -379,10 +379,10 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
         anyObjectFromGenesInClass = e.genesInClass.iterator().next();
     }
     
-    t.c_enriched = (int) Utils.round(Signal.calculate(m, c_enriched), 0);
-    t.c_total = (int) Utils.round(Signal.calculate(m, c_total), 0);
-    t.b_subset = (int) Utils.round(Signal.calculate(m, b_subset), 0);
-    t.b_total = (int) Utils.round(Signal.calculate(m, b_total), 0);
+    t.c_enriched = (int) MathUtils.round(Signal.calculate(m, c_enriched), 0);
+    t.c_total = (int) MathUtils.round(Signal.calculate(m, c_total), 0);
+    t.b_subset = (int) MathUtils.round(Signal.calculate(m, b_subset), 0);
+    t.b_total = (int) MathUtils.round(Signal.calculate(m, b_total), 0);
     
     // Do Not always call mergeAbstract. If list contains geneIDs, they will
     // be averaged, what is really senseless. Though make a type checking!

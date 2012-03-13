@@ -47,16 +47,16 @@ import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
-import de.zbit.gui.ActionCommandWithIcon;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.actioncommand.ActionCommandWithIcon;
 import de.zbit.gui.customcomponents.ProgressWorker;
 import de.zbit.gui.table.JTableFilter;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NameAndSignalsTab;
-import de.zbit.parser.Species;
+import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 
 /**

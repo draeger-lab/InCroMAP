@@ -31,8 +31,8 @@ import java.util.Comparator;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
-import de.zbit.io.CSVReader;
-import de.zbit.parser.Species;
+import de.zbit.io.csv.CSVReader;
+import de.zbit.util.Species;
 
 /**
  * On element, describing all properties required by a file.

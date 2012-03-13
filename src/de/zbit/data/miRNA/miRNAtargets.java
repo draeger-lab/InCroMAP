@@ -35,10 +35,10 @@ import java.util.regex.Pattern;
 
 import de.zbit.data.ObjectAndScore;
 import de.zbit.exception.CorruptInputStreamException;
-import de.zbit.io.CSVwriteable;
+import de.zbit.io.csv.CSVwriteable;
+import de.zbit.math.MathUtils;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.SortedArrayList;
-import de.zbit.util.Utils;
 
 /**
  * A class to hold {@link miRNA} and {@link Collection}s of targets.
@@ -438,7 +438,7 @@ public class miRNAtargets implements Serializable, CSVwriteable, Comparable<miRN
       int curTargets=sizeOfTargets();
       log.fine(String.format("Filter results for '%s' all %s %s:", predictionAlgorithm, removeAllBelow?"below":"above", threshold));
       log.fine(String.format("Removed %s targets (old:%s now:%s => %s%%).",
-        (numTargets-curTargets), numTargets, curTargets, Utils.round(100-(curTargets/(double)numTargets*100.0), 2) ));
+        (numTargets-curTargets), numTargets, curTargets, MathUtils.round(100-(curTargets/(double)numTargets*100.0), 2) ));
     }
   }
   

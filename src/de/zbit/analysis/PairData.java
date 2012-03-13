@@ -42,14 +42,14 @@ import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
-import de.zbit.gui.LayoutHelper;
 import de.zbit.gui.dialogs.MergedSignalDialog;
 import de.zbit.gui.dialogs.MergedSignalDialog.MergeTypeForTwo;
+import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
-import de.zbit.parser.Species;
-import de.zbit.util.LabeledObject;
-import de.zbit.util.ValuePair;
+import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.LabeledObject;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * Provides tools and methods two pair two Collections of {@link NameAndSignals}.

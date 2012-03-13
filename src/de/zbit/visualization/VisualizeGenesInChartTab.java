@@ -66,8 +66,8 @@ import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
-import de.zbit.parser.Species;
 import de.zbit.sequence.region.Region;
+import de.zbit.util.Species;
 import de.zbit.util.prefs.SBPreferences;
 import de.zbit.utils.SignalColor;
 

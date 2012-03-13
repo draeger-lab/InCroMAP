@@ -42,10 +42,11 @@ import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.integrator.ReaderCacheElement;
-import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
-import de.zbit.util.ValuePair;
-import de.zbit.util.ValueTriplet;
+import de.zbit.io.csv.CSVReader;
+import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.ValuePair;
+import de.zbit.util.objectwrapper.ValueTriplet;
+import de.zbit.util.progressbar.AbstractProgressBar;
 
 /**
  * A generic class to read data, consisting of name and signals.

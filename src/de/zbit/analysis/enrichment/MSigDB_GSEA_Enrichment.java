@@ -32,9 +32,9 @@ import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.enrichment.GeneID2MSigDB_Mapper;
 import de.zbit.math.Bonferroni;
-import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
-import de.zbit.util.ProgressBar;
+import de.zbit.util.Species;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * Allows to perform enrichment analyzes of any data set from

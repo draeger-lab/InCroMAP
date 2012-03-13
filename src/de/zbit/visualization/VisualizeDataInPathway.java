@@ -69,6 +69,7 @@ import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.GraphMLmapsExtended;
 import de.zbit.integrator.NameAndSignal2PWTools;
+import de.zbit.io.FileTools;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.KGMLSelectAndDownload;
 import de.zbit.kegg.gui.TranslatorPanel;
@@ -78,16 +79,15 @@ import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.math.rescale.AbstractRescale;
 import de.zbit.math.rescale.LinearRescale;
 import de.zbit.math.rescale.LogarithmicRescale;
-import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
 import de.zbit.util.ArrayUtils;
-import de.zbit.util.FileTools;
+import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.TranslatorTools;
 import de.zbit.util.Utils;
-import de.zbit.util.ValuePair;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.objectwrapper.ValuePair;
+import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
+import de.zbit.util.progressbar.AbstractProgressBar;
 import de.zbit.utils.SignalColor;
 
 /**

@@ -29,10 +29,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
-import de.zbit.gui.ExpandablePanel;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
-import de.zbit.gui.LayoutHelper;
+import de.zbit.gui.layout.LayoutHelper;
+import de.zbit.gui.panels.ExpandablePanel;
 import de.zbit.gui.prefs.PathwayVisualizationOptionPanel;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.PreferencesPanel;

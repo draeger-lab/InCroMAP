@@ -26,8 +26,8 @@ import java.util.List;
 import de.zbit.data.genes.GenericGene;
 import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.mapper.MappingUtils.IdentifierType;
-import de.zbit.parser.Species;
 import de.zbit.sequence.region.Region;
+import de.zbit.util.Species;
 
 /**
  * A reader for {@link GenericGene}.

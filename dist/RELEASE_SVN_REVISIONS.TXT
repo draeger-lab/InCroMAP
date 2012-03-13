@@ -1,6 +1,14 @@
 
-* Integrator 1.0.0 (released finally in October 2011 (2011-10-14)) is based on the following subversion revisions:
+* Integrator 1.0.0 (released finally in November 2011 (2011-11-29)) is based on the following subversion revisions:
+  (MISSING!)
   Integrator XX
   KEGGtranslator XX
   SysBio XX
+
+
+* Integrator 1.1.0 (released finally in March 2012 (2012-03-05)) is based on the following subversion revisions:
+  Integrator 93
+  KEGGtranslator 269
+  SysBio 816
+
 

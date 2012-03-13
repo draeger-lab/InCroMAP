@@ -29,7 +29,7 @@ import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.zbit.util.ValuePair;
+import de.zbit.util.objectwrapper.ValuePair;
 
 /**
  * Quick and Cache-based implementation of the Hypergeometric test

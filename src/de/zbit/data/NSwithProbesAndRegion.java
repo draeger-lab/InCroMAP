@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
+import de.zbit.math.MathUtils;
 import de.zbit.sequence.region.Chromosome;
 import de.zbit.sequence.region.ChromosomeTools;
 import de.zbit.sequence.region.Region;
@@ -198,7 +199,7 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
       if (s!=Region.DEFAULT_START) positions.add(s);
     }
     if (positions.size()>0) {
-      double averagePosition = Utils.min(positions);
+      double averagePosition = MathUtils.min(positions);
       ((Region) target).setStart((int)(averagePosition));
     }
     
@@ -209,7 +210,7 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
       if (s!=Region.DEFAULT_START) positions.add(s);
     }
     if (positions.size()>0) {
-      double averagePosition = Utils.max(positions);
+      double averagePosition = MathUtils.max(positions);
       try {
         ((Region) target).setEnd((int)(averagePosition));
       } catch (Exception e) {

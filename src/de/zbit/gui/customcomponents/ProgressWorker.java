@@ -23,7 +23,7 @@ package de.zbit.gui.customcomponents;
 
 import javax.swing.SwingWorker;
 
-import de.zbit.util.AbstractProgressBar;
+import de.zbit.util.progressbar.AbstractProgressBar;
 
 /**
  * A simple {@link SwingWorker} extension with a {@link AbstractProgressBar}.

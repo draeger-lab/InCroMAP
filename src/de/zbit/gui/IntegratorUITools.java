@@ -97,6 +97,7 @@ import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.dialogs.IntegratedEnrichmentDialog;
 import de.zbit.gui.dialogs.IntegrationDialog;
+import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.MergeTypeOptions;
 import de.zbit.gui.prefs.SignalOptionPanel;
@@ -108,10 +109,11 @@ import de.zbit.io.DNAmethylationReader;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.OpenFile;
 import de.zbit.io.ProteinModificationReader;
-import de.zbit.io.SBFileFilter;
 import de.zbit.io.SNPReader;
+import de.zbit.io.SerializableTools;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
+import de.zbit.io.filefilter.SBFileFilter;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.OrganismSelector;
 import de.zbit.kegg.gui.PathwaySelector;
@@ -119,13 +121,12 @@ import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierType;
-import de.zbit.parser.Species;
 import de.zbit.util.ArrayUtils;
-import de.zbit.util.LabeledObject;
+import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
-import de.zbit.util.Utils;
-import de.zbit.util.ValuePair;
-import de.zbit.util.ValueTriplet;
+import de.zbit.util.objectwrapper.LabeledObject;
+import de.zbit.util.objectwrapper.ValuePair;
+import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
 import de.zbit.visualization.VisualizeDataInPathway;
 
@@ -981,11 +982,11 @@ public class IntegratorUITools {
       try {
         if (isExperimentalSelected) {
           log.fine("Loading experimental miRNA targets");
-          t_all = (miRNAtargets) Utils.loadGZippedObject(
+          t_all = (miRNAtargets) SerializableTools.loadGZippedObject(
             OpenFile.searchFileAndGetInputStream("miRNA_targets/" + species.getNCBITaxonID() + ".dat"));
         } if (isPredictedSelected) {
           log.fine("Loading predicted miRNA targets");
-          miRNAtargets t = (miRNAtargets) Utils.loadGZippedObject(
+          miRNAtargets t = (miRNAtargets) SerializableTools.loadGZippedObject(
             OpenFile.searchFileAndGetInputStream("miRNA_targets/" + species.getNCBITaxonID() + "_HC.dat"));
           if (t_all==null) t_all = t; else t_all.addAll(t);
         }

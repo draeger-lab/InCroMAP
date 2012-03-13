@@ -30,16 +30,17 @@ import java.util.logging.Logger;
 
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.data.miRNA.miRNAtargets;
+import de.zbit.io.csv.CSVReader;
+import de.zbit.io.csv.CSVwriteableIO;
 import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
-import de.zbit.parser.Species;
-import de.zbit.util.AbstractProgressBar;
-import de.zbit.util.ProgressBar;
+import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
-import de.zbit.util.Utils;
-import de.zbit.util.ValuePair;
 import de.zbit.util.logging.LogUtil;
+import de.zbit.util.objectwrapper.ValuePair;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * miRNA Target data reader.
@@ -481,7 +482,7 @@ public class miRNATargetReader {
     System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
     
     // SAVE
-    Utils.saveGZippedObject("miRNAtargets.dat", t_all);
+    SerializableTools.saveGZippedObject("miRNAtargets.dat", t_all);
     CSVwriteableIO.write(t_all, "miRNAtargets.txt");
     
     // Filter for HC and save again
@@ -490,7 +491,7 @@ public class miRNATargetReader {
     t_all.filterTargets("ElMMo v4", 0.8, true);
     t_all.printSummary();
     
-    Utils.saveGZippedObject("miRNAtargets_HC.dat", t_all);
+    SerializableTools.saveGZippedObject("miRNAtargets_HC.dat", t_all);
     CSVwriteableIO.write(t_all, "miRNAtargets_HC.txt");
     
   }
@@ -572,7 +573,7 @@ public class miRNATargetReader {
       t_all.printSummary();
       String outFileName = spec.getKeggAbbr() + "_HC_miRNApredTargets";
       System.out.println("Writing to " + outFileName +"\n");
-      Utils.saveGZippedObject(outFileName +".dat", t_all);
+      SerializableTools.saveGZippedObject(outFileName +".dat", t_all);
       CSVwriteableIO.write(t_all, outFileName+".txt");
       t_all = new miRNAtargets(); // Reset
       
@@ -630,7 +631,7 @@ public class miRNATargetReader {
       t_all.printSummary();      
       outFileName = spec.getKeggAbbr() + "_miRNAexpTargets";
       System.out.println("Writing to " + outFileName +"\n");
-      Utils.saveGZippedObject(outFileName +".dat", t_all);
+      SerializableTools.saveGZippedObject(outFileName +".dat", t_all);
       CSVwriteableIO.write(t_all, outFileName+".txt");
     }
   }
