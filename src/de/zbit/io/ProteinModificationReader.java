@@ -40,6 +40,12 @@ public class ProteinModificationReader extends AbstractGeneBasedNSreader<Protein
   
   int analyteIDCol=-1;
   int modificationCol=-1;
+  
+  /**
+   * A regular expression, customized for the NMI's/Johannes
+   * protein modification column.
+   */
+  private final static String modificationRegEx = "([ADMPTM]{1,2}-([KSTPY]\\d*/?)+|basic)";
 
   /* (non-Javadoc)
    * @see de.zbit.io.AbstractGeneBasedNSreader#getAdditionalExpectedColumns()
@@ -49,8 +55,8 @@ public class ProteinModificationReader extends AbstractGeneBasedNSreader<Protein
     List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
     
     //list.add(new ExpectedColumn("Analyte short name",false));
-    list.add(new ExpectedColumn("Analyte ID",false));
-    list.add(new ExpectedColumn("Modification name",false));
+    list.add(new ExpectedColumn("Analyte ID",false, "^\\w+_"+modificationRegEx+"$"));
+    list.add(new ExpectedColumn("Modification name",false, "^"+modificationRegEx+"$"));
     
     return list;
   }
