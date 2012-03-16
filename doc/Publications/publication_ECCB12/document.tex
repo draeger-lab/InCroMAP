@@ -1,0 +1,178 @@
+\documentclass{bioinfo}
+\copyrightyear{2012}
+\pubyear{2012}
+
+\begin{document}
+\firstpage{1}
+
+\title[Pathway-based visualization of cross-platform microarray datasets]{Pathway-based visualization of cross-platform microarray datasets}
+\author[Clemens Wrzodek \textit{et~al}]{Clemens Wrzodek\,$^{1\footnote{to whom correspondence should be addressed}}$, Johannes Eichner\,$^{1}$ and Andreas Zell\,$^1$}
+
+\address{$^{1}$Center for Bioinformatics Tuebingen (ZBIT), \\University of Tuebingen, 72076 T\"ubingen, Germany}
+\history{Received on XXXXX; revised on XXXXX; accepted on XXXXX}
+
+\editor{Associate Editor: XXXXXXX}
+
+\maketitle
+
+\begin{abstract}
+
+\section{Motivation:}
+Text Text Text  Text Text Text Text Text Text Text Text
+Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text.
+
+\section{Results:}
+Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text
+
+%\section{Availability:}
+
+\section{Contact:} \href{clemens.wrzodek@uni-tuebingen.de}{clemens.wrzodek@uni-tuebingen.de}
+\end{abstract}
+
+\section{Introduction}
+
+During the first years after the invention of microarrays, researchers focused their experiments largely on messenger RNA (mRNA) expression data. Therefore, many analysis and visualization methods have been developed especially for mRNA datasets. Until today, many different microarray platforms have been developed. These different platforms include, for example, microarrays to measure the expression of micro RNAs (miRNAs), proteins, or even the amount of DNA methylation in defined genomic regions  [TODO - CITE REVIEW PAPER, SIEHE SEMINAR!].
+
+Of course, some analysis and visualization methods also became available for those different platforms. But until today, methods that can integratively visualize multiple microarray datasets, coming from the different platforms are very rare.
+
+The amount of available expression datasets is growing rapidly from day to day. But not only the 
+Einleitung
+
+Warum ist PW-basierte visualisierung, grade für mehrere Datentypen, besser als UCSC genome browser oder anderes.
+
+Related Work. Abgrenzung zu GenMAPP und Ingenuity, Cytoscape; Siehe auch Kohlbacher-Nils Paper, S. Symons paper (niselt).
+Gibt es ueberhaupt ein Tool, welches alle 4 Datentypen (miRNA, etc) visualisieren kann?
+
+
+%\begin{methods}
+\section{Methods}
+Einleitender, kurzer Abschnitt, welcher auf Figure mit Alle-daten-in-1-graph zeigt.
+
+\subsection{Pathway visualization}
+Auf KEGGtranslator und generell (auch mehrere gene in 1 knoten, etc) Pathway visualisierung eingehen.
+
+\textbf{Clemens.}
+
+\subsection{Visualization of messenger RNA expression data}
+1 wert berechnen, Knotenfarbe
+
+\subsection{Visualization of micro RNA expression data}
+erst auf Targets eingehen.
+
+Dann wie targets in graph gefügt werden
+
+Dann wie knoten eingefärbt werden.
+
+\subsection{Visualization of protein and protein modification expression data}
+
+Erklären, warum man modifikationen nicht mischen darf; Auf box-visualisierung eingehen; erwähnen, dass auch normale protein daten visualisiert werden können.
+
+\textbf{Johannes.}
+
+\subsection{Visualization of DNA methylation data}
+
+Ein Wert nur als Hinweis, hier geht etwas [click gibt details?]. fold-change wird zu box von -2 bis +2, p-value im grunde ein bar-blot von 1 bis 0.00005 oder so...
+
+Einzelner Wert mit binning und $\frac{\sum\limits_{i=1}^n\log_2 x}{n}$, für fold-changes oder so peak detection möglich und max. peak anzeigen.
+
+\textbf{Johannes.}
+
+
+\subsection{OFFENE FRAGEN}
+Sollten wir hier einfaerbung nach enrichment p-values bzw. den "metabolic pathways"-pathway erwaehnen? Oder lieber fuer spaetere publikationen "aufspaaren"?
+
+%\end{methods}
+
+
+
+\section{Results and discussion}
+
+Gesamtkonzept und Ergebnisse / Bilder vorstellen
+
+hier erwähnen, dass methoden in InCroMAP drin sind? oder lieber in conslutions?
+
+
+
+
+
+
+\begin{figure}[!tpb]%figure1
+%\centerline{\includegraphics{fig01.eps}}
+\caption{Caption, caption.}\label{fig:01}
+\end{figure}
+
+\begin{figure}[!tpb]%figure2
+%\centerline{\includegraphics{fig02.eps}}
+\caption{Caption, caption.}\label{fig:02}
+\end{figure}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%     please remove the " % " symbol from \centerline{\includegraphics{fig01.eps}}
+%     as it may ignore the figures.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+\section{Conclusion}
+
+TODO
+
+
+
+\section*{Acknowledgement}
+Text Text Text Text Text Text  Text Text.  \citealp{Boffelli03} might want to know about  text text text text
+
+\paragraph{Funding\textcolon} The research leading to these results has received funding from the Innovative Medicine Initiative Joint Undertaking (IMI JU) under grant agreement nr. 115001 (MARCAR project).
+
+%\bibliographystyle{natbib}
+%\bibliographystyle{achemnat}
+%\bibliographystyle{plainnat}
+%\bibliographystyle{abbrv}
+%\bibliographystyle{bioinformatics}
+%
+%\bibliographystyle{plain}
+%
+%\bibliography{Document}
+
+
+\begin{thebibliography}{}
+\bibitem[Bofelli {\it et~al}., 2000]{Boffelli03} Bofelli,F., Name2, Name3 (2003) Article title, {\it Journal Name}, {\bf 199}, 133-154.
+
+\bibitem[Bag {\it et~al}., 2001]{Bag01} Bag,M., Name2, Name3 (2001) Article title, {\it Journal Name}, {\bf 99}, 33-54.
+
+\bibitem[Yoo \textit{et~al}., 2003]{Yoo03}
+Yoo,M.S. \textit{et~al}. (2003) Oxidative stress regulated genes
+in nigral dopaminergic neurnol cell: correlation with the known
+pathology in Parkinson's disease. \textit{Brain Res. Mol. Brain
+Res.}, \textbf{110}(Suppl. 1), 76--84.
+
+\bibitem[Lehmann, 1986]{Leh86}
+Lehmann,E.L. (1986) Chapter title. \textit{Book Title}. Vol.~1, 2nd edn. Springer-Verlag, New York.
+
+\bibitem[Crenshaw and Jones, 2003]{Cre03}
+Crenshaw, B.,III, and Jones, W.B.,Jr (2003) The future of clinical
+cancer management: one tumor, one chip. \textit{Bioinformatics},
+doi:10.1093/bioinformatics/btn000.
+
+\bibitem[Auhtor \textit{et~al}. (2000)]{Aut00}
+Auhtor,A.B. \textit{et~al}. (2000) Chapter title. In Smith, A.C.
+(ed.), \textit{Book Title}, 2nd edn. Publisher, Location, Vol. 1, pp.
+???--???.
+
+\bibitem[Bardet, 1920]{Bar20}
+Bardet, G. (1920) Sur un syndrome d'obesite infantile avec
+polydactylie et retinite pigmentaire (contribution a l'etude des
+formes cliniques de l'obesite hypophysaire). PhD Thesis, name of
+institution, Paris, France.
+
+\end{thebibliography}
+\end{document}
