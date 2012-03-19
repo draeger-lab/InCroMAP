@@ -31,13 +31,13 @@ Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Tex
 
 \section{Introduction}
 
-During the first years after the invention of microarrays, researchers focused their experiments largely on messenger RNA (mRNA) expression data. Therefore, many analysis and visualization methods have been developed especially for mRNA datasets. Until today, multiple different microarray platforms have been developed. These different platforms include, for example, microarrays to measure the expression of micro RNAs (miRNAs), proteins, or even the amount of DNA methylation in defined genomic regions  [TODO - CITE REVIEW PAPER, SIEHE SEMINAR!]. For all of those platforms, preprocessing, analysis and visualization methods also became available. But, until today, methods that can integratively visualize multiple microarray datasets, coming from multiple different platforms are very rare.
+During the first years after the invention of microarrays, researchers focused their experiments largely on messenger RNA (mRNA) expression data. Therefore, many analysis and visualization methods have been developed especially for mRNA datasets. Until today, multiple different microarray platforms have been developed. These different platforms include, for example, microarrays to measure the expression of micro RNAs (miRNAs), proteins, or even the amount of DNA methylation in defined genomic regions \citep{Hoheisel2006}. For all of those platforms, preprocessing, analysis and visualization methods also became available. But, until today, methods that can integratively visualize multiple microarray datasets, coming from multiple different platforms are very rare.
 
 We introduce a method, for integrated pathway-based visualization of multiple different microarray datasets. 
 
 % Warum ist PW-basierte visualisierung, grade für mehrere Datentypen, besser als UCSC genome browser oder anderes.
 
-Microarrays are probe-based and these probes are mostly not spread randomly across the genome. Probes are usually picked for interesting genes or regions, which includes genes, that are important for certain pathways. Region-based visualization methods, like the USCS Genome Browser [TODO CITE], may be suitable for visualization if researchers already know some regions of interest. But in general, they are not good visualization methods for probe-based datasets. 
+Microarrays are probe-based and these probes are mostly not spread randomly across the genome. Probes are usually picked for interesting genes or regions, which includes genes, that are important for certain pathways. Region-based visualization methods, like the USCS Genome Browser \citep[see][]{UCSCBrowser}, may be suitable for visualization if researchers already know some regions of interest. But in general, they are not good visualization methods for probe-based datasets.
 
 To get a starting point for microarray analysis and because microarrays usually contain probes for most important pathways, the popular pathway enrichment analysis is very often performed on microarray datasets. And this is already the ending point of most pathway analysis methods. Some applications offer users to show the pathway enrichments as bar plots, but visualizing the pathways and plotting the microarray data directly in the pathway are rare features. For these reasons, we show how to integratively visualize data from multiple different microarray datasets in a pathway.
 
@@ -62,6 +62,7 @@ Gibt es ueberhaupt ein Tool, welches alle 4 Datentypen (miRNA, etc) visualisiere
 
 %\begin{methods}
 \section{Methods}
+
 Einleitender, kurzer Abschnitt, welcher auf Figure mit Alle-daten-in-1-graph zeigt.
 
 \subsection{Pathway visualization}
@@ -149,46 +150,46 @@ Text Text Text Text Text Text  Text Text.  \citealp{Boffelli03} might want to kn
 
 \paragraph{Funding\textcolon} The research leading to these results has received funding from the Innovative Medicine Initiative Joint Undertaking (IMI JU) under grant agreement nr. 115001 (MARCAR project).
 
-%\bibliographystyle{natbib}
+\bibliographystyle{natbib}
 %\bibliographystyle{achemnat}
 %\bibliographystyle{plainnat}
 %\bibliographystyle{abbrv}
 %\bibliographystyle{bioinformatics}
 %
 %\bibliographystyle{plain}
+
+\bibliography{document}
+
+
+%\begin{thebibliography}{}
+%\bibitem[Bofelli {\it et~al}., 2000]{Boffelli03} Bofelli,F., Name2, Name3 (2003) Article title, {\it Journal Name}, {\bf 199}, 133-154.
 %
-%\bibliography{Document}
-
-
-\begin{thebibliography}{}
-\bibitem[Bofelli {\it et~al}., 2000]{Boffelli03} Bofelli,F., Name2, Name3 (2003) Article title, {\it Journal Name}, {\bf 199}, 133-154.
-
-\bibitem[Bag {\it et~al}., 2001]{Bag01} Bag,M., Name2, Name3 (2001) Article title, {\it Journal Name}, {\bf 99}, 33-54.
-
-\bibitem[Yoo \textit{et~al}., 2003]{Yoo03}
-Yoo,M.S. \textit{et~al}. (2003) Oxidative stress regulated genes
-in nigral dopaminergic neurnol cell: correlation with the known
-pathology in Parkinson's disease. \textit{Brain Res. Mol. Brain
-Res.}, \textbf{110}(Suppl. 1), 76--84.
-
-\bibitem[Lehmann, 1986]{Leh86}
-Lehmann,E.L. (1986) Chapter title. \textit{Book Title}. Vol.~1, 2nd edn. Springer-Verlag, New York.
-
-\bibitem[Crenshaw and Jones, 2003]{Cre03}
-Crenshaw, B.,III, and Jones, W.B.,Jr (2003) The future of clinical
-cancer management: one tumor, one chip. \textit{Bioinformatics},
-doi:10.1093/bioinformatics/btn000.
-
-\bibitem[Auhtor \textit{et~al}. (2000)]{Aut00}
-Auhtor,A.B. \textit{et~al}. (2000) Chapter title. In Smith, A.C.
-(ed.), \textit{Book Title}, 2nd edn. Publisher, Location, Vol. 1, pp.
-???--???.
-
-\bibitem[Bardet, 1920]{Bar20}
-Bardet, G. (1920) Sur un syndrome d'obesite infantile avec
-polydactylie et retinite pigmentaire (contribution a l'etude des
-formes cliniques de l'obesite hypophysaire). PhD Thesis, name of
-institution, Paris, France.
-
-\end{thebibliography}
+%\bibitem[Bag {\it et~al}., 2001]{Bag01} Bag,M., Name2, Name3 (2001) Article title, {\it Journal Name}, {\bf 99}, 33-54.
+%
+%\bibitem[Yoo \textit{et~al}., 2003]{Yoo03}
+%Yoo,M.S. \textit{et~al}. (2003) Oxidative stress regulated genes
+%in nigral dopaminergic neurnol cell: correlation with the known
+%pathology in Parkinson's disease. \textit{Brain Res. Mol. Brain
+%Res.}, \textbf{110}(Suppl. 1), 76--84.
+%
+%\bibitem[Lehmann, 1986]{Leh86}
+%Lehmann,E.L. (1986) Chapter title. \textit{Book Title}. Vol.~1, 2nd edn. Springer-Verlag, New York.
+%
+%\bibitem[Crenshaw and Jones, 2003]{Cre03}
+%Crenshaw, B.,III, and Jones, W.B.,Jr (2003) The future of clinical
+%cancer management: one tumor, one chip. \textit{Bioinformatics},
+%doi:10.1093/bioinformatics/btn000.
+%
+%\bibitem[Auhtor \textit{et~al}. (2000)]{Aut00}
+%Auhtor,A.B. \textit{et~al}. (2000) Chapter title. In Smith, A.C.
+%(ed.), \textit{Book Title}, 2nd edn. Publisher, Location, Vol. 1, pp.
+%???--???.
+%
+%\bibitem[Bardet, 1920]{Bar20}
+%Bardet, G. (1920) Sur un syndrome d'obesite infantile avec
+%polydactylie et retinite pigmentaire (contribution a l'etude des
+%formes cliniques de l'obesite hypophysaire). PhD Thesis, name of
+%institution, Paris, France.
+%
+%\end{thebibliography}
 \end{document}
