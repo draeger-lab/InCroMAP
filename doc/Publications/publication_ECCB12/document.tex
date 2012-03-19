@@ -60,31 +60,31 @@ Related Work. Abgrenzung zu GenMAPP und Ingenuity, Cytoscape, KEGG Atlas, KEGG A
 Gibt es ueberhaupt ein Tool, welches alle 4 Datentypen (miRNA, etc) visualisieren kann?
 
 
+No method today for high-dimensional, heterogeneous cross-platform datasets.
+
 %\begin{methods}
 \section{Methods}
 
-Einleitender, kurzer Abschnitt, welcher auf Figure mit Alle-daten-in-1-graph zeigt.
+This method starts by translating KGML documents from the KEGG PATHWAY database to GraphML documents. Optionally, one can create an overlay graph that shows the original KEGG pathway picture in the background to reduce the lack of information that occurs by limitations of the KGML format. Afterwards, the nodes are modified to reflect mRNA expression, protein expression and DNA methylation changes. As a last step, nodes are being added for miRNAs and miRNA expression data is visualized in the pathway. See Figure~\ref{fig:visualization_steps} for a graphical description of all those visualization steps.
+
+%Please note that the described procedures are only valid for processed microarray datasets with ``observations". In this context, observations can be any statistical significance or comparative measure (we used \emph{p}-values or fold-changes).
 
 \subsection{Pathway visualization}
-Auf KEGGtranslator und generell (auch mehrere gene in 1 knoten, etc) Pathway visualisierung eingehen.
 
-\textbf{Clemens.}
+The basic prerequisite for pathway-based visualization is visualizing the pathway itself. We are using KEGGtranslator \citep[see][]{Wrzodek2011} to perform a basic conversion of the KEGG KGML documents to GraphML and to annotate all nodes with entrez gene identifiers. In short, KEGGtranslator converts all KGML entries to nodes and all relations to edges. Some basic errors are corrected automatically and appropriate shapes, colors and labels are inferred. Then, all nodes are annotated with various identifiers and further information. The resulting document is the base for our visualizations. At this point, it is important to note that KEGG usually draws referenced pathways as rectangular nodes with rounded corners, small molecules as circles, and single gene products (e.g., enzymes) as well as gene families as rectangles. This means that one rectangular node can consist of multiple different enzymes, depending on the KEGG definition.
 
 \subsection{Visualization of messenger RNA expression data}
-1 wert berechnen, Knotenfarbe
 
-\subsection{Visualization of micro RNA expression data}
-erst auf Targets eingehen.
+Visualization of mRNA datasets is straightforward by somehow gene-centering the input data and then changing the node color according to this value. As input, this method requires processed mRNA datasets with gene identifiers and ``observations". In this context, ``observations" can be any statistical significance or comparative measure (we used \emph{p}-values or fold-changes). Then, for each node in the pathway, one value must be calculated. Therefore, all probes that belong to a node are gathered from the input dataset and then the mean or median is calculated. Another possibility is to take the most important probe (i.e., $\min\emph{p}-value$ or $\max|fold-change|$) to get a single value for each pathway node.
+This value is then used to calculate a color for the node. For fold-changes (which are usually $log_2$ values), we color every node with a fold-change $\geq2$ red and all fold-changes $\leq-2$ blue. Fold-changes of zero are defined to have a white color and colors between $\pm2$ are faded from blue or red to white, depending on the actual fold-change. The same procedure can be used for \emph{p}-values, except that just one minimum threshold and one minimum color must be defined. Furthermore, the color for \emph{p}-values should not be changed on a linear, but on a log-scale. See Figure~\ref{fig:visualization_steps}c) for an example of visualized mRNA data.
 
-Dann wie targets in graph gefügt werden
-
-Dann wie knoten eingefärbt werden.
 
 \subsection{Visualization of protein and protein modification expression data}
 
-Erklären, warum man modifikationen nicht mischen darf; Auf box-visualisierung eingehen; erwähnen, dass auch normale protein daten visualisiert werden können.
+Visualization of protein datasets is performed by adding small boxes below pathway nodes and changing the color of the boxes according to the corresponding protein expression data. Protein datasets usually have identifiers, like Entrez Gene IDs, UniProt IDs, etc. which allows to make a straightforward mapping to pathway nodes. Then, all values must be collected and a color must be calculated for each node in the same way as already described for mRNA datasets.
 
-\textbf{Johannes.}
+Protein modification datasets must be treated differently. They usually not only contain one expression values for the basic form of the protein, but also for some phosphorylated or likewise modified form. Therefore, separate boxes are created below each pathway node for all modifications. These boxes are labeled according to the modification. Furthermore, the color for each box must only be calculated on probes that match the pathway node and the modification of each box.
+
 
 \subsection{Visualization of DNA methylation data}
 
@@ -93,6 +93,14 @@ Ein Wert nur als Hinweis, hier geht etwas [click gibt details?]. fold-change wir
 Einzelner Wert mit binning und $\frac{\sum\limits_{i=1}^n\log_2 x}{n}$, für fold-changes oder so peak detection möglich und max. peak anzeigen.
 
 \textbf{Johannes.}
+
+
+\subsection{Visualization of micro RNA expression data}
+erst auf Targets eingehen.
+
+Dann wie targets in graph gefügt werden
+
+Dann wie knoten eingefärbt werden.
 
 
 \subsection{OFFENE FRAGEN}
@@ -113,29 +121,11 @@ hier erwähnen, dass methoden in InCroMAP drin sind? oder lieber in conslutions?
 
 
 
-\begin{figure}[!tpb]%figure1
-%\centerline{\includegraphics{fig01.eps}}
-\caption{Caption, caption.}\label{fig:01}
-\end{figure}
-
-\begin{figure}[!tpb]%figure2
-%\centerline{\includegraphics{fig02.eps}}
-\caption{Caption, caption.}\label{fig:02}
-\end{figure}
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-%     please remove the " % " symbol from \centerline{\includegraphics{fig01.eps}}
-%     as it may ignore the figures.
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
+\begin{figure*}[t]
+\centering
+\includegraphics[width=1.0\textwidth]{figures/visualization-steps.PNG}
+\caption{MAPK signaling pathway.}\label{fig:visualization_steps}
+\end{figure*}
 
 
 
@@ -146,7 +136,7 @@ TODO
 
 
 \section*{Acknowledgement}
-Text Text Text Text Text Text  Text Text.  \citealp{Boffelli03} might want to know about  text text text text
+We gratefully acknowledge contributions from Andreas Dr\"ager and Finja B\"uchel, as well as the whole MACRCAR consortium.
 
 \paragraph{Funding\textcolon} The research leading to these results has received funding from the Innovative Medicine Initiative Joint Undertaking (IMI JU) under grant agreement nr. 115001 (MARCAR project).
 
@@ -155,41 +145,9 @@ Text Text Text Text Text Text  Text Text.  \citealp{Boffelli03} might want to kn
 %\bibliographystyle{plainnat}
 %\bibliographystyle{abbrv}
 %\bibliographystyle{bioinformatics}
-%
 %\bibliographystyle{plain}
 
 \bibliography{document}
+%TODO: When paper is ready, comment \bibliography line and add content of document.bbl here.
 
-
-%\begin{thebibliography}{}
-%\bibitem[Bofelli {\it et~al}., 2000]{Boffelli03} Bofelli,F., Name2, Name3 (2003) Article title, {\it Journal Name}, {\bf 199}, 133-154.
-%
-%\bibitem[Bag {\it et~al}., 2001]{Bag01} Bag,M., Name2, Name3 (2001) Article title, {\it Journal Name}, {\bf 99}, 33-54.
-%
-%\bibitem[Yoo \textit{et~al}., 2003]{Yoo03}
-%Yoo,M.S. \textit{et~al}. (2003) Oxidative stress regulated genes
-%in nigral dopaminergic neurnol cell: correlation with the known
-%pathology in Parkinson's disease. \textit{Brain Res. Mol. Brain
-%Res.}, \textbf{110}(Suppl. 1), 76--84.
-%
-%\bibitem[Lehmann, 1986]{Leh86}
-%Lehmann,E.L. (1986) Chapter title. \textit{Book Title}. Vol.~1, 2nd edn. Springer-Verlag, New York.
-%
-%\bibitem[Crenshaw and Jones, 2003]{Cre03}
-%Crenshaw, B.,III, and Jones, W.B.,Jr (2003) The future of clinical
-%cancer management: one tumor, one chip. \textit{Bioinformatics},
-%doi:10.1093/bioinformatics/btn000.
-%
-%\bibitem[Auhtor \textit{et~al}. (2000)]{Aut00}
-%Auhtor,A.B. \textit{et~al}. (2000) Chapter title. In Smith, A.C.
-%(ed.), \textit{Book Title}, 2nd edn. Publisher, Location, Vol. 1, pp.
-%???--???.
-%
-%\bibitem[Bardet, 1920]{Bar20}
-%Bardet, G. (1920) Sur un syndrome d'obesite infantile avec
-%polydactylie et retinite pigmentaire (contribution a l'etude des
-%formes cliniques de l'obesite hypophysaire). PhD Thesis, name of
-%institution, Paris, France.
-%
-%\end{thebibliography}
 \end{document}
