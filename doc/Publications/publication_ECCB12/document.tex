@@ -31,16 +31,32 @@ Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Tex
 
 \section{Introduction}
 
-During the first years after the invention of microarrays, researchers focused their experiments largely on messenger RNA (mRNA) expression data. Therefore, many analysis and visualization methods have been developed especially for mRNA datasets. Until today, many different microarray platforms have been developed. These different platforms include, for example, microarrays to measure the expression of micro RNAs (miRNAs), proteins, or even the amount of DNA methylation in defined genomic regions  [TODO - CITE REVIEW PAPER, SIEHE SEMINAR!].
+During the first years after the invention of microarrays, researchers focused their experiments largely on messenger RNA (mRNA) expression data. Therefore, many analysis and visualization methods have been developed especially for mRNA datasets. Until today, multiple different microarray platforms have been developed. These different platforms include, for example, microarrays to measure the expression of micro RNAs (miRNAs), proteins, or even the amount of DNA methylation in defined genomic regions  [TODO - CITE REVIEW PAPER, SIEHE SEMINAR!]. For all of those platforms, preprocessing, analysis and visualization methods also became available. But, until today, methods that can integratively visualize multiple microarray datasets, coming from multiple different platforms are very rare.
 
-Of course, some analysis and visualization methods also became available for those different platforms. But until today, methods that can integratively visualize multiple microarray datasets, coming from the different platforms are very rare.
+We introduce a method, for integrated pathway-based visualization of multiple different microarray datasets. 
 
-The amount of available expression datasets is growing rapidly from day to day. But not only the 
-Einleitung
+% Warum ist PW-basierte visualisierung, grade für mehrere Datentypen, besser als UCSC genome browser oder anderes.
 
-Warum ist PW-basierte visualisierung, grade für mehrere Datentypen, besser als UCSC genome browser oder anderes.
+Microarrays are probe-based and these probes are mostly not spread randomly across the genome. Probes are usually picked for interesting genes or regions, which includes genes, that are important for certain pathways. Region-based visualization methods, like the USCS Genome Browser [TODO CITE], may be suitable for visualization if researchers already know some regions of interest. But in general, they are not good visualization methods for probe-based datasets. 
 
-Related Work. Abgrenzung zu GenMAPP und Ingenuity, Cytoscape; Siehe auch Kohlbacher-Nils Paper, S. Symons paper (niselt).
+To get a starting point for microarray analysis and because microarrays usually contain probes for most important pathways, the popular pathway enrichment analysis is very often performed on microarray datasets. And this is already the ending point of most pathway analysis methods. Some applications offer users to show the pathway enrichments as bar plots, but visualizing the pathways and plotting the microarray data directly in the pathway are rare features. For these reasons, we show how to integratively visualize data from multiple different microarray datasets in a pathway.
+
+% TODO: Erwähnen dass mRNA knoten einfärbung ein "alter hut ist", aber das besodere bei den anderen 3 datentypen ist.
+
+
+We present a novel method that includes visualizing pathways and changing the pathway to reflect expression data from mRNA, miRNA, DNA methylation and (phospho-) protein datasets.
+
+
+% The amount of available expression datasets is growing rapidly from day to day. But not only the
+
+There are other tools, specialized in pathway analysis (e.g., Ingenuity, ), or in pathway visualization (Cytoscape, KEGG Atlas). Some even offer visualizing data in a pathway (GenMAPP, KEGG Array, Symony programm). 
+
+TODO: das höchste der gefühle sind methoden um 2 farben in 1 knoten, aber keiner kann DNA methylation oder sogar miRNA knoten rein.
+
+TODO Johannes: Kannst du 1-2 Sätze jeweils zu Cytoscape, Ingenuity, eventuell noch Cytoscape + Plugins schreiben?
+
+
+Related Work. Abgrenzung zu GenMAPP und Ingenuity, Cytoscape, KEGG Atlas, KEGG Array; Siehe auch Kohlbacher-Nils Paper, S. Symons paper (niselt).
 Gibt es ueberhaupt ein Tool, welches alle 4 Datentypen (miRNA, etc) visualisieren kann?
 
 
