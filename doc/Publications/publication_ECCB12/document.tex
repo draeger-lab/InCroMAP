@@ -120,11 +120,14 @@ of the probes to genes or genomic regions. After these preprocessing steps the m
 to be exported in tabular format (e.g., CSV or Excel). These tables have to contain two types of
 columns: (1) annotation columns, containing probe or probeset IDs (e.g., Affymetrix IDs) and
 database IDs of the corresponding genes (e.g., Ensembl or Entrez IDs), and (2) data columns
-containing either fold-changes and/or p-values resulting from basic statistical analysis of the
-microarray data. For convenience, these tables can be imported into InCroMAP per drag-and-drop, and
-the tool tries to auto-detect the platform type.
+containing either fold-changes and/or p-values resulting from basic statistical analysis of the 
+microarray data.
 
-% Import von Pathways in InCroMAP
+% JE: Habe das mal rausgenommen, da es zu InCroMAP-spezifisch ist oder ?
+% For convenience, these tables can be imported into InCroMAP per drag-and-drop, and the 
+% tool tries to auto-detect the platform type.  
+
+% Import von Pathways in InCroMAP 
 The pathway data is automatically imported from KEGG. In the KEGG PATHWAY database each pathway map
 is available for download as a KGML document which is internally converted into a GraphML document
 by InCroMAP. These GraphML files can be interactively visualized by InCroMAP using the yWorks graph
@@ -133,78 +136,118 @@ graph that shows the original KEGG pathway image in the background, which may pr
 additional information about cellular structure and compartmentalization.
 
 % Visualisierung von Microarray-Daten im Kontext von Pathways
-The nodes are then overlaid with microarray data such to reflect mRNA expression, protein expression
-and DNA methylation changes. As a last step, nodes are being added for miRNAs and miRNA expression
-data is visualized in the pathway. See Figure~\ref{fig:visualization_steps} for a graphical
-description of all those visualization steps.
+After uploading the data, the KEGG pathway nodes, which correspond to genes or gene families, can be
+overlaid with fold-changes measured on mRNA or protein expression level. Furthermore, DNA
+methylation changes observed in the proximal promoter regions can be visualized. In the final step,
+additional nodes corresponding to miRNAs can be added to the pathway and colored according to the
+expression changes measured in the underlying experiment. See Figure~\ref{fig:visualization_steps}
+for an illustration of all the above-mentioned visualization steps.
 
 \subsection{Pathway visualization}
 
-The basic prerequisite for pathway-based visualization is visualizing the pathway itself. We are
-using KEGGtranslator \citep[see][]{Wrzodek2011} to perform a basic conversion of the KEGG KGML
-documents to GraphML and to annotate all nodes with entrez gene identifiers. In short,
-KEGGtranslator converts all KGML entries to nodes and all relations to edges. Some basic errors are
-corrected automatically and appropriate shapes, colors and labels are inferred. Then, all nodes are
-annotated with various identifiers and further information. The resulting document is the base for
-our visualizations. At this point, it is important to note that KEGG usually draws referenced
-pathways as rectangular nodes with rounded corners, small molecules as circles, and single gene
-products (e.g., enzymes) as well as gene families as rectangles. This means that one rectangular
-node can consist of multiple different enzymes, depending on the KEGG definition.
+The basic prerequisite for generating a pathway-based visualization is visualizing the pathway
+itself. For this purpose, we are using KEGGtranslator \citep[see][]{Wrzodek2011}, which performs a
+basic conversion of the KEGG KGML documents to GraphML and to annotates all nodes with EntrezGene
+identifiers (Ref. zu NCBI EntrezGene). In short, KEGGtranslator converts all KGML entries to nodes
+and all relations to edges. Some basic errors are corrected automatically and appropriate shapes,
+colors and labels are inferred. Then, all nodes are annotated with diverse identifiers,
+descriptions, and further information. The resulting document provides the basis for the
+subsequently generated visualizations.
 
-% TODO: Auch Schritt von figure a) zu b) erwaehnen. Manche Informationen manchmal nur in grafischen
-% abbildungen enthalten, deshalb original KEGG bild als hintergrund nehmen und den eigentlichen
-% graphen als overlay schicht darueber anzeigen. Auf figure 1 a), b) fuer beispiel verweisen.
+% JE: Die Bedeutung von den KEGG-Knoten (einzelne Gene oder Genfamilien) habe ich weiter oben eingebaut. 
+% Ich würde daher den folgenden Absatz streichen um den Leser nicht zu ausführlich mit Details vollzulabern ;-)
+% 
+% At this point, it is important to note that KEGG usually draws referenced
+% pathways as rectangular nodes with rounded corners, small molecules as circles, and single gene
+% products (e.g., enzymes) as well as gene families as rectangles. This means that one rectangular
+% node can consist of multiple different enzymes, depending on the KEGG definition.
 
-\subsection{Visualization of messenger RNA expression data}
+% Vorteile des Pathway-Bilds im Hintergrund
+At least for some pathways the KGML document available at KEGG does not contain all information 
+displayed in the corresponding pathway map. Thus, an overlay graph can be generated which contains the 
+original pathway map as a static transparent image in the background of the interactive graph plot 
+(see Figure~\ref{fig:visualization_steps}b). Owing to this feature, additional information on 
+cellular structure (e.g., schematic drawings of receptors involved in cell signaling) can be maintained. 
+This feature also enhances the visualization of the global maps in KEGG PATHWAY, as additional
+information on the organisation of subordinate pathway groups is provided by the pathway image.
 
-Visualization of mRNA datasets is straightforward by somehow gene-centering the input data and then
-changing the node color according to this value. As input, this method requires processed mRNA
-datasets with gene identifiers and ``observations". In this context, ``observations" can be any
-statistical significance or comparative measure (we used \emph{p}-values or fold-changes). Then, for
-each node in the pathway, one value must be calculated. Therefore, all probes that belong to a node
-are gathered from the input dataset and then the mean or median is calculated. Another possibility
-is to take the most important probe (i.e., $\min\emph{p}-value$ or $\max|fold-change|$) to get a
-single value for each pathway node.  This value is then used to calculate a color for the node. For
-fold-changes (which are usually $log_2$ values), we color every node with a fold-change $\geq2$ red
-and all fold-changes $\leq-2$ blue. Fold-changes of zero are defined to have a white color and
-colors between $\pm2$ are faded from blue or red to white, depending on the actual fold-change. The
-same procedure can be used for \emph{p}-values, except that just one minimum threshold and one
-minimum color must be defined. Furthermore, the color for \emph{p}-values should not be changed on a
-linear, but on a log-scale. See Figure~\ref{fig:visualization_steps}c) for an example of visualized
-mRNA data.
+\subsection{Visualization of messenger-RNA expression data} 
 
-\subsection{Visualization of protein and protein modification expression data}
+% Darstellung von mRNA-Daten
+As mRNA expression data is typically available for the whole genome, and thus also for the majority
+of nodes in a particular KEGG pathway, these data are displayed in the background color of the
+nodes.
 
+% Eingabeformat für mRNA-Daten
+As input our method requires preprocessed mRNA datasets with annotation columns (e.g., probeset and
+gene identifiers) and data columns, which are referred to as \emph{observations}. In this context,
+observations can be any statistical significance (e.g., \emph{p}-values) or comparative measure
+(e.g., fold-changes or log-ratios).
+
+% Mapping von mRNA-Daten auf Pathway-Knoten
+Next, these data have to be broken down to a single value for each pathway node, which then
+corresponds to the color of the node.  As single nodes can represent multiple genes in KEGG, the
+intensities measured by probes, corresponding to the same node, have to be summarized. To this end,
+the mean or median is calculated across probes, which were mapped to the same node, or the probe
+with the strongest or most significant signal (i.e., $\min\emph{p}-value$ or $\max|fold-change|$) is
+adopted for coloring the node.
+
+% Einfärbung der Knoten
+To visualize fold-changes or log-ratios in the context of pathways a color gradient ranging from
+blue to red is used to illustrate down- and upregulation, respectively. Non-differentially expressed
+genes are shown in white, and pathway nodes for which no mRNA data is available are displayed in
+grey. If desired \emph{p}-values can be shown instead of fold-changes. For this purpose, we propose
+to map the negative logarithmized \emph{p}-values to a color gradient, which leads to a more
+intuitive illustration of the observed significances.  See Figure~\ref{fig:visualization_steps}c)
+for an example of visualized mRNA data.
+
+% JE: Würde den Absatz streichen, da er zu viele technische Details enthält  
+% For fold-changes (which are usually $log_2$ values), we color every node with a fold-change $\geq2$ red
+% and all fold-changes $\leq-2$ blue. Fold-changes of zero are defined to have a white color and
+% colors between $\pm2$ are faded from blue or red to white, depending on the actual fold-change. The
+% same procedure can be used for \emph{p}-values, except that just one minimum threshold and one
+% minimum color must be defined. Furthermore, the color for \emph{p}-values should not be changed on a
+% linear, but on a log-scale. 
+
+\subsection{Visualization of protein expression data}
+
+% Darstellung von Protein-Daten
 Visualization of protein datasets is performed by adding small boxes below pathway nodes and
-changing the color of the boxes according to the corresponding protein expression data. Protein
-datasets usually have identifiers, like Entrez Gene IDs, UniProt IDs, etc. which allows to make a
-straightforward mapping to pathway nodes. Then, all values must be collected and a color must be
-calculated for each node in the same way as already described for mRNA datasets.
+changing the color of the boxes according to the corresponding protein expression data. As state-of-the-art 
+experimental techniques (e.g., reverse-phase protein arrays, quantitative mass spectrometry) 
+facilitate the distinction between different protein modifications (e.g., phosphorylated or 
+acetylated forms of proteins) (TODO: Refs), multiple measurements may correspond to the same gene. 
+In this particular case, the expression change observed for each individual protein form is represented 
+as a separate box below the corresponding node. Each of these boxes is then labeled according to the 
+respective protein form and colored based on the underlying expression data, as described previously 
+for mRNA datasets.
 
-Protein modification datasets must be treated differently. They usually not only contain one
-expression values for the basic form of the protein, but also for some phosphorylated or likewise
-modified form. Therefore, separate boxes are created below each pathway node for all
-modifications. These boxes are labeled according to the modification. Furthermore, the color for
-each box must only be calculated on probes that match the pathway node and the modification of each
-box.
+% Eingabeformat für Protein-Daten
+We require protein datasets to be annotated with database identifiers referring to proteins (e.g.,
+UniProt IDs) or genes (e.g. EntrezGene IDs), which allows us to perform a straightforward mapping to
+pathway nodes.
 
-\subsection{Visualization of DNA methylation data}
+\subsection{Visualization of DNA-methylation data}
 
-Ein Wert nur als Hinweis, hier geht etwas [click gibt details?]. fold-change wird zu box von -2 bis
-+2, p-value im grunde ein bar-blot von 1 bis 0.00005 oder so...
-
-Einzelner Wert mit binning und $\frac{\sum\limits_{i=1}^n\log_2 x}{n}$, f�r fold-changes oder so
-peak detection m�glich und max. peak anzeigen.
-
-\textbf{Johannes.}
+% Darstellung von DNAm-Daten
 
 
-\subsection{Visualization of micro RNA expression data}
+% Eingabeformat für DNAm-Daten
 
-Visualizing microRNA (miRNA) datasets is not straightforward, because pathways usually do not
+
+% Ein Wert nur als Hinweis, hier geht etwas 
+% click gibt details?]. 
+% fold-change wird zu box von -2 bis +2
+% p-value im grunde ein bar-blot von 1 bis 0.00005 oder so...
+% Einzelner Wert mit binning und $\frac{\sum\limits_{i=1}^n\log_2 x}{n}$, f�r fold-changes oder so
+% peak detection m�glich und max. peak anzeigen.
+
+\subsection{Visualization of micro-RNA expression data}
+
+Visualizing micro-RNA (miRNA) datasets is not straightforward, because pathways usually do not
 contain miRNAs. Pathway mainly consist of small molecules and enzymes, which are products of protein
 coding genes. Therefore, to add miRNAs to a pathway, a connection must be established from miRNAs to
-to protein coding genes.
+to protein-coding genes.
 
 Biologically, miRNAs are small non-coding RNAs that regulate gene expression by binding to mRNA
 targets and somehow inducing a degradation of the targeted mRNA \citep{Bartel2004}. The targets for
@@ -223,52 +266,59 @@ integrated visualization that contains miRNA expression, miRNA target relation i
 also mRNA data is visualized) the expression of the targeted
 mRNA. Figure~\ref{fig:visualization_steps}f) shows an example result of the described procedure.
 
-
-\subsection{OFFENE FRAGEN}
-
-Sollten wir hier einfaerbung nach enrichment p-values bzw. den "metabolic
-pathways"-pathway erwaehnen? Oder lieber fuer spaetere publikationen "aufspaaren"?
-
 %\end{methods}
-
-
 
 \section{Results and discussion}
 
+In this work, we present a novel visualization method to integratively visualize pathway interaction
+information, miRNA target relations, DNA methylation data, mRNA, (phospho-) protein, and miRNA
+expression data. Visualizing single datasets in pathways is a good first step that is also included
+in other methods and applications. Actually, any dataset with gene identifiers and expression values
+can be somehow visualized by changing node colors or other aspects of pathway nodes. Hence, it is
+not very hard to visualize mRNA datasets. But visualization of phosphoprotein, microRNA or DNA
+methylation datasets is not easy, because each datatype has its own characteristics.  %% PROTEIN For
+phosphoproteins, one destroys the data if expression values for differen protein modifications
+(i.e. phosphoforms) are merged. Hence, we add a separate box with its own visualized expression
+value for every protein and protein modification to the pathway graph.  %% MicroRNA For MicroRNAs,
+the general method with adding gene identifiers to datasets and mapping to the pathways does not
+work at all, because miRNAs are not contained in pathways. We visualize miRNAs together with an
+additional information: the miRNA target relation. By identifying protein coding genes, whose mRNAs
+are targets of miRNAs, one can add the miRNAs to the pathways and connect them to the protein coding
+genes by inserting edges to the corresponding targets.  %% DNA METHYLATION DNA methylation
+microarray datasets are region-based and thus contain a huge number of probes and information. The
+connection to protein coding genes is usually performed by defining a region around the
+transcription start site (TSS) of a gene and assigning all probes in this region to the gene.  %For
+example, with this procedure one can define that all probes within -2000 and +500 bps of a TSS are
+most important for the regulation of this gene's expression.  But then, it is not recommended to
+visualize all this information in the pathway. For example, it would be possible to create small XY
+plots of the promoter region for every gene and add these pictures as small icons below each
+node. But this would clutter the picture and destroy the clarity of it. Thus, we concluded that it
+is most important to know if there are methylation changes in a promoter and maybe also if the gene
+is rather hyper- or hypomethylated. The methylation details can then be inspected manually later
+(e.g., the InCroMAP application provides a detailed XY plot of the DNA methylation if one clicks on
+a pathway node). But the most important information in the first place is, if there are methylation
+changes at all. And this can be expressed with various summarization methods and a small black bar
+that grows with the amount of significant methylation changes in a gene promoter. 
 
-
-
-In this work, we present a novel visualization method to integratively visualize pathway interaction information, miRNA target relations, DNA methylation data, mRNA, (phospho-) protein, and miRNA expression data. Visualizing single datasets in pathways is a good first step that is also included in other methods and applications. Actually, any dataset with gene identifiers and expression values can be somehow visualized by changing node colors or other aspects of pathway nodes. Hence, it is not very hard to visualize mRNA datasets. But visualization of phosphoprotein, microRNA or DNA methylation datasets is not easy, because each datatype has its own characteristics. 
-%% PROTEIN
-For phosphoproteins, one destroys the data if expression values for differen protein modifications (i.e. phosphoforms) are merged. Hence, we add a separate box with its own visualized expression value for every protein and protein modification to the pathway graph.
-%% MicroRNA
-For MicroRNAs, the general method with adding gene identifiers to datasets and mapping to the pathways does not work at all, because miRNAs are not contained in pathways. We visualize miRNAs together with an additional information: the miRNA target relation. By identifying protein coding genes, whose mRNAs are targets of miRNAs, one can add the miRNAs to the pathways and connect them to the protein coding genes by inserting edges to the corresponding targets.
-%% DNA METHYLATION
-DNA methylation microarray datasets are region-based and thus contain a huge number of probes and information. The connection to protein coding genes is usually performed by defining a region around the transcription start site (TSS) of a gene and assigning all probes in this region to the gene.
-%For example, with this procedure one can define that all probes within -2000 and +500 bps of a TSS are most important for the regulation of this gene's expression.
-But then, it is not recommended to visualize all this information in the pathway. For example, it would be possible to create small XY plots of the promoter region for every gene and add these pictures as small icons below each node. But this would clutter the picture and destroy the clarity of it. Thus, we concluded that it is most important to know if there are methylation changes in a promoter and maybe also if the gene is rather hyper- or hypomethylated. The methylation details can then be inspected manually later (e.g., the InCroMAP application provides a detailed XY plot of the DNA methylation if one clicks on a pathway node). But the most important information in the first place is, if there are methylation changes at all. And this can be expressed with various summarization methods and a small black bar that grows with the amount of significant methylation changes in a gene promoter.
-
-An example for a KEGG pathway with visualized mRNA, miRNA, protein and DNA methylation data can be seen in Figure~\ref{fig:cellcycle}. The visualization of multiple heterogenous datatypes can not be performed with either a loss of information or a loss of clarity. Since these integrated pathway visualizations should provide an overview, rather than a detailed listing of all possible information, we tried to keep the clarity and summarize information wherever possible.
-%Especially when visualizing four different data types, this is important. Hence, we provide a 
-
+An example for a KEGG pathway with visualized mRNA, miRNA, protein and DNA methylation data can be
+seen in Figure~\ref{fig:cellcycle}. The visualization of multiple heterogenous datatypes can not be
+performed with either a loss of information or a loss of clarity. Since these integrated pathway
+visualizations should provide an overview, rather than a detailed listing of all possible
+information, we tried to keep the clarity and summarize information wherever possible.  
+% Especially when visualizing four different data types, this is important. Hence, we provide a
 % TODO: Ein schoenes ende finden. 
 
 
-
 % TODO: Gesamtkonzept und Ergebnisse / Bilder vorstellen
-%- Beschreiben das auch recht viele definitionen drin sind (farben, thresholds, selection of miRNA target databases)
-%- Beschreiben dass DNAm nur ein Hinweis ist wo man naeher nachschauen sollte
+% - Beschreiben das auch recht viele definitionen drin sind (farben, thresholds, selection of miRNA target databases)
+% - Beschreiben dass DNAm nur ein Hinweis ist wo man naeher nachschauen sollte
 % - Link (URL) auf InCroMAP HIER oder in CONCLUSIONS ?
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
-\caption{
-TODO: Bild zeigt AUSSCHNITT des MAPK signaling pathway. Alle Schritte von a) bis f) kurz erlauetern und kurz sagen, dass f) quasi dem finalen Bild dieser Methode entspricht. }\label{fig:visualization_steps}
+\begin{figure*}[t] \centering \includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
+\caption{ TODO: Bild zeigt AUSSCHNITT des MAPK signaling pathway. Alle Schritte von a) bis f) kurz
+          erlauetern und kurz sagen, dass f) quasi dem finalen Bild dieser Methode entspricht. }
+\label{fig:visualization_steps} 
 \end{figure*}
-
-
-
 
 
 %TODO Abbildungen:
@@ -279,16 +329,30 @@ TODO: Bild zeigt AUSSCHNITT des MAPK signaling pathway. Alle Schritte von a) bis
 
 \section{Conclusion}
 
-Pathway enrichment analysis is a common microarray data analysis tool to discover pathways, whose genes show significant expression changes. In most applications, these enrichments are endpoints in analysis workflows. There are some methods or applications that can show pictures of significantly altered pathways and a few applications can even change node shapes or colors according to a single expression dataset. However, not only the amount of available microarray datasets is growing rapidly, but also the number of available platforms. Thus, today we have datasets that not only consist of mRNA data, but also DNA methylation, miRNA, protein or even more different levels. Analysis and especially visualization methods for such cross-platform datasets are very rare.
+Pathway enrichment analysis is a common microarray data analysis tool to discover pathways, whose
+genes show significant expression changes. In most applications, these enrichments are endpoints in
+analysis workflows. There are some methods or applications that can show pictures of significantly
+altered pathways and a few applications can even change node shapes or colors according to a single
+expression dataset. However, not only the amount of available microarray datasets is growing
+rapidly, but also the number of available platforms. Thus, today we have datasets that not only
+consist of mRNA data, but also DNA methylation, miRNA, protein or even more different
+levels. Analysis and especially visualization methods for such cross-platform datasets are very
+rare.
 
-Here, we present a pathway-based cross-platform microarray visualization method that is perfectly suitable, e.g., as visualization method after pathway enrichment analyses. Especially the visualization of DNA methylation and miRNA datasets is a feature that can not be found in other visualization approaches. By integratively visualizing all datatypes, it helps researchers to discover potential relationships across multiple layers. For example, a miRNA can be upregulated and the corresponding mRNA target downregulated, whereupon a connected pathway protein could also be downregulated in protein expression. This effect, which involves information about pathway relations and miRNA targets, as well as miRNA, mRNA and protein expression, would be directly visible from the here presented visualization method.
+Here, we present a pathway-based cross-platform microarray visualization method that is perfectly
+suitable, e.g., as visualization method after pathway enrichment analyses. Especially the
+visualization of DNA methylation and miRNA datasets is a feature that can not be found in other
+visualization approaches. By integratively visualizing all datatypes, it helps researchers to
+discover potential relationships across multiple layers. For example, a miRNA can be upregulated and
+the corresponding mRNA target downregulated, whereupon a connected pathway protein could also be
+downregulated in protein expression. This effect, which involves information about pathway relations
+and miRNA targets, as well as miRNA, mRNA and protein expression, would be directly visible from the
+here presented visualization method.
 
-
-
-% TODO: - Zusammenfassung, vor allem Einzigartigkeit der Methode (insb. miRNA, (DNAm)) herausstellen,
-% - und kurze interpretation eines finalen bildes liefern ("man sieht in einem bild pathway informationen, miRNA relationen, expressionsdaten von miRNA, mRNA, bla; und sonst ist meist nach dem enrichment schluss bzw mRNA einfarbung bereits das maximum moegliche").
-
-
+% TODO: - Zusammenfassung, vor allem Einzigartigkeit der Methode (insb. miRNA, (DNAm))
+% herausstellen, - und kurze interpretation eines finalen bildes liefern ("man sieht in einem bild
+% pathway informationen, miRNA relationen, expressionsdaten von miRNA, mRNA, bla; und sonst ist
+% meist nach dem enrichment schluss bzw mRNA einfarbung bereits das maximum moegliche").
 
 \section*{Acknowledgement}
 We gratefully acknowledge contributions from Andreas Dr\"ager and Finja B\"uchel, as well as the
