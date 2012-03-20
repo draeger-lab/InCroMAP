@@ -201,7 +201,7 @@ peak detection m�glich und max. peak anzeigen.
 
 \subsection{Visualization of micro RNA expression data}
 
-Visualizing micro RNA (miRNA) datasets is not straightforward, because pathways usually do not
+Visualizing microRNA (miRNA) datasets is not straightforward, because pathways usually do not
 contain miRNAs. Pathway mainly consist of small molecules and enzymes, which are products of protein
 coding genes. Therefore, to add miRNAs to a pathway, a connection must be established from miRNAs to
 to protein coding genes.
@@ -235,8 +235,30 @@ pathways"-pathway erwaehnen? Oder lieber fuer spaetere publikationen "aufspaaren
 
 \section{Results and discussion}
 
+
+
+
+In this work, we present a novel visualization method to integratively visualize pathway interaction information, miRNA target relations, DNA methylation data, mRNA, (phospho-) protein, and miRNA expression data. Visualizing single datasets in pathways is a good first step that is also included in other methods and applications. Actually, any dataset with gene identifiers and expression values can be somehow visualized by changing node colors or other aspects of pathway nodes. Hence, it is not very hard to visualize mRNA datasets. But visualization of phosphoprotein, microRNA or DNA methylation datasets is not easy, because each datatype has its own characteristics. 
+%% PROTEIN
+For phosphoproteins, one destroys the data if expression values for differen protein modifications (i.e. phosphoforms) are merged. Hence, we add a separate box with its own visualized expression value for every protein and protein modification to the pathway graph.
+%% MicroRNA
+For MicroRNAs, the general method with adding gene identifiers to datasets and mapping to the pathways does not work at all, because miRNAs are not contained in pathways. We visualize miRNAs together with an additional information: the miRNA target relation. By identifying protein coding genes, whose mRNAs are targets of miRNAs, one can add the miRNAs to the pathways and connect them to the protein coding genes by inserting edges to the corresponding targets.
+%% DNA METHYLATION
+DNA methylation microarray datasets are region-based and thus contain a huge number of probes and information. The connection to protein coding genes is usually performed by defining a region around the transcription start site (TSS) of a gene and assigning all probes in this region to the gene.
+%For example, with this procedure one can define that all probes within -2000 and +500 bps of a TSS are most important for the regulation of this gene's expression.
+But then, it is not recommended to visualize all this information in the pathway. For example, it would be possible to create small XY plots of the promoter region for every gene and add these pictures as small icons below each node. But this would clutter the picture and destroy the clarity of it. Thus, we concluded that it is most important to know if there are methylation changes in a promoter and maybe also if the gene is rather hyper- or hypomethylated. The methylation details can then be inspected manually later (e.g., the InCroMAP application provides a detailed XY plot of the DNA methylation if one clicks on a pathway node). But the most important information in the first place is, if there are methylation changes at all. And this can be expressed with various summarization methods and a small black bar that grows with the amount of significant methylation changes in a gene promoter.
+
+An example for a KEGG pathway with visualized mRNA, miRNA, protein and DNA methylation data can be seen in Figure~\ref{fig:cellcycle}. The visualization of multiple heterogenous datatypes can not be performed with either a loss of information or a loss of clarity. Since these integrated pathway visualizations should provide an overview, rather than a detailed listing of all possible information, we tried to keep the clarity and summarize information wherever possible.
+%Especially when visualizing four different data types, this is important. Hence, we provide a 
+
+% TODO: Ein schoenes ende finden. 
+
+
+
 % TODO: Gesamtkonzept und Ergebnisse / Bilder vorstellen
-% hier erw�hnen, dass methoden in InCroMAP drin sind? oder lieber in conclutions?
+%- Beschreiben das auch recht viele definitionen drin sind (farben, thresholds, selection of miRNA target databases)
+%- Beschreiben dass DNAm nur ein Hinweis ist wo man naeher nachschauen sollte
+% - Link (URL) auf InCroMAP HIER oder in CONCLUSIONS ?
 
 \begin{figure*}[t]
 \centering
@@ -246,7 +268,10 @@ TODO: Bild zeigt AUSSCHNITT des MAPK signaling pathway. Alle Schritte von a) bis
 \end{figure*}
 
 
-%TODO:
+
+
+
+%TODO Abbildungen:
 % - Sollen wie noch "Table 1" aus MARCAR D4.1 reinnehmen (tabellarische erklaerung der visualisierung aller 4 datentypen mit beispielen), und/oder
 % - Ein schoenes Gesamtbild e.g. von cell cycle oder wnt signaling oder sowas
 %[ - den metabolic pathway overview mit eingefarbten knoten] Dies nur wenn diese Methode auch noch bestandteil dieses papers wird (muesste noch bei methoden usw. aufgenommen und erklaert werden).
@@ -254,10 +279,14 @@ TODO: Bild zeigt AUSSCHNITT des MAPK signaling pathway. Alle Schritte von a) bis
 
 \section{Conclusion}
 
-% TODO: Zusammenfassung, vor allem Einzigartigkeit der Methode (insb. miRNA, (DNAm)) herausstellen,
-% und kurze interpretation eines finalen bildes liefern ("man sieht in einem bild pathway
-% informationen, miRNA relationen, expressionsdaten von miRNA, mRNA, bla; und sonst ist meist nach dem
-% enrichment schluss bzw mRNA einfarbung bereits das maximum moegliche").
+Pathway enrichment analysis is a common microarray data analysis tool to discover pathways, whose genes show significant expression changes. In most applications, these enrichments are endpoints in analysis workflows. There are some methods or applications that can show pictures of significantly altered pathways and a few applications can even change node shapes or colors according to a single expression dataset. However, not only the amount of available microarray datasets is growing rapidly, but also the number of available platforms. Thus, today we have datasets that not only consist of mRNA data, but also DNA methylation, miRNA, protein or even more different levels. Analysis and especially visualization methods for such cross-platform datasets are very rare.
+
+Here, we present a pathway-based cross-platform microarray visualization method that is perfectly suitable, e.g., as visualization method after pathway enrichment analyses. Especially the visualization of DNA methylation and miRNA datasets is a feature that can not be found in other visualization approaches. By integratively visualizing all datatypes, it helps researchers to discover potential relationships across multiple layers. For example, a miRNA can be upregulated and the corresponding mRNA target downregulated, whereupon a connected pathway protein could also be downregulated in protein expression. This effect, which involves information about pathway relations and miRNA targets, as well as miRNA, mRNA and protein expression, would be directly visible from the here presented visualization method.
+
+
+
+% TODO: - Zusammenfassung, vor allem Einzigartigkeit der Methode (insb. miRNA, (DNAm)) herausstellen,
+% - und kurze interpretation eines finalen bildes liefern ("man sieht in einem bild pathway informationen, miRNA relationen, expressionsdaten von miRNA, mRNA, bla; und sonst ist meist nach dem enrichment schluss bzw mRNA einfarbung bereits das maximum moegliche").
 
 
 
