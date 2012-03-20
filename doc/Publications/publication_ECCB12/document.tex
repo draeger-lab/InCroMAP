@@ -44,9 +44,9 @@ ranging from mRNA or miRNA transcripts, through proteins or protein modification
 functional elements such as exons, SNPs or promoters (TODO: Refs). In addition to arrays serving for
 the quantification of global gene expression on the RNA or protein level, also epigenetic
 modifications such as DNA methylation (DNAm) can be monitored on a genome-wide level using
-microarray technology \citep{Hoheisel2006}.  
+microarray technology \citep{Hoheisel2006}.
 
-% Motivation für die Entwicklung des Tools 
+% Motivation für die Entwicklung des Tools
 Several tools exist for the visual inspection of datasets from individual platforms
 (Refs.). However, the current inventory of publicly available tools, which are capable of
 integrating and jointly visualizing data from multiple microarray platforms, is still very limited.
@@ -54,11 +54,11 @@ Here, we introduce a method, for integrated pathway-centered visualization of da
 from the same biological samples using different microarray platforms, which interrogate
 complementary genomic and epigenomic features.
 
-% Pathway-basierte Visualisierung vs. Regions-basierte Visualisierung 
+% Pathway-basierte Visualisierung vs. Regions-basierte Visualisierung
 In contrast to commonly used region-based visualization methods (e.g., \citep[see][]{UCSCBrowser},
 TODO: weitere Beispiele und Zitate), we propose to visualize the microarray data in the context of
 specific signaling or metabolic pathways, which can in many cases be more easily related to the
-biological problem under study than individual genes or genomic regions.  
+biological problem under study than individual genes or genomic regions.
 
 
 % TODO: das h�chste der gef�hle sind methoden um 2 farben in 1 knoten, aber keiner kann DNA
@@ -71,7 +71,7 @@ biological problem under study than individual genes or genomic regions.
 % auch Kohlbacher-Nils Paper, S. Symons paper .Gibt es ueberhaupt ein Tool, welches alle 4
 % Datentypen (miRNA, etc) visualisieren kann?
 
-% TODO: InCroMAP vs. publizierte Pathway-basierte Visualisierungstools 
+% TODO: InCroMAP vs. publizierte Pathway-basierte Visualisierungstools
 There are other tools, specialized in pathway analysis (e.g., Ingenuity, ), or in pathway
 visualization (Cytoscape, KEGG Atlas). Some even offer visualizing data in a pathway (GenMAPP, KEGG
 Array, Symons programm). No method today for high-dimensional, heterogeneous cross-platform
@@ -95,11 +95,22 @@ pathway alterations. In contrast to previous work (TODO: Refs zu Cytoscape, Expl
 offers convenient functions to overlay a pathway plot with sample-matched microarray data from
 platforms measuring gene regulation on mRNA, miRNA, DNAm and protein level.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CELL CYCLE PICTURE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[tb]
+\centering
+\includegraphics[width=.5\textwidth]{figures/mmu04110.png}
+\caption{
+TODO: Bild zeigt Cell Cycle pathway}\label{fig:cellcycle}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%\begin{methods} 
-\section{Methods} 
+%\begin{methods}
+\section{Methods}
 
-% Import von Microarray-Daten in InCroMAP 
+% Import von Microarray-Daten in InCroMAP
 Before use with InCroMAP the microarray datasets of interest have to be preprocessed and annotated
 using platform-specific workflows (Refs zu Ringo, MEDME, AgiMicroRna, Limma, Annotate). These
 workflows usually involve (1) the quality control of the raw data (TODO: cite arrayQualityMetrics,
@@ -111,23 +122,23 @@ columns: (1) annotation columns, containing probe or probeset IDs (e.g., Affymet
 database IDs of the corresponding genes (e.g., Ensembl or Entrez IDs), and (2) data columns
 containing either fold-changes and/or p-values resulting from basic statistical analysis of the
 microarray data. For convenience, these tables can be imported into InCroMAP per drag-and-drop, and
-the tool tries to auto-detect the platform type.  
+the tool tries to auto-detect the platform type.
 
-% Import von Pathways in InCroMAP 
+% Import von Pathways in InCroMAP
 The pathway data is automatically imported from KEGG. In the KEGG PATHWAY database each pathway map
 is available for download as a KGML document which is internally converted into a GraphML document
 by InCroMAP. These GraphML files can be interactively visualized by InCroMAP using the yWorks graph
 viewer (TODO: Ref.). In order to overcome limitations of the KGML format, one can create an overlay
 graph that shows the original KEGG pathway image in the background, which may provide the user with
-additional information about cellular structure and compartmentalization.  
+additional information about cellular structure and compartmentalization.
 
-% Visualisierung von Microarray-Daten im Kontext von Pathways 
+% Visualisierung von Microarray-Daten im Kontext von Pathways
 The nodes are then overlaid with microarray data such to reflect mRNA expression, protein expression
 and DNA methylation changes. As a last step, nodes are being added for miRNAs and miRNA expression
 data is visualized in the pathway. See Figure~\ref{fig:visualization_steps} for a graphical
 description of all those visualization steps.
 
-\subsection{Pathway visualization} 
+\subsection{Pathway visualization}
 
 The basic prerequisite for pathway-based visualization is visualizing the pathway itself. We are
 using KEGGtranslator \citep[see][]{Wrzodek2011} to perform a basic conversion of the KEGG KGML
@@ -140,11 +151,11 @@ pathways as rectangular nodes with rounded corners, small molecules as circles, 
 products (e.g., enzymes) as well as gene families as rectangles. This means that one rectangular
 node can consist of multiple different enzymes, depending on the KEGG definition.
 
-# TODO: Auch Schritt von figure a) zu b) erwaehnen. Manche Informationen manchmal nur in grafischen
-# abbildungen enthalten, deshalb original KEGG bild als hintergrund nehmen und den eigentlichen
-# graphen als overlay schicht darueber anzeigen. Auf figure 1 a), b) fuer beispiel verweisen.
+% TODO: Auch Schritt von figure a) zu b) erwaehnen. Manche Informationen manchmal nur in grafischen
+% abbildungen enthalten, deshalb original KEGG bild als hintergrund nehmen und den eigentlichen
+% graphen als overlay schicht darueber anzeigen. Auf figure 1 a), b) fuer beispiel verweisen.
 
-\subsection{Visualization of messenger RNA expression data} 
+\subsection{Visualization of messenger RNA expression data}
 
 Visualization of mRNA datasets is straightforward by somehow gene-centering the input data and then
 changing the node color according to this value. As input, this method requires processed mRNA
@@ -213,7 +224,7 @@ also mRNA data is visualized) the expression of the targeted
 mRNA. Figure~\ref{fig:visualization_steps}f) shows an example result of the described procedure.
 
 
-\subsection{OFFENE FRAGEN} 
+\subsection{OFFENE FRAGEN}
 
 Sollten wir hier einfaerbung nach enrichment p-values bzw. den "metabolic
 pathways"-pathway erwaehnen? Oder lieber fuer spaetere publikationen "aufspaaren"?
@@ -224,36 +235,37 @@ pathways"-pathway erwaehnen? Oder lieber fuer spaetere publikationen "aufspaaren
 
 \section{Results and discussion}
 
-# TODO: Gesamtkonzept und Ergebnisse / Bilder vorstellen
-# hier erw�hnen, dass methoden in InCroMAP drin sind? oder lieber in conslutions?
+% TODO: Gesamtkonzept und Ergebnisse / Bilder vorstellen
+% hier erw�hnen, dass methoden in InCroMAP drin sind? oder lieber in conclutions?
 
-\begin{figure*}[t] \centering \includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
-\caption{ TODO: Bild zeigt AUSSCHNITT des MAPK signaling pathway. Alle Schritte von a) bis f) kurz
-erlauetern und kurz sagen, dass f) quasi dem finalen Bild dieser Methode
-entspricht. }\label{fig:visualization_steps} \end{figure*}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
+\caption{
+TODO: Bild zeigt AUSSCHNITT des MAPK signaling pathway. Alle Schritte von a) bis f) kurz erlauetern und kurz sagen, dass f) quasi dem finalen Bild dieser Methode entspricht. }\label{fig:visualization_steps}
+\end{figure*}
 
 
-# TODO: - Sollen wie noch "Table 1" aus MARCAR D4.1 reinnehmen (tabellarische erklaerung der
-# visualisierung aller 4 datentypen mit beispielen), und/oder - Ein schoenes Gesamtbild e.g. von cell
-# cycle oder wnt signaling oder sowas [ - den metabolic pathway overview mit eingefarbten knoten] Dies
-# nur wenn diese Methode auch noch bestandteil dieses papers wird (muesste noch bei methoden
-# usw. aufgenommen und erklaert werden).
+%TODO:
+% - Sollen wie noch "Table 1" aus MARCAR D4.1 reinnehmen (tabellarische erklaerung der visualisierung aller 4 datentypen mit beispielen), und/oder
+% - Ein schoenes Gesamtbild e.g. von cell cycle oder wnt signaling oder sowas
+%[ - den metabolic pathway overview mit eingefarbten knoten] Dies nur wenn diese Methode auch noch bestandteil dieses papers wird (muesste noch bei methoden usw. aufgenommen und erklaert werden).
 
 
 \section{Conclusion}
 
-# TODO: Zusammenfassung, vor allem Einzigartigkeit der Methode (insb. miRNA, (DNAm)) herausstellen,
-# und kurze interpretation eines finalen bildes liefern ("man sieht in einem bild pathway
-# informationen, miRNA relationen, expressionsdaten von miRNA, mRNA, bla; und sonst ist meist nach dem
-# enrichment schluss bzw mRNA einfarbung bereits das maximum moegliche").
+% TODO: Zusammenfassung, vor allem Einzigartigkeit der Methode (insb. miRNA, (DNAm)) herausstellen,
+% und kurze interpretation eines finalen bildes liefern ("man sieht in einem bild pathway
+% informationen, miRNA relationen, expressionsdaten von miRNA, mRNA, bla; und sonst ist meist nach dem
+% enrichment schluss bzw mRNA einfarbung bereits das maximum moegliche").
 
 
 
-\section*{Acknowledgement} 
+\section*{Acknowledgement}
 We gratefully acknowledge contributions from Andreas Dr\"ager and Finja B\"uchel, as well as the
 whole MACRCAR consortium.
 
-\paragraph{Funding\textcolon} 
+\paragraph{Funding\textcolon}
 The research leading to these results has received funding from the Innovative Medicine Initiative
 Joint Undertaking (IMI JU) under grant agreement nr. 115001 (MARCAR project).
 
