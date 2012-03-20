@@ -31,17 +31,15 @@ Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Tex
 
 \section{Introduction}
 
-During the first years after the invention of microarrays, researchers focused their experiments largely on messenger RNA (mRNA) expression data. Therefore, many analysis and visualization methods have been developed especially for mRNA datasets. Until today, multiple different microarray platforms have been developed. These different platforms include, for example, microarrays to measure the expression of micro RNAs (miRNAs), proteins, or even the amount of DNA methylation in defined genomic regions \citep{Hoheisel2006}. For all of those platforms, preprocessing, analysis and visualization methods also became available. But, until today, methods that can integratively visualize multiple microarray datasets, coming from multiple different platforms are very rare.
+The first generation of microarray platforms was developed as a high-throughput technique for profiling the transcriptome of diverse biological systems (i.e., cells, organs or organisms) under various experimental conditions (TODO: Refs. Golub, etc.). As these traditional gene-centered arrays were mostly limited to mRNA transcripts, the vast majority of visualization tools are still focused on mRNA datasets (Refs.). To date, a plethora of different microarray platforms are readily available. These include gene-centered platforms which rely on current genome annotations as well as unbiased tiling arrays which interrogate large non-repetitive regions of the genome. Diverse types of platforms have been specificly designed for the interrogation of different genomic features, ranging from mRNA or miRNA transcripts, through  proteins or protein modifications, to relevant functional elements such as exons, SNPs or promoters (TODO: Refs). In addition to arrays serving for the quantification of global gene expression on the RNA or protein level, also epigenetic modifications such as DNA methylation (DNAm) can be monitored on a genome-wide level using microarray technology \citep{Hoheisel2006}.
+% Motivation fÃ¼r die Entwicklung des Tools
+Several tools exist for the visual inspection of datasets from individual platforms (Refs.). However, the current inventory of publicly available tools, which are capable of integrating and jointly visualizing data from multiple microarray platforms, is still very limited.
+Here, we introduce a method, for integrated pathway-centered visualization of datasets generated from the same biological samples using different microarray platforms, which interrogate complementary genomic and epigenomic features. 
+% Warum ist PW-basierte visualisierung, grade fï¿½r mehrere Datentypen, besser als UCSC genome browser oder anderes.
+In contrast to commonly used region-based visualization methods (e.g., \citep[see][]{UCSCBrowser}, TODO: weitere Beispiele und Zitate), we propose to visualize the microarray data in the context of specific signaling or metabolic pathways, which can in many cases be more easily related to the biological problem under study than individual genes or genomic regions.  
+% Integrated oder single platform enrichment zur Identifikation der relevanten Pathways
+The pathways which are relevant for the conducted experiment can be deduced from the differentially expressed genes using pathway enrichment analysis. For this purpose, candidate pathways which are putatively involved in the studied biological phenomenon are typically ranked according to p-values resulting from a hypergeometric test for overrepresentation. The results are usually presented to the user as a sorted table or barplot which does not show any superordinate relations of the pathways detected as enriched with differentially expressed genes. In addition to this traditional approach, we also implemented an alternative method, which provides the user with a more structured view of the metabolic pathways linked to a certain microarray experiment. Owing to the hierarchical structure of the KEGG PATHWAY database, InCroMAP can visualize the enrichments computed for each individual metabolic pathway in the context of the higher-order overall metabolic pathway map compiled by KEGG (http://www.genome.jp/kegg/pathway/map/map01100.html). Starting from either a ranked pathway table or a colored meta-pathway map, individual pathways can be visualized in InCroMAP and overlaid with microarray data from multiple platforms, to facilitate thorough visual inspection of the measured pathway alterations. In contrast to previous work (TODO: Refs zu Cytoscape, Explain, etc.), InCroMAP offers convenient functions to overlay a pathway plot with sample-matched microarray data from platforms measuring gene regulation on mRNA, miRNA, DNAm and protein level.
 
-We introduce a method, for integrated pathway-based visualization of multiple different microarray datasets. 
-
-% Warum ist PW-basierte visualisierung, grade für mehrere Datentypen, besser als UCSC genome browser oder anderes.
-
-Microarrays are probe-based and these probes are mostly not spread randomly across the genome. Probes are usually picked for interesting genes or regions, which includes genes, that are important for certain pathways. Region-based visualization methods, like the USCS Genome Browser \citep[see][]{UCSCBrowser}, may be suitable for visualization if researchers already know some regions of interest. But in general, they are not good visualization methods for probe-based datasets.
-
-To get a starting point for microarray analysis and because microarrays usually contain probes for most important pathways, the popular pathway enrichment analysis is very often performed on microarray datasets. And this is already the ending point of most pathway analysis methods. Some applications offer users to show the pathway enrichments as bar plots, but visualizing the pathways and plotting the microarray data directly in the pathway are rare features. For these reasons, we show how to integratively visualize data from multiple different microarray datasets in a pathway.
-
-% TODO: Erwähnen dass mRNA knoten einfärbung ein "alter hut ist", aber das besodere bei den anderen 3 datentypen ist.
 
 
 We present a novel method that includes visualizing pathways and changing the pathway to reflect expression data from mRNA, miRNA, DNA methylation and (phospho-) protein datasets.
@@ -51,9 +49,9 @@ We present a novel method that includes visualizing pathways and changing the pa
 
 There are other tools, specialized in pathway analysis (e.g., Ingenuity, ), or in pathway visualization (Cytoscape, KEGG Atlas). Some even offer visualizing data in a pathway (GenMAPP, KEGG Array, Symony programm). 
 
-TODO: das höchste der gefühle sind methoden um 2 farben in 1 knoten, aber keiner kann DNA methylation oder sogar miRNA knoten rein.
+TODO: das hï¿½chste der gefï¿½hle sind methoden um 2 farben in 1 knoten, aber keiner kann DNA methylation oder sogar miRNA knoten rein.
 
-TODO Johannes: Kannst du 1-2 Sätze jeweils zu Cytoscape, Ingenuity, eventuell noch Cytoscape + Plugins schreiben?
+TODO Johannes: Kannst du 1-2 Sï¿½tze jeweils zu Cytoscape, Ingenuity, eventuell noch Cytoscape + Plugins schreiben?
 
 
 Related Work. Abgrenzung zu GenMAPP und Ingenuity, Cytoscape, KEGG Atlas, KEGG Array; Siehe auch Kohlbacher-Nils Paper, S. Symons paper (niselt).
@@ -78,10 +76,10 @@ The basic prerequisite for pathway-based visualization is visualizing the pathwa
 Visualization of mRNA datasets is straightforward by somehow gene-centering the input data and then changing the node color according to this value. As input, this method requires processed mRNA datasets with gene identifiers and ``observations". In this context, ``observations" can be any statistical significance or comparative measure (we used \emph{p}-values or fold-changes). Then, for each node in the pathway, one value must be calculated. Therefore, all probes that belong to a node are gathered from the input dataset and then the mean or median is calculated. Another possibility is to take the most important probe (i.e., $\min\emph{p}-value$ or $\max|fold-change|$) to get a single value for each pathway node.
 This value is then used to calculate a color for the node. For fold-changes (which are usually $log_2$ values), we color every node with a fold-change $\geq2$ red and all fold-changes $\leq-2$ blue. Fold-changes of zero are defined to have a white color and colors between $\pm2$ are faded from blue or red to white, depending on the actual fold-change. The same procedure can be used for \emph{p}-values, except that just one minimum threshold and one minimum color must be defined. Furthermore, the color for \emph{p}-values should not be changed on a linear, but on a log-scale. See Figure~\ref{fig:visualization_steps}c) for an example of visualized mRNA data.
 
-
 \subsection{Visualization of protein and protein modification expression data}
 
 Visualization of protein datasets is performed by adding small boxes below pathway nodes and changing the color of the boxes according to the corresponding protein expression data. Protein datasets usually have identifiers, like Entrez Gene IDs, UniProt IDs, etc. which allows to make a straightforward mapping to pathway nodes. Then, all values must be collected and a color must be calculated for each node in the same way as already described for mRNA datasets.
+
 
 Protein modification datasets must be treated differently. They usually not only contain one expression values for the basic form of the protein, but also for some phosphorylated or likewise modified form. Therefore, separate boxes are created below each pathway node for all modifications. These boxes are labeled according to the modification. Furthermore, the color for each box must only be calculated on probes that match the pathway node and the modification of each box.
 
@@ -90,7 +88,7 @@ Protein modification datasets must be treated differently. They usually not only
 
 Ein Wert nur als Hinweis, hier geht etwas [click gibt details?]. fold-change wird zu box von -2 bis +2, p-value im grunde ein bar-blot von 1 bis 0.00005 oder so...
 
-Einzelner Wert mit binning und $\frac{\sum\limits_{i=1}^n\log_2 x}{n}$, für fold-changes oder so peak detection möglich und max. peak anzeigen.
+Einzelner Wert mit binning und $\frac{\sum\limits_{i=1}^n\log_2 x}{n}$, fï¿½r fold-changes oder so peak detection mï¿½glich und max. peak anzeigen.
 
 \textbf{Johannes.}
 
@@ -98,9 +96,9 @@ Einzelner Wert mit binning und $\frac{\sum\limits_{i=1}^n\log_2 x}{n}$, für fold
 \subsection{Visualization of micro RNA expression data}
 erst auf Targets eingehen.
 
-Dann wie targets in graph gefügt werden
+Dann wie targets in graph gefï¿½gt werden
 
-Dann wie knoten eingefärbt werden.
+Dann wie knoten eingefï¿½rbt werden.
 
 
 \subsection{OFFENE FRAGEN}
@@ -114,7 +112,7 @@ Sollten wir hier einfaerbung nach enrichment p-values bzw. den "metabolic pathwa
 
 Gesamtkonzept und Ergebnisse / Bilder vorstellen
 
-hier erwähnen, dass methoden in InCroMAP drin sind? oder lieber in conslutions?
+hier erwï¿½hnen, dass methoden in InCroMAP drin sind? oder lieber in conslutions?
 
 
 
@@ -123,7 +121,7 @@ hier erwähnen, dass methoden in InCroMAP drin sind? oder lieber in conslutions?
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=1.0\textwidth]{figures/visualization-steps.PNG}
+\includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
 \caption{MAPK signaling pathway.}\label{fig:visualization_steps}
 \end{figure*}
 
