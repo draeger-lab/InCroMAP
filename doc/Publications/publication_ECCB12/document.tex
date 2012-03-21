@@ -1,4 +1,7 @@
 \documentclass{bioinfo}
+
+\usepackage[rightcaption]{sidecap} % Allows captions besides figures
+
 \copyrightyear{2012}
 \pubyear{2012}
 
@@ -34,31 +37,25 @@ Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Tex
 
 The first generation of microarray platforms was developed as a high-throughput technique for
 profiling the transcriptome of diverse biological systems (i.e., cells, organs or organisms) under
-various experimental conditions (TODO: Refs. Golub, etc.). As these traditional gene-centered arrays
+various experimental conditions \citep{Golub1999, Schena1995}. As these traditional gene-centered arrays
 were mostly limited to mRNA transcripts, the vast majority of visualization tools are still focused
-on mRNA datasets (Refs.). To date, a plethora of different microarray platforms are readily
-available. These include gene-centered platforms which rely on current genome annotations as well as
+on mRNA datasets (e.g., Expression Profiler -- \citealp{Kapushesky2004} or KegArray -- \citealp{KEGG}). To date, a plethora of different microarray platforms are readily available. These include gene-centered platforms which rely on current genome annotations as well as
 unbiased tiling arrays which interrogate large non-repetitive regions of the genome. Diverse types
-of platforms have been specificly designed for the interrogation of different genomic features,
+of platforms have been specifically designed for the interrogation of different genomic features,
 ranging from mRNA or miRNA transcripts, through proteins or protein modifications, to relevant
-functional elements such as exons, SNPs or promoters (TODO: Refs). In addition to arrays serving for
+functional elements such as exons, SNPs or promoters \citep{Hoheisel2006}. In addition to arrays serving for
 the quantification of global gene expression on the RNA or protein level, also epigenetic
 modifications such as DNA methylation (DNAm) can be monitored on a genome-wide level using
-microarray technology \citep{Hoheisel2006}.
+microarray technology \citep{Schumacher2006}.
+% Hoheisel2006 ist review f�r versch. MA technologien. DNAm, miRNA und protein ist drin!
 
-% Motivation für die Entwicklung des Tools
+% Motivation fuer die Entwicklung des Tools
 Several tools exist for the visual inspection of datasets from individual platforms
-(Refs.). However, the current inventory of publicly available tools, which are capable of
+\citep[see][for some examples]{Gehlenborg2010}. However, the current inventory of publicly available tools, which are capable of
 integrating and jointly visualizing data from multiple microarray platforms, is still very limited.
-Here, we introduce a method, for integrated pathway-centered visualization of datasets generated
-from the same biological samples using different microarray platforms, which interrogate
+Here, we introduce a method for integrated pathway-centered visualization of datasets, generated
+from the same biological samples using different microarray platforms, which sample
 complementary genomic and epigenomic features.
-
-% Pathway-basierte Visualisierung vs. Regions-basierte Visualisierung
-In contrast to commonly used region-based visualization methods (e.g., \citep[see][]{UCSCBrowser},
-TODO: weitere Beispiele und Zitate), we propose to visualize the microarray data in the context of
-specific signaling or metabolic pathways, which can in many cases be more easily related to the
-biological problem under study than individual genes or genomic regions.
 
 % TODO: das h�chste der gef�hle sind methoden um 2 farben in 1 knoten, aber keiner kann DNA
 % methylation oder sogar miRNA knoten rein.
@@ -70,70 +67,81 @@ biological problem under study than individual genes or genomic regions.
 % auch Kohlbacher-Nils Paper, S. Symons paper .Gibt es ueberhaupt ein Tool, welches alle 4
 % Datentypen (miRNA, etc) visualisieren kann?
 
+
+% Pathway-basierte Visualisierung vs. Regions-basierte Visualisierung
+In contrast to commonly used region-based visualization methods (e.g., the UCSC genome browser -- \citealp{UCSCBrowser}), we propose to visualize the microarray data in the context of
+specific signaling or metabolic pathways, which can in many cases be more easily related to the
+biological problem under study, than individual genes or genomic regions.
+%
 % InCroMAP vs. publizierte Pathway-basierte Visualisierungstools
-There are other tools, specialized in pathway analysis (e.g., Ingenuity, ), or in pathway
-visualization (Cytoscape, KEGG Atlas). Some even offer visualizing data in a pathway (GenMAPP, KEGG
-Array, Symons programm). No method today for high-dimensional, heterogeneous cross-platform
-datasets.
+There are other tools, specialized in pathway analysis (e.g., Ingenuity), or in pathway visualization (e.g., Cytoscape -- \citealp{Cytoscape} or KEGG Atlas -- \citealp{KEGGAtlas}). Some even offer visualizing data in a pathway (e.g., KegArray -- \citealp{KEGG}, GenMAPP -- \citealp{GenMAPP} or MGV -- \citealp{Symons2011}). Most of those visualization tools offer simply changing the color of nodes. GenMAPP or MGV even habe capabilities to put multiple colors in a single node (e.g., for visualization of time-series experiments). MGV goes a step further and offers additional features to change the shape of nodes by putting XY plots or heatmaps inside nodes. But these tools are not able to handle data that have no direct reference to genes in a pathway (like microRNAs), and none offers solutions that are tailored for high-dimensional heterogeneous cross-platform datasets.
+
+
+%But there is no method today that is tailored for high-dimensional heterogeneous cross-platform datasets.
 % TODO: Absatz vervollständigen
 
-% Integrated oder single platform enrichment zur Identifikation der relevanten Pathways The pathways
-which are relevant for the conducted experiment can be deduced from the differentially expressed
-genes using pathway enrichment analysis. For this purpose, candidate pathways which are putatively
-involved in the studied biological phenomenon are typically ranked according to p-values resulting
-from a hypergeometric test for overrepresentation. The results are usually presented to the user as
-a sorted table or barplot which does not show any superordinate relations of the pathways detected
-as enriched with differentially expressed genes. In addition to this traditional approach, we also
-implemented an alternative method, which provides the user with a more structured view of the
-metabolic pathways linked to a certain microarray experiment. Owing to the hierarchical structure of
-the KEGG PATHWAY database, InCroMAP can visualize the enrichments computed for each individual
-metabolic pathway in the context of the higher-order overall metabolic pathway map compiled by KEGG
-(http://www.genome.jp/kegg/pathway/map/map01100.html). Starting from either a ranked pathway table
-or a colored meta-pathway map, individual pathways can be visualized in InCroMAP and overlaid with
-microarray data from multiple platforms, to facilitate thorough visual inspection of the measured
-pathway alterations. In contrast to previous work (TODO: Refs zu Cytoscape, Explain, etc.), InCroMAP
-offers convenient functions to overlay a pathway plot with sample-matched microarray data from
-platforms measuring gene regulation on mRNA, miRNA, DNAm and protein level.
+% Integrated oder single platform enrichment zur Identifikation der relevanten Pathways
+% Ich denke, der kommende Abschnitt ist eher fuer App-Note oder Anwendungspaper...
+
+%The pathways, which are relevant for the conducted experiment, can be deduced from the differentially expressed
+%genes using pathway enrichment analysis. For this purpose, candidate pathways which are putatively
+%involved in the studied biological phenomenon are typically ranked according to \emph{p}-values resulting
+%from a hypergeometric test for overrepresentation. The results are usually presented to the user as
+%a sorted table or barplot which does not show any superordinate relations of the pathways detected
+%as enriched with differentially expressed genes. In addition to this traditional approach, we also
+%implemented an alternative method, which provides the user with a more structured view of the
+%metabolic pathways linked to a certain microarray experiment. Owing to the hierarchical structure of
+%the KEGG PATHWAY database, InCroMAP can visualize the enrichments computed for each individual
+%metabolic pathway in the context of the higher-order overall metabolic pathway map compiled by KEGG
+%(http://www.genome.jp/kegg/pathway/map/map01100.html). Starting from either a ranked pathway table
+%or a colored meta-pathway map, individual pathways can be visualized in InCroMAP and overlaid with
+%microarray data from multiple platforms, to facilitate thorough visual inspection of the measured
+%pathway alterations. In contrast to previous work (TODO: Refs zu Cytoscape, Explain, etc.), InCroMAP
+%offers convenient functions to overlay a pathway plot with sample-matched microarray data from
+%platforms measuring gene regulation on mRNA, miRNA, DNAm and protein level.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CELL CYCLE PICTURE
+% MAPK different steps to visualization PICTURE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure}[tb]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=.5\textwidth]{figures/mmu04110.png}
+\includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
 \caption{
-TODO: Bild zeigt Cell Cycle pathway}\label{fig:cellcycle}
-\end{figure}
+These pictures show an excerpt of the KEGG MAPK signaling pathway. It is demonstrated how the pathway and each of the four supported platforms is visualized in the pathway. Picture a) shows the visualized KGML document as nodes and edges. b) demonstrates that the overall quality of KEGG pathway visualizations can be improved by underlaying the original KEGG pathway picture. c) presents the excerpt with visualized mRNA data, whereas red means upregulation, blue downregulation and lighter colors represent smaller fold-changes. d) shoes how protein modification datasets are visualized in the pathway. Each of the boxes below "Egfr" represent different modifications of this protein and the color of the box reflects the corresponding fold-change. e) illustrates DNA methylation peaks in promoter regions. A bar from the middle of the black box to the left represents hypomethylation and hypermethylation is expressed by a bar to the right. The size of the bar determines the size of the maximum DNA methylation peak. f) demonstrates the visualization of microRNA data by adding small triangles, representing microRNAs, and connecting them with grey edges to their mRNA targets. The color of the microRNA nodes determines the corresponding fold-change.
+}
+\label{fig:visualization_steps}
+\end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %\begin{methods}
 \section{Methods}
 
 % Import von Microarray-Daten in InCroMAP
-Before use with InCroMAP the microarray datasets of interest have to be preprocessed and annotated
-using platform-specific workflows (Refs zu Ringo, MEDME, AgiMicroRna, Limma, Annotate). These
-workflows usually involve (1) the quality control of the raw data (TODO: cite arrayQualityMetrics,
-simpleaffy, etc.), (2) the data normalization to correct for background noise and experimental
-variation (TODO: cite RMA and GCRMA paper or review paper about normalization), and (3) the mapping
+% (Refs zu Ringo, MEDME, AgiMicroRna, Limma, Annotate)
+Before visualization, the microarray datasets of interest have to be preprocessed and annotated
+using platform-specific workflows \citep{Limma, AgiMicroRna}. These
+workflows usually involve (1) the quality control of the raw data \citep{arrayQualityMetrics}, (2) the data normalization to correct for background noise and experimental
+variation \citep{Lim2007}, and (3) the mapping
 of the probes to genes or genomic regions. After these preprocessing steps the microarray data has
-to be exported in tabular format (e.g., CSV or Excel). These tables have to contain two types of
+to be exported in tabular format. These tables have to contain two types of
 columns: (1) annotation columns, containing probe or probeset IDs (e.g., Affymetrix IDs) and
 database IDs of the corresponding genes (e.g., Ensembl or Entrez IDs), and (2) data columns
-containing either fold-changes and/or p-values resulting from basic statistical analysis of the 
+containing either fold-changes and/or \emph{p}-values resulting from basic statistical analysis of the
 microarray data.
 
 % JE: Habe das mal rausgenommen, da es zu InCroMAP-spezifisch ist oder ?
-% For convenience, these tables can be imported into InCroMAP per drag-and-drop, and the 
-% tool tries to auto-detect the platform type.  
+% For convenience, these tables can be imported into InCroMAP per drag-and-drop, and the
+% tool tries to auto-detect the platform type.
 
-% Import von Pathways in InCroMAP 
+% Import von Pathways in InCroMAP
 The pathway data is automatically imported from KEGG. In the KEGG PATHWAY database each pathway map
 is available for download as a KGML document which is internally converted into a GraphML document
 by InCroMAP. These GraphML files can be interactively visualized by InCroMAP using the yWorks graph
 viewer (TODO: Ref.). In order to overcome limitations of the KGML format, one can create an overlay
 graph that shows the original KEGG pathway image in the background, which may provide the user with
 additional information about cellular structure and compartmentalization.
+% TODO Clemens: Umformulieren mit GraphML format? yWorks raus? usw.
 
 % Visualisierung von Microarray-Daten im Kontext von Pathways
 After uploading the data, the KEGG pathway nodes, which correspond to genes or gene families, can be
@@ -154,24 +162,24 @@ colors and labels are inferred. Then, all nodes are annotated with diverse ident
 descriptions, and further information. The resulting document provides the basis for the
 subsequently generated visualizations.
 
-% JE: Die Bedeutung von den KEGG-Knoten (einzelne Gene oder Genfamilien) habe ich weiter oben eingebaut. 
+% JE: Die Bedeutung von den KEGG-Knoten (einzelne Gene oder Genfamilien) habe ich weiter oben eingebaut.
 % Ich würde daher den folgenden Absatz streichen um den Leser nicht zu ausführlich mit Details vollzulabern ;-)
-% 
+%
 % At this point, it is important to note that KEGG usually draws referenced
 % pathways as rectangular nodes with rounded corners, small molecules as circles, and single gene
 % products (e.g., enzymes) as well as gene families as rectangles. This means that one rectangular
 % node can consist of multiple different enzymes, depending on the KEGG definition.
 
 % Vorteile des Pathway-Bilds im Hintergrund
-At least for some pathways the KGML document available at KEGG does not contain all information 
-displayed in the corresponding pathway map. Thus, an overlay graph can be generated which contains the 
-original pathway map as a static transparent image in the background of the interactive graph plot 
-(see Figure~\ref{fig:visualization_steps}b). Owing to this feature, additional information on 
-cellular structure (e.g., schematic drawings of receptors involved in cell signaling) can be maintained. 
+At least for some pathways the KGML document available at KEGG does not contain all information
+displayed in the corresponding pathway map. Thus, an overlay graph can be generated which contains the
+original pathway map as a static transparent image in the background of the interactive graph plot
+(see Figure~\ref{fig:visualization_steps}b). Owing to this feature, additional information on
+cellular structure (e.g., schematic drawings of receptors involved in cell signaling) can be maintained.
 This feature also enhances the visualization of the global maps in KEGG PATHWAY, as additional
 information on the organisation of subordinate pathway groups is provided by the pathway image.
 
-\subsection{Visualization of messenger-RNA expression data} 
+\subsection{Visualization of messenger-RNA expression data}
 
 % Darstellung von mRNA-Daten
 As mRNA expression data is typically available for the whole genome, and thus also for the majority
@@ -201,25 +209,25 @@ to map the negative logarithmized \emph{p}-values to a color gradient, which lea
 intuitive illustration of the observed significances.  See Figure~\ref{fig:visualization_steps}c)
 for an example of visualized mRNA data.
 
-% JE: Würde den Absatz streichen, da er zu viele technische Details enthält  
+% JE: Würde den Absatz streichen, da er zu viele technische Details enthält
 % For fold-changes (which are usually $log_2$ values), we color every node with a fold-change $\geq2$ red
 % and all fold-changes $\leq-2$ blue. Fold-changes of zero are defined to have a white color and
 % colors between $\pm2$ are faded from blue or red to white, depending on the actual fold-change. The
 % same procedure can be used for \emph{p}-values, except that just one minimum threshold and one
 % minimum color must be defined. Furthermore, the color for \emph{p}-values should not be changed on a
-% linear, but on a log-scale. 
+% linear, but on a log-scale.
 
 \subsection{Visualization of protein expression data}
 
 % Darstellung von Protein-Daten
 Visualization of protein datasets is performed by adding small boxes below pathway nodes and
-changing the color of the boxes according to the corresponding protein expression data. As state-of-the-art 
-experimental techniques (e.g., reverse-phase protein arrays, quantitative mass spectrometry) 
-facilitate the distinction between different protein modifications (e.g., phosphorylated or 
-acetylated forms of proteins) (TODO: Refs), multiple measurements may correspond to the same gene. 
-In this particular case, the expression change observed for each individual protein form is represented 
-as a separate box below the corresponding node. Each of these boxes is then labeled according to the 
-respective protein form and colored based on the underlying expression data, as described previously 
+changing the color of the boxes according to the corresponding protein expression data. As state-of-the-art
+experimental techniques (e.g., reverse-phase protein arrays, quantitative mass spectrometry)
+facilitate the distinction between different protein modifications (e.g., phosphorylated or
+acetylated forms of proteins) (TODO: Refs), multiple measurements may correspond to the same gene.
+In this particular case, the expression change observed for each individual protein form is represented
+as a separate box below the corresponding node. Each of these boxes is then labeled according to the
+respective protein form and colored based on the underlying expression data, as described previously
 for mRNA datasets.
 
 % Eingabeformat für Protein-Daten
@@ -227,9 +235,24 @@ We require protein datasets to be annotated with database identifiers referring 
 UniProt IDs) or genes (e.g. EntrezGene IDs), which allows us to perform a straightforward mapping to
 pathway nodes.
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CELL CYCLE PICTURE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{SCfigure*}[1][tb]
+\centering
+\includegraphics[width=.65\textwidth]{figures/mmu04110.png}
+\caption{
+Integrated visualization of datasets from four different platforms in the KEGG Cell Cycle pathway.
+The colors reflect the fold-changes, whereas red means upregulated and blue means downregulated. White corresponds to a fold-change of zero and darker colors represent stronger differential expression. The color of each node itself reflects the mRNA fold-change, e.g., "Ttk" shows a strong upregulation and Smc3 is downregulated. Smaller boxes below nodes show the protein and protein modification expression. For example, we visualized three different forms of "Trp53": a phosphorylation at the Serine 15 (S15) site, which shows almost no expression change, a modification of the S9 site, which is upregulated and the basic protein itself, which is also upregulated.
+The black boxes left of the nodes represent the maximum DNA methylation fold-change peak. A bar to the left represents hypomethylation and a bar to the right hypermethylation. In out example, "Ttk" shows a strong hypermethylation. MicroRNAs are added as small triangles to the pathway and connected with a grey edge to their mRNA targets. The color of the microRNA nodes reflects the fold-change, as described for the mRNA nodes.}\label{fig:cellcycle}
+\end{SCfigure*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 \subsection{Visualization of DNA-methylation data}
 
-% Darstellung von DNAm-Daten 
+% Darstellung von DNAm-Daten
 The DNA-methylation (DNAm) status observed in the proximal promoter of a gene is graphically
 represented by adding boxes to the left side of the pathway nodes. These boxes are drawn in a white
 box containing a black bar which stretches from the middle to the left in the case of
@@ -259,30 +282,30 @@ In order to relate the DNAm data to data from gene-centered microarrays (e.g., m
 arrays), each probe has to be assigned to a gene. Thus, we require annotation columns containing the
 chromosome and the genomic position of each probe to facilitate the mapping from probes to genes.
 
+
 \subsection{Visualization of micro-RNA expression data}
 
 % Mapping von miRNA-Daten auf Pathways
-Visualizing micro-RNA (miRNA) datasets in the context of KEGG pathways is not straightforward, as
-these pathways do not contain miRNAs a priori. Therefore, in order to incorporate the data into a
-pathway, a connection must be established between the monitored miRNAs and the protein-coding genes
+Visualizing microRNA (miRNA) datasets in the context of KEGG pathways is not straightforward, as
+these pathways do not contain miRNAs \emph{a priori}. Therefore, in order to incorporate the data into a
+pathway, a connection must be established between the miRNAs and the protein-coding genes
 in the pathway. As the common mechanism of miRNAs involves the binding to complementary mRNA
-transcripts \citep{Bartel2004}, we propose to link miRNAs to their known target mRNAs.  These target
+transcripts \citep{Bartel2004}, we propose to link miRNAs to their known target mRNAs. These target
 mRNAs can be obtained from diverse databases, which either contain experimentally verified targets
 (e.g., miRecords \citep[see][]{miRecords}, miRTarBase \citep[see][]{miRTarBase}, TarBase
-\citep[see][]{TarBase}) or predicted miRNA targets \citep{Alexiou2009} (TODO: Beispiele hinzufügen).
+\citep[see][]{TarBase}) or predicted miRNA targets \citep[reviewed in][]{Alexiou2009} (TODO: Beispiele hinzufügen).
+We used a union of the three mentioned experimentally verified miRNA target databases for the example figures in this publication.
 
-% Eingabeformat für miRNA-Daten
-For the mapping of the miRNAs to their target mRNA transcripts, a common miRNA identifier (e.g.,
-miRBase Accession, miRBase ID) is required.
 
 % Darstellung von miRNA-Daten
-Based on a static map containing all connections between miRNAs and their target mRNAs, the miRNAs
+Based on a map containing all connections between miRNAs and their target mRNAs, the miRNAs
 monitored in a specific experiment can be added to a pathway of interest as small triangular nodes,
-which have outgoing edges to the pathway nodes corresponding to their target mRNAs.  The triangular
+which have outgoing edges to the pathway nodes corresponding to their target mRNAs. The triangular
 miRNA nodes are colored according to their expression, as described previously for mRNA datasets.
 This leads to an integrated visualization of a pathway, overlaid with miRNA and mRNA expression
 data, and extended with putative miRNA-mRNA interactions. Figure~\ref{fig:visualization_steps}f)
 shows an example result of the described procedure.
+
 
 %\end{methods}
 
@@ -296,19 +319,19 @@ can be somehow visualized by changing node colors or other aspects of pathway no
 not very hard to visualize mRNA datasets. But visualization of phosphoprotein, microRNA or DNA
 methylation datasets is not easy, because each datatype has its own characteristics.
 
-%% PROTEIN 
+%% PROTEIN
 For phosphoproteins, one destroys the data if expression values for differen protein modifications
 (i.e. phosphoforms) are merged. Hence, we add a separate box with its own visualized expression
 value for every protein and protein modification to the pathway graph.
 
-%% MicroRNA 
+%% MicroRNA
 For MicroRNAs, the general method with adding gene identifiers to datasets and mapping to the
 pathways does not work at all, because miRNAs are not contained in pathways. We visualize miRNAs
 together with an additional information: the miRNA target relation. By identifying protein coding
 genes, whose mRNAs are targets of miRNAs, one can add the miRNAs to the pathways and connect them to
 the protein coding genes by inserting edges to the corresponding targets.
 
-%% DNA METHYLATION 
+%% DNA METHYLATION
 DNA methylationmicroarray datasets are region-based and thus contain a huge number of probes and
 information. The connection to protein coding genes is usually performed by defining a region around
 the transcription start site (TSS) of a gene and assigning all probes in this region to the gene.
@@ -332,7 +355,7 @@ visualizations should provide an overview, rather than a detailed listing of all
 information, we tried to keep the clarity and summarize information wherever possible.
 
 % Especially when visualizing four different data types, this is important. Hence, we provide a
-% TODO: Ein schoenes ende finden. 
+% TODO: Ein schoenes ende finden.
 
 
 % TODO: Gesamtkonzept und Ergebnisse / Bilder vorstellen
@@ -340,11 +363,6 @@ information, we tried to keep the clarity and summarize information wherever pos
 % - Beschreiben dass DNAm nur ein Hinweis ist wo man naeher nachschauen sollte
 % - Link (URL) auf InCroMAP HIER oder in CONCLUSIONS ?
 
-\begin{figure*}[t] \centering \includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
-\caption{ TODO: Bild zeigt AUSSCHNITT des MAPK signaling pathway. Alle Schritte von a) bis f) kurz
-          erlauetern und kurz sagen, dass f) quasi dem finalen Bild dieser Methode entspricht. }
-\label{fig:visualization_steps} 
-\end{figure*}
 
 
 %TODO Abbildungen:
