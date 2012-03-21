@@ -60,7 +60,6 @@ TODO: weitere Beispiele und Zitate), we propose to visualize the microarray data
 specific signaling or metabolic pathways, which can in many cases be more easily related to the
 biological problem under study than individual genes or genomic regions.
 
-
 % TODO: das h�chste der gef�hle sind methoden um 2 farben in 1 knoten, aber keiner kann DNA
 % methylation oder sogar miRNA knoten rein.
 
@@ -71,11 +70,12 @@ biological problem under study than individual genes or genomic regions.
 % auch Kohlbacher-Nils Paper, S. Symons paper .Gibt es ueberhaupt ein Tool, welches alle 4
 % Datentypen (miRNA, etc) visualisieren kann?
 
-% TODO: InCroMAP vs. publizierte Pathway-basierte Visualisierungstools
+% InCroMAP vs. publizierte Pathway-basierte Visualisierungstools
 There are other tools, specialized in pathway analysis (e.g., Ingenuity, ), or in pathway
 visualization (Cytoscape, KEGG Atlas). Some even offer visualizing data in a pathway (GenMAPP, KEGG
 Array, Symons programm). No method today for high-dimensional, heterogeneous cross-platform
 datasets.
+% TODO: Absatz vervollständigen
 
 % Integrated oder single platform enrichment zur Identifikation der relevanten Pathways The pathways
 which are relevant for the conducted experiment can be deduced from the differentially expressed
@@ -229,42 +229,60 @@ pathway nodes.
 
 \subsection{Visualization of DNA-methylation data}
 
-% Darstellung von DNAm-Daten
+% Darstellung von DNAm-Daten 
+The DNA-methylation (DNAm) status observed in the proximal promoter of a gene is graphically
+represented by adding boxes to the left side of the pathway nodes. These boxes are drawn in a white
+box containing a black bar which stretches from the middle to the left in the case of
+hypomethylation and from the middle to the right to indicate hypermethylation.
 
+% Berechnung des DNAm-Gesamtwerts
+The length of the black bar is proportional to a summary value reflecting the DNAm status of the
+promoter of a certain gene.  This value is by default computed from the probes in a region ranging
+from -2000 bp upstream of the transcription start site to 500 bp downstream. Normally, mean
+log-ratios $r$ are used as summary value, which can be computed from the probe-level fold-changes
+$x_1,...,x_n$ using the formula $r=\frac{1}{n}\sum\limits_{i=1}^n\log_2(x_i)$. Alternatively, the
+value of the maximum peak found in the promoter of a gene can be displayed. For peak detection
+Nimblegen recently proposed two algorithms which are called "Windowed Threshold Detection" and
+"Second Derivative Peak Detection". A detailed description of these methods can be found in the
+user's guide of the Nimblegen software SignalMap
+(http://www.nimblegen.com/products/lit/signalmap1.9usersguide.pdf).
+
+% Darstellung der DNAm-Einzelwerte
+The genomic location of individual peaks can be visualized in more detail in a DNAm profile plot
+(TODO: Auf entsprechende Figure verweisen).  To this end, the fold-changes observed for the probes
+covering the promoter region of a certain gene are plotted along their genomic coordinates. This
+depiction is particularly useful for comparing the DNAm profiles and peaks found for different
+observations (i.e. sample groups).
 
 % Eingabeformat für DNAm-Daten
-
-
-% Ein Wert nur als Hinweis, hier geht etwas 
-% click gibt details?]. 
-% fold-change wird zu box von -2 bis +2
-% p-value im grunde ein bar-blot von 1 bis 0.00005 oder so...
-% Einzelner Wert mit binning und $\frac{\sum\limits_{i=1}^n\log_2 x}{n}$, f�r fold-changes oder so
-% peak detection m�glich und max. peak anzeigen.
+In order to relate the DNAm data to data from gene-centered microarrays (e.g., mRNA expression
+arrays), each probe has to be assigned to a gene. Thus, we require annotation columns containing the
+chromosome and the genomic position of each probe to facilitate the mapping from probes to genes.
 
 \subsection{Visualization of micro-RNA expression data}
 
-Visualizing micro-RNA (miRNA) datasets is not straightforward, because pathways usually do not
-contain miRNAs. Pathway mainly consist of small molecules and enzymes, which are products of protein
-coding genes. Therefore, to add miRNAs to a pathway, a connection must be established from miRNAs to
-to protein-coding genes.
+% Mapping von miRNA-Daten auf Pathways
+Visualizing micro-RNA (miRNA) datasets in the context of KEGG pathways is not straightforward, as
+these pathways do not contain miRNAs a priori. Therefore, in order to incorporate the data into a
+pathway, a connection must be established between the monitored miRNAs and the protein-coding genes
+in the pathway. As the common mechanism of miRNAs involves the binding to complementary mRNA
+transcripts \citep{Bartel2004}, we propose to link miRNAs to their known target mRNAs.  These target
+mRNAs can be obtained from diverse databases, which either contain experimentally verified targets
+(e.g., miRecords \citep[see][]{miRecords}, miRTarBase \citep[see][]{miRTarBase}, TarBase
+\citep[see][]{TarBase}) or predicted miRNA targets \citep{Alexiou2009} (TODO: Beispiele hinzufügen).
 
-Biologically, miRNAs are small non-coding RNAs that regulate gene expression by binding to mRNA
-targets and somehow inducing a degradation of the targeted mRNA \citep{Bartel2004}. The targets for
-each miRNA must be known and there are several databases that contain information about
-experimentally verified miRNA targets (e.g., miRecords \citep[see][]{miRecords}, miRTarBase
-\citep[see][]{miRTarBase}, TarBase \citep[see][]{TarBase}) or predicted miRNA targets
-\citep{Alexiou2009}. We use these miRNA target databases to perform the linkage between miRNAs and
-pathways.
+% Eingabeformat für miRNA-Daten
+For the mapping of the miRNAs to their target mRNA transcripts, a common miRNA identifier (e.g.,
+miRBase Accession, miRBase ID) is required.
 
-Pathway-based visualization of miRNA datasets is done by annotating all known targets to every miRNA
-in the input dataset. Then all miRNAs that have targets in any pathway that should be visualized are
-added to the pathway as small triangular nodes. The relation to the pathway is then established by
-creating an edge from every miRNA to every target in the pathway. The triangular miRNA nodes
-themselves are colored according to their expression, as described for mRNA.  This leads to an
-integrated visualization that contains miRNA expression, miRNA target relation information and (if
-also mRNA data is visualized) the expression of the targeted
-mRNA. Figure~\ref{fig:visualization_steps}f) shows an example result of the described procedure.
+% Darstellung von miRNA-Daten
+Based on a static map containing all connections between miRNAs and their target mRNAs, the miRNAs
+monitored in a specific experiment can be added to a pathway of interest as small triangular nodes,
+which have outgoing edges to the pathway nodes corresponding to their target mRNAs.  The triangular
+miRNA nodes are colored according to their expression, as described previously for mRNA datasets.
+This leads to an integrated visualization of a pathway, overlaid with miRNA and mRNA expression
+data, and extended with putative miRNA-mRNA interactions. Figure~\ref{fig:visualization_steps}f)
+shows an example result of the described procedure.
 
 %\end{methods}
 
@@ -276,20 +294,27 @@ expression data. Visualizing single datasets in pathways is a good first step th
 in other methods and applications. Actually, any dataset with gene identifiers and expression values
 can be somehow visualized by changing node colors or other aspects of pathway nodes. Hence, it is
 not very hard to visualize mRNA datasets. But visualization of phosphoprotein, microRNA or DNA
-methylation datasets is not easy, because each datatype has its own characteristics.  %% PROTEIN For
-phosphoproteins, one destroys the data if expression values for differen protein modifications
+methylation datasets is not easy, because each datatype has its own characteristics.
+
+%% PROTEIN 
+For phosphoproteins, one destroys the data if expression values for differen protein modifications
 (i.e. phosphoforms) are merged. Hence, we add a separate box with its own visualized expression
-value for every protein and protein modification to the pathway graph.  %% MicroRNA For MicroRNAs,
-the general method with adding gene identifiers to datasets and mapping to the pathways does not
-work at all, because miRNAs are not contained in pathways. We visualize miRNAs together with an
-additional information: the miRNA target relation. By identifying protein coding genes, whose mRNAs
-are targets of miRNAs, one can add the miRNAs to the pathways and connect them to the protein coding
-genes by inserting edges to the corresponding targets.  %% DNA METHYLATION DNA methylation
-microarray datasets are region-based and thus contain a huge number of probes and information. The
-connection to protein coding genes is usually performed by defining a region around the
-transcription start site (TSS) of a gene and assigning all probes in this region to the gene.  %For
-example, with this procedure one can define that all probes within -2000 and +500 bps of a TSS are
-most important for the regulation of this gene's expression.  But then, it is not recommended to
+value for every protein and protein modification to the pathway graph.
+
+%% MicroRNA 
+For MicroRNAs, the general method with adding gene identifiers to datasets and mapping to the
+pathways does not work at all, because miRNAs are not contained in pathways. We visualize miRNAs
+together with an additional information: the miRNA target relation. By identifying protein coding
+genes, whose mRNAs are targets of miRNAs, one can add the miRNAs to the pathways and connect them to
+the protein coding genes by inserting edges to the corresponding targets.
+
+%% DNA METHYLATION 
+DNA methylationmicroarray datasets are region-based and thus contain a huge number of probes and
+information. The connection to protein coding genes is usually performed by defining a region around
+the transcription start site (TSS) of a gene and assigning all probes in this region to the gene.
+
+For example, with this procedure one can define that all probes within -2000 and +500 bps of a TSS
+are most important for the regulation of this gene's expression.  But then, it is not recommended to
 visualize all this information in the pathway. For example, it would be possible to create small XY
 plots of the promoter region for every gene and add these pictures as small icons below each
 node. But this would clutter the picture and destroy the clarity of it. Thus, we concluded that it
@@ -298,13 +323,14 @@ is rather hyper- or hypomethylated. The methylation details can then be inspecte
 (e.g., the InCroMAP application provides a detailed XY plot of the DNA methylation if one clicks on
 a pathway node). But the most important information in the first place is, if there are methylation
 changes at all. And this can be expressed with various summarization methods and a small black bar
-that grows with the amount of significant methylation changes in a gene promoter. 
+that grows with the amount of significant methylation changes in a gene promoter.
 
 An example for a KEGG pathway with visualized mRNA, miRNA, protein and DNA methylation data can be
 seen in Figure~\ref{fig:cellcycle}. The visualization of multiple heterogenous datatypes can not be
 performed with either a loss of information or a loss of clarity. Since these integrated pathway
 visualizations should provide an overview, rather than a detailed listing of all possible
-information, we tried to keep the clarity and summarize information wherever possible.  
+information, we tried to keep the clarity and summarize information wherever possible.
+
 % Especially when visualizing four different data types, this is important. Hence, we provide a
 % TODO: Ein schoenes ende finden. 
 
