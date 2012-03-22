@@ -286,23 +286,33 @@ background and contain a black bar which stretches from the middle to the left, 
 % Berechnung des DNAm Gesamtwerts
 The length of the black bar is proportional to a summary value reflecting the DNAm status of the
 promoter of a certain gene.  This value is by default computed from the probes in a region ranging
-from -2000 bps upstream of the transcription start site to 500 bps downstream. Normally, mean
-log-ratios $r$ are used as summary value, which can be computed from the probe-level \emph{p}-values
-$x_1,\dots,x_n$ using the formula $r=\frac{1}{n}\sum\limits_{i=1}^n\log_2(x_i)$. Alternatively, the
-value of the maximum peak found in the promoter of a gene can be visualized. For peak detection,
+from -2000 bps upstream of the transcription start site to 500 bps downstream. Normally, the
+value of the maximum peak found in the promoter of a gene is visualized. For peak detection,
 Nimblegen proposed two algorithms which are called "Windowed Threshold Detection" and
 "Second Derivative Peak Detection". A detailed description of these methods can be found in the
-user's guide of Nimblegen's SignalMap software \citep[see][]{NimblegenSignalMapUserGuide}. In addition to those sophisticated peak detection methods, one can also approximate peaks by using simple methods like picking the probe with maximum differential methylation (i.e., $\max|fold-change|$).
+user's guide of Nimblegen's SignalMap software \citep[see][]{NimblegenSignalMapUserGuide}. 
+In addition to those sophisticated peak detection methods, one can also approximate peaks by 
+using simple methods like picking the probe with maximum differential methylation (i.e., $\max|fold-change|$).
+As an alternative to visualizing peaks derived from the probe-level fold-changes one can also use a statistical
+approach to estimate the differential methylation in a promoter region. For this purpose, we 
+propose to divide the promoter region $r$ into segments $b_1,\dots,b_n$, each containing a fixed number of probes. 
+For each segment a statistical test (e.g., ordinary or moderated t-test) can be employed to detect 
+differential methylation between two experimental groups. An overall significance value $s$ can then be computed 
+from the \emph{p}-values $p(b_1),\dots,p(b_n)$ using the formula $s=\frac{1}{n}\sum\limits_{i=1}^n-\log(p(b_i))$.
+This binning approach has the advantage of being sensitive to local changes in DNA methylation, as promoter segments with 
+significant changes in DNA methylation are highly weighted. Conversely, segments for which slight changes were observed only 
+contribute marginally to the overall significance score.
 
 % Darstellung der DNAm Einzelwerte
-The purpose of this visualization technique is giving researchers a hint if, and how many methylation changes are present in a gene promoter.
+The purpose of this visualization technique is giving researchers a hint if, 
+and how many methylation changes are present in a gene promoter.
 For more details, the genomic location of individual peaks can be visualized in a DNAm profile plot
 (see Figure~\ref{fig:methdetails}). To this end, the fold-changes observed for the probes
 covering the promoter region of a certain gene are plotted along their genomic coordinates. This
 depiction is particularly useful for comparing the DNAm profiles and peaks found for different
 observations (i.e., sample groups).
 
-% Eingabeformat f¸r DNAm Daten
+% Eingabeformat fÔøΩr DNAm Daten
 In order to relate the DNAm data to data from gene-centered microarrays (e.g., mRNA expression
 arrays), each probe needs to be mapped to a gene. Thus, we require annotation columns containing the
 chromosome and the genomic position of each probe to facilitate the mapping from probes to genes.
@@ -380,7 +390,7 @@ By identifying protein coding genes, whose mRNAs are targets of miRNAs, one can 
 and connect them to the protein coding genes by inserting edges to the corresponding targets.
 
 
-"Analyse der genetischen Loci von deregulierten miRNAs weiterf¸hren kann[]" eher f¸r regions-basierte verfahgen. PWs sind funktionielle/ regulatorische zusammenh‰nnge. => aber generell m¸ssen benachbarte loci nicht derselben genetischen regulation unterlegen und deshalb f¸r verbindung ist es besser regulatorische zusammenh‰nge zu verwenden
+"Analyse der genetischen Loci von deregulierten miRNAs weiterfÔøΩhren kann[]" eher fÔøΩr regions-basierte verfahgen. PWs sind funktionielle/ regulatorische zusammenhÔøΩnnge. => aber generell mÔøΩssen benachbarte loci nicht derselben genetischen regulation unterlegen und deshalb fÔøΩr verbindung ist es besser regulatorische zusammenhÔøΩnge zu verwenden
 %
 % TODO: Diskussionspunkt: Alternativ zu Abbildung auf Targets w√§re auch Abbildung auf Genlokus denkbar (Heidruns Vorschlag)
 %
@@ -407,7 +417,7 @@ in the DNA methylation pattern, which may be biologically meaningful. Thus, one 
 consider advisable is the detection and visualization of maximum peaks (TODO: cite Nimblegen's user's guide),
 as it is sensitive to local changes in DNA methylation.
 
-TODO: Probe-level specific effekte sollten abgeschw‰cht sein => Smoothing => dann max FC.
+TODO: Probe-level specific effekte sollten abgeschwÔøΩcht sein => Smoothing => dann max FC.
 
  Alternatively, we suggest to use the mean
 probe-level fold-changes as a summary value, if global changes of DNA methylation in the proximal promoter region
@@ -452,7 +462,6 @@ information, we tried to keep the clarity and summarize information wherever pos
 % - Link (URL) auf InCroMAP HIER oder in CONCLUSIONS ?
 
 
-% TODO f√ºr JE: Kapitel √ºberarbeiten
 \section{Conclusion}
 
 Pathway enrichment analysis is a common microarray data analysis tool to discover pathways, whose
@@ -460,20 +469,21 @@ genes show significant expression changes. In most applications, these enrichmen
 analysis workflows. There are some methods or applications that can show pictures of significantly
 altered pathways and a few applications can even change node shapes or colors according to a single
 expression dataset. However, not only the amount of available microarray datasets is growing
-rapidly, but also the number of available platforms. Thus, today we have datasets that not only
-consist of mRNA data, but also DNA methylation, miRNA, protein or even more different
-levels. Analysis and especially visualization methods for such cross-platform datasets are very
-rare.
+rapidly, but also the number of available platforms. At present, microarray platforms exist for
+profiling diverse genomic features, as for instance mRNAs, miRNAs, proteins and promoter regions. 
+However, the current repertoire of analysis and especially visualization methods which are specifically designed for
+the analysis of cross-platform datasets is still very limited.
 
-Here, we present a pathway-based cross-platform microarray visualization method that is perfectly
-suitable, e.g., as visualization method after pathway enrichment analyses. Especially the
+Here, we present a pathway-based cross-platform microarray visualization method which
+can for instance be used to inspect relevant pathways detected by pathway enrichment analyses. Especially the
 visualization of DNA methylation and miRNA datasets is a feature that can not be found in other
 visualization approaches. By integratively visualizing all datatypes, it helps researchers to
-discover potential relationships across multiple layers. For example, a miRNA can be upregulated and
-the corresponding mRNA target downregulated, whereupon a connected pathway protein could also be
-downregulated in protein expression. This effect, which involves information about pathway relations
-and miRNA targets, as well as miRNA, mRNA and protein expression, would be directly visible from the
-here presented visualization method.
+discover potential relationships across multiple layers of gene regulation. 
+% JE: Sch√∂nes Beispiel. Habe noch die DNAm vor die miRNA gesetzt um alle Plattformen in der Kausalkette unterzubringen.
+For example, the hypomethylation of a promoter may cause the upregulation of a miRNA which may in turn
+downregulate the corresponding target mRNA, whereupon a connected pathway protein could change its expression or activation state.
+Such complex cascades of effects, which involve multiple levels of gene regulation can be deduced from the pathway images 
+generated by the here presented visualization method.
 
 % TODO:
 %- Zusammenfassung, vor allem Einzigartigkeit der Methode (insb. miRNA, (DNAm)) herausstellen,
