@@ -1,6 +1,8 @@
 \documentclass{bioinfo}
 
 \usepackage[rightcaption]{sidecap} % Allows captions besides figures
+%\usepackage{url} % Allows using the\url command (in NimbleGen citation)
+%\usepackage{fixltx2e} % Can be used to force the order of images As-Is.
 
 \copyrightyear{2012}
 \pubyear{2012}
@@ -27,8 +29,9 @@ Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Tex
 \section{Results:}
 Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text Text Text Text  Text Text Text Text Text Text
 
-%\section{Availability:}
-%The described method is included in the InCroMAP application, which is available at \href{TODO}{TODO}.
+\section{Availability:}
+The described method is implemented as part of the InCroMAP application that is freely available at \href{http://www.ra.cs.uni-tuebingen.de/software/InCroMAP/}{www.ra.cs.uni-tuebingen.de/software/InCroMAP}.
+%\url{http://www.ra.cs.uni-tuebingen.de/software/InCroMAP/}.
 
 \section{Contact:} \href{clemens.wrzodek@uni-tuebingen.de}{clemens.wrzodek@uni-tuebingen.de}
 \end{abstract}
@@ -190,8 +193,33 @@ cellular structure (e.g., schematic drawings of receptors involved in cell signa
 
 
 % CW: Bezieht sich auf KEGG metabolic pathways und ist deshalb auskommentiert
-% This feature also enhances the visualization of the global maps in KEGG PATHWAY, as additional information on 
+% This feature also enhances the visualization of the global maps in KEGG PATHWAY, as additional information on
 % the organisation of subordinate pathway groups is provided by the pathway image.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CELL CYCLE PICTURE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{SCfigure*}[1][tb]
+\centering
+\includegraphics[width=.70\textwidth]{figures/mmu04110.png}
+\caption{Integrated visualization of datasets from four different platforms in the KEGG "Cell Cycle" pathway.
+The colors reflect the fold-changes, whereas red means upregulated and blue means
+downregulated. White corresponds to a fold-change of zero and darker colors represent stronger
+differential expression. The color of each node itself reflects the mRNA fold-change, e.g., "Ttk"
+shows a strong upregulation and Smc3 is downregulated. Smaller boxes below nodes show the protein
+and protein modification expression. For example, we visualized three different forms of "Trp53": a
+phosphorylation at the Serine 15 (S15) site, which shows almost no expression change, a modification
+of the S9 site, which is upregulated and the basic protein itself, which is also upregulated.  The
+black boxes left of the nodes represent the maximum DNA methylation fold-change peak. A bar to the
+left represents hypomethylation and a bar to the right hypermethylation. In out example, "Ttk" shows
+a strong hypermethylation. MicroRNAs are added as small triangles to the pathway and connected with
+a grey edge to their mRNA targets. The color of the microRNA nodes reflects the fold-change, as
+described for the mRNA nodes.}
+\label{fig:cellcycle}
+\end{SCfigure*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 \subsection{Visualization of messenger RNA expression data}
 
@@ -231,6 +259,7 @@ Figure~\ref{fig:visualization_steps}c) for an example of visualized mRNA data.
 % minimum color must be defined. Furthermore, the color for \emph{p}-values should not be changed on a
 % linear, but on a log-scale.
 
+
 \subsection{Visualization of protein expression data}
 
 % Darstellung von Protein-Daten
@@ -242,70 +271,60 @@ acetylated forms of proteins) (TODO: Refs), multiple measurements may correspond
 In this particular case, the expression change observed for each individual protein form is represented
 as a separate box below the corresponding node. Each of these boxes is then labeled according to the
 respective protein form and colored based on the underlying expression data, as described previously
-for mRNA datasets.
-
-% Eingabeformat für Protein-Daten
-We require protein datasets to be annotated with database identifiers referring to proteins (e.g.,
-UniProt IDs) or genes (e.g. EntrezGene IDs), which allows us to perform a straightforward mapping to
-pathway nodes.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CELL CYCLE PICTURE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{SCfigure*}[1][tb]
-\centering
-\includegraphics[width=.70\textwidth]{figures/mmu04110.png}
-\caption{Integrated visualization of datasets from four different platforms in the KEGG "Cell Cycle" pathway.
-The colors reflect the fold-changes, whereas red means upregulated and blue means
-downregulated. White corresponds to a fold-change of zero and darker colors represent stronger
-differential expression. The color of each node itself reflects the mRNA fold-change, e.g., "Ttk"
-shows a strong upregulation and Smc3 is downregulated. Smaller boxes below nodes show the protein
-and protein modification expression. For example, we visualized three different forms of "Trp53": a
-phosphorylation at the Serine 15 (S15) site, which shows almost no expression change, a modification
-of the S9 site, which is upregulated and the basic protein itself, which is also upregulated.  The
-black boxes left of the nodes represent the maximum DNA methylation fold-change peak. A bar to the
-left represents hypomethylation and a bar to the right hypermethylation. In out example, "Ttk" shows
-a strong hypermethylation. MicroRNAs are added as small triangles to the pathway and connected with
-a grey edge to their mRNA targets. The color of the microRNA nodes reflects the fold-change, as
-described for the mRNA nodes.}
-\label{fig:cellcycle}
-\end{SCfigure*}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for mRNA datasets. We require protein datasets to be annotated with database identifiers referring
+to proteins or genes (e.g. Entrez Gene IDs), which allows us to perform a straightforward mapping to
+pathway nodes. For protein modification dataset, we further require a column, determining the
+actual modification for every protein.
 
 
 \subsection{Visualization of DNA methylation data}
 
 % Darstellung von DNAm Daten
-The DNA methylation (DNAm) status observed in the proximal promoter of a gene is graphically
-represented by adding boxes to the left side of the pathway nodes. These boxes are drawn in a white
-box containing a black bar which stretches from the middle to the left in the case of
-hypomethylation and from the middle to the right to indicate hypermethylation.
+The DNA methylation (DNAm) status, observed in the proximal promoter of a gene, is graphically
+represented by adding boxes to the left side of the pathway nodes. These boxes are drawn on a white
+background and contain a black bar which stretches from the middle to the left, in the case of hypomethylation and from the middle to the right, to indicate hypermethylation. Instead of discriminating between hyper- and hypomethylation, one can simply visualize the amount of differential methylation. In this case, the black bar would stretch from the left border of the box to the right border.
 
 % Berechnung des DNAm Gesamtwerts
 The length of the black bar is proportional to a summary value reflecting the DNAm status of the
 promoter of a certain gene.  This value is by default computed from the probes in a region ranging
-from -2000 bp upstream of the transcription start site to 500 bp downstream. Normally, mean
-log-ratios $r$ are used as summary value, which can be computed from the probe-level fold-changes
-$x_1,...,x_n$ using the formula $r=\frac{1}{n}\sum\limits_{i=1}^n\log_2(x_i)$. Alternatively, the
-value of the maximum peak found in the promoter of a gene can be displayed. For peak detection
-Nimblegen recently proposed two algorithms which are called "Windowed Threshold Detection" and
+from -2000 bps upstream of the transcription start site to 500 bps downstream. Normally, mean
+log-ratios $r$ are used as summary value, which can be computed from the probe-level \emph{p}-values
+$x_1,\dots,x_n$ using the formula $r=\frac{1}{n}\sum\limits_{i=1}^n\log_2(x_i)$. Alternatively, the
+value of the maximum peak found in the promoter of a gene can be visualized. For peak detection,
+Nimblegen proposed two algorithms which are called "Windowed Threshold Detection" and
 "Second Derivative Peak Detection". A detailed description of these methods can be found in the
-user's guide of the Nimblegen software SignalMap
-(http://www.nimblegen.com/products/lit/signalmap1.9usersguide.pdf).
+user's guide of Nimblegen's SignalMap software \citep[see][]{NimblegenSignalMapUserGuide}. In addition to those sophisticated peak detection methods, one can also approximate peaks by using simple methods like picking the probe with maximum differential methylation (i.e., $\max|fold-change|$).
 
 % Darstellung der DNAm Einzelwerte
-The genomic location of individual peaks can be visualized in more detail in a DNAm profile plot
-(TODO: Auf entsprechende Figure verweisen).  To this end, the fold-changes observed for the probes
+The purpose of this visualization technique is giving researchers a hint if, and how many methylation changes are present in a gene promoter.
+For more details, the genomic location of individual peaks can be visualized in a DNAm profile plot
+(see Figure~\ref{fig:methdetails}). To this end, the fold-changes observed for the probes
 covering the promoter region of a certain gene are plotted along their genomic coordinates. This
 depiction is particularly useful for comparing the DNAm profiles and peaks found for different
-observations (i.e. sample groups).
+observations (i.e., sample groups).
 
-% Eingabeformat für DNAm Daten
+% Eingabeformat f�r DNAm Daten
 In order to relate the DNAm data to data from gene-centered microarrays (e.g., mRNA expression
-arrays), each probe has to be assigned to a gene. Thus, we require annotation columns containing the
+arrays), each probe needs to be mapped to a gene. Thus, we require annotation columns containing the
 chromosome and the genomic position of each probe to facilitate the mapping from probes to genes.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Methylation Details Picture
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[tb]
+\centering
+% Add a border
+\setlength\fboxsep{1pt}
+\setlength\fboxrule{1pt}
+\fbox{
+  \includegraphics[width=.47\textwidth]{figures/meth-details.png}
+}
+\caption{Integrated visualization of the "MAPK signaling" pathway with a detailed view of DNA methylation in the proximal promoter of "Egfr".
+The DNA methylation bar next to the "Egfr" gene in the pathway plot indicates hypermethylation. A profile plot of this genes genomic location
+reveals an increase in DNA methylation in this genes promoter.}
+\label{fig:methdetails}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Visualization of microRNA expression data}
 
@@ -316,8 +335,8 @@ pathway, a connection must be established between the miRNAs and the protein-cod
 in the pathway. As the common mechanism of miRNAs involves the binding to complementary mRNA
 transcripts \citep{Bartel2004}, we propose to link miRNAs to their known target mRNAs. These target
 mRNAs can be obtained from diverse databases, which either contain experimentally verified targets
-(e.g., miRecords \citep[see][]{miRecords}, miRTarBase \citep[see][]{miRTarBase}, TarBase
-\citep[see][]{TarBase}) or predicted miRNA targets \citep[reviewed in][]{Alexiou2009}.
+(e.g., miRecords -- \citealp{miRecords}, miRTarBase -- \citealp{miRTarBase}, TarBase --
+\citealp{TarBase}) or predicted miRNA targets \citep[reviewed in][]{Alexiou2009}.
 We used a union of the three mentioned experimentally verified miRNA target databases for the
 figures in this publication.
 
@@ -338,36 +357,36 @@ shows an example result of the described procedure.
 In this work, we present a novel methodology for the combined visualization of DNA methylation data,
 as well as mRNA, (phospho-) protein, and miRNA expression data in the context of canonical pathways.
 This methodology involves strategies for mapping the data from heterogeneous platform types to a common
-functional element, namely a gene, embedded into a pathway which regulates higher-order cellular 
-functions or processes. Furthermore, we propose visualization techniques which are particularly suited for 
-displaying quantitative data from diverse genomic features in an integrated graph plot,  
-which represents a metabolic or signaling pathway of interest. However, generating a joint visualization of 
-epigenomics, transcriptomics and proteomics data is challenging, as each data type has 
+functional element, namely a gene, embedded into a pathway which regulates higher-order cellular
+functions or processes. Furthermore, we propose visualization techniques which are particularly suited for
+displaying quantitative data from diverse genomic features in an integrated graph plot,
+which represents a metabolic or signaling pathway of interest. However, generating a joint visualization of
+epigenomics, transcriptomics and proteomics data is challenging, as each data type has
 its own characteristics.
 
 % Zusammenfassung: Proteomics-Daten
-For proteomics data we propose to map basic and modified proteins to their common source gene and 
+For proteomics data we propose to map basic and modified proteins to their common source gene and
 draw each protein form as a separate box below the pathway node representing the source gene. Using this kind of
 visualization one can, for instance, determine the activation state of a protein by comparing the color (i.e, expression state)
-of the box corresponding to the basic form with the one which corresponds to the phosphorylated form. 
+of the box corresponding to the basic form with the one which corresponds to the phosphorylated form.
 
 % Zusammenfassung: Transcriptomics-Daten
-In brief, for most mRNA expression datasets it is sufficient to annotate the probesets with appropriate 
+In brief, for most mRNA expression datasets it is sufficient to annotate the probesets with appropriate
 gene identifiers, in order to link the data with the pathways of interest. For miRNA datasets this linkage
 is complicated by the fact that miRNAs are normally not contained in pathways. Thus, we make use of known
-interactions between miRNAs and their target mRNAs which can be extracted from public databases. 
-By identifying protein coding genes, whose mRNAs are targets of miRNAs, one can add the miRNAs to the pathways 
+interactions between miRNAs and their target mRNAs which can be extracted from public databases.
+By identifying protein coding genes, whose mRNAs are targets of miRNAs, one can add the miRNAs to the pathways
 and connect them to the protein coding genes by inserting edges to the corresponding targets.
 %
 % Zusammenfassung: Epigenomics-Daten
-The probe design of DNA methylation microarrays is typically not gene-centered, but 
-region-based. Thus, in contrast to gene-centered arrays the probes are not organised in 
-probesets which from the outset correspond to the same gene. Instead these arrays 
-cover well-defined genomic regions of interest, as for instance promoters. The connection to protein 
+The probe design of DNA methylation microarrays is typically not gene-centered, but
+region-based. Thus, in contrast to gene-centered arrays the probes are not organised in
+probesets which from the outset correspond to the same gene. Instead these arrays
+cover well-defined genomic regions of interest, as for instance promoters. The connection to protein
 coding genes is usually established by defining a region around the transcription start site (TSS)
 of a gene and assigning all probes in this region to the gene.
 
-# TODO für JE: Abschnitt überarbeiten
+% TODO für JE: Abschnitt überarbeiten
 For example, with this procedure one can define that all probes within -2000 and +500 bps of a TSS
 are most important for the regulation of this gene's expression.  But then, it is not recommended to
 visualize all this information in the pathway. For example, it would be possible to create small XY
@@ -395,7 +414,7 @@ information, we tried to keep the clarity and summarize information wherever pos
 % - Link (URL) auf InCroMAP HIER oder in CONCLUSIONS ?
 
 
-# TODO für JE: Kapitel überarbeiten
+% TODO für JE: Kapitel überarbeiten
 \section{Conclusion}
 
 Pathway enrichment analysis is a common microarray data analysis tool to discover pathways, whose
