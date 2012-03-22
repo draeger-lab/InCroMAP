@@ -149,16 +149,15 @@ data.
 % tool tries to auto-detect the platform type.
 
 % Import von Pathways in InCroMAP
-The pathway data is automatically imported from KEGG. In the KEGG PATHWAY database each pathway map
-is available for download as a KGML document which is internally converted into a GraphML document
-by InCroMAP. These GraphML files can be interactively visualized by InCroMAP using the yWorks graph
-viewer (TODO: Ref.). In order to overcome limitations of the KGML format, one can create an overlay
+The pathway data is automatically imported from KEGG \citep{KEGG}. In the KEGG PATHWAY database, each pathway map
+is available for download as KGML document, which is internally converted into a graph structure
+by InCroMAP. In order to overcome limitations of the KGML format, one can create an overlay
 graph that shows the original KEGG pathway image in the background, which may provide the user with
 additional information about cellular structure and compartmentalization.
-% TODO Clemens: Umformulieren mit GraphML format? yWorks raus? usw.
-
+%The graph structures, including the overlay pictures, are interactively visualized by InCroMAP using the yWorks graph viewer (TODO: Ref.).
+%
 % Visualisierung von Microarray-Daten im Kontext von Pathways
-After uploading the data, the KEGG pathway nodes, which correspond to genes or gene families, can be
+After importing the data, the KEGG pathway nodes, which correspond to genes or gene families, can be
 overlaid with fold-changes measured on mRNA or protein expression level. Furthermore, DNA
 methylation changes observed in the proximal promoter regions can be visualized. In the final step,
 additional nodes corresponding to miRNAs can be added to the pathway and colored according to the
@@ -223,18 +222,18 @@ described for the mRNA nodes.}
 
 \subsection{Visualization of messenger RNA expression data}
 
-% Darstellung von mRNA-Daten
+% Darstellung von mRNA Daten
 As mRNA expression data is typically available for the whole genome and thus, also for the majority
 of nodes in a particular KEGG pathway, these data are displayed in the background color of the
 nodes.
 %
-% Eingabeformat fÃ¼r mRNA-Daten
+% Eingabeformat fÃ¼r mRNA Daten
 As input, our method requires preprocessed mRNA datasets with annotation columns (e.g.,
 gene identifiers) and data columns, which are referred to as \emph{observations}. In this context,
 observations can be any statistical significance (e.g., \emph{p}-values) or comparative measure
 (e.g., fold-changes or log-ratios).
 
-% Mapping von mRNA-Daten auf Pathway-Knoten
+% Mapping von mRNA Daten auf Pathway-Knoten
 Next, these data have to be broken down to a single value for each pathway node, which then
 determines the color of the node. As single nodes can represent multiple genes in KEGG, the
 intensities measured by probes, corresponding to the same node, have to be summarized. To this end,
@@ -267,12 +266,12 @@ Visualization of protein datasets is performed by adding small boxes below pathw
 changing the color of the boxes according to the corresponding protein expression data. As state-of-the-art
 experimental techniques (e.g., reverse-phase protein arrays, quantitative mass spectrometry)
 facilitate the distinction between different protein modifications (e.g., phosphorylated or
-acetylated forms of proteins) (TODO: Refs), multiple measurements may correspond to the same gene.
+acetylated forms of proteins), multiple measurements may correspond to the same gene \citep{Pirnia2009, Yates2009}.
 In this particular case, the expression change observed for each individual protein form is represented
 as a separate box below the corresponding node. Each of these boxes is then labeled according to the
 respective protein form and colored based on the underlying expression data, as described previously
 for mRNA datasets. We require protein datasets to be annotated with database identifiers referring
-to proteins or genes (e.g. Entrez Gene IDs), which allows us to perform a straightforward mapping to
+to proteins or genes (e.g., Entrez Gene IDs), which allows us to perform a straightforward mapping to
 pathway nodes. For protein modification dataset, we further require a column, determining the
 actual modification for every protein.
 
@@ -328,7 +327,7 @@ reveals an increase in DNA methylation in this genes promoter.}
 
 \subsection{Visualization of microRNA expression data}
 
-% Mapping von miRNA-Daten auf Pathways
+% Mapping von miRNA Daten auf Pathways
 Visualizing microRNA (miRNA) datasets in the context of KEGG pathways is not straightforward, as
 these pathways do not contain miRNAs \emph{a priori}. Therefore, in order to incorporate the data into a
 pathway, a connection must be established between the miRNAs and the protein-coding genes
@@ -341,7 +340,7 @@ We used a union of the three mentioned experimentally verified miRNA target data
 figures in this publication.
 
 
-% Darstellung von miRNA-Daten
+% Darstellung von miRNA Daten
 Based on a map containing all connections between miRNAs and their target mRNAs, the miRNAs
 monitored in a specific experiment can be added to a pathway of interest as small triangular nodes,
 which have outgoing edges to the pathway nodes corresponding to their target mRNAs. The triangular
@@ -367,46 +366,57 @@ its own characteristics.
 % Zusammenfassung: Proteomics-Daten
 For proteomics data we propose to map basic and modified proteins to their common source gene and
 draw each protein form as a separate box below the pathway node representing the source gene. Using this kind of
-visualization one can, for instance, determine the activation state of a protein by comparing the color (i.e, expression state)
+visualization one can, for instance, determine the activation state of a protein by comparing the color (i.e., expression state)
 of the box corresponding to the basic form with the one which corresponds to the phosphorylated form.
 
 % Zusammenfassung: Transcriptomics-Daten
 In brief, for most mRNA expression datasets it is sufficient to annotate the probesets with appropriate
 gene identifiers, in order to link the data with the pathways of interest. For miRNA datasets this linkage
-is complicated by the fact that miRNAs are normally not contained in pathways. Thus, we make use of known
+is complicated by the fact that miRNAs are normally not contained in pathways. 
+
+Thus, we make use of known
 interactions between miRNAs and their target mRNAs which can be extracted from public databases.
 By identifying protein coding genes, whose mRNAs are targets of miRNAs, one can add the miRNAs to the pathways
 and connect them to the protein coding genes by inserting edges to the corresponding targets.
+
+
+"Analyse der genetischen Loci von deregulierten miRNAs weiterführen kann[]" eher für regions-basierte verfahgen. PWs sind funktionielle/ regulatorische zusammenhännge. => aber generell müssen benachbarte loci nicht derselben genetischen regulation unterlegen und deshalb für verbindung ist es besser regulatorische zusammenhänge zu verwenden
+%
 % TODO: Diskussionspunkt: Alternativ zu Abbildung auf Targets wÃ¤re auch Abbildung auf Genlokus denkbar (Heidruns Vorschlag)
+%
 
 % Zusammenfassung: Epigenomics-Daten
 The probe design of DNA methylation microarrays is typically not gene-centered, but
-region-based. Thus, in contrast to gene-centered arrays the probes are not organised in
-probesets which from the outset correspond to the same gene. Instead these arrays
-cover well-defined genomic regions of interest, as for instance promoters. The connection to protein
+region-based. Thus, in contrast to gene-centered arrays the probes are not organized in
+probesets which were designed specifically for the same gene. Instead these arrays
+cover specific genomic regions of interest, as for instance promoters. The connection to protein
 coding genes is usually established by defining a region around the transcription start site (TSS)
 of a gene and assigning all probes in this region to the gene.
 
 % Problematik bei Berechnung eines Gesamtwerts fÃ¼r DNAm
 As visualizing the signal levels of all probes assigned to a certain gene in one pathway node would
 clutter the picture and reduce the clarity of it, a method for the computation of a single
-summary value is needed. For mRNA expression arrays the summarization of probes corresponding to
+summary value is needed. For mRNA expression arrays, the summarization of probes corresponding to
 the same transcript is usually achieved by the median polishing algorithm (TODO: cite RMA/GCRMA paper) which
-effectively alleviates the influence of outlier probes. However, this algorithm is only applicable under the assumption 
+effectively alleviates the influence of outlier probes. However, this algorithm is only applicable under the assumption
 that ideally the probe intensities are expected to run evenly along transcripts.
-As a matter of fact, this assumption does not hold for the DNA-methylation of promoter regions, which
-is for one not expected to be evenly distributed along the region. Secondly, outlier probes corresponding to 
-DNA-methylation peaks are quite likely not due to probe-specific effects, but rather reflect a local change
-in the DNA-methylation pattern, which may be biologically meaningful. Thus, one of the summarization methods, we
-consider advisable is the detection and visualization of maximum peaks (TODO: cite Nimblegen's user's guide), 
-as it is sensitive to local changes in DNA-methylation. Alternatively, we suggest to use the mean 
-probe-level fold-changes as a summary value, if global changes of DNA-methylation in the proximal promoter region 
-are of peculiar interest. Nevertheless, both methods have obvious limitations. The maximum peaks method is definitely 
-less robust against probe-specific effects and the results may be inconclusive as a single positive peak may 
+As a matter of fact, this assumption does not hold for the DNA methylation of promoter regions, as the probe intensities are
+firstly not expected to be evenly distributed along the region. Secondly, outlier probes corresponding to
+DNA methylation peaks are quite likely not due to probe-specific effects, but rather reflect a local change
+in the DNA methylation pattern, which may be biologically meaningful. Thus, one of the summarization methods, we
+consider advisable is the detection and visualization of maximum peaks (TODO: cite Nimblegen's user's guide),
+as it is sensitive to local changes in DNA methylation.
+
+TODO: Probe-level specific effekte sollten abgeschwächt sein => Smoothing => dann max FC.
+
+ Alternatively, we suggest to use the mean
+probe-level fold-changes as a summary value, if global changes of DNA methylation in the proximal promoter region
+are of peculiar interest. Nevertheless, both methods have obvious limitations. The maximum peaks method is definitely
+less robust against probe-specific effects and the results may be inconclusive as a single positive peak may
 suggest hypermethylation of a region, while the major part of the promoter is clearly hypomethylated.
 On the other hand the mean fold-change summarization clearly suffers from the fact that localized differential methylation
-is averaged out. Despite these limitations, in principle, we deem both methods suited for indicating 
-differential methylation in the promoters of most genes. However, due to the heterogeneity and complexity of DNAm patterns, 
+is averaged out. Despite these limitations, in principle, we deem both methods suited for indicating
+differential methylation in the promoters of most genes. However, due to the heterogeneity and complexity of DNAm patterns,
 plotting the probe-level DNAm data along genomic coordinates often leads to more reliable conclusions about the DNAm state of promoters.
 
 % JE: Habe den Abschnitt neu geschrieben
@@ -428,6 +438,10 @@ seen in Figure~\ref{fig:cellcycle}. The visualization of multiple heterogenous d
 performed with either a loss of information or a loss of clarity. Since these integrated pathway
 visualizations should provide an overview, rather than a detailed listing of all possible
 information, we tried to keep the clarity and summarize information wherever possible.
+
+% TODO: Nested nodes (pics in nodes) diskutieren
+
+
 
 % Especially when visualizing four different data types, this is important. Hence, we provide a
 % TODO: Ein schoenes ende finden.
