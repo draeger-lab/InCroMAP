@@ -377,7 +377,8 @@ is complicated by the fact that miRNAs are normally not contained in pathways. T
 interactions between miRNAs and their target mRNAs which can be extracted from public databases.
 By identifying protein coding genes, whose mRNAs are targets of miRNAs, one can add the miRNAs to the pathways
 and connect them to the protein coding genes by inserting edges to the corresponding targets.
-%
+% TODO: Diskussionspunkt: Alternativ zu Abbildung auf Targets wäre auch Abbildung auf Genlokus denkbar (Heidruns Vorschlag)
+
 % Zusammenfassung: Epigenomics-Daten
 The probe design of DNA methylation microarrays is typically not gene-centered, but
 region-based. Thus, in contrast to gene-centered arrays the probes are not organised in
@@ -386,19 +387,42 @@ cover well-defined genomic regions of interest, as for instance promoters. The c
 coding genes is usually established by defining a region around the transcription start site (TSS)
 of a gene and assigning all probes in this region to the gene.
 
-% TODO für JE: Abschnitt überarbeiten
-For example, with this procedure one can define that all probes within -2000 and +500 bps of a TSS
-are most important for the regulation of this gene's expression.  But then, it is not recommended to
-visualize all this information in the pathway. For example, it would be possible to create small XY
-plots of the promoter region for every gene and add these pictures as small icons below each
-node. But this would clutter the picture and destroy the clarity of it. Thus, we concluded that it
-is most important to know if there are methylation changes in a promoter and maybe also if the gene
-is rather hyper- or hypomethylated. The methylation details can then be inspected manually later
-(e.g., the InCroMAP application provides a detailed XY plot of the DNA methylation if one clicks on
-a pathway node). But the most important information in the first place is, if there are methylation
-changes at all. And this can be expressed with various summarization methods and a small black bar
-that grows with the amount of significant methylation changes in a gene promoter.
+% Problematik bei Berechnung eines Gesamtwerts für DNAm
+As visualizing the signal levels of all probes assigned to a certain gene in one pathway node would
+clutter the picture and reduce the clarity of it, a method for the computation of a single
+summary value is needed. For mRNA expression arrays the summarization of probes corresponding to
+the same transcript is usually achieved by the median polishing algorithm (TODO: cite RMA/GCRMA paper) which
+effectively alleviates the influence of outlier probes. However, this algorithm is only applicable under the assumption 
+that ideally the probe intensities are expected to run evenly along transcripts.
+As a matter of fact, this assumption does not hold for the DNA-methylation of promoter regions, which
+is for one not expected to be evenly distributed along the region. Secondly, outlier probes corresponding to 
+DNA-methylation peaks are quite likely not due to probe-specific effects, but rather reflect a local change
+in the DNA-methylation pattern, which may be biologically meaningful. Thus, one of the summarization methods, we
+consider advisable is the detection and visualization of maximum peaks (TODO: cite Nimblegen's user's guide), 
+as it is sensitive to local changes in DNA-methylation. Alternatively, we suggest to use the mean 
+probe-level fold-changes as a summary value, if global changes of DNA-methylation in the proximal promoter region 
+are of peculiar interest. Nevertheless, both methods have obvious limitations. The maximum peaks method is definitely 
+less robust against probe-specific effects and the results may be inconclusive as a single positive peak may 
+suggest hypermethylation of a region, while the major part of the promoter is clearly hypomethylated.
+On the other hand the mean fold-change summarization clearly suffers from the fact that localized differential methylation
+is averaged out. Despite these limitations, in principle, we deem both methods suited for indicating 
+differential methylation in the promoters of most genes. However, due to the heterogeneity and complexity of DNAm patterns, 
+plotting the probe-level DNAm data along genomic coordinates often leads to more reliable conclusions about the DNAm state of promoters.
 
+% JE: Habe den Abschnitt neu geschrieben
+% For example, with this procedure one can define that all probes within -2000 and +500 bps of a TSS
+% are most important for the regulation of this gene's expression.  But then, it is not recommended to
+% visualize all this information in the pathway. For example, it would be possible to create small XY
+% plots of the promoter region for every gene and add these pictures as small icons below each
+% node. But this would clutter the picture and destroy the clarity of it. Thus, we concluded that it
+% is most important to know if there are methylation changes in a promoter and maybe also if the gene
+% is rather hyper- or hypomethylated. The methylation details can then be inspected manually later
+% (e.g., the InCroMAP application provides a detailed XY plot of the DNA methylation if one clicks on
+% a pathway node). But the most important information in the first place is, if there are methylation
+% changes at all. And this can be expressed with various summarization methods and a small black bar
+% that grows with the amount of significant methylation changes in a gene promoter.
+
+% Beispiel für Visualisierung aller Plattform-Typen in einem Pathway
 An example for a KEGG pathway with visualized mRNA, miRNA, protein and DNA methylation data can be
 seen in Figure~\ref{fig:cellcycle}. The visualization of multiple heterogenous datatypes can not be
 performed with either a loss of information or a loss of clarity. Since these integrated pathway
