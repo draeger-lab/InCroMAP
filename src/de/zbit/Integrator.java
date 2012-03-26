@@ -6,7 +6,7 @@
  * heterogeneous microarray datasets. This includes enrichment-analysis,
  * pathway-based visualization as well as creating special tabular
  * views and many other features. Please visit the project homepage at
- * <http://www.cogsys.cs.uni-tuebingen.de/software/Integrator> to
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
  * obtain the latest version of Integrator.
  *
  * Copyright (C) 2011 by the University of Tuebingen, Germany.
@@ -157,7 +157,7 @@ public class Integrator extends Launcher {
   @Override
   public URL getURLOnlineUpdate() {
     try {
-      return new URL("http://www.cogsys.cs.uni-tuebingen.de/software/Integrator/downloads/");
+      return new URL("http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/downloads/");
     } catch (MalformedURLException e) {
       log.log(Level.FINE, e.getLocalizedMessage(), e);
     }
