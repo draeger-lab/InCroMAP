@@ -25,18 +25,18 @@
 \begin{abstract}
 
 \section{Motivation:}
-% 1. Heute immer mehr ma platforms, und damit auch cross-p. datasets available
-Today, a plethora of different microarray platforms is available. Messenger RNA microarrays are still dominating but other platforms, like microRNA expression or DNA methylation, are becoming more and more popular. Consequently, also the amount of cross-platform datasets, coming from the same biological samples but different microarray platforms is growing rapidly.
+% GroÃŸe Menge an Microarray-Plattformtypen, aber wenig Verfahren zur integrierten Visualisierung
+Today, a wide variety of different microarray platforms is available. Traditionally, microarrays were employed for the genome-wide analysis of differential gene expression in organisms, tissues, or cell types, monitored under varying experimental conditions. Nowadays, besides global mRNA profiling their scope of application includes the interrogation of diverse genomic features, such as microRNAs, proteins, and promoters. 
 
-% 2. Keine gescheiten visualisierungsmethoden für alle datasets zusammen (insbesondere ohne direkten genbezug wie miRNA und DNAm)
-There are only a few methods available to integratively analyze or visualize such heterogenous datasets. Most available methods are focused on single datasets or, in general, datasets that are directly referenced to protein coding genes (e.g., mRNA or protein). Especially methods that additionally visualize regulatory influences (e.g., by microRNAs) and epigenetic alterations (like DNA methylation) are extremely rare.
+To date, most available methods for the visualization of these datasets are focused on individual platforms and are not capable of integratively visualizing multiple microarray datasets from cross-platform studies. Futhermore, current pathway-based visualization tools do mostly not support genomic features which are not directly linked to protein-coding genes. Particularly, there is a demand for methods which can visualize regulatory RNAs (e.g., microRNAs) and epigenetic alterations (e.g., DNA methylation) in a pathway-centered manner. 
 
 \section{Results:}
-We present a novel pathway-based visualization method that is especially suitable for visualization of cross-platform microarray datasets. The proposed methodology can not only handle datasets with a direct reference to genes (i.e., mRNA or protein) but also microRNA expression and DNA methylation datasets. Furthermore, it is able to distinguish and separate different protein modifications and establish a regulatory context between the pathway and microRNAs. All four data types can be integratively visualized in the context of canonical pathways.
+We present a novel pathway-based visualization method that is especially suitable for the visualization of high-throughput datasets where multiple microarray platforms were employed for the analysis of diverse genomic features in the same set of biological samples. The proposed methodology includes concepts for linking DNA-methylation and microRNA expression datasets to canonical signaling and metabolic pathways by establishing connections to the protein-coding genes therein. Furthermore, we point out strategies for displaying data from multiple proteins and protein modifications corresponding to the same gene. Ultimately, we show how data from four distinct platform types (mRNA, miRNA, protein, and DNA methylation arrays) can be integratively visualized in the context of canonical pathways.
 
 \section{Availability:}
 The described method is implemented as part of the InCroMAP application that is freely available at \href{http://www.ra.cs.uni-tuebingen.de/software/InCroMAP/}{www.ra.cs.uni-tuebingen.de/software/InCroMAP}.
 %\url{http://www.ra.cs.uni-tuebingen.de/software/InCroMAP/}.
+% JE: Warum schreibst du nicht "www.cogsys.cs. ..."
 
 \section{Contact:} \href{clemens.wrzodek@uni-tuebingen.de}{clemens.wrzodek@uni-tuebingen.de}
 \end{abstract}
@@ -116,21 +116,19 @@ heterogeneous microarray platforms.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
-\caption{
-These pictures show an excerpt of the KEGG "MAPK signaling" pathway. It is demonstrated how the
+\caption{These pictures show an excerpt of the KEGG "MAPK signaling" pathway. It is demonstrated how the
 pathway and each of the four supported platforms are visualized in the pathway. Picture a) shows the
-visualized KGML document as nodes and edges. b) demonstrates that the overall quality of KEGG
-pathway visualizations can be improved by underlaying the original KEGG pathway picture. c) presents
-the excerpt with visualized mRNA data, whereas red means upregulation, blue downregulation and
-brighter colors represent smaller fold-changes. d) shows how protein modification datasets are
-visualized in the pathway. Each of the boxes below "Egfr" represent different modifications of this
+pathway from the KGML document visualized as a graph b) indicates that the information content of KEGG
+pathway visualizations can be improved by underlaying the original KEGG pathway picture. c) shows the
+pathway overlaid with mRNA expression data, where red means upregulation, blue indicates downregulation, and
+darker colors correspond to higher fold-changes. d) shows how protein modification datasets are
+visualized in the pathway. Each box below the node "Egfr" represents a different modification of this
 protein and the color of the box reflects the corresponding fold-change. e) illustrates DNA
 methylation peaks in promoter regions. A bar from the middle of the black box to the left represents
-hypomethylation and hypermethylation is expressed by a bar to the right. The size of the bar
-determines the size of the maximum DNA methylation peak. f) demonstrates the visualization of
-microRNA data by adding small triangles, representing microRNAs, and connecting them with grey edges
-to their mRNA targets. The color of the microRNA nodes determines the corresponding fold-change.
-}
+hypomethylation and hypermethylation is indicated by a bar to the right. The size of the bar
+corresponds to the size of the maximum DNA methylation peak. f) demonstrates the visualization of
+microRNA data by adding small triangles, representing microRNAs, and connecting them to their mRNA targets. 
+The color of the microRNA nodes refers to the corresponding fold-changes.}
 \label{fig:visualization_steps}
 \end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -180,15 +178,15 @@ for an illustration of all the above-mentioned visualization steps.
 \centering
 \includegraphics[width=.70\textwidth]{figures/mmu04110.png}
 \caption{Integrated visualization of datasets from four different platforms in the KEGG "Cell Cycle" pathway.
-The colors reflect the fold-changes, whereas red means upregulated and blue means
-downregulated. White corresponds to a fold-change of zero and darker colors represent stronger
+The colors reflect the fold-changes, where red means upregulated and blue means
+downregulated. White indicates a fold-change of zero and darker colors correspond to stronger
 differential expression. The color of each node itself reflects the mRNA fold-change, e.g., "Ttk"
 shows a strong upregulation and Smc3 is downregulated. Smaller boxes below nodes show the protein
 and protein modification expression. For example, we visualized three different forms of "Trp53": a
 phosphorylation at the Serine 15 (S15) site, which shows almost no expression change, a modification
 of the S9 site, which is upregulated and the basic protein itself, which is also upregulated.  The
 black boxes left of the nodes represent the maximum DNA methylation fold-change peak. A bar to the
-left represents hypomethylation and a bar to the right hypermethylation. In out example, "Ttk" shows
+left indicates hypomethylation and a bar to the right hypermethylation. In out example, "Ttk" shows
 a strong hypermethylation. MicroRNAs are added as small triangles to the pathway and connected with
 a grey edge to their mRNA targets. The color of the microRNA nodes reflects the fold-change, as
 described for the mRNA nodes.}
@@ -336,9 +334,12 @@ chromosome and the genomic position of each probe to facilitate the mapping from
 \fbox{
   \includegraphics[width=.47\textwidth]{figures/meth-details.png}
 }
-\caption{Integrated visualization of the "MAPK signaling" pathway with a detailed view of DNA methylation in the proximal promoter of "Egfr".
-The DNA methylation bar next to the "Egfr" gene in the pathway plot indicates hypermethylation. A profile plot of this genes genomic location
-reveals an increase in DNA methylation in this genes promoter.}
+\caption{Integrated visualization of the "MAPK signaling" pathway with a detailed view of DNA methylation 
+in the proximal promoter of "Egfr". The black DNA methylation bar next to the "Egfr" gene in the pathway 
+plot stretches from the middle to the right of the box, which indicates strong hypermethylation. The length
+of the black bar corresponds to the height of the maximum peak of the red curve. This curve displays the probe-level
+fold-changes plotted along the promoter region of the Egfr gene. The light blue curve shows the DNA methylation
+profile of the Egfr gene observed in another sample group.}
 \label{fig:methdetails}
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
