@@ -1,0 +1,2 @@
+- JFreeChart is under LGPL (Unknown version)
+  See http://sourceforge.net/projects/jfreechart/

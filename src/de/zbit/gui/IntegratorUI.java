@@ -417,7 +417,7 @@ public class IntegratorUI extends BaseFrame {
     speciesLabel.setHorizontalTextPosition(JLabel.RIGHT);
     panel.add(speciesLabel);
     
-    statusBar.add(panel, BorderLayout.EAST);
+    statusBar.getRightPanel().add(panel, BorderLayout.CENTER);
   }
   
   
