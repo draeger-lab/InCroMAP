@@ -42,22 +42,22 @@ straight-for-ward
 
 \section{Motivation:}
 Traditionally, microarrays were almost exclusively employed for the genome-wide analysis of differential gene expression. But nowadays, their scope of application has been extended to various genomic features, such as microRNAs, proteins, and DNA methylation.
-Most available methods for the visualization of these datasets are focused on individual platforms and are not capable of integratively visualizing multiple microarray datasets from cross-platform studies. 
+Most available methods for the visualization of these datasets are focused on individual platforms and are not capable of integratively visualizing multiple microarray datasets from cross-platform studies.
 %
 %Most current pathway-based visualization tools do not support genomic features which are not directly linked to protein-coding genes. Particularly, there is a demand for methods which can visualize regulatory RNAs (e.g., microRNAs) and epigenetic alterations (e.g., DNA methylation) in a pathway-centered manner.
 %
 Above all, there is a demand for methods that can visualize genomic features that are not directly linked to protein-coding genes, such as regulatory RNAs (e.g., microRNAs) and epigenetic alterations (e.g., DNA methylation), in a pathway-centered manner.
 
 \section{Results:}
-We present a novel pathway-based visualization method that is especially suitable for the visualization of high-throughput datasets in which multiple different microarray platforms were employed for the analysis of diverse genomic features in the same set of biological samples.
+We present a novel pathway-based visualization method that is especially suitable for the visualization of high-throughput datasets from multiple different microarray platforms which were employed for the analysis of diverse genomic features in the same set of biological samples.
 %The proposed methodology includes concepts for linking DNA methylation and microRNA expression datasets to canonical signaling and metabolic pathways by establishing connections to the protein-coding genes therein. Furthermore, we point out strategies for displaying data from multiple proteins and protein modifications corresponding to the same gene. Ultimately, we show how data from four distinct platform types (mRNA, miRNA, protein, and DNA methylation arrays) can be integratively visualized in the context of canonical pathways.
 The proposed methodology includes concepts for linking DNA methylation and microRNA expression datasets to canonical signaling and metabolic pathways.
 We further point out strategies for displaying data from multiple proteins and protein modifications corresponding to the same gene. Ultimately, we show how data from four distinct platform types (mRNA, miRNA, protein, and DNA methylation arrays) can be integratively visualized in the context of canonical pathways.
 
 
 \section{Availability:}
-The described method is implemented as part of the InCroMAP application that is freely available at \href{http://www.ra.cs.uni-tuebingen.de/software/InCroMAP/}{www.ra.cs.uni-tuebingen.de/software/InCroMAP}.
-%\url{http://www.ra.cs.uni-tuebingen.de/software/InCroMAP/}.
+The described method is implemented as part of the InCroMAP application that is freely available at \href{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}{www.cogsys.cs.uni-tuebingen.de/software/InCroMAP}.
+%\url{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}.
 % JE: Warum schreibst du nicht "www.cogsys.cs. ..."
 
 \section{Contact:} \href{mailto:clemens.wrzodek@uni-tuebingen.de}{clemens.wrzodek@uni-tuebingen.de}
@@ -72,7 +72,7 @@ The described method is implemented as part of the InCroMAP application that is 
 \includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
 \caption{These pictures show an excerpt of the KEGG "MAPK signaling" pathway. It is demonstrated how the
 pathway and each of the four supported platforms are visualized in the pathway. Picture a) shows the
-pathway from the KGML document visualized as a graph b) indicates that the information content of KEGG
+pathway from the KGML document visualized as a graph. b) indicates that the information content of KEGG
 pathway visualizations can be improved by underlaying the original KEGG pathway picture. c) shows the
 pathway overlaid with mRNA expression data, where red means upregulation, blue indicates downregulation, and
 darker colors correspond to higher fold-changes. d) shows how protein modification datasets are
@@ -107,7 +107,7 @@ such as DNA methylation can be monitored on a genome-wide level using microarray
 
 % Motivation fuer die Entwicklung des Tools
 Several tools exist for the visual inspection of datasets from individual platforms \citep[see][for
-some examples]{Gehlenborg2010}. However, the current inventory of publicly available tools that are
+some examples]{Gehlenborg2010}. However, the current inventory of publicly available tools, that are
 capable of integrating and jointly visualizing data from multiple microarray platforms, is still
 very limited.  Here, we introduce a method for integrated pathway-centered visualization of
 datasets, generated from the same biological samples using different microarray platforms, which
@@ -199,12 +199,12 @@ for an illustration of all the above-mentioned visualization steps.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{SCfigure*}[1][tb]
 \centering
-\includegraphics[width=.70\textwidth]{figures/mmu04110.png}
+\includegraphics[width=.70\textwidth]{figures/mmu04110_highlight.png}
 \caption{Integrated visualization of datasets from four different platforms in the KEGG "Cell Cycle" pathway.
 The colors reflect the fold-changes, where red means upregulated and blue means
 downregulated. White indicates a fold-change of zero and darker colors correspond to stronger
 differential expression. The color of each node itself reflects the mRNA fold-change, e.g., "Ttk"
-shows a strong upregulation and Smc3 is downregulated. Smaller boxes below nodes show the protein
+shows a strong upregulation and "Smc3" is downregulated. Smaller boxes below nodes show the protein
 and protein modification expression. For example, we visualized three different forms of "Trp53": a
 phosphorylation at the Serine 15 (S15) site, which shows almost no expression change, a modification
 % Bitte das komma vor dem AND lassen (ein sog. "serial comma").
@@ -267,7 +267,7 @@ observations can be any statistical significance (e.g., \emph{p}-values) or comp
 Next, these data have to be broken down to a single value for each pathway node, which then
 determines the color of the node. As single nodes can represent multiple genes in KEGG, the
 intensities measured by probes, corresponding to the same node, have to be summarized. To this end,
-the mean or median is calculated across probes, which were mapped to the same node, or the probe
+either the mean or median is calculated across these probes, or the probe
 with the strongest or most significant signal (i.e., $\min\emph{p}-value$ or $\max|fold-change|$) is
 decisive for coloring the node.
 
@@ -326,7 +326,7 @@ using simple methods like picking the probe with maximum differential methylatio
 As an alternative to visualizing peaks derived from the probe-level fold-changes one can also use a statistical
 approach to estimate the differential methylation in a promoter region. For this purpose, we
 propose to divide the promoter region $r$ into segments $b_1,\dots,b_n$, each containing a fixed number of probes.
-For each segment a statistical test (e.g., ordinary or moderated t-test) can be employed to detect
+For each segment a statistical test (e.g., ordinary or moderated \emph{t}-test) can be employed to detect
 differential methylation between two experimental groups. An overall significance value $s$ can then be computed
 from the \emph{p}-values $p(b_1),\dots,p(b_n)$ using the formula $s=\frac{1}{n}\sum\limits_{i=1}^n-\log(p(b_i))$.
 This binning approach has the advantage of being sensitive to local changes in DNA methylation, as promoter segments with
@@ -417,7 +417,7 @@ In brief, for most mRNA expression datasets it is sufficient to annotate the pro
 gene identifiers, in order to link the data with the pathways of interest. For miRNA datasets this linkage
 is complicated by the fact that miRNAs are normally not contained in pathways.
 % miRNA discussion
-A simple approach for putting miRNAs in context would be, inspecting the gene locus of the microRNAs. This approach already led to some valuable results, e.g., the detection of a strong co-regulation within the genomic DLK1 locus \citep{DLK1miRNA}. But this approach is not suitable for linking the miRNAs with genes in a pathway. Firstly, genes from neighboring loci are not generally co-regulated. Secondly, a pathway shows, for example, how a signal is processed within a certain organism. The genes in a pathway are usually functionally related or present regulatory relationships. Hence, when adding new nodes to a pathway, the relation should also be made based on functional or regulatory relationships. MicroRNAs are known to have a regulatory function by binding to complementary mRNA transcripts \citep{Bartel2004}. These interactions are documented in public databases, which we use to extract interactions between miRNAs and their target mRNAs. Using this information, one can add the miRNAs to the pathways and connect them to the existing nodes by inserting edges to the corresponding targets.
+A simple approach for putting miRNAs in context would be, inspecting the gene locus of the microRNAs. This approach already led to some valuable results, e.g., the detection of a strong co-regulation within the genomic DLK1 locus \citep{DLK1miRNA}. But this approach is not suitable for linking the miRNAs with genes in a pathway. Firstly, genes from neighboring loci are not generally co-regulated. Secondly, a pathway shows, for example, how a signal is processed within a certain organism. The genes in a pathway are usually functionally related or represent regulatory relationships. Hence, when adding new nodes to a pathway, the relation should also be made based on functional or regulatory relationships. MicroRNAs are known to have a regulatory function by binding to complementary mRNA transcripts \citep{Bartel2004}. These interactions are documented in public databases, which we use to extract interactions between miRNAs and their target mRNAs. Using this information, one can add the miRNAs to the pathways and connect them to the existing nodes by inserting edges to the corresponding targets.
 
 % Zusammenfassung: Epigenomics-Daten
 The probe design of DNA methylation microarrays is typically not gene-centered, but
@@ -443,13 +443,12 @@ DNA methylation peaks, are mostly not due to probe-specific effects, but rather 
 in the DNA methylation pattern, which may be biologically meaningful. Thus, one of the summarization methods we
 consider advisable is the detection and visualization of maximum peaks as it is sensitive to local changes in DNA methylation.
 
-Alternatively, if the data is properly normalized and smoothed (i.e. probe-level specific effects are alleviated), one can also take the probe with maximum differential methylation to approximate the peak.
+Alternatively, if the data is properly normalized and smoothed (i.e., probe specific effects are alleviated), one can also take the probe with maximum differential methylation to approximate the peak.
 Nevertheless, every summarization method has its limitations. The maximum peak methods are definitely
 less robust against probe-specific effects and the results may be inconclusive as a single positive peak may
 suggest hypermethylation of a region, while the majority of the promoter is clearly hypomethylated.
-On the other hand, a mean fold-change summarization clearly suffers from the fact that localized differential methylation
-is averaged out. Means or medians of DNA methylation probes in a promoter region are typically close to zero.
-
+%On the other hand, a mean fold-change summarization clearly suffers from the fact that localized differential methylation is averaged out. Means or medians of DNA methylation probes in a promoter region are typically close to zero.
+On the other hand, if mean probe-level fold-changes are computed across larger regions, there is a higher chance that localized differential methylation is erased.
 
 % Auskommentiert da das Ende quasi besagt, dass unsere Methode schlecht ist!
 %Despite these limitations, in principle, we deem both methods suited for indicating
@@ -476,7 +475,7 @@ performed with either a loss of information or a loss of clarity. Since these in
 visualizations should provide an overview, rather than a detailed listing of all possible
 information, we tried to keep the clarity and summarize information wherever possible.
 
-At first glance, it always seems to be desirable putting as much information as possible into the pathway. For example, it would be possible to create small XY plots of promoter regions for every gene and add these pictures as small icons below each node. Other possibilities include the creation of Heatmaps or visualization of multiple timepoints with various colors in a single node.
+At first glance, it always seems to be desirable putting as much information as possible into the pathway. For example, it would be possible to create small XY plots of promoter regions for every gene and add these pictures as small icons below each node. Other possibilities include the creation of heatmaps or visualization of multiple timepoints with various colors in a single node.
 But, especially if multiple datasets are visualized together in a pathway, it is very important to summarize things and to not overload the whole picture. The main purpose of a pathway-based visualization is not to replace all other analysis and visualization methods, but rather giving a general overview that helps researchers further analyzing their data.
 
 
