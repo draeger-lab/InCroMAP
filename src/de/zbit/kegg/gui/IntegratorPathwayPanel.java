@@ -58,6 +58,7 @@ import de.zbit.data.VisualizedData;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.graph.io.Graph2Dwriter;
 import de.zbit.graph.io.def.GenericDataMap;
+import de.zbit.graph.io.def.GraphMLmaps;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
@@ -65,7 +66,6 @@ import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.integrator.GraphMLmapsExtended;
-import de.zbit.kegg.ext.GraphMLmaps;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.kegg.parser.pathway.Pathway;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
@@ -93,6 +93,7 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
    */
   public IntegratorPathwayPanel(String pathwayID, Format format, ActionListener translationResult) {
     super(pathwayID, format, translationResult);
+    TranslatorPanelTools.setupBackgroundImage(this);
   }
   
   /**

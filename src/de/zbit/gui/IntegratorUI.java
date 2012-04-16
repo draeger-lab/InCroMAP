@@ -338,6 +338,7 @@ public class IntegratorUI extends BaseFrame {
 //    Translator.VERSION_NUMBER = appVersion;
     
     TranslatorUI.watermarkLogoResource = "img/logo.png";
+    TranslatorGraphLayerPanel.optionClass = KEGGTranslatorPanelOptions.class;
   }
   
   /**

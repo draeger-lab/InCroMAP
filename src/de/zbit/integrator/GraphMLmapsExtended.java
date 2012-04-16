@@ -26,7 +26,7 @@ import java.util.Map;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.VisualizedData;
-import de.zbit.kegg.ext.GraphMLmaps;
+import de.zbit.graph.io.def.GraphMLmaps;
 import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
