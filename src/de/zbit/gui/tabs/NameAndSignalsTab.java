@@ -253,9 +253,11 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
   }
   
   @Override
-  public void updateButtons(JMenuBar menuBar, JToolBar toolbar) {
+  public void updateButtons(JMenuBar menuBar, JToolBar... toolbar) {
     super.updateButtons(menuBar, toolbar);
-    actions.updateToolbarButtons(toolbar);
+    if (toolbar!=null && toolbar.length>0) {
+      actions.updateToolbarButtons(toolbar[0]);
+    }
   }
   
   /**

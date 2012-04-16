@@ -45,6 +45,7 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.protein.ProteinModificationExpression;
+import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
@@ -58,7 +59,6 @@ import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.OrganismSelector;
 import de.zbit.kegg.gui.PathwaySelector;
-import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Species;
 import de.zbit.util.objectwrapper.LabeledObject;
@@ -272,7 +272,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
           IntegratorUITools.modifyExperimentBoxForDNAMethylation(expSelect[i], (NameAndSignals)nsTab.getExampleData());
         }
         // TODO: does this also change the experiment box?
-        //dataSelect[i].fireACtionListeners();
+        //dataSelect[i].fireActionListeners();
       }
       
       dataSelect[i].setEnabled(visDataType[i].isSelected());

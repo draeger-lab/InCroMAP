@@ -70,6 +70,8 @@ import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.data.protein.ProteinModificationExpression;
+import de.zbit.graph.gui.TranslatorGraphLayerPanel;
+import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.actions.TranslatorTabActions;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
@@ -85,10 +87,11 @@ import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.kegg.KEGGtranslatorOptions;
 import de.zbit.kegg.Translator;
+import de.zbit.kegg.ext.KEGGTranslatorPanelOptions;
 import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.kegg.gui.TranslatePathwayDialog;
 import de.zbit.kegg.gui.TranslatorGraphPanel;
-import de.zbit.kegg.gui.TranslatorPanel;
+import de.zbit.kegg.gui.TranslatorUI;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.Species;
@@ -334,7 +337,7 @@ public class IntegratorUI extends BaseFrame {
 //    Translator.APPLICATION_NAME = appName;
 //    Translator.VERSION_NUMBER = appVersion;
     
-    TranslatorPanel.logoResourcePath = "img/logo.png";
+    TranslatorUI.watermarkLogoResource = "img/logo.png";
   }
   
   /**
@@ -400,6 +403,7 @@ public class IntegratorUI extends BaseFrame {
     if (prefsIO == null) {
       prefsIO = SBPreferences.getPreferencesFor(IntegratorIOOptions.class);
     }
+    TranslatorGraphLayerPanel.optionClass = KEGGTranslatorPanelOptions.class;
   }
   
   /**

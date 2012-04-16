@@ -36,7 +36,7 @@ import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.kegg.KEGGtranslatorOptions;
-import de.zbit.kegg.ext.TranslatorPanelOptions;
+import de.zbit.kegg.ext.KEGGTranslatorPanelOptions;
 import de.zbit.util.prefs.KeyProvider;
 
 /**
@@ -123,7 +123,7 @@ public class Integrator extends Launcher {
     configList.add(EnrichmentOptions.class);
     
     configList.add(KEGGtranslatorOptions.class);
-    configList.add(TranslatorPanelOptions.class);
+    configList.add(KEGGTranslatorPanelOptions.class);
     //configList.add(GUIOptions.class);
     return configList;
   }

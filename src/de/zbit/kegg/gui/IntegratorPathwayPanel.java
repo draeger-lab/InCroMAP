@@ -56,6 +56,8 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.VisualizedData;
 import de.zbit.data.methylation.DNAmethylation;
+import de.zbit.graph.io.Graph2Dwriter;
+import de.zbit.graph.io.def.GenericDataMap;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
@@ -63,11 +65,9 @@ import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.integrator.GraphMLmapsExtended;
-import de.zbit.kegg.ext.GenericDataMap;
 import de.zbit.kegg.ext.GraphMLmaps;
-import de.zbit.kegg.io.KEGG2jSBML;
-import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
+import de.zbit.kegg.parser.pathway.Pathway;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.math.MathUtils;
 import de.zbit.util.Species;
@@ -164,7 +164,7 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
     if (nodeOrEdge instanceof Edge) return null; // Disabled...
     Graph2D graph = getDocument();
     // Show a nice ToolTipText for every node.
-    GenericDataMap<DataMap, String> mapDescriptionMap = (GenericDataMap<DataMap, String>) graph.getDataProvider(KEGG2yGraph.mapDescription);
+    GenericDataMap<DataMap, String> mapDescriptionMap = (GenericDataMap<DataMap, String>) graph.getDataProvider(Graph2Dwriter.mapDescription);
     if (nodeOrEdge==null || mapDescriptionMap==null) return null;
     
     // Create a box plot of all visualized experimental data.
@@ -228,9 +228,9 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
           for (String s: c.toString().split(",")) {
             s=s.toUpperCase().trim();
             if (s.startsWith("PATH:")) {
-              image+=KEGG2jSBML.getPathwayPreviewPicture(s);
+              image+=Pathway.getPathwayPreviewPicture(s);
             } else if (s.startsWith("CPD:")) {
-              image+=KEGG2jSBML.getCompoundPreviewPicture(s);
+              image+=Pathway.getCompoundPreviewPicture(s);
             }
           }
           

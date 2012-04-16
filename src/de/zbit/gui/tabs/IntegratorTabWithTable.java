@@ -125,10 +125,10 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
    * @see de.zbit.gui.BaseFrameTab#updateButtons(javax.swing.JMenuBar, javax.swing.JToolBar)
    */
   @Override
-  public void updateButtons(JMenuBar menuBar, JToolBar toolbar) {
+  public void updateButtons(JMenuBar menuBar, JToolBar... toolbar) {
     // Update the toolbar.
-    if (toolbar!=null) {
-      createJToolBarItems(toolbar);
+    if (toolbar!=null && toolbar.length>0) {
+      createJToolBarItems(toolbar[0]);
     }
     
     // Enable and disable items

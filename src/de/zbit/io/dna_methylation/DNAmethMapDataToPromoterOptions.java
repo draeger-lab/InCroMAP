@@ -24,7 +24,7 @@ package de.zbit.io.dna_methylation;
 import javax.swing.ButtonGroup;
 
 import de.zbit.data.methylation.DNAmethylation;
-import de.zbit.kegg.ext.TranslatorPanelOptions;
+import de.zbit.kegg.ext.KEGGTranslatorPanelOptions;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.OptionGroup;
@@ -54,12 +54,12 @@ public interface DNAmethMapDataToPromoterOptions extends KeyProvider {
   public static final Option<Integer> UPSTREAM = new Option<Integer>(
     "UPSTREAM", Integer.class, "Define the promoter region size, upstream of a TSS (in base pairs).",
     new Range<Integer>(Integer.class, "{[1,20000]}"), Integer.valueOf(2000), "Upstream of TSS", 
-    MAP_DATA_TO_GENE_PROMOTERS, TranslatorPanelOptions.TRUE_RANGE);
+    MAP_DATA_TO_GENE_PROMOTERS, KEGGTranslatorPanelOptions.TRUE_RANGE);
   
   public static final Option<Integer> DOWNSTREAM = new Option<Integer>(
       "DOWNSTREAM", Integer.class, "Define the promoter region size, downstream of a TSS (in base pairs).",
       new Range<Integer>(Integer.class, "{[1,5000]}"), Integer.valueOf(500), "Downstream of TSS",
-      MAP_DATA_TO_GENE_PROMOTERS, TranslatorPanelOptions.TRUE_RANGE);
+      MAP_DATA_TO_GENE_PROMOTERS, KEGGTranslatorPanelOptions.TRUE_RANGE);
   
   public static final Option<Boolean> DISCARD_PROBES_WITH_AMBIGUOUS_MAPPING = new Option<Boolean>(
       "DISCARD_PROBES_WITH_AMBIGUOUS_MAPPING", Boolean.class, "Discard probes that overlap with mutliple promoters.",

@@ -58,6 +58,7 @@ import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.graph.LineNodeRealizer;
+import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
@@ -72,7 +73,6 @@ import de.zbit.integrator.NameAndSignal2PWTools;
 import de.zbit.io.FileTools;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.KGMLSelectAndDownload;
-import de.zbit.kegg.gui.TranslatorPanel;
 import de.zbit.kegg.io.BatchKEGGtranslator;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
@@ -163,7 +163,7 @@ public class VisualizeDataInPathway {
    * @param tp any {@link TranslatorPanel}
    */
   public VisualizeDataInPathway(TranslatorPanel<Graph2D> tp){
-    this(tp.isGraphML()?(Graph2D) tp.getDocument():null);
+    this(tp.getDocument());
     panelContainingGraph = tp;
   }
   
