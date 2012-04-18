@@ -88,8 +88,9 @@
     	     <zipfileset excludes="META-INF/*" src="${base}/lib/JFreeChart/jcommon-1.0.17.jar"/>
     	
            <fileset dir="${SysBioPath}/bin">
-              <exclude name="de/zbit/resources/liftover/*"/>
+              <exclude name="de/zbit/resources/liftover/**/*"/>
             	<exclude name="**/package.html"/>
+           	  <exclude name="overview.html"/>
            </fileset>
     	
 <!--    	      <zipfileset excludes="META-INF/*,de/zbit/resources/liftover/*,**/package.html" src="${base}/lib/sysbio_v2_light.jar"/> -->
@@ -100,13 +101,15 @@
             <!-- <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/keggapi.jar"/> -->
             <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/wsdl4j.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/axis.jar"/>
-    	      <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/sysbio-osx-support.jar"/>
             <!-- <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/Java5/saaj.jar"/>-->
             <!-- <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/WSDbfetch.jar"/>-->
             <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/commons-cli-1.1.jar"/>
+    	      <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/quaqua.jar"/>
+    	      <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/sysbio-osx-support.jar"/>
             
             <fileset dir="${KEGGtranslatorPath}/bin">
               <exclude name="de/zbit/gui/prefs/PreferencePanels.class"/>
+            	<exclude name="**/package.html"/>
             	<exclude name="overview.html"/>
             </fileset>
             <zipfileset excludes="META-INF/*.SF" src="${KEGGtranslatorPath}/lib/y.jar"/>
