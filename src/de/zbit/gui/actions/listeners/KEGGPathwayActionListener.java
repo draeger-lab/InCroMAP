@@ -468,7 +468,9 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
   private void hightlightGenes(TranslatorPanel<Graph2D> source, Iterable<Integer> geneIDs) {
     SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
     Color colorForUnaffectedNodes = PathwayVisualizationOptions.COLOR_FOR_NO_VALUE.getValue(prefs);
-    Color affectedColor = PathwayVisualizationOptions.COLOR_FOR_MAXIMUM_FOLD_CHANGE.getValue(prefs);
+    //Color affectedColor = PathwayVisualizationOptions.COLOR_FOR_MAXIMUM_FOLD_CHANGE.getValue(prefs);
+    // It is confusing if the same color as for maxFC is used.
+    Color affectedColor = Color.YELLOW;
     TranslatorTools tools = new TranslatorTools(source);
     tools.highlightGenes(geneIDs,affectedColor, colorForUnaffectedNodes, true);
     source.repaint();
