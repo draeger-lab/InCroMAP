@@ -374,17 +374,20 @@ public class IntegratorUITools {
    * Add a "Visualize pathway" {@link JMenuItem} to the given
    * {@link JPopupMenu}.
    * @param l
-   * @param append
-   * @return
+   * @param append if not null, will append the created {@link JMenuItem} to
+   * this menu.
+   * @return the just created menu item.
    */
-  public static JPopupMenu createKeggPathwayPopup(KEGGPathwayActionListener l, JPopupMenu append) {
+  public static JMenuItem createKeggPathwayPopup(KEGGPathwayActionListener l, JPopupMenu append) {
     JMenuItem showPathway = GUITools.createJMenuItem(l,
         KEGGPathwayActionListener.VISUALIZE_PATHWAY,
         UIManager.getIcon("ICON_PATHWAY_16"));
     
-    append.add(showPathway);
+    if (append!=null) {
+      append.add(showPathway);
+    }
     
-    return append;
+    return showPathway;
   }
   
   public static JPopupMenu createVisualizeGenomicRegionPopup(NameAndSignalTabActions l, JPopupMenu append) {

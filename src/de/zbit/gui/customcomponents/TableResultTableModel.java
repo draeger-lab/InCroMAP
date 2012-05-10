@@ -23,6 +23,8 @@ package de.zbit.gui.customcomponents;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,6 +34,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.border.MatteBorder;
@@ -254,7 +257,16 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
           // It's a KEGG Pathway enrichment.
           popUp.addSeparator();
           KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
-          IntegratorUITools.addRightMousePopup(jc, IntegratorUITools.createKeggPathwayPopup(al2, popUp));
+          final JMenuItem visualizePopUp = IntegratorUITools.createKeggPathwayPopup(al2, popUp);
+          IntegratorUITools.addRightMousePopup(jc, popUp);
+          // Show pathway on double click
+          jc.addMouseListener(new MouseAdapter(){
+            public void mouseClicked(MouseEvent e){
+              if (e.getClickCount() == 2){
+                visualizePopUp.doClick();
+              }
+            }
+          });
         }
       } else {
         if (Region.class.isAssignableFrom(tab.getDataContentType())) {
