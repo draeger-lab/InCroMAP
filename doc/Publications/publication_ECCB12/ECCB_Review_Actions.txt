@@ -1,0 +1,13 @@
+- Reactome and Biocarta
+- Methylation visualization gefällt nicht so
+- DISCUSS RELATED WORK: pathline; data visualization community (e.g., Colin Ware, Tamara Munzner, Edward Tufte, etc.). For example, the Cerebral pathway visualization from Tamara Munzner
+
+DONE: - Nomenclature
+DONE: - KEGG BG and layout is an OPTIONAL STEP.
+DONE: - KEGG BG kurz erklären (given x/y match perfectly with pic)
+- 100% bei DNA methylation, kleine unterschiede "nicht so wichtig"
+- "Visualization of protein expression data" This is confusing. It's either transcript expression, protein translation, or protein modification. From the rest of the text, it seems to be about protein modification.
+- Interactivity is included
+- Kurz ekrlären dass eventuell minimale verschiebungen nötig sind um überlappungen zu vermeiden, KEGG's hand-layout aber optimal ist und nicht layouting algo verwendet werden sollte.
+
+
