@@ -58,7 +58,7 @@ We further point out strategies for displaying data from multiple proteins and p
 \section{Availability:}
 The described method is implemented as part of the InCroMAP application that is freely available at \href{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}{www.cogsys.cs.uni-tuebingen.de/software/InCroMAP}.
 %\url{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}.
-% JE: Warum schreibst du nicht "www.cogsys.cs. ..."
+
 
 \section{Contact:} \href{mailto:clemens.wrzodek@uni-tuebingen.de}{clemens.wrzodek@uni-tuebingen.de}
 \end{abstract}
@@ -70,13 +70,13 @@ The described method is implemented as part of the InCroMAP application that is 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=1.0\textwidth]{figures/visualization-steps.png}
-\caption{These pictures show an excerpt of the KEGG "MAPK signaling" pathway. It is demonstrated how the
+\caption{These pictures show an excerpt of the KEGG `MAPK signaling' pathway. It is demonstrated how the
 pathway and each of the four supported platforms are visualized in the pathway. Picture a) shows the
 pathway from the KGML document visualized as a graph. b) indicates that the information content of KEGG
 pathway visualizations can be improved by underlaying the original KEGG pathway picture. c) shows the
 pathway overlaid with mRNA expression data, where red means upregulation, blue indicates downregulation, and
-darker colors correspond to higher fold-changes. d) shows how protein modification datasets are
-visualized in the pathway. Each box below the node "Egfr" represents a different modification of this
+more saturated colors correspond to stronger differential expression. d) shows how protein modification datasets are
+visualized in the pathway. Each box below the node \emph{Egfr} represents a different modification of the corresponding
 protein and the color of the box reflects the corresponding fold-change. e) illustrates DNA
 methylation peaks in promoter regions. A bar from the middle of the black box to the left represents
 hypomethylation and hypermethylation is indicated by a bar to the right. The size of the bar
@@ -199,18 +199,20 @@ for an illustration of all the above-mentioned visualization steps.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{SCfigure*}[1][tb]
 \centering
-\includegraphics[width=.70\textwidth]{figures/mmu04110_highlight.png}
-\caption{Integrated visualization of datasets from four different platforms in the KEGG "Cell Cycle" pathway.
-The colors reflect the fold-changes, where red means upregulated and blue means
+\includegraphics[width=.675\textwidth]{figures/mmu04110_highlight.png}
+\caption{Integrated visualization of datasets from four different platforms in the KEGG `Cell Cycle' pathway.
+We highlighted three examples, which are mentioned below, with a light yellow color to ease
+finding the mentioned nodes.
+In general, colors reflect fold-changes, where red means upregulated and blue means
 downregulated. White indicates a fold-change of zero and darker colors correspond to stronger
-differential expression. The color of each node itself reflects the mRNA fold-change, e.g., "Ttk"
-shows a strong upregulation and "Smc3" is downregulated. Smaller boxes below nodes show the protein
-and protein modification expression. For example, we visualized three different forms of "Trp53": a
+differential expression. The color of each node itself reflects the mRNA fold-change, e.g., \emph{Ttk}
+shows a strong upregulation and \emph{Smc3} is downregulated. Smaller boxes below nodes show the protein
+and protein modification expression. For example, we visualized three different forms of TRP53: a
 phosphorylation at the Serine 15 (S15) site, which shows almost no expression change, a modification
 % Bitte das komma vor dem AND lassen (ein sog. "serial comma").
 of the S9 site, which is upregulated, and the basic protein itself, which is also upregulated.  The
 black boxes left of the nodes represent the maximum DNA methylation fold-change peak. A bar to the
-left indicates hypomethylation and a bar to the right hypermethylation. In out example, "Ttk" shows
+left indicates hypomethylation and a bar to the right hypermethylation. In our example, \emph{Ttk} shows
 a strong hypermethylation. MicroRNAs are added as small triangles to the pathway and connected with
 a grey edge to their mRNA targets. The color of the microRNA nodes reflects the fold-change, as
 described for the mRNA nodes.}
@@ -241,7 +243,9 @@ subsequently generated visualizations.
 At least for some pathways, the KGML document available at KEGG does not contain all information
 that is depicted in the corresponding pathway map. Thus, an overlay graph can be generated which contains the
 original pathway map as a static transparent image in the background of the interactive graph plot
-(see Figure~\ref{fig:visualization_steps}b). Owing to this feature, additional information on
+(see Figure~\ref{fig:visualization_steps}b). By using the given x, y, width and height of each node, it is possible
+to match each node exactly on the background pathway picture. However, to allow a clear distinction between the actual pathway in the foreground and the pathway background picture, the background picture should be brightened by at least 70\,\%. Furthermore, this is just an optional recommended step that allows for the creation of integrated pathway plots with additional information like compartments or further descriptions.
+Owing to this feature, additional information on
 cellular structure (e.g., schematic drawings of receptors involved in cell signaling) can be maintained.
 
 
@@ -318,8 +322,8 @@ The length of the black bar is proportional to a summary value reflecting the DN
 promoter of a certain gene.  This value is by default computed from the probes in a region ranging
 from -2000 bps upstream of the transcription start site to 500 bps downstream. Normally, the
 value of the maximum peak found in the promoter of a gene is visualized. For peak detection,
-Nimblegen proposed two algorithms which are called "Windowed Threshold Detection" and
-"Second Derivative Peak Detection". A detailed description of these methods can be found in the
+Nimblegen proposed two algorithms which are called `Windowed Threshold Detection' and
+`Second Derivative Peak Detection'. A detailed description of these methods can be found in the
 user's guide of Nimblegen's SignalMap software \citep[see][]{NimblegenSignalMapUserGuide}.
 In addition to those sophisticated peak detection methods, one can also approximate peaks by
 using simple methods like picking the probe with maximum differential methylation (i.e., $\max|fold-change|$).
@@ -358,12 +362,12 @@ chromosome and the genomic position of each probe to facilitate the mapping from
 \fbox{
   \includegraphics[width=.47\textwidth]{figures/meth-details.png}
 }
-\caption{Integrated visualization of the "MAPK signaling" pathway with a detailed view of DNA methylation
-in the proximal promoter of "Egfr". The black DNA methylation bar next to the "Egfr" gene in the pathway
+\caption{Integrated visualization of the `MAPK signaling' pathway with a detailed view of DNA methylation
+in the proximal promoter of \emph{Egfr}. The black DNA methylation bar next to the \emph{Egfr} gene in the pathway
 plot stretches from the middle to the right of the box, which indicates strong hypermethylation. The length
 of the black bar corresponds to the height of the maximum peak of the red curve. This curve displays the probe-level
-fold-changes plotted along the promoter region of the "Egfr" gene. The light blue curve shows the DNA methylation
-profile of the "Egfr" gene observed in another sample group.}
+fold-changes plotted along the promoter region of \emph{Egfr}. The light blue curve shows the DNA methylation
+profile of \emph{Egfr}, observed in another sample group.}
 \label{fig:methdetails}
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
