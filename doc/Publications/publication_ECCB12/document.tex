@@ -109,7 +109,7 @@ such as DNA methylation can be monitored on a genome-wide level using microarray
 Several tools exist for the visual inspection of datasets from individual platforms \citep[see][for
 some examples]{Gehlenborg2010}. However, the current inventory of publicly available tools, that are
 capable of integrating and jointly visualizing data from multiple microarray platforms, is still
-very limited.  Here, we introduce a method for integrated pathway-centered visualization of
+very limited. Here, we introduce a method for integrated pathway-centered visualization of
 datasets, generated from the same biological samples using different microarray platforms, which
 monitor complementary genomic and epigenomic features.
 
@@ -123,7 +123,7 @@ problem under study, than individual genes or genomic regions.
 In recent years, diverse tools were developed, which are specialized in pathway analysis (e.g.,
 Ingenuity) or pathway visualization (e.g., Cytoscape -- \citealp{Cytoscape} or KEGG Atlas --
 \citealp{KEGGAtlas}). Some of these tools offer visualizing experimental data in a pathway (e.g.,
-KegArray -- \citealp{KEGG}, GenMAPP -- \citealp{GenMAPP} or MGV -- \citealp{Symons2011}). For this
+KegArray -- \citealp{KEGG}, Pathline -- \citealp{Pathline}, GenMAPP -- \citealp{GenMAPP} or MGV -- \citealp{Symons2011}). For this
 purpose, the experimental data is typically mapped to a color gradient and displayed in the
 background color of the pathway nodes. GenMAPP or MGV even have capabilities to display multiple
 colors in a single node (e.g., for the visualization of time-series experiments). MGV goes one step
@@ -210,7 +210,7 @@ shows a strong upregulation and \emph{Smc3} is downregulated. Smaller boxes belo
 and protein modification expression. For example, we visualized three different forms of TRP53: a
 phosphorylation at the Serine 15 (S15) site, which shows almost no expression change, a modification
 % Bitte das komma vor dem AND lassen (ein sog. "serial comma").
-of the S9 site, which is upregulated, and the basic protein itself, which is also upregulated.  The
+of the S9 site, which is upregulated, and the basic protein itself, which is also upregulated. The
 black boxes left of the nodes represent the maximum DNA methylation fold-change peak. A bar to the
 left indicates hypomethylation and a bar to the right hypermethylation. In our example, \emph{Ttk} shows
 a strong hypermethylation. MicroRNAs are added as small triangles to the pathway and connected with
@@ -281,7 +281,7 @@ blue through white to red is used to illustrate down- and upregulation,
 respectively. Non-differentially expressed genes are shown in white, and pathway nodes for which no
 mRNA data is available are displayed in grey. If desired, \emph{p}-values can be shown instead of
 fold-changes. For this purpose, we propose to map the negative logarithm of the \emph{p}-values to a
-color gradient, which leads to a more intuitive illustration of the observed significances.  See
+color gradient, which leads to a more intuitive illustration of the observed significances. See
 Figure~\ref{fig:visualization_steps}c) for an example of visualized mRNA data.
 
 % JE: Würde den Absatz streichen, da er zu viele technische Details enthält
@@ -319,7 +319,7 @@ background and contain a black bar which stretches from the middle to the left, 
 
 % Berechnung des DNAm Gesamtwerts
 The length of the black bar is proportional to a summary value reflecting the DNAm status of the
-promoter of a certain gene.  This value is by default computed from the probes in a region ranging
+promoter of a certain gene. This value is by default computed from the probes in a region ranging
 from -2000 bps upstream of the transcription start site to 500 bps downstream. Normally, the
 value of the maximum peak found in the promoter of a gene is visualized. For peak detection,
 Nimblegen proposed two algorithms which are called `Windowed Threshold Detection' and
@@ -461,7 +461,7 @@ On the other hand, if mean probe-level fold-changes are computed across larger r
 
 % JE: Habe den Abschnitt neu geschrieben
 % For example, with this procedure one can define that all probes within -2000 and +500 bps of a TSS
-% are most important for the regulation of this gene's expression.  But then, it is not recommended to
+% are most important for the regulation of this gene's expression. But then, it is not recommended to
 % visualize all this information in the pathway. For example, it would be possible to create small XY
 % plots of the promoter region for every gene and add these pictures as small icons below each
 % node. But this would clutter the picture and destroy the clarity of it. Thus, we concluded that it
@@ -482,6 +482,10 @@ information, we tried to keep the clarity and summarize information wherever pos
 At first glance, it always seems to be desirable putting as much information as possible into the pathway. For example, it would be possible to create small XY plots of promoter regions for every gene and add these pictures as small icons below each node. Other possibilities include the creation of heatmaps or visualization of multiple timepoints with various colors in a single node.
 But, especially if multiple datasets are visualized together in a pathway, it is very important to summarize things and to not overload the whole picture. The main purpose of a pathway-based visualization is not to replace all other analysis and visualization methods, but rather giving a general overview that helps researchers further analyzing their data.
 
+
+\section{Implementation and availability}
+The described methods are implemented in InCroMAP, a tool for integrated analysis of cross-platform microarray and Pathway data. 
+InCroMAP is a Java\texttrademark{} application that provides an interactive, user-friendly and easy-to-use graphical user interface (GUI), and is freely available under the LGPL version 3 license from \href{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}{www.cogsys.cs.uni-tuebingen.de/software/InCroMAP}. The application can import all mentioned data types, is able to automatically download and layout KGML pathways, and apply all described visualization methods on those pathways. The resulting graphs can be exported as JPG, GIF, TGF, GML or GraphML. Furthermore, many options are provided that control, e.g., various thresholds or color definitions and allow for customization of the generated cross-platform pathway visualizations.
 
 
 \section{Conclusion}
