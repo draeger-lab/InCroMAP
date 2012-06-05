@@ -16,7 +16,7 @@ straight-for-ward
 \begin{document}
 \firstpage{1}
 
-\title[Pathway-based visualization of cross-platform microarray datasets]{Pathway-based visualization of cross-platform microarray datasets}
+\title[Visualization of cross-platform microarray data]{Pathway-based visualization of cross-platform microarray datasets}
 \author[Clemens Wrzodek \textit{et~al}]{Clemens Wrzodek\,$^{1\footnote{to whom correspondence should be addressed}}$, Johannes Eichner\,$^{1}$ and Andreas Zell\,$^1$}
 
 \address{$^{1}$Center for Bioinformatics Tuebingen (ZBIT), \\University of Tuebingen, 72076 T\"ubingen, Germany}
@@ -201,8 +201,7 @@ for an illustration of all the above-mentioned visualization steps.
 \centering
 \includegraphics[width=.675\textwidth]{figures/mmu04110_highlight.png}
 \caption{Integrated visualization of datasets from four different platforms in the KEGG `Cell Cycle' pathway.
-We highlighted three examples, which are mentioned below, with a light yellow color to ease
-finding the mentioned nodes.
+%We highlighted three examples, which are mentioned below, with a light yellow color to ease finding the mentioned nodes.
 In general, colors reflect fold-changes, where red means upregulated and blue means
 downregulated. White indicates a fold-change of zero and darker colors correspond to stronger
 differential expression. The color of each node itself reflects the mRNA fold-change, e.g., \emph{Ttk}
@@ -213,7 +212,9 @@ phosphorylation at the Serine 15 (S15) site, which shows almost no expression ch
 of the S9 site, which is upregulated, and the basic protein itself, which is also upregulated. The
 black boxes left of the nodes represent the maximum DNA methylation fold-change peak. A bar to the
 left indicates hypomethylation and a bar to the right hypermethylation. In our example, \emph{Ttk} shows
-a strong hypermethylation. MicroRNAs are added as small triangles to the pathway and connected with
+a strong hypermethylation.
+All above mentioned genes are highlighted in yellow.
+MicroRNAs are added as small triangles to the pathway and connected with
 a grey edge to their mRNA targets. The color of the microRNA nodes reflects the fold-change, as
 described for the mRNA nodes.}
 \label{fig:cellcycle}
@@ -243,9 +244,10 @@ subsequently generated visualizations.
 At least for some pathways, the KGML document available at KEGG does not contain all information
 that is depicted in the corresponding pathway map. Thus, an overlay graph can be generated which contains the
 original pathway map as a static transparent image in the background of the interactive graph plot
-(see Figure~\ref{fig:visualization_steps}b). By using the given x, y, width and height of each node, it is possible
-to match each node exactly on the background pathway picture. However, to allow a clear distinction between the actual pathway in the foreground and the pathway background picture, the background picture should be brightened by at least 70\,\%. Furthermore, this is just an optional recommended step that allows for the creation of integrated pathway plots with additional information like compartments or further descriptions.
-Owing to this feature, additional information on
+(see Figure~\ref{fig:visualization_steps}b). By using the given x and y coordinates together with height and width of each interactive node, it is possible
+to match each node exactly on the background pathway picture. However, to allow a clear distinction between the actual pathway in the foreground and the pathway background picture, the background picture should be brightened by at least 70\,\%.
+%Furthermore, this is just an optional recommended step that allows for the creation of integrated pathway plots with additional information like compartments or further descriptions.
+Owing to this optional feature, additional information on
 cellular structure (e.g., schematic drawings of receptors involved in cell signaling) can be maintained.
 
 
@@ -272,7 +274,7 @@ Next, these data have to be broken down to a single value for each pathway node,
 determines the color of the node. As single nodes can represent multiple genes in KEGG, the
 intensities measured by probes, corresponding to the same node, have to be summarized. To this end,
 either the mean or median is calculated across these probes, or the probe
-with the strongest or most significant signal (i.e., $\min\emph{p}-value$ or $\max|fold-change|$) is
+with the strongest or most significant signal (i.e., $\min\emph{p}\text{-}value$ or $\max|fold\text{-}change|$) is
 decisive for coloring the node.
 
 % Einfärbung der Knoten
@@ -484,8 +486,8 @@ But, especially if multiple datasets are visualized together in a pathway, it is
 
 
 \section{Implementation and availability}
-The described methods are implemented in InCroMAP, a tool for integrated analysis of cross-platform microarray and Pathway data. 
-InCroMAP is a Java\texttrademark{} application that provides an interactive, user-friendly and easy-to-use graphical user interface (GUI), and is freely available under the LGPL version 3 license from \href{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}{www.cogsys.cs.uni-tuebingen.de/software/InCroMAP}. The application can import all mentioned data types, is able to automatically download and layout KGML pathways, and apply all described visualization methods on those pathways. The resulting graphs can be exported as JPG, GIF, TGF, GML or GraphML. Furthermore, many options are provided that control, e.g., various thresholds or color definitions and allow for customization of the generated cross-platform pathway visualizations.
+The described methods are implemented in InCroMAP, a tool for integrated analysis of cross-platform microarray and Pathway data.
+InCroMAP is a Java\texttrademark{} application that provides an interactive, user-friendly and easy-to-use graphical user interface (GUI), and is freely available under the LGPL version 3 license from \href{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}{www.cogsys.cs.uni-tuebingen.de/software/InCroMAP}. The application can import all mentioned data types, is able to automatically download and layout KEGG pathways, and apply all described visualization methods on those pathways. The resulting graphs can be exported as JPG, GIF, TGF, GML or GraphML. Furthermore, many options are provided that control, e.g., the mapping of expression values to a continuous color gradient and allow for customization of the generated cross-platform pathway visualizations.
 
 
 \section{Conclusion}
@@ -525,13 +527,17 @@ generated by the here presented visualization method.
 % pathway informationen, miRNA relationen, expressionsdaten von miRNA, mRNA, bla; und sonst ist
 % meist nach dem enrichment schluss bzw mRNA einfarbung bereits das maximum moegliche").
 
+\section*{Funding}
+%The research leading to these results has received funding from the Innovative Medicine Initiative Joint Undertaking (IMI JU) under grant agreement nr. 115001 (MARCAR project).
+This work was supported by the Innovative Medicine Initiative Joint Undertaking (IMI JU), MARCAR project [grant number 115001].
+
 \section*{Acknowledgement}
 We gratefully acknowledge contributions from Andreas Dr\"ager and Finja B\"uchel, as well as the
 whole MACRCAR consortium.
 
-\paragraph{Funding\textcolon}
-The research leading to these results has received funding from the Innovative Medicine Initiative
-Joint Undertaking (IMI JU) under grant agreement nr. 115001 (MARCAR project).
+%\paragraph{Funding\textcolon}
+%The research leading to these results has received funding from the Innovative Medicine Initiative
+%Joint Undertaking (IMI JU) under grant agreement nr. 115001 (MARCAR project).
 
 \bibliographystyle{natbib}
 %\bibliographystyle{achemnat}
