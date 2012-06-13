@@ -60,9 +60,11 @@
 
 %% Custom packages that should not violate PLoS author guidelones
 \usepackage[greek,english]{babel} % for non-itealic greek letters
-\newcommand{\Beta}{\greektext b\latintext}
+\usepackage[pdfborder={0 0 0}]{hyperref} % Allow making urls as links, no colored boxes.
 
-\newcommand{\TODO}[1]{\textcolor{red}{\textbf{#1}}}
+\newcommand{\Beta}{\greektext b\latintext}
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{\underline{TODO:} #1}}}
+\newcommand{\NOTE}[1]{\textcolor{blue}{\textbf{\underline{Note:} #1}}}
 
 \hyphenation{
 microRNA
@@ -99,46 +101,75 @@ $\ast$ E-mail: clemens.wrzodek@uni-tuebingen.de
 
 % Please keep the abstract between 250 and 300 words
 \section*{Abstract}
+%TODO: Use words Joint and heterogenous, cross-platform
 
-%TODO: Use words Joint and heterogenous
+In the last decade, measuring transcriptome data has become the most popular method for genome-wide high-throughput analysis of diverse biological samples. But nowadays, genome-wide evaluation of regulatory effects, e.g., from DNA methylations or microRNAs has become more and more important to explain the observed transcriptomic changes. Furthermore, high-throughput technologies are available that facilitate the generation of omics data from multiple different layers of gene regulation.
+%This technology allows for generating data from multiple different levels of gene-regulation from the same set of biological samples.
+These datasets are usually analyzed with respect to the underlying platform. Cross-platform effects, such as a hypermethylated DNA region that leads to suppression of a microRNA, which in turn increases the amount of a targeted mRNA are hard to discover. 
+Applications and methods that allow for an integrated analysis of data from multiple heterogeneous microarray platforms are very rare.
+
+We here propose multiple methods and visualizations for a joint analysis of biological samples, whose expression has been measured with multiple different platforms. All described analysis techniques are implemented in the InCroMAP application, available from \url{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}. The usefulness of all methods is demonstrated on a cross-platform dataset that comprises mRNA, microRNA, DNA methylation and protein modification data from \emph{Ctnnb1}- and \emph{Ha-ras}-mutated tumors.
+%The integrated analysis of all four data types provides biological insights that are much harder to identify using separate analysis procedures.
+\TODO{W\"are super wenn wir hier noch eine tolle (abstract-style) Erkl\"arung h\"atten, warum grade die Analyse der Daten von diesen Tumoren so interessant ist. Daf\"ur habe ich noch 60 bis 100 W\"orter platz gelassen.}
+We show that the integrated analysis of all four data types provides much deeper biological insights into the mechanisms of those tumor samples then independent analyses of all platforms.
 
 
-\TODO{Konzept (technisch): Heute nicht nur mRNA sondern auch viele andere microarrays (miRNA, DNAm, etc.). Daten von den selben samples verfügbar. Methoden für platformübergreifende datenanalyse und visualisierung sind sehr gefragt.
-Konzept (biologisch): Auf Ha-Ras / CTNNB1 eingehen, vor allem platformübergreifende zusammenhänge erläutern und RESULTS dass diese mit den genannten Methoden super analysier/ und visualisierbar sind.}
+
+
+%For the analysis of diverse biological samples, microarrays that measure the transcript level of diverse genes are often employed.
+%An important step for the analysis of biological samples
+%The analysis of biological samples has primarily
+%To gain insights into complex regulatory processes
+%Insights into biochemical processes
+%Analysis of biological samples
+%\TODO{Konzept (technisch): Heute nicht nur mRNA sondern auch viele andere microarrays (miRNA, DNAm, etc.). Daten von den selben samples verfügbar. Methoden für platformübergreifende datenanalyse und visualisierung sind sehr gefragt.
+%Konzept (biologisch): Auf Ha-Ras / CTNNB1 eingehen, vor allem platformübergreifende zusammenhänge erläutern und RESULTS dass diese mit den genannten Methoden super analysier/ und visualisierbar sind.}
 
 % Please keep the Author Summary between 150 and 200 words
 % Use first person. PLoS ONE authors please skip this step.
 % Author Summary not valid for PLoS ONE submissions.
 \section*{Author Summary}
-\TODO{Eine art subjektive zusammenfassung zu dem artikel schreiben...}
+\NOTE{Dies ist eine PLoS comp. biol. spezifische, subjektive Kurzfassung die f\"ur jeden Wissenschaftler verst\"andlich sein sollte. PLoS sagt: Please keep the Author Summary between 150 and 200 words. Use first person.}
 
+A frequent method to discover the impact of a certain stimulus on a cell or organism is comparing treated samples to untreated control samples.
+We employed this technique to discover the differences between healthy and tumor samples from male mice with mutations in the \emph{Ctnnb1} or \emph{Ha-ras} gene. Multiple heterogenous platforms have been employed to gain a broad insight into the biochemical changes in the tumor tissue across multiple layers. With these platforms, changes in messenger RNA, microRNA and protein modification expression can be detected as well as changes in DNA methylation.
 
+Many tools and methods are available for an analysis of the individual platforms. However, methods for cross-platform analysis or visualizations are very rare. Especially, no techniques are available that focus on integrated analysis of DNA methylation, mRNA, microRNA and protein modification data.
+Therefore, we developed multiple strategies that ease cross-platform analysis of data from the same set of biological samples. These strategies can also be employed for a subset of the mentioned platforms and include tabular integrations, an extension of gene-set enrichment analysis to multiple platforms and pathway-based visualization techniques.
+
+All of them are implemented into an easy-to-use application that bridges the gap from single dataset analysis to an integrated analysis of cross-platform data. The developed methods, included in the application, have been used to analyze the mentioned tumor datasets and some results are highlighted in the context of this publication.
+
+%The described methods and published tool should provide other researchers tools to perform joint analysis of cross-platform datasets.
 \section*{Introduction}
 
-\TODO{Vor Abgabe suchen und vereinheitlichen von
+\TODO{CLEMENS: Vor Abgabe suchen und vereinheitlichen von
 \begin{itemize}
   \item gene and genome nomenclature
   \item \emph{p}-value
   \item fold-change
   \item Ctnnb1
   \item Ha-ras
-  \item up-regulated and down-regulated
+  \item up-regulated and down-regulated (Bindestrich vs. kein Bindestrich)
+  \item microRNA // miRNA; (phospho-) protein // protein modification
   \item BE vs AE (analyses vs. analyzes)
   \item irgendwo erklären dass unsere fold-changes immer log2 based sind!
+  \item Anfuehrungsstriche // doppelte vs. einfache
+  \item im Material u Methoden teil kurzer abschnitt über fold-changes log2 und thresholds die verwendet wurden. Weiterhin, welche miRNA db's.
 \end{itemize}
 }
 
 In the past, the microarray technology has primarily been used to detect changes in genome-wide gene expression of various biological systems. Usually, a set of biological samples is tested under various experimental and corresponding control conditions. This allows to calculate a relative change in gene expression between treatments and controls, but also between different treatments. Thus, for example, comparisons between differently mutated tumors or animal groups treated with different types of tumor promoters are possible. It has previously been shown that in mice, treatment with the anticonvulsant phenobarbital following a single ip injection of the mutagenic initiator N-diethylnitrosamine (DEN) predominantly leads to liver tumors harboring activating point mutations in the gene encoding the transcription factor \Beta-Catenin, \emph{Ctnnb1} (\TODO{Citation?}). In contrast, tumors isolated from animals treated with DEN only rather carry \emph{Ha-ras}- or \emph{B-raf}-mutations, both of which lead to constant activation of the MAP-kinase signaling pathway \cite{Aydinlik2001}. In the study described by Stahl \emph{et al.}, the microarray approach was used to explore the effect of phenobarbital-treatment on gene expression in mouse liver tumors as compared to non-tumor control tissue \cite{Stahl2005a}.
 
 Today, the application of high-throughput techniques evolved from gene expression to a broad range of other genomic, proteomic and epigenomic features. MicroRNAs (miRNAs) are short non-coding RNAs that regulate gene-expression by potentially binding to complementary mRNA targets \cite{He2004}. MiRNA expression can be measured very similarly to mRNA expression, by defining specific probesets for those RNAs. There are several microarray platforms available today to detect the expression of miRNAs \cite{Hoheisel2006}.
-
+%
 When studying the proteome in context of signaling networks, it is very important to know the phosphorylation state of proteins. In many cases, only phosphorylated proteins become active and propagate a signal, e.g., in a pathway. The expression of basic and phosphorylated proteins can be measured with reverse-phase-protein arrays \cite{Pirnia2009}.
-
+%
 Epigenetic alterations are often detected by measuring DNA methylation of cytosines. It is known that DNA methylation is the only covalent modification of DNA and hypermethylation of cytosines in gene promoters leads to gene silencing of corresponding genes\cite{TheEpigenomicsOfCancer,TheMammalianEpigenome}. The microarray technology has been extended to approaches that tile the promoter regions of defined genes to detect the degree of methylation in those regions \cite{Schumacher2006}.%(TODO: ein wenig erweitern?, auf bisulfite eingehen?)
 
-Using all those microarray technologies (mRNA, miRNA, (phospho-)protein, and DNA methylation), on the same set of biological samples leads to high-dimensional, heterogeneous cross-platform datasets. Figure~1 For most of those individual platforms there are many microarray analysis methods available that go beyond the usual calculation and comparison of fold-changes or other statistical comparisons. But many interesting biological findings are not covered by single platform analysis. The biological system of a cell includes all levels of regulation and omics data expression and therefore, many conclusions can only be drawn when studying multiple genomic layers in parallel.
+Using all those microarray technologies (mRNA, miRNA, protein modification, and DNA methylation) on the same set of biological samples leads to high-dimensional, heterogeneous cross-platform datasets. A visualization of the genomic and gene-regulatory context for all described data types is provided in Figure~\ref{fig:1}.
+For most of those individual platforms, many microarray analysis methods are available that go beyond the usual calculation and comparison of fold changes or other statistical comparisons. But some interesting biological findings are not covered by single platform analysis. The biological system of a cell includes all levels of regulation and omics data expression and therefore, many conclusions can only be drawn when studying multiple genomic layers in parallel.
 
-We here present methods that ease the integrated study of of multiple high-throughput datasets, in which several microarray platforms have been used to investigate various genomic features in the same set of biological samples. The usefulness of those methods is demonstrated by application to a cross-platform dataset of mRNA, miRNA, protein modification, and DNA methylation data, obtained from \emph{Ha-ras}- or \emph{Ctnnb1}-mutated liver tumors in \emph{mus musculus}. These algorithms are going beyond single gene or protein expression analysis (i.e. complementary to locus-specific approaches) and thus into an area of computational biology with a very sparse research density. Interactions detected in heterogeneous datasets have the power to, e.g., reveal novel and very promising biomarker candidates.
+We here present methods that ease the integrated study of of multiple high-throughput datasets, in which several microarray platforms have been used to investigate various genomic features in the same set of biological samples. The usefulness of those methods is demonstrated by application to a cross-platform dataset of mRNA, miRNA, protein modification, and DNA methylation data, obtained from \emph{Ha-ras}- or \emph{Ctnnb1}-mutated liver tumors in \emph{mus musculus}. These algorithms are going beyond single gene or protein expression analysis (i.e., complementary to locus-specific approaches) and thus into an area of computational biology with a very sparse research density. Interactions detected in heterogeneous datasets have the power to, e.g., reveal novel and very promising biomarker candidates.
 
 \section*{Results and Discussion}
 
@@ -154,7 +185,7 @@ Having all platforms integrated, we propose numerous method for integrated repre
 
 \subsubsection*{Data pairing}
 
-A first approach that is already suitable for any two datasets is ``data pairing". Data pairing allows viewing two different datasets at once. In the first step, each value from dataset one is mapped on the matching value in dataset two. Then, both values are displayed next to each other in a tabular view. This procedure allows a first glance on integrated data that comes from two platforms. It is especially useful for showing microRNA and mRNA target interactions: the miRNA is shown, together with p-value and fold change on the left hand side, whereas the targeted mRNA is shown, together with p-value and fold change on the right hand side. In the middle between both datasets, the relation is displayed: This includes the source of this target mapping (miRNA target database or prediction algorithm), the confidence of this interaction and the inferred miRNA effect on the mRNA.
+A first approach that is already suitable for any two datasets is ``data pairing". Data pairing allows viewing two different datasets at once. In the first step, each value from dataset one is mapped on the matching value in dataset two. Then, both values are displayed next to each other in a tabular view. This procedure allows a first glance on integrated data that comes from two platforms. It is especially useful for showing microRNA and mRNA target interactions: the miRNA is shown, together with p-value and fold change on the left-hand side, whereas the targeted mRNA is shown, together with p-value and fold change on the right-hand side. In the middle between both datasets, the relation is displayed: This includes the source of this target mapping (miRNA target database or prediction algorithm), the confidence of this interaction and the inferred miRNA effect on the mRNA.
 %
 The InCroMAP application includes all required algorithms to pair any two datasets -– this includes the automated target annotation for miRNA data, the described gene-centering preprocessing steps and the actual creation and rendering of the paired table. An example can be seen in Figure~\ref{fig:2:pairing}.
 
@@ -184,7 +215,9 @@ A common data analysis method, especially for mRNA data, is the gene set enrichm
 
 % Prozedur-Bild
 
-We propose a cross-platform extension of this procedure for multiple, integrated heterogeneous datasets. The method is depicted in Figure~\ref{fig:5:iEnrichment}. As usually, platform-specific low-level processing and gene-centering procedures are performed for each platform. Each gene is then being assigned a p-value and fold change. Based on these values, a mixed gene pool of significant differentially expressed genes is created, by picking and merging the significantly differentially expressed genes from all platforms. On this mixed gene pool, an enrichment analysis is now performed. As a result, terms (e.g., pathways) are returned that are enriched across all platforms and not only effects of, for example, mRNA or miRNA data analysis. This provides a much broader insight into pathway changes in the organism, upon treatment with a specific compound, than enrichment analysis of a single platform.
+We propose a cross-platform extension of this procedure for multiple, integrated heterogeneous datasets. The method is depicted in Figure~\ref{fig:5:iEnrichment}. As usually, platform-specific low-level processing and gene-centering procedures are performed for each platform. Each gene is then being assigned a p-value and fold change. Based on these values, a mixed gene pool of significant differentially expressed genes is created by picking and merging the significantly differentially expressed genes from all platforms. This includes genes with strong methylation changes in their promoters, target of differentially expressed microRNAs, protein modifications with strong differential expression, and genes that show strong changes in their mRNA level.
+On this mixed gene pool, a standard enrichment analysis is now performed as described by various other publications \cite{Subramanian2005,Backes2007}.
+As a result, terms (e.g., pathways) are returned that are enriched across all platforms and not only effects of, for example, mRNA or miRNA data analysis. This provides a much broader insight into pathway changes in the organism, upon treatment with a specific compound, than enrichment analysis of a single platform.
 
 Figure~\ref{fig:6:iEnrichmentVsMRNA} shows a comparison between mRNA-only and an integrated gene set enrichment, using mRNA, miRNA, DNA methylation and protein modification data from \emph{Ctnnb1}-mutated tumors. It is clearly visible that the integrated enrichment shows significant changes in many cancer related pathways, whereas the mRNA enrichment shows most significant changes in metabolic pathway maps. Having differentially cancer-related pathways as a results in tumor tissue shows the comprehensiveness of an integrated enrichment, in contrast to platform-specific results, showing in detail which pathways are differentially regulated in this particular platform.
 
@@ -197,7 +230,7 @@ Following up the common pathway enrichment analysis, integrated visualization of
 
 %\textbf{Metabolic overview} --
 %
-To get a comprehensive overview of the regulation of metabolic processes and affected pathways in a microarray dataset, we propose to modify KEGG's ``Metabolic Pathways" map. This pathway visualizes compounds, enzymes and secondary pathways, which are involved in many important metabolic processes in an organism (see Figure~\ref{fig:7:metabolicOverview} and Supplement~\TODO{X}). To visualize specific microarray data and differentially regulated metabolic processes in this pathway, the color of various pathway elements is changed. All downregulated enzymes (depicted as edges between compounds) are colored blue and all upregulated enzymes are colored red. Stronger differential expression is indicated by more saturated colors. With this procedure, the expression of all contained enzymes is visualized, e.g., based on an mRNA dataset. Further, the metabolic overview pathway contains multiple rectangular nodes which are references to secondary metabolic pathways. The color of those referenced pathways can be changed to reflect the p-value of this pathway in an enrichment analyses. In other words, the color of referenced pathways can be changed to a more saturated color if the pathway is significantly differentially regulated in a microarray dataset and to a brighter color if it is less significantly differentially regulated. The resulting picture is an overview which metabolic processes and enzymes are up- or downregulated in any input microarray dataset. See Figure~\ref{fig:7:metabolicOverview} for an example.
+To get a comprehensive overview of the regulation of metabolic processes and affected pathways in a microarray dataset, we propose to modify KEGG's ``Metabolic Pathways" map. This pathway visualizes compounds, enzymes and secondary pathways, which are involved in many important metabolic processes in an organism (see Figure~\ref{fig:7:metabolicOverview} and Supplement~\TODO{1}). To visualize specific microarray data and differentially regulated metabolic processes in this pathway, the color of various pathway elements is changed. All downregulated enzymes (depicted as edges between compounds) are colored blue and all upregulated enzymes are colored red. Stronger differential expression is indicated by more saturated colors. With this procedure, the expression of all contained enzymes is visualized, e.g., based on an mRNA dataset. Further, the metabolic overview pathway contains multiple rectangular nodes which are references to secondary metabolic pathways. The color of those referenced pathways can be changed to reflect the p-value of this pathway in an enrichment analysis. In other words, the color of referenced pathways can be changed to a more saturated color if the pathway is significantly differentially regulated in a microarray dataset and to a brighter color if it is less significantly differentially regulated. The resulting picture is an overview which metabolic processes and enzymes are up- or downregulated in any input microarray dataset. See Figure~\ref{fig:7:metabolicOverview} for an example.
 
 % Metabolic overview bild
 
@@ -211,17 +244,19 @@ Integrating microRNA data into the pathway visualization is more difficult, as p
 
 DNA methylation data can be interpreted as a trajectory in a defined window for each gene. This information must be summarized, in order to crete a brief overview for each gene. Since most researchers want to know if a gene is rather hyper- or hypomethylated, we recommend to inspect and visualize the DNA methylation peaks. Visualizing the mean or median is not very informative since small local peaks can already have a strong influence on gene expression. Hence, to get a single summary value for each gene, any peak detection algorithm can be applied to a DNA methylation dataset (see, e.g., the user's guide of Nimblegen's SignalMap software \cite{NimblegenSignalMapUserGuide}) or the peak can be approximated by taking the probe with maximum differential expression on a normalized and smoothed DNA methylation dataset.
 
-\TODO{TODO: Folgende Bloecke ueberarbeiten und etwas results zusammentippen, auf glycolysis fig eingehen, zusätzlich noch eine fig (wnt/map) mit alle 4 typen.}
-
 The summary value for DNA methylation data is visualized as a black bar that is drawn from the middle to the left side to indicate hypomethylation and from the middle to the right side to indicate hypermethylation. The total size of the bar is proportional to the summary value, i.e., the maximum DNA methylation peak. The aim of this visualization is giving a first hint if a gene promoter is differentially methylated. In the InCroMAP application, the gene can be selected to get a detailed plot of the actual DNA methylation trajectory in the corresponding promoter region (see Figure~\ref{fig:4:egfrMethylation}).
 
-A global overview of metabolic pathways in \emph{Ha-ras}- or \emph{Ctnnb1}-mutated tumors on mRNA level provided a first insight into the profound metabolic changes taking place in the tumors. Integrated enrichment indicated individual pathways with the strongest differential regulation in the respective tumor tissue as compared to normal tissue. The visualizations clearly show characteristic perturbations in the metabolism of \emph{Ctnnb1}-mutated tumors. 
-
-Major transcriptional changes take place in key pathways of energy metabolism, such as glycolysis and gluconeogenesis, the citric acid cycle or the urea cycle. In general, the key enzymes of gluconeogenesis are down-regulated whereas the expression of glucokinase, which catalyzes the first step of glycolysis, is up-regulated. Also, the rate-limiting enzymes of the citric acid cycle are up-regulated. This might indicate that this tumor type uses glucose as fuel rather than synthesizing it \emph{de novo}. Furthermore, the key enzymes of the urea cycle as well as several enzymes involved in amino acid catabolism are characteristically down-regulated in \emph{Ctnnb1}-mutated tumors which is consistent with previous findings \cite{Stahl2005}.
 
 
+The global overview of metabolic pathways in \emph{Ha-ras}- and \emph{Ctnnb1}-mutated tumors on mRNA level provides a first insight into the profound metabolic changes taking place in the tumors.
+%Integrated enrichment indicated individual pathways with the strongest differential regulation in the respective tumor tissue as compared to normal tissue.
+The visualizations show characteristic perturbations in the metabolism of \emph{Ha-ras}-mutated as opposed to \emph{Ctnnb1}-mutated tumors.
+%
+Major transcriptional changes take place in key pathways of energy metabolism, such as glycolysis and gluconeogenesis, the citric acid cycle or the urea cycle.
+In general, many key enzymes of gluconeogenesis (PCK1, G6PC, etc.) are down-regulated whereas the expression of glucokinase (\emph{Gck}), which catalyzes the first step of glycolysis, is up-regulated in \emph{Ctnnb1} mutated tumors. Figure~\ref{fig:9:GlycolysisCtnnb1Ras} shows mRNA fold changes and maximum DNA methylation peaks within parts of the ``Glycolysis / Gluconeogenesis" pathway for both tumors. Further, there are some interesting examples in which promoter methylation correlates well with mRNA expression, for example the phosphoglucomutase (\emph{Pgm}), \emph{G6Pc} or glucose phosphate isomerase 1 (\emph{Gpi1}).
+Also, some key enzymes of the citric acid cycle, such as the isocitrate dehydrogenase 3 alpha (IDH3a) or the citrate synthase (CS), are up-regulated. This might indicate that this tumor type uses glucose as fuel rather than synthesizing it \emph{de novo}. Furthermore, the key enzymes of the urea cycle as well as several enzymes involved in amino acid catabolism are characteristically down-regulated in \emph{Ctnnb1}-mutated tumors which is consistent with previous findings \cite{Stahl2005}.
 
-All of the described visualization techniques allow for a joint visualization of mRNA, miRNA, DNA methylation and protein modification data (see Figure~\ref{fig:8:pwVisPlatformsExplanation} for a detailed example of the described visualizations).
+All of the above described visualization techniques allow for a joint visualization of mRNA, miRNA, DNA methylation and protein modification data (see Figure~\ref{fig:8:pwVisPlatformsExplanation} for a detailed example of the described visualizations). The `WNT signaling pathway' constitutes a further interesting example for a joint visualization of the mentioned platforms (see Figure~\ref{fig:10:WNTCtnnb1}). It shows that gene and protein expression of the pathway targets and transcription factors \emph{Myc}, \emph{Jun}, \emph{Fosl1} (fos-like antigen 1) and \emph{Ccnd1} (Cyclin D1) are up-regulated. Interestingly, various \Beta-Catenin inhibitory genes show an increased expression in the tumors with activating \emph{Ctnnb1}-mutations which again indicates activation of negative regulatory mechanisms. These \emph{Wnt}-inhibitors include \emph{Gsk3b} and \emph{Axin2}, which together form the \Beta-Catenin degradation complex, \emph{Nkd2} (naked cuticle homologue 2) and \emph{Wnt} inhibitory factor 1 (\emph{Wifi1}).
 
 
 %But first, researchers usually start by creating a list of significantly up- or downregulated genes, performing a pathway enrichment analysis and picking significantly enriched and interesting pathways. Our developed algorithm now visualizes the selected pathway, using KEGGtranslator \cite{Wrzodek2011}. In this pathway, a first visualization step is highlighting the genes from the source gene list that lead to the occurrence of this pathway in the enrichment analysis. Going one step further, the mRNA fold change of the source dataset can be visualized as described above.
@@ -345,9 +380,12 @@ To obtain a more detailed view of the compound-specific pathway alterations, EKU
   \end{center}
 
 \caption{
-{\bf Visualization of diverse microarray platforms that have been employed to perform an integrated data analysis.}
-\TODO{1 Caption überarbeiten, 2 nach Möglichkeit referenz auf farben entfernen, 3 Referenz in Introduction auf Figure einbauen.}
-Red fonts describe the actual data types and corresponding platforms. This figure is restricted to genomic interactions relevant for this deliverable. At the bottom of the figure, a DNA sequence is given, for which methylation data is available. This DNA is transcribed to an mRNA. The transcription might be regulated by methylated regions on the gene promoter. Furthermore, miRNAs might inhibit the translation from mRNA to a protein. Both, mRNA and miRNA expression is measured with Affymetrix and Agilent microarrays. In the end, translated proteins might get modified, e.g., by phosphorylation or acetylation. The expression of some basic isoforms and specific modifications is determined, using Zeptosens arrays.
+%{\bf Visualization of diverse microarray platforms that have been employed to perform an integrated data analysis.}
+{\bf Visualization of different genomic and regulatory layers for which we propose cross-platform analysis and visualization methods.}
+%
+At the bottom of the figure, a DNA sequence is depicted for which methylation data is available. This DNA is transcribed to an mRNA. The transcription might be regulated by methylated regions on the gene promoter. Furthermore, miRNAs might inhibit the translation from mRNA to a protein. Both, mRNA and miRNA expression can be measured with microarrays. In the end, translated proteins might get modified, e.g., by phosphorylation or acetylation. The expression of basic proteins and specific modifications can be determined, e.g., by using reverse phase protein arrays with several antibodies.
+% Figure Caption from D4.1:
+%Red fonts describe the actual data types and corresponding platforms. This figure is restricted to genomic interactions relevant for this deliverable. At the bottom of the figure, a DNA sequence is given, for which methylation data is available. This DNA is transcribed to an mRNA. The transcription might be regulated by methylated regions on the gene promoter. Furthermore, miRNAs might inhibit the translation from mRNA to a protein. Both, mRNA and miRNA expression is measured with Affymetrix and Agilent microarrays. In the end, translated proteins might get modified, e.g., by phosphorylation or acetylation. The expression of some basic isoforms and specific modifications is determined, using Zeptosens arrays.
 }
 \label{fig:1}
 \end{figure}
@@ -363,8 +401,11 @@ Red fonts describe the actual data types and corresponding platforms. This figur
   \end{center}
 
 \caption{
-{\bf Pairing of miRNA (left side) and mRNA (right side) datasets reveals miR-495 as a potential regulator of the HNF-6 coding gene \emph{Onecut1}.}
-\TODO{1 Caption überarbeiten, 2 Ueberlegen ob Ras Expressionswerte ausgeblendet werden sollten und wenn nciht, "in Ctnnb1" in titel.}
+{\bf Pairing of miRNA (left-hand side) and mRNA (right-hand side) datasets reveals miR-495 as a potential regulator of the HNF-6 coding gene \emph{Onecut1} in \emph{Ctnnb1}-mutated tumors.}
+%\TODO{1 Caption überarbeiten, 2 Ueberlegen ob Ras Expressionswerte ausgeblendet werden sollten und wenn nciht, "in Ctnnb1" in titel.}
+Data pairing can be used to create a tabular representation of any two datasets. In this example, the effect of differentially expressed microRNAs on corresponding mRNA targets is visualized. The left-hand part of the table shows the miRNA data, sorted descending by log$_2$ fold change expression in \emph{Ctnnb1}-mutated tumors. The right-hand side of the table shows the targeted mRNAs, together with their fold change. Between both parts, some convenient information is shown, i.e., the absolute sum of miRNA and target mRNA fold changes in \emph{Ctnnb1}-mutated tumors and a textual representation of miRNA and corresponding mRNA expression.
+%
+This table shows that miR-495 is up-regulated and the corresponding mRNA target, \emph{Onecut1}, is down-regulated.
 }
 \label{fig:2:pairing}
 \end{figure}
@@ -381,7 +422,10 @@ Red fonts describe the actual data types and corresponding platforms. This figur
 
 \caption{
 {\bf Multiple integration of four different platforms from \emph{Ctnnb1} mutated tumors shows an mRNA decrease of \emph{Egfr} as a potential effect of DNA methylation increase in the promoter region.}
-\TODO{Bildunterschrift}
+This tabular visualization integrates data from four different platforms in an expandable, gene-based manner. On the first layer, each row corresponds to one gene and each column to one platform. A summary value is displayed for each gene and platform. If expanded, the second layer shows different groups for mRNA, miRNA, DNA methylation and protein modification data. If these are further expanded, the single probes, miRNAs targeting this mRNA or protein modifications are shown, together with the corresponding expression fold change.
+`N/A' indicates either `not applicable', e.g., the protein expression value for an mRNA probe, or `data not available'.
+%
+This tabular cross-platform integration of log$_2$ fold-changes shows that the promoter region of \emph{Egfr} has a maximum DNA methylation peak of $1.93$ and a minimum mRNA expression of $-1.93$. The mRNA is the target of two microRNAs and next to the basic protein, the expression of three different phosphoforms has been measured. A subsequent analysis of DNA methylation in the promoter region of \emph{Egfr} is depicted in Figure~\ref{fig:4:egfrMethylation}.
 }
 \label{fig:3:multipleIntegration}
 \end{figure}
@@ -398,7 +442,9 @@ Red fonts describe the actual data types and corresponding platforms. This figur
 
 \caption{
 {\bf DNA methylation in the promoter region of \emph{Egfr} in \emph{Ctnnb1}-mutated tumors.}
-\TODO{Bildunterschrift, 2 sagen dass dies auch ein paired ist, da mRNA entsprechend eingefärbt wurde}
+This picture depicts the DNA methylation and mRNA expression changes for a region surrounding the transcription start site of \emph{Egfr} by $-2,000$ and $+500$\,bps. For DNA methylation, the fold changes of all probes in this region are visualized and connected by a curve. The gene body of \emph{Egfr} is depicted on the forward strand with a big box on the lower part of the picture. The blue-color indicates the mRNA expression of \emph{Egfr} in \emph{Ctnnb1}-mutated tumors (blue means down-regulation, red would indicate an up-regulation and color saturation denotes the intensity of the differential expression).
+%In this example, the mRNA has an average log$_2$ fold change of -0.93.
+In this example, the mRNA has a maximum differential log$_2$ fold change of $-1.93$.
 }
 \label{fig:4:egfrMethylation}
 \end{figure}
@@ -416,7 +462,8 @@ Red fonts describe the actual data types and corresponding platforms. This figur
 
 \caption{
 {\bf Proposed procedure for a cross-platform gene-set enrichment analysis.}
-\TODO{Bildunterschrift, 2 sagen dass 85 usw. examples sind.}
+%\TODO{Bildunterschrift, 2 sagen dass 85 usw. examples sind.}
+This flowchart depicts the major steps, involved in the creation of an integrated enrichment. The first two steps involve the evaluation of different datasets and extracting genes with strong platform-based changes as opposed to their corresponding control. In the third step, a mixed gene pool is created by joining all those gene lists (in this example, the result is a list of 85 genes). Finally, an enrichment is performed by comparing this list of genes to predefined gene sets and calculating a p-value, e.g., by using a hypergeometric distribution (see Subramanian \emph{et al.} for more information\cite{Subramanian2005}).
 }
 \label{fig:5:iEnrichment}
 \end{figure}
@@ -432,8 +479,10 @@ Red fonts describe the actual data types and corresponding platforms. This figur
   \end{center}
 
 \caption{
-{\bf Comparison of an integrated and mRNA enrichment, based on data from Ctnnb1-mutated tumors.}
-\TODO{Bildunterschrift, Metabolic vs. Cancer}
+{\bf Comparison of an integrated and mRNA enrichment, based on data from \emph{Ctnnb1}-mutated tumors.}
+%\TODO{Bildunterschrift, Metabolic vs. Cancer}
+This comparison shows the difference between a KEGG pathway enrichment that is based only on mRNA data (right-hand side) and the result of an integrated enrichment (left-hand side). The integrated enrichment includes genes with differentially expressed mRNA, targets of differentially expressed microRNAs, differently expressed protein or protein modifications and genes with strong DNA methylation changes in their promoters.
+It is clearly visible that the integrated enrichment provides a much broader insight into the pathway-changes in a tumor than using only a single dataset: Many cancer-related pathways are significantly impaired in the integrated enrichment, whereas the mRNA enrichment lists mainly metabolic pathways, which does only reflect the transcriptional changes.
 }
 \label{fig:6:iEnrichmentVsMRNA}
 \end{figure}
@@ -446,17 +495,21 @@ Red fonts describe the actual data types and corresponding platforms. This figur
   \begin{center}
   %TODO: Convert to TIF (=> look at author guidelines)
   %TODO: Add full image (+mRNA coloring) as supplementary material
-    \includegraphics[width=1.0\textwidth]{figures/mmu01100_noCPDlabels.jpeg}
+    \includegraphics[width=1.0\textwidth]{figures/mmu01100_Ras_vs_Cat_noCPDlabels.jpeg}
   \end{center}
 
 \caption{
-{\bf Comparison of an integrated and mRNA enrichment, based on data from Ctnnb1-mutated tumors.}
-\TODO{Bildunterschrift, 2 Integrates a) pathway b) enrichment c) (on mRNA). 3 Can be extended to line-color mRNA 4 Volles Bild + mRNA kanten im supplement}
-\TODO{\newline Was sollten wir hier genau zeigen?
-\newline-- Gesamtes Bild oder bestimmter Ausschnitt? Wenn Ausschnitt, welcher?
-\newline-- Kanten nach mRNA einfaerben oder nicht?
-\newline-- Compound Beschriftungen verstecken oder zeigen? (Derzeit sind sie nicht beschriftet!)
-}
+{\bf Overview of transcriptional metabolic changes in \emph{Ha-ras}- and \emph{Ctnnb1}-mutated tumors.}
+This visualization unifies pathway information, gene-set enrichment results and mRNA expression data to a single metabolic overview picture.
+It is based on the mRNA differences between \emph{Ha-ras}- and \emph{Ctnnb1}-mutated tumors.
+Compounds are depicted by grey circles and edges between them represent different enzymes. These edges are colored red, if the corresponding mRNA is higher expressed in \emph{Ha-ras}-mutated tumors and blue, if the corresponding mRNA is higher expressed in \emph{Ctnnb1}-mutated tumors. Grey indicates no differential expression. The bigger rectangles are references to other KEGG pathways and have been colored by significance (p-value) as a result of a pathway enrichment on the fold change differences between \emph{Ha-ras}- and \emph{Ctnnb1}-mutated tumors: A more saturated blue color indicates a lower p-value, white indicates p-values $>$ 0.05 and grey is used if no differential expression between both tumor types has been observed in the respective pathway. You can find a full-sized version of this picture in the supplement.
+%
+%\TODO{Bildunterschrift, 2 Integrates a) pathway b) enrichment c) (on mRNA). 3 Can be extended to line-color mRNA 4 Volles Bild + mRNA kanten im supplement}
+%\TODO{\newline Was sollten wir hier genau zeigen?
+%\newline-- Gesamtes Bild oder bestimmter Ausschnitt? Wenn Ausschnitt, welcher?
+%\newline-- Kanten nach mRNA einfaerben oder nicht?
+%\newline-- Compound Beschriftungen verstecken oder zeigen? (Derzeit sind sie nicht beschriftet!)
+%}
 }
 \label{fig:7:metabolicOverview}
 \end{figure}
@@ -473,7 +526,9 @@ Red fonts describe the actual data types and corresponding platforms. This figur
 
 \caption{
 {\bf Pathway-based visualization of different platforms.}
-\TODO{Bildunterschrift}
+This figure shows how data from different platforms can be jointly visualized in a pathway. A) Messenger RNA expression changes are visualized as node color. Red is used to indicate up-regulation, blue is used for down-regulation and white indicates no differential expression (i.e., fold-change is zero). More saturated colors indicate stronger differential expression. B) Protein modification data is visualized by adding small boxes below the node. In this example, one box is used for the basic protein and one for a phosphorylated isoform. ``MYC P-T58/S62" indicates an antibody that detects changes specifically for MYC proteins that are phosphorylated on Threonine 58 and Serine 62.
+The color scheme is the same as for the mRNA. C) MicroRNAs are added to pathways as small triangles that are connected to their potential mRNA targets. MicroRNA expression data is then visualized by changing to color of the microRNA as described above. D) DNA methylation data is summarized by taking the maximum differential peak in the corresponding gene promoter. This peak is visualized by a black bar that stretches from the middle to the left to indicate hypomethylation and from the middle to the right to indicate hypermethylation. In the depicted examples, \emph{Bub1} shows a hypomethylation (log$_2$ fold change of approximately 1) and \emph{Ttk} shows a strong hypermethylation (log$_2$ fold change of $\geq$ 1.5).
+Figure~\ref{fig:10:WNTCtnnb1} shows an example in which all four visualization techniques are used to create a joint pathway-based visualization of data from heterogenous platforms.
 }
 \label{fig:8:pwVisPlatformsExplanation}
 \end{figure}
@@ -490,23 +545,46 @@ Red fonts describe the actual data types and corresponding platforms. This figur
   \end{center}
 
 \caption{
-{\bf Transcriptional and epigenetic changes in Glycolysis/Gluconeogenesis during profiling of \emph{Ha-Ras} and \emph{Ctnnb1} mutated tumors.}
-\TODO{Bildunterschrift, Legende (nur DNAm, mRNA)}
+{\bf Integrated view of transcriptional and epigenetic changes in parts of the Glycolysis/ Gluconeogenesis pathway during profiling of \emph{Ha-Ras} and \emph{Ctnnb1} mutated tumors.}
 %
-Glucokinase (Gck) -- katalysiert den 1. Schritt des Glucose-Abbaus in der Glykolyse: Genexpression hochreguliert, Promotorregion hypomethyliert.
+The pictures on the left show mRNA and DNA methylation changes in the \emph{Ctnnb1}-mutated tumors, which is mediated by phenobarbital (PB). For comparison, the same parts of the pathway are visualized on the right-hand side with data from \emph{Ha-ras}-mutated tumors, which were not treated with PB.
 %
-Glucose-6-phosphatase (G6PC) -- katalysiert den der Gck entgegengesetzten Schritt in der Glukoneogenese, also dem Synthese von Glukose. Dieses Gen ist in beiden Tumortypen runterreguliert, dazu passt, dass die Promotorregion bei beiden weitestgehend hypermethyliert ist.
+Briefly, nodes are colored according to mRNA expression changes (red means up-regulation and blue means down-regulation) and the black bar left of each node indicates DNA methylation changes (please see Figure~\ref{fig:8:pwVisPlatformsExplanation} for a more detailed legend).
 %
-Fructose-1,6-bisphosphatase (FBP) -- auch ein Enzym der Gluconeogenese, in beiden Tumortypen runterreguliert mit hypermethylierter Promotorregion.
 %
-Bei Pgm, Aldo und anderen eingefärbten Enzymen wäre ich persönlich jetzt noch vorsichtig mit irgendwelchen Aussagen, weil da oft nur sehr wenige Sonden gemessen wurden oder die Sonden widersprüchliche Werte zeigen.
-%
-Korrelation von DNAm und mRNA ist teilweise recht interresant!
-%
+%%
+%Glucokinase (Gck) -- katalysiert den 1. Schritt des Glucose-Abbaus in der Glykolyse: Genexpression hochreguliert, Promotorregion hypomethyliert.
+%%
+%Glucose-6-phosphatase (G6PC) -- katalysiert den der Gck entgegengesetzten Schritt in der Glukoneogenese, also dem Synthese von Glukose. Dieses Gen ist in beiden Tumortypen runterreguliert, dazu passt, dass die Promotorregion bei beiden weitestgehend hypermethyliert ist.
+%%
+%Fructose-1,6-bisphosphatase (FBP) -- auch ein Enzym der Gluconeogenese, in beiden Tumortypen runterreguliert mit hypermethylierter Promotorregion.
+%%
+%Bei Pgm, Aldo und anderen eingefärbten Enzymen wäre ich persönlich jetzt noch vorsichtig mit irgendwelchen Aussagen, weil da oft nur sehr wenige Sonden gemessen wurden oder die Sonden widersprüchliche Werte zeigen.
+%%
+%Korrelation von DNAm und mRNA ist teilweise recht interresant!
+%%
 }
 \label{fig:9:GlycolysisCtnnb1Ras}
 \end{figure}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% WNT_signaling with four data types
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[!htb]
+  \begin{center}
+  %TODO: Convert to TIF (=> look at author guidelines)
+  % Source Powerpoint file: "Glycolysis".
+    \includegraphics[width=1.0\textwidth]{figures/WNT_signaling.jpeg}
+  \end{center}
+
+\caption{
+{\bf Integrated visualization of DNA methylation, protein modification, microRNA and messenger RNA changes in the WNT signaling pathway of \emph{Ctnnb1} mutated tumors.}
+Characteristic perturbations in Ctnnb1 mutated tumors across multiple layers of gene-regulation are depicted in this picture. In general, red means up-regulation and blue means down-regulation. More saturated colors indicate stronger differential regulation. Messenger RNA expression is shown directly as node color, microRNAs are connected to their mRNA targets and colored according to microRNA expression and protein modification data is shown in small separate boxes below the actual nodes. DNA methylation is indicated with a black bar in a black surrounded box, ranging from the middle to the left to indicate hypomethylation and to the right to indicate hypermethylation.
+%The up-regulated transcription factors \emph{Myc}, \emph{Jun}, \emph{Fosl1} and \emph{Ccnd1} constitute main targets of the pathway.
+}
+\label{fig:10:WNTCtnnb1}
+\end{figure}
 
 \section*{Tables}
 %\begin{table}[!ht]
