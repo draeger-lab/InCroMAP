@@ -108,6 +108,15 @@ public class Integrator extends Launcher {
   }
   
   /* (non-Javadoc)
+   * @see de.zbit.Launcher#getCitation(boolean)
+   */
+  @Override
+  public String getCitation(boolean HTMLstyle) {
+    // TODO ADD Citation!
+    return super.getCitation(HTMLstyle);
+  }
+  
+  /* (non-Javadoc)
    * @see de.zbit.Launcher#getInteractiveOptions()
    */
   @Override

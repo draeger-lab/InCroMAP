@@ -72,6 +72,7 @@ import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.graph.gui.TranslatorGraphLayerPanel;
 import de.zbit.graph.gui.TranslatorPanel;
+import de.zbit.graph.gui.options.TranslatorPanelOptions;
 import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.actions.TranslatorTabActions;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
@@ -331,8 +332,12 @@ public class IntegratorUI extends BaseFrame {
     KEGGtranslatorOptions.REMOVE_ORPHANS.setDefaultValue(false);
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
     KEGGtranslatorOptions.SBML_OPTIONS.setVisible(false);
+    
     KEGGtranslatorOptions.AUTOCOMPLETE_REACTIONS.setVisible(false);
-        
+    KEGGtranslatorOptions.AUTOCOMPLETE_REACTIONS.setDefaultValue(false);
+    
+    TranslatorPanelOptions.SHOW_PROPERTIES_TABLE.setDefaultValue(false);
+    
     // Set the often used KeggTranslator methods to use this appName as application name
 //    Translator.APPLICATION_NAME = appName;
 //    Translator.VERSION_NUMBER = appVersion;
@@ -709,7 +714,9 @@ public class IntegratorUI extends BaseFrame {
   @Override
   protected Component createMainComponent() {
     ImageIcon logo = new ImageIcon(IntegratorUI.class.getResource("img/logo.png"));
-    tabbedPane = new JTabbedLogoPane(logo);
+//    tabbedPane = new JTabbedLogoPane(logo);
+    tabbedPane = new JTabbedPaneDraggableAndCloseable(logo);
+    ((JTabbedPaneDraggableAndCloseable)tabbedPane).setShowCloseIcon(false);
     
     // Change active buttons, based on selection.
     tabbedPane.addChangeListener(new ChangeListener() {
@@ -1046,6 +1053,14 @@ public class IntegratorUI extends BaseFrame {
     }
     
     return titles;
+  }
+
+  /* (non-Javadoc)
+   * @see de.zbit.gui.BaseFrame#saveFileAs()
+   */
+  @Override
+  public File saveFileAs() {
+    return saveFile();
   }
   
 }

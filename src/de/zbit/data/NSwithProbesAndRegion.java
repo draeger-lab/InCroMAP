@@ -23,6 +23,7 @@ package de.zbit.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -195,8 +196,10 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
     // This is required to ensure having (min of) integers as start and end positions.
     List<Integer> positions = new ArrayList<Integer>(source.size());
     for (T o : source) {
-      int s = ((Region) o).getStart();
-      if (s!=Region.DEFAULT_START) positions.add(s);
+      if (o instanceof Region) {
+        int s = ((Region) o).getStart();
+        if (s!=Region.DEFAULT_START) positions.add(s);
+      }
     }
     if (positions.size()>0) {
       double averagePosition = MathUtils.min(positions);
@@ -206,8 +209,10 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
     // End pos (max and integer)
     positions = new ArrayList<Integer>(source.size());
     for (T o : source) {
-      Integer s = ((Region) o).getEnd();
-      if (s!=Region.DEFAULT_START) positions.add(s);
+      if (o instanceof Region) {
+        Integer s = ((Region) o).getEnd();
+        if (s!=Region.DEFAULT_START) positions.add(s);
+      }
     }
     if (positions.size()>0) {
       double averagePosition = MathUtils.max(positions);
@@ -222,11 +227,15 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
     
     // Chromosome (only if equal)
     byte chr = Chromosome.default_Chromosome_byte;
-    if (source.iterator().hasNext()) {
-      chr = ((Chromosome)source.iterator().next()).getChromosomeAsByteRepresentation();
+    Iterator<T> it = source.iterator();
+    if (it.hasNext()) {
+      T c = it.next();
+      if (c instanceof Chromosome) {
+        chr = ((Chromosome)c).getChromosomeAsByteRepresentation();
+      }
       boolean allMatch = true;
       for (T o : source) {
-        if (((Chromosome)o).getChromosomeAsByteRepresentation()!=chr) {
+        if ((o instanceof Chromosome) && ((Chromosome)o).getChromosomeAsByteRepresentation()!=chr) {
           allMatch = false;
           break;
         }
