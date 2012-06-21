@@ -4,12 +4,14 @@
 %\usepackage{url} % Allows using the\url command (in NimbleGen citation)
 %\usepackage{fixltx2e} % Can be used to force the order of images As-Is.
 
-\hyphenation{microRNA microRNAs}
-
 \copyrightyear{2012}
 \pubyear{2012}
 
 \hyphenation{
+microRNA
+microRNAs
+miRNA
+miRNAs
 straight-for-ward
 }
 
@@ -147,7 +149,9 @@ heterogeneous microarray platforms.
 %metabolic pathways linked to a certain microarray experiment. Owing to the hierarchical structure of
 %the KEGG PATHWAY database, InCroMAP can visualize the enrichments computed for each individual
 %metabolic pathway in the context of the higher-order overall metabolic pathway map compiled by KEGG
-%(http://www.genome.jp/kegg/pathway/map/map01100.html). Starting from either a ranked pathway table
+%(http://www.genome.jp/kegg/pathway/map/map01100.html). 
+
+%Starting from either a ranked pathway table
 %or a colored meta-pathway map, individual pathways can be visualized in InCroMAP and overlaid with
 %microarray data from multiple platforms, to facilitate thorough visual inspection of the measured
 %pathway alterations. In contrast to previous work (TODO: Refs zu Cytoscape, Explain, etc.), InCroMAP
@@ -533,7 +537,7 @@ This work was supported by the Innovative Medicine Initiative Joint Undertaking 
 
 \section*{Acknowledgement}
 We gratefully acknowledge contributions from Andreas Dr\"ager and Finja B\"uchel, as well as the
-whole MACRCAR consortium.
+whole MARCAR consortium.
 
 %\paragraph{Funding\textcolon}
 %The research leading to these results has received funding from the Innovative Medicine Initiative
@@ -546,7 +550,221 @@ whole MACRCAR consortium.
 %\bibliographystyle{bioinformatics}
 %\bibliographystyle{plain}
 
-\bibliography{document}
-%TODO: When paper is ready, comment \bibliography line and add content of document.bbl here.
+%\bibliography{document}
+\begin{thebibliography}{}
+
+\bibitem[Alexiou {\em et~al.}(2009)Alexiou, Maragkakis, Papadopoulos, Reczko,
+  and Hatzigeorgiou]{Alexiou2009}
+Alexiou, P., Maragkakis, M., Papadopoulos, G.~L., Reczko, M., and
+  Hatzigeorgiou, A.~G. (2009).
+\newblock Lost in translation: an assessment and perspective for computational
+  {microRNA} target identification.
+\newblock {\em Bioinformatics\/}, {\bf 25}(23), 3049--3055.
+
+\bibitem[Bartel(2004)Bartel]{Bartel2004}
+Bartel, D.~P. (2004).
+\newblock {MicroRNAs}: genomics, biogenesis, mechanism, and function.
+\newblock {\em Cell\/}, {\bf 116}(2), 281--297.
+
+\bibitem[Cline {\em et~al.}(2007)Cline, Smoot, Cerami, Kuchinsky, Landys,
+  Workman, Christmas, Avila-Campilo, Creech, Gross, Hanspers, Isserlin, Kelley,
+  Killcoyne, Lotia, Maere, Morris, Ono, Pavlovic, Pico, Vailaya, Wang, Adler,
+  Conklin, Hood, Kuiper, Sander, Schmulevich, Schwikowski, Warner, Ideker, and
+  Bader]{Cytoscape}
+Cline, M.~S., Smoot, M., Cerami, E., Kuchinsky, A., Landys, N., Workman, C.,
+  Christmas, R., Avila-Campilo, I., Creech, M., Gross, B., \emph{et al.} (2007).
+\newblock Integration of biological networks and gene expression data using
+  {Cytoscape}.
+\newblock {\em Nat Protoc\/}, {\bf 2}(10), 2366--2382.
+
+\bibitem[Gehlenborg {\em et~al.}(2010)Gehlenborg, O'Donoghue, Baliga, Goesmann,
+  Hibbs, Kitano, Kohlbacher, Neuweger, Schneider, Tenenbaum, and
+  Gavin]{Gehlenborg2010}
+Gehlenborg, N., O'Donoghue, S.~I., Baliga, N.~S., Goesmann, A., Hibbs, M.~A.,
+  Kitano, H., Kohlbacher, O., Neuweger, H., Schneider, R., Tenenbaum, D., and
+  Gavin, A.-C. (2010).
+\newblock Visualization of omics data for systems biology.
+\newblock {\em Nat Methods\/}, {\bf 7}(3 Suppl), S56--S68.
+
+\bibitem[Golub {\em et~al.}(1999)Golub, Slonim, Tamayo, Huard, Gaasenbeek,
+  Mesirov, Coller, Loh, Downing, Caligiuri, Bloomfield, and Lander]{Golub1999}
+Golub, T.~R., Slonim, D.~K., Tamayo, P., Huard, C., Gaasenbeek, M., Mesirov,
+  J.~P., Coller, H., Loh, M.~L., Downing, J.~R., Caligiuri, M.~A., Bloomfield,
+  C.~D., and Lander, E.~S. (1999).
+\newblock Molecular classification of cancer: class discovery and class
+  prediction by gene expression monitoring.
+\newblock {\em Science\/}, {\bf 286}(5439), 531--537.
+
+\bibitem[Hoheisel(2006)Hoheisel]{Hoheisel2006}
+Hoheisel, J.~D. (2006).
+\newblock Microarray technology: beyond transcript profiling and genotype
+  analysis.
+\newblock {\em Nat Rev Genet\/}, {\bf 7}(3), 200--210.
+
+\bibitem[Hsu {\em et~al.}(2011)Hsu, Lin, Wu, Liang, Huang, Chan, Tsai, Chen,
+  Lee, Chiu, Chien, Wu, Huang, Tsou, and Huang]{miRTarBase}
+Hsu, S.~D., Lin, F.~M., Wu, W.~Y., Liang, C., Huang, W.~C., Chan, W.~L., Tsai,
+  W.~T., Chen, G.~Z., Lee, C.~J., Chiu, C.~M., Chien, C.~H., Wu, M.~C., Huang,
+  C.~Y., Tsou, A.~P., and Huang, H.~D. (2011).
+\newblock {miRTarBase: a database curates experimentally validated
+  microRNA-target interactions}.
+\newblock {\em Nucleic Acids Res\/}, {\bf 39}(Database issue), D163--9.
+
+\bibitem[Kanehisa {\em et~al.}(2006)Kanehisa, Goto, Hattori, Aoki-Kinoshita,
+  Itoh, Kawashima, Katayama, Araki, and Hirakawa]{KEGG}
+Kanehisa, M., Goto, S., Hattori, M., Aoki-Kinoshita, K.~F., Itoh, M.,
+  Kawashima, S., Katayama, T., Araki, M., and Hirakawa, M. (2006).
+\newblock From genomics to chemical genomics: new developments in {KEGG}.
+\newblock {\em Nucleic Acids Res\/}, {\bf 34}(Database issue), D354--D357.
+
+\bibitem[Kapushesky {\em et~al.}(2004)Kapushesky, Kemmeren, Culhane, Durinck,
+  Ihmels, Körner, Kull, Torrente, Sarkans, Vilo, and Brazma]{Kapushesky2004}
+Kapushesky, M., Kemmeren, P., Culhane, A.~C., Durinck, S., Ihmels, J., Körner,
+  C., Kull, M., Torrente, A., Sarkans, U., Vilo, J., and Brazma, A. (2004).
+\newblock {Expression Profiler}: next generation--an online platform for
+  analysis of microarray data.
+\newblock {\em Nucleic Acids Res\/}, {\bf 32}(Web Server issue), W465--W470.
+
+\bibitem[Kauffmann {\em et~al.}(2009)Kauffmann, Gentleman, and
+  Huber]{arrayQualityMetrics}
+Kauffmann, A., Gentleman, R., and Huber, W. (2009).
+\newblock {arrayQualityMetrics}--a bioconductor package for quality assessment
+  of microarray data.
+\newblock {\em Bioinformatics\/}, {\bf 25}(3), 415--416.
+
+\bibitem[Kent {\em et~al.}(2002)Kent, Sugnet, Furey, Roskin, Pringle, Zahler,
+  and Haussler]{UCSCBrowser}
+Kent, W.~J., Sugnet, C.~W., Furey, T.~S., Roskin, K.~M., Pringle, T.~H.,
+  Zahler, A.~M., and Haussler, D. (2002).
+\newblock The human genome browser at {UCSC}.
+\newblock {\em Genome Res\/}, {\bf 12}(6), 996--1006.
+
+\bibitem[Lim {\em et~al.}(2007)Lim, Wang, Lefebvre, and Califano]{Lim2007}
+Lim, W.~K., Wang, K., Lefebvre, C., and Califano, A. (2007).
+\newblock Comparative analysis of microarray normalization procedures: effects
+  on reverse engineering gene networks.
+\newblock {\em Bioinformatics\/}, {\bf 23}(13), i282--i288.
+
+\bibitem[L\'{o}pez-Romero(2011)L\'{o}pez-Romero]{AgiMicroRna}
+L\'{o}pez-Romero, P. (2011).
+\newblock Pre-processing and differential expression analysis of {Agilent
+  microRNA } arrays using the {AgiMicroRna Bioconductor} library.
+\newblock {\em BMC Genomics\/}, {\bf 12}, 64.
+
+\bibitem[Luk {\em et~al.}(2011)Luk, Burchard, Zhang, Liu, Wong, Shek, Lee, Fan,
+  Poon, Ivanovska, Philippar, Cleary, Buser, Shaw, Lee, Tenen, Dai, and
+  Mao]{DLK1miRNA}
+Luk, J.~M., Burchard, J., Zhang, C., Liu, A.~M., Wong, K.~F., Shek, F.~H., Lee,
+  N.~P., Fan, S.~T., Poon, R.~T., Ivanovska, I., Philippar, U. \emph{et al.}
+  (2011).
+\newblock {DLK1-DIO3 genomic imprinted microRNA cluster at 14q32.2 defines a
+  stemlike subtype of hepatocellular carcinoma associated with poor survival.}
+\newblock {\em J Biol Chem\/}, {\bf 286}(35), 30706--30713.
+
+\bibitem[Maglott {\em et~al.}(2005)Maglott, Ostell, Pruitt, and
+  Tatusova]{EntrezGene}
+Maglott, D., Ostell, J., Pruitt, K.~D., and Tatusova, T. (2005).
+\newblock {Entrez Gene}: gene-centered information at {NCBI}.
+\newblock {\em Nucleic Acids Res\/}, {\bf 33}(Database issue), D54--D58.
+
+\bibitem[Meyer {\em et~al.}(2010)Meyer, Wong, Styczynski, Munzner, and
+  Pfister]{Pathline}
+Meyer, M., Wong, B., Styczynski, M., Munzner, T., and Pfister, H. (2010).
+\newblock {Pathline: A Tool For Comparative Functional Genomics}.
+\newblock {\em Computer Graphics Forum (Proc. EuroVis 2010)\/}, {\bf 29}(3),
+  1043--1052.
+
+\bibitem[{NimbleGen Systems Inc.}(2006){NimbleGen Systems
+  Inc.}]{NimblegenSignalMapUserGuide}
+{NimbleGen Systems Inc.} (2006).
+\newblock {SignalMap User's Guide}.
+\newblock Available from {NimbleGen} at
+  \href{http://www.nimblegen.com/products/lit/signalmap1.9usersguide.pdf}{www.nimblegen.com/products/lit/signalmap1.9usersguide.pdf}.
+  Accessed 2012 Mar 22.
+
+\bibitem[Okuda {\em et~al.}(2008)Okuda, Yamada, Hamajima, Itoh, Katayama, Bork,
+  Goto, and Kanehisa]{KEGGAtlas}
+Okuda, S., Yamada, T., Hamajima, M., Itoh, M., Katayama, T., Bork, P., Goto,
+  S., and Kanehisa, M. (2008).
+\newblock {KEGG Atlas} mapping for global analysis of metabolic pathways.
+\newblock {\em Nucleic Acids Res\/}, {\bf 36}(Web Server issue), W423--W426.
+
+\bibitem[Papadopoulos {\em et~al.}(2009)Papadopoulos, Reczko, Simossis,
+  Sethupathy, and Hatzigeorgiou]{TarBase}
+Papadopoulos, G.~L., Reczko, M., Simossis, V.~A., Sethupathy, P., and
+  Hatzigeorgiou, A.~G. (2009).
+\newblock The database of experimentally supported targets: a functional update
+  of {TarBase}.
+\newblock {\em Nucleic Acids Res\/}, {\bf 37}(Database issue), D155--8.
+
+\bibitem[Pirnia {\em et~al.}(2009)Pirnia, Pawlak, Thallinger, Gierke, Templin,
+  Kappeler, Betticher, Gloor, and Borner]{Pirnia2009}
+Pirnia, F., Pawlak, M., Thallinger, G.~G., Gierke, B., Templin, M.~F.,
+  Kappeler, A., Betticher, D.~C., Gloor, B., and Borner, M.~M. (2009).
+\newblock Novel functional profiling approach combining reverse phase protein
+  microarrays and human {3-D} ex vivo tissue cultures: expression of
+  apoptosis-related proteins in human colon cancer.
+\newblock {\em Proteomics\/}, {\bf 9}(13), 3535--3548.
+
+\bibitem[Salomonis {\em et~al.}(2007)Salomonis, Hanspers, Zambon, Vranizan,
+  Lawlor, Dahlquist, Doniger, Stuart, Conklin, and Pico]{GenMAPP}
+Salomonis, N., Hanspers, K., Zambon, A.~C., Vranizan, K., Lawlor, S.~C.,
+  Dahlquist, K.~D., Doniger, S.~W., Stuart, J., Conklin, B.~R., and Pico, A.~R.
+  (2007).
+\newblock {GenMAPP} 2: new features and resources for pathway analysis.
+\newblock {\em BMC Bioinformatics\/}, {\bf 8}, 217.
+
+\bibitem[Schena {\em et~al.}(1995)Schena, Shalon, Davis, and Brown]{Schena1995}
+Schena, M., Shalon, D., Davis, R.~W., and Brown, P.~O. (1995).
+\newblock Quantitative monitoring of gene expression patterns with a
+  complementary {DNA} microarray.
+\newblock {\em Science\/}, {\bf 270}(5235), 467--470.
+
+\bibitem[Schumacher {\em et~al.}(2006)Schumacher, Kapranov, Kaminsky, Flanagan,
+  Assadzadeh, Yau, Virtanen, Winegarden, Cheng, Gingeras, and
+  Petronis]{Schumacher2006}
+Schumacher, A., Kapranov, P., Kaminsky, Z., Flanagan, J., Assadzadeh, A., Yau,
+  P., Virtanen, C., Winegarden, N., Cheng, J., Gingeras, T., and Petronis, A.
+  (2006).
+\newblock Microarray-based {DNA} methylation profiling: technology and
+  applications.
+\newblock {\em Nucleic Acids Res\/}, {\bf 34}(2), 528--542.
+
+\bibitem[Smyth(2004)Smyth]{Limma}
+Smyth, G.~K. (2004).
+\newblock Linear models and empirical bayes methods for assessing differential
+  expression in microarray experiments.
+\newblock {\em Stat Appl Genet Mol Biol\/}, {\bf 3}, Article3.
+
+\bibitem[Symons and Nieselt(2011)Symons and Nieselt]{Symons2011}
+Symons, S. and Nieselt, K. (2011).
+\newblock {MGV}: a generic graph viewer for comparative omics data.
+\newblock {\em Bioinformatics\/}, {\bf 27}(16), 2248--2255.
+
+\bibitem[Wrzodek {\em et~al.}(2011)Wrzodek, Dr\"ager, and Zell]{Wrzodek2011}
+Wrzodek, C., Dr\"ager, A., and Zell, A. (2011).
+\newblock {KEGGtranslator: visualizing and converting the KEGG PATHWAY database
+  to various formats}.
+\newblock {\em Bioinformatics\/}, {\bf 27}(16), 2314--2315.
+
+\bibitem[Wu and Irizarry(2005)Wu and Irizarry]{GCRMA}
+Wu, Z. and Irizarry, R.~A. (2005).
+\newblock Stochastic models inspired by hybridization theory for short
+  oligonucleotide arrays.
+\newblock {\em J Comput Biol\/}, {\bf 12}(6), 882--893.
+
+\bibitem[Xiao {\em et~al.}(2009)Xiao, Zuo, Cai, Kang, Gao, and Li]{miRecords}
+Xiao, F., Zuo, Z., Cai, G., Kang, S., Gao, X., and Li, T. (2009).
+\newblock {miRecords: an integrated resource for microRNA-target interactions}.
+\newblock {\em Nucleic Acids Res\/}, {\bf 37}(Database issue), D105--10.
+
+\bibitem[Yates {\em et~al.}(2009)Yates, Ruse, and Nakorchevsky]{Yates2009}
+Yates, J.~R., Ruse, C.~I., and Nakorchevsky, A. (2009).
+\newblock Proteomics by mass spectrometry: approaches, advances, and
+  applications.
+\newblock {\em Annu Rev Biomed Eng\/}, {\bf 11}, 49--79.
+
+\end{thebibliography}
+
 
 \end{document}
