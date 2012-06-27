@@ -49,13 +49,12 @@ com-pre-hen-sive
 % TODO: Vor Submission Example DNAm data set checken ob sie noch sinn ergeben!
 \section{Summary:}
 %
-Microarrays are commonly used to detect changes in gene expression between different biological samples. For this purpose, many analysis tools have been developed that offer visualization, statistical analysis and more sophisticated analysis methods. Most of these tools are designed specifically for messenger RNA microarrays. However today, more and more different microarray platforms are available. Changes in DNA methylation, microRNA expression or even protein phosphorylation states can be detected with specialized arrays. For these microarray technologies, the number of available tools is very small, compared to mRNA analysis tools. Especially, a joint analysis of different microarray platforms that have been employed on the same set of biological samples is hardly supported by most microarray analysis tools.
+Microarrays are commonly used to detect changes in gene expression between different biological samples. For this purpose, many analysis tools have been developed that offer visualization, statistical analysis, and more sophisticated analysis methods. Most of these tools are designed specifically for messenger RNA microarrays. However today, more and more different microarray platforms are available. Changes in DNA methylation, microRNA expression or even protein phosphorylation states can be detected with specialized arrays. For these microarray technologies, the number of available tools is very small, compared to mRNA analysis tools. Especially, a joint analysis of different microarray platforms that have been employed on the same set of biological samples is hardly supported by most microarray analysis tools.
 
 %We here present InCroMAP, a high-level microarray data analysis tool that can be used to perform individual and integrated microarray data analysis.
 We here present InCroMAP, a tool for the analysis and visualization of high-level microarray data from individual or multiple different platforms.
 Currently, InCroMAP supports mRNA, microRNA, DNA methylation and protein modification datasets.
 Several methods are offered that allow for an integrated analysis of data from those platforms.
-% TODO: Satz über integrated
 The available features of InCroMAP range from visualization of DNA methylation data over annotation of microRNA targets and integrated gene set enrichment analysis to a joint visualization of data from all platforms in the context of metabolic or signaling pathways.
 
 
@@ -71,7 +70,7 @@ The available features of InCroMAP range from visualization of DNA methylation d
 % High-level analysis tools for microarray data are
 
 \section{Availability:}
-InCroMAP is freely available as Java\texttrademark{} application at \href{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}{www.cogsys.cs.uni-tuebingen.de/software/InCroMAP}. A comprehensive user guide and example files are also available from this homepage.
+InCroMAP is freely available as Java\texttrademark{} application at \href{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}{www.cogsys.cs.uni-tuebingen.de/software/InCroMAP}, including a comprehensive user's guide and example files.
 
 % And a comprehensive documentation
 %The described method is implemented as part of the InCroMAP application that is freely available at \href{http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP/}{www.cogsys.cs.uni-tuebingen.de/software/InCroMAP}.
@@ -105,13 +104,13 @@ InCroMAP is freely available as Java\texttrademark{} application at \href{http:/
 Typical workflows for the analysis of microarray data involve several steps, namely the preparation of samples and arrays, their hybridization to arrays,
 scanning the array, and processing the image in order to read out the raw probe intensities.
 Depending on the array type, several quality control and low-level data analysis steps are then performed \emph{in silico}.
-These steps mostly include normalization, annotation of gene identifiers and calculation of diverse measures of differential signal intensities (such as p-values, fold changes or log ratios). Mostly, these tasks are performed in R, a statistical programming language (\href{http://www.r-project.org/}{www.r-project.org}), or by using derived applications with a graphical user interface (e.g., Mayday, \citealp{Dietzsch2006}).
+These steps mostly include normalization, annotation of gene identifiers, and the calculation of diverse measures of differential probe-level intensities (such as p-values, fold changes or log ratios). Mostly, these tasks are performed in R, a statistical programming language (\href{http://www.r-project.org/}{www.r-project.org}), or by using derived applications with a graphical user interface (e.g., Mayday, \citealp{Dietzsch2006}).
 %These two mentioned tools also bridge the gap to more sophisticated array analysis and visualization methods. But typically,
-The processed datasets can then be used in various high-level data analysis tools for further evaluation and data mining. A popular example is the commercial Ingenuity Pathways Analysis software (\href{http://www.ingenuity.com/}{www.ingenuity.com}), which links processed microarray datasets with pathway analysis.
+The processed datasets can then be used in various high-level data analysis tools for further evaluation and data mining. A popular example is the commercial Ingenuity Pathway Analysis software (\href{http://www.ingenuity.com/}{www.ingenuity.com}), which links processed microarray datasets with pathway analysis.
 %
 However, most of these high-level analysis tools are specialized on single platforms and only a few approaches are available for an integrated analysis of high-throughput data from heterogenous platforms.
 %One of these examples is MMIA \citep{Nam2009}, a webtool that integrates microRNA and mRNA data.
-Furthermore, not many software tools are freely available that offer suitable and easy-to-use analysis and visualization techniques for microarray platforms, other than mRNA expression arrays.
+Furthermore, not many software tools are freely available that offer suitable and easy-to-use analysis, and visualization techniques for microarray platforms, other than mRNA expression arrays.
 
 Therefore, we developed InCroMAP, a user-friendly and interactive application with a graphical user interface that is specialized on an integrated analysis of cross-platform microarray and pathway data. InCroMAP supports DNA methylation, messenger RNA, microRNA and protein modification datasets. Besides these platforms, it is possible to import data from any platform that contains expression values that can somehow be assigned to genes.
 A special emphasis has been put on the usability of the application. Hence, all required files, e.g., for mapping gene identifiers to gene symbols, annotating mRNA targets to microRNAs, or pathways to visualize are either directly included in the application or downloaded dynamically in the background.
@@ -122,10 +121,10 @@ A special emphasis has been put on the usability of the application. Hence, all 
 %%%%%%%%%%%%%%%%%%%%%  FIGURE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure*}[t]%figure1
 \centerline{
-  \noindent\includegraphics[width=\textwidth]{figures/Figure.png}
+  \noindent\includegraphics[width=\textwidth]{Figure.png}
 }
 \caption{
-Different views of InCroMAP. A) the popup menu shows different methods that are provided for a joint analysis of heterogeneous microarray platforms. B) MicroRNA datasets can be annotated with three experimental and three predicted miRNA target databases directly from within the application. In the background the result of the `integrate heterogeneous data' procedure is shown. C) Integrated pathway-based visualization of heterogenous microarray datasets allows to visualize up to four different platforms in a single pathway (here: excerpt from the `MAPK signaling' pathway). Pathway nodes can be selected to get more detailed information, including various plots for all assigned expression values (here: DNA methylation in the promoter region of \emph{Egfr}).
+Different views of InCroMAP. A) The popup menu shows different methods that are provided for a joint analysis of heterogeneous microarray platforms. B) MicroRNA datasets can be annotated with three experimental and three predicted miRNA target databases directly from within the application. In the background the result of the `integrate heterogeneous data' procedure is shown. C) Integrated pathway-based visualization of heterogenous microarray datasets allows to visualize up to four different platforms in a single pathway (here: excerpt from the `MAPK signaling' pathway). Pathway nodes can be selected to get more detailed information, including various plots for all assigned expression values (here: DNA methylation in the promoter region of \emph{Egfr}).
 }\label{fig:01}
 \end{figure*}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -134,7 +133,7 @@ Different views of InCroMAP. A) the popup menu shows different methods that are 
 \begin{methods}
 \section{Results}
 %\subsection{Integration of heterogeneous platforms}
-%Prior to the application of cross-platform data analysis methods, data from all 
+%Prior to the application of cross-platform data analysis methods, data from all
 To integrate data from multiple platforms, a common denominator must be established. The vast majority of all data is somehow associated to genes. Hence, integration of multiple data types is performed by mapping each probe to a gene. This procedure is straightforward for protein or mRNA datasets. DNA methylation datasets are region-based and can be mapped onto genes by defining a window upstream and downstream of each gene's transcription start site. InCroMAP proposes a window of $-2,000$ and $+500$\,bps as default region, but users may change these values.
 %Commonly, mRNA and protein data consist of protein coding genes and the relation between DNA methylation and mRNA is of regulatory nature. Therefore,
 Integration of microRNA data is performed by annotating the genes of the mRNA targets to each microRNA. For this task, the user can choose between three microRNA target databases that contain experimentally verified targets and three databases with predicted targets (listed in Fig.~\ref{fig:01}B, \citealp[databases reviewed in][]{Alexiou2009}).
@@ -145,17 +144,17 @@ Integration of microRNA data is performed by annotating the genes of the mRNA ta
 
 
 %\subsection{Integrated data analysis}
-A first approach to integratively investigate data from any two platforms is the `data pairing' procedure. This procedure shows two datasets next to each other thus, simplifying common lookup task such as investigating the effect of a differentially 
+A first approach to integratively investigate data from any two platforms is the `data pairing' procedure. This procedure shows two datasets next to each other, thus, simplifying common lookup task, such as investigating the effect of a differentially
 methylated promoter on mRNA level.
 %regulated mRNA on protein level.
 Further, this view is especially suitable to inspect the effect of microRNA expression on target mRNAs.
 %Therefore, some additional columns are placed between the datasets that display the database in which this relation is specified or that allow for calculations of differences.
 %Für miRNA gut, AbsoluteSum kann berechnet werden um jede zu bekommen welche in protein und mRNA hochreguliert sind.
 An arbitrary amount of data from different platforms can be inspected, using the `integrate heterogenous data' procedure. To keep the clarity, only the most relevant information, i.e., the expression values (as fold changes or p-values) are shown. Therefore, one row is created for each gene and one column for each platform. %This procedure requires mostly summarization of multiple values, which users can control by picking mean, median, maximum, etc.
-A hierarchical representation of the table allows for expanding nodes to get more information, such as all microRNAs targeting this gene's mRNA (see Fig.~\ref{fig:01} B).
+A hierarchical representation of the table allows for expanding nodes to get more information, such as all microRNAs targeting this gene's mRNA (see Fig.~\ref{fig:01}B).
 %A special representation is provided that integrates a tree in a table to allow expanding the node of each gene to show all platforms with associated values. If these are expanded more detailed information, such as the single probes or microRNAs targeting this gene's mRNA is displayed.
 %
-A popular method for a generic analysis of expression data is performing a gene set enrichment. We have extended this procedure to an integrated gene set enrichment that is able to perform enrichments across multiple platforms. The user can choose the datasets and thresholds for each dataset to calculate a p-value, using a hypergeometric test for each predefined gene set \citep{Backes2007}. InCroMAP supports gene sets from the KEGG PATHWAY database \citep{KEGG}, Gene Ontology and any gene set from the molecular signatures database
+A popular method for a generic analysis of expression data is performing a gene set enrichment. We have extended this procedure to an integrated gene set enrichment that is able to perform enrichments across multiple platforms. The user can choose the datasets and thresholds for each dataset to calculate a p-value, using a hypergeometric test for each predefined gene set \citep{Backes2007}. InCroMAP supports gene sets from the KEGG PATHWAY database \citep{KEGG}, Gene Ontology, and any gene set from the molecular signatures database
 (\href{http://www.broadinstitute.org/gsea/msigdb/}{www.broadinstitute.org/gsea/msigdb/}).
 % Including the citation takes too much space... \citep{Subramanian2005}.
 %
