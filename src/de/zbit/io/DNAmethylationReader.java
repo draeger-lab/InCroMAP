@@ -53,7 +53,7 @@ public class DNAmethylationReader extends AbstractGeneAndRegionBasedNSreader<DNA
   /**
    * This mapper allows to assign gene-ids for {@link Region}s.
    */
-  private DNAmethylationDataMapper toGeneMapper = null;
+  private transient DNAmethylationDataMapper toGeneMapper = null;
   
   
   /* (non-Javadoc)

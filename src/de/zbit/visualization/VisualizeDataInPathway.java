@@ -957,6 +957,7 @@ public class VisualizeDataInPathway {
     if (ignorePV==null||Double.isNaN(ignorePV.doubleValue())) ignorePV=1d;
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
     
+    int maximumModifications = 0;
     int changedNodes = 0;
     for (Node n: n2ns.keySet()) {
       Set<String> addedAnalytes = new HashSet<String>(); // required to hide multiple values coming from the same analyte.
@@ -1013,7 +1014,24 @@ public class VisualizeDataInPathway {
       // Write all those signals to node annotations
       writeSignalsToNode(n, sorted, tabName, experimentName, type);
       changedNodes++;
+      maximumModifications = Math.max(maximumModifications, sorted.size());
     }
+    
+    System.out.println(maximumModifications);
+    
+    // Eventally change the layout (Reviewer question)
+    if (PathwayVisualizationOptions.RELAYOUT_NODES_AFTER_SIZE_CHANGE.getValue(prefs)
+//        || (maximumModifications>4 && GUITools.showQuestionMessage(null, 
+//          "At least one of the mofified nodes has more than four different protein modifications at the bottom.\n\nDo you want to adjust the layout of all modified nodes?", "Re-layout node subset", 
+//          JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
+        ) {
+      if (n2ns.keySet().size()>=graph.nodeCount()*0.7) {
+        tools.layoutNodeSubset(n2ns.keySet());
+      } else {
+        tools.layoutSubset(n2ns.keySet());
+      }
+    }
+    
     // TODO: Change eventual DNA methylation box-heights. If so,
     // Change also on REMOVAL of prot mod data.
     return changedNodes;
@@ -1099,8 +1117,8 @@ public class VisualizeDataInPathway {
           
           nl.setModel(NodeLabel.FREE);
           nl.setPosition(NodeLabel.W);
-          nl.setBackgroundColor(nr.getLineColor());
-          nl.setLineColor(nl.getBackgroundColor());
+          nl.setBackgroundColor(Color.GRAY);
+          nl.setLineColor(nr.getLineColor());
           nl.setAutoSizePolicy(NodeLabel.AUTOSIZE_NONE);
           nl.setContentHeight(barHeight);
           nl.setDistance(0); // Adjacent to node
@@ -1130,8 +1148,9 @@ public class VisualizeDataInPathway {
           }
         }
         
+        NodeLabel border = null;
         if (showBorderForDNAmethylationBox) {
-          NodeLabel border = nr.createNodeLabel(); //(NodeLabel) nl.clone();
+          border = nr.createNodeLabel(); //(NodeLabel) nl.clone();
           border.setModel(NodeLabel.FREE);
           border.setBackgroundColor(Color.WHITE);
           border.setContentWidth(maxWidth);
@@ -1155,6 +1174,15 @@ public class VisualizeDataInPathway {
       // TODO: Observe behaviour on probe-based data; write only top-5 dysregulated/min-pVal
       writeSignalsToNode(n, nsForNode, tabName, experimentName, type);
       changedNodes++;
+    }
+    
+    // Eventally change the layout (Reviewer question)
+    if (PathwayVisualizationOptions.RELAYOUT_NODES_AFTER_SIZE_CHANGE.getValue(prefs)) {
+      if (n2ns.keySet().size()>=graph.nodeCount()*0.7) {
+        tools.layoutNodeSubset(n2ns.keySet());
+      } else {
+        tools.layoutSubset(n2ns.keySet());
+      }
     }
     
     return changedNodes;

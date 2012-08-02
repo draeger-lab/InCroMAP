@@ -473,6 +473,11 @@ public class IntegratorUITools {
     else if (type.equals(IdentifierType.Ensembl)) return 1;
     else if (type.equals(IdentifierType.KeggGenes)) return 1;
     else if (type.equals(IdentifierType.RefSeq)) return 1;
+    
+    else if (type.equals(IdentifierType.Affymetrix)) return 1;
+    else if (type.equals(IdentifierType.Illumina)) return 1;
+    else if (type.equals(IdentifierType.Agilent)) return 1;
+    
     else if (type.equals(IdentifierType.GeneSymbol)) return 2;
     else if (type.equals(IdentifierType.Unknown)) return 3;
     else {

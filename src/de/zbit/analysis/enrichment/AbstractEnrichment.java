@@ -50,8 +50,8 @@ import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.enrichment.EnrichmentMapper;
 import de.zbit.math.BenjaminiHochberg;
-import de.zbit.math.FDRCorrection;
 import de.zbit.math.EnrichmentPvalue;
+import de.zbit.math.FDRCorrection;
 import de.zbit.math.HypergeometricTest;
 import de.zbit.util.Species;
 import de.zbit.util.prefs.SBPreferences;
@@ -390,20 +390,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     for (Map.Entry<EnrichIDType, Set<?>> entry : pwList.entrySet()) {
       if (prog!=null) prog.DisplayBar();
       
-      // KEGG Pathway id 2 Pathway Name
-      String pw_name=entry.getKey().toString();
-      if (enrich_ID2Name!=null && enrich_ID2Name.isReady()) {
-        try {
-          pw_name = enrich_ID2Name.map(entry.getKey());
-          if (pw_name==null||pw_name.length()<1) {
-            pw_name = "Unknown";//entry.getKey().toString();
-          }
-        } catch (Exception e) {
-          if (enrich_ID2Name!=null) {
-            log.log(Level.WARNING, String.format("Could not map Enrichment id 2 name: %s", entry.getKey()), e);
-          }
-        }
-      }
+      String pw_name = getEnrichedObjectName(entry.getKey(), enrich_ID2Name);
       
       // Total # genes in pw
       int pwSize=geneID2enrich_ID.getEnrichmentClassSize(entry.getKey());
@@ -432,6 +419,31 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     Collections.sort(ret, Signal.getComparator(EnrichmentObject.signalNameForPvalues, SignalType.pValue));
     
     return ret;
+  }
+  
+  /**
+   * Converts an ID (e.g., KEGG PATHWAY id) to corresponding name (e.g., name of the pathway).
+   * @param <EnrichIDType>
+   * @param id
+   * @param enrich_ID2Name
+   * @return
+   */
+  public static <EnrichIDType> String getEnrichedObjectName(EnrichIDType id, AbstractMapper<EnrichIDType, String> enrich_ID2Name) {
+    // KEGG Pathway id 2 Pathway Name
+    String pw_name=id.toString();
+    if (enrich_ID2Name!=null && enrich_ID2Name.isReady()) {
+      try {
+        pw_name = enrich_ID2Name.map(id);
+        if (pw_name==null||pw_name.length()<1) {
+          pw_name = "Unknown";//entry.getKey().toString();
+        }
+      } catch (Exception e) {
+        if (enrich_ID2Name!=null) {
+          log.log(Level.WARNING, String.format("Could not map Enrichment id 2 name: %s", id), e);
+        }
+      }
+    }
+    return pw_name;
   }
   
   /**

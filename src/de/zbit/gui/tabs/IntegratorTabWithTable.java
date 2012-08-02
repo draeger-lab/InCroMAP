@@ -316,7 +316,13 @@ public class IntegratorTabWithTable extends IntegratorTab<Collection<? extends T
         
         // Set initial selection
         String signalColumnName = NameAndSignals.signal2columnName(preselection);
-        if (ns instanceof EnrichmentObject) signalColumnName = ((EnrichmentObject<?>)ns).getColumnName(5);
+        if (ns instanceof EnrichmentObject) {
+          if (ns.getColumnCount()>5) {
+            signalColumnName = ((EnrichmentObject<?>)ns).getColumnName(5);
+          } else {
+            signalColumnName = "Q-value";
+          }
+        }
         if (preselection.getType().equals(SignalType.pValue)) {
           f.setInitialSelection(signalColumnName, "<", "0.05");
         } else {

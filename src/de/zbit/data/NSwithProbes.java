@@ -137,6 +137,25 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
   }
   
   
+  /* (non-Javadoc)
+   * @see de.zbit.data.NameAndSignals#getObjectAtColumn(int)
+   */
+  @Override
+  public Object getObjectAtColumn(int columnIndex) {
+    Object su = super.getObjectAtColumn(columnIndex);
+    
+    // Change geneID "-1" to "not found"
+    if (su instanceof Number && su.equals(new Integer(-1))) {
+      String GeneIDHeader = StringUtil.formatOptionName(GeneID.gene_id_key);
+      if (getColumnName(columnIndex).equals(GeneIDHeader)) {
+        return "Not found";
+      }
+    }
+    
+    return su;
+  }
+  
+  
   
   /**
    * @return the probe name (or a list of probes,

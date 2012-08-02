@@ -131,9 +131,28 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     idTypes.remove(IdentifierType.Unknown);
     // Do not set the gene id regex (simple number... to unspecific)
     regExForIdTypes.set(idTypes.indexOf(IdentifierType.NCBI_GeneID), null);
+    regExForIdTypes.set(idTypes.indexOf(IdentifierType.GeneSymbol), null);
     
     // The user may choose multiple identifier columns
-    ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),true,true,true,false,regExForIdTypes.toArray(new String[0]));
+    ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),true,true,true,false,regExForIdTypes.toArray(new String[0])) {
+      /* (non-Javadoc)
+       * @see de.zbit.gui.csv.ExpectedColumn#getInitialSuggestions(de.zbit.io.csv.CSVReader)
+       */
+      @Override
+      public int[] getInitialSuggestions(CSVReader r) {
+        int[] su = super.getInitialSuggestions(r);
+        // Try to enhance auto detection of identifiers with unspecific regex'es
+        // NCBI_GeneID, RefSeq, Ensembl, KeggGenes, GeneSymbol, Affymetrix, Agilent, Illumina
+        if (su[0]<0) {
+          su[0] = r.getColumnContaining("entrez");
+        }
+        if (su[4]<0) {
+          su[4] = r.getColumnContaining("symbol");
+        }
+          
+        return su;
+      }
+    };
     list.add(e);
     
     List<ExpectedColumn> additional = getAdditionalExpectedColumns();

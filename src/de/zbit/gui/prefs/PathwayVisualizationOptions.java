@@ -85,6 +85,9 @@ public interface PathwayVisualizationOptions extends KeyProvider {
       "Define a maximum width (in pixel) of boxes that are added left of nodes to represent DNA methylation changes.",
       new Range<Byte>(Byte.class, "{[5,100]}"), new Byte((byte) 20), "DNA methylation maximum box width"); //should be dividable by 2
   
+  public static Option<Boolean> RELAYOUT_NODES_AFTER_SIZE_CHANGE = new Option<Boolean>("RELAYOUT_NODES_AFTER_SIZE_CHANGE", Boolean.class,
+      "If DNA methylation data or protein data is visualized and this option is activated, a re-layout of affected nodes will be performed.", Boolean.FALSE);
+  
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static final OptionGroup PATHWAY_COLORING_OPTIONS = new OptionGroup(
     "Pathway coloring options",

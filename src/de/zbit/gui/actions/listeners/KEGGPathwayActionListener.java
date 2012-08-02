@@ -41,12 +41,16 @@ import javax.swing.JTable;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
+import y.layout.organic.SmartOrganicLayouter;
+import y.layout.router.OrganicEdgeRouter;
 import y.view.Graph2D;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
+import de.zbit.graph.GraphTools;
 import de.zbit.graph.gui.TranslatorPanel;
+import de.zbit.graph.gui.options.TranslatorPanelOptions;
 import de.zbit.gui.BaseFrameTab;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
@@ -63,7 +67,9 @@ import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NameAndSignalsTab;
+import de.zbit.kegg.KeggTools;
 import de.zbit.kegg.Translator;
+import de.zbit.kegg.ext.KEGGTranslatorPanelOptions;
 import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorUI;
@@ -355,6 +361,19 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
           // Repaint and hide loading screens
           //tp.repaint();
           //tp.hideTemporaryLoadingBar();
+          
+//          // Let edges dock to labels
+//          SBPreferences prefs = SBPreferences.getPreferencesFor(KEGGTranslatorPanelOptions.class);
+//          if (TranslatorPanelOptions.LAYOUT_EDGES.getValue(prefs)) {
+//            //new GraphTools((Graph2D)tp.getDocument()).layout(OrganicEdgeRouter.class);
+//            // TODO:  This would be a great preferred feature!
+//            // If last bend/source node below then dock to labels
+//            // If last bend/source node left  then dock to labels
+//            // Else, if dock > node bounds, remove dock.
+//            new GraphTools((Graph2D)tp.getDocument()).adjustEdgesToLabels();
+//          }
+          
+          
           return coloredNodes;
         } catch (Exception e) {
           throw e;

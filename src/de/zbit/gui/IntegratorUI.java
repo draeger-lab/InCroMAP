@@ -52,6 +52,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.ToolTipManager;
@@ -82,6 +83,7 @@ import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.DNAmethylationReader;
+import de.zbit.io.EnrichmentReader;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.mRNAReader;
@@ -191,6 +193,10 @@ public class IntegratorUI extends BaseFrame {
      * {@link Action} to load opened tabs from another session.
      */
     WORKSPACE_LOAD,
+    /**
+     * {@link Action} to load an enrichment (from external applications).
+     */
+    LOAD_ENRICHMENT,
     /**
      * {@link Action} to load data with the {@link mRNAReader}.
      */
@@ -303,6 +309,8 @@ public class IntegratorUI extends BaseFrame {
           return "Integrate multiple heterogeneous datasets from different platforms by building a gene-centered tree.";
         case INTEGRATED_ENRICHMENT:
           return "Perform an integrated enrichment across multiple (heterogeneous) datasets.";
+        case LOAD_ENRICHMENT:
+          return "Load an enrichment that has been saved from this or any other application (e.g., DAVID, GSEA, or others).";
           
         default:
           return "";
@@ -337,6 +345,10 @@ public class IntegratorUI extends BaseFrame {
     KEGGtranslatorOptions.AUTOCOMPLETE_REACTIONS.setDefaultValue(false);
     
     TranslatorPanelOptions.SHOW_PROPERTIES_TABLE.setDefaultValue(false);
+    TranslatorPanelOptions.DRAW_EDGES_ON_TOP_OF_NODES.setDefaultValue(true);
+    // Edge layouting will create fixed bends in edges that obscure the graph,
+    // if nodes are moved for any reason.
+    //TranslatorPanelOptions.LAYOUT_EDGES.setDefaultValue(true);
     
     // Set the often used KeggTranslator methods to use this appName as application name
 //    Translator.APPLICATION_NAME = appName;
@@ -496,12 +508,80 @@ public class IntegratorUI extends BaseFrame {
    */
   @Override
   protected JMenuItem[] additionalFileMenuItems() {
+    
+    JMenu importData = new JMenu("Import enrichment result");
+    importData.setToolTipText(Action.LOAD_ENRICHMENT.getToolTip());
+    
+    /*
+     * Make separate menu items for the same thing (requested by reviewers).
+     */
+    
+    importData.add(
+      GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openEnrichment"),
+        new ActionCommand() {
+        @Override
+        public String getToolTip() {
+          return "Load an enrichment that has been saved with this tool.";
+        }
+        @Override
+        public String getName() {
+          return "Load InCroMAP enrichment";
+        }
+      }, UIManager.getIcon("ICON_OPEN_16"))
+    );
+    
+    importData.add(
+      GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openEnrichment"),
+        new ActionCommand() {
+        @Override
+        public String getToolTip() {
+          return "Load an enrichment that has been saved with the official GSEA tool (see http://www.broadinstitute.org/gsea/index.jsp).";
+        }
+        @Override
+        public String getName() {
+          return "Load GSEA enrichment";
+        }
+      }, UIManager.getIcon("ICON_OPEN_16"))
+    );
+    
+    importData.add(
+      GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openEnrichment"),
+        new ActionCommand() {
+        @Override
+        public String getToolTip() {
+          return "Load an enrichment that has been saved with DAVID Bioinformatics Resources (see http://david.abcc.ncifcrf.gov/).";
+        }
+        @Override
+        public String getName() {
+          return "Load DAVID enrichment";
+        }
+      }, UIManager.getIcon("ICON_OPEN_16"))
+    );
+    
+    importData.add(new JSeparator());
+    
+    importData.add(
+      GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openEnrichment"),
+        new ActionCommand() {
+        @Override
+        public String getToolTip() {
+          return "Load an enrichment that has been saved with any application or tool.";
+        }
+        @Override
+        public String getName() {
+          return "Load other enrichment";
+        }
+      }, UIManager.getIcon("ICON_OPEN_16"))
+    );
+    
     return new JMenuItem[] {
         /* TOO difficult to save workspace...
          * GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "saveWorkspace"),
           Action.WORKSPACE_SAVE, UIManager.getIcon("ICON_SAVE_16"), KeyStroke.getKeyStroke('W',InputEvent.CTRL_DOWN_MASK),
           'W', false)*/
-          };
+    
+      importData
+    };
   }
   
   @Override
@@ -561,6 +641,7 @@ public class IntegratorUI extends BaseFrame {
     
     return new JMenu[]{importData, tools};
   }
+  
   
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#createJToolBar()
@@ -647,6 +728,10 @@ public class IntegratorUI extends BaseFrame {
     if (l.size()<1) return;
     
     addToFileHistory(l, fileHistoryDuplicate);
+  }
+  
+  public void openEnrichment() {
+    openFile(null, false, EnrichmentReader.class);
   }
   
   public void openMRNAfile() {
@@ -893,6 +978,9 @@ public class IntegratorUI extends BaseFrame {
   }
   
   protected File[] openFile(File[] files, Class<?>... reader) {
+    return openFile(files, true, reader);
+  }
+  protected File[] openFile(File[] files, boolean addToHistory, Class<?>... reader) {
 
     // Ask input file
     if ((files == null) || (files.length < 1)) {
@@ -940,7 +1028,9 @@ public class IntegratorUI extends BaseFrame {
      * 1) if this method is invoked by e.g. "openMRNAfile()", it is not logged and
      * 2) the additionalHistory has to be changed too.
      */
-    addToFileHistory(files);
+    if (addToHistory) {
+      addToFileHistory(files);
+    }
     
     return files;
   }

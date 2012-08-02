@@ -38,6 +38,7 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.math.EnrichmentPvalue;
 import de.zbit.math.HypergeometricTest;
 import de.zbit.math.MathUtils;
+import de.zbit.util.ArrayUtils;
 import de.zbit.util.StringUtil;
 
 /**
@@ -96,6 +97,16 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    */
   private EnrichmentObject(String name) {
     super(name);
+  }
+  
+  /**
+   * Special constructor that allows loading external enrichment results
+   * @param name
+   * @param identifier
+   */
+  public EnrichmentObject(String name, EnrichIDType identifier) {
+    this(name);
+    if (identifier!=null) addData(idKey, identifier);
   }
   
   /**
@@ -340,13 +351,31 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
     // If you change something here, remember to also change #getColumnName(int).
     Object[] ret = new Object[7];
     
-    ret[0] = getIdentifier();
-    ret[1] = getName();
-    ret[2] = new Ratio(getNumberOfEnrichedGenesInClass(), getTotalGenesInSourceList());
-    ret[3] = new Ratio(getTotalGenesInClass(), getTotalGenesInGenome());
-    ret[4] = getPValue();
-    ret[5] = getQValue();
-    ret[6] = getGenesInClass();
+    int i=0;
+    ret[i] = getIdentifier();
+    ret[++i] = getName();
+    if (getNumberOfEnrichedGenesInClass()<=0 && getTotalGenesInSourceList()<=0) {
+      //ret[++i] = "N/A";
+    } else {
+      ret[++i] = new Ratio(getNumberOfEnrichedGenesInClass(), getTotalGenesInSourceList());
+    }
+    if (getTotalGenesInClass()<=0 && getTotalGenesInGenome()<=0) {
+      //ret[++i] = "N/A";
+    } else {
+      ret[++i] = new Ratio(getTotalGenesInClass(), getTotalGenesInGenome());
+    }
+    ret[++i] = getPValue();
+    ret[++i] = getQValue();
+    if (getGenesInClass()==null || getGenesInClass().size()<1) {
+      ret[++i] = "Unknown";
+    } else {
+      ret[++i] = getGenesInClass();
+    }
+    
+    // If array is smaller, resize it.
+    if (i<6) {
+      return ArrayUtils.resize(ret, i+1, null);
+    }
     
     return ret;
   }
@@ -441,13 +470,19 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
    */
   @Override
   public String getColumnName(int columnIndex) {
-    if (columnIndex==0) return "ID";
-    else if (columnIndex==1) return "Name";
-    else if (columnIndex==2) return "List ratio";
-    else if (columnIndex==3) return "BG ratio";
-    else if (columnIndex==4) return "P-value";
-    else if (columnIndex==5) return "Q-value";// Number 5 is hard coded in "setDefaultInitialSelectionOfJTableFilter()"
-    else if (columnIndex==6) return "Genes";
+    int i=0;
+    if (columnIndex==i) return "ID";
+    else if (columnIndex==++i) return "Name";
+    
+    // If enrichments have been loaded, no ratios are available
+    else if ((getNumberOfEnrichedGenesInClass()>0 || getTotalGenesInSourceList()>0) &&
+        columnIndex==++i) return "List ratio";
+    else if ((getTotalGenesInClass()>0 || getTotalGenesInGenome()>0) &&
+        columnIndex==++i) return "BG ratio";
+    
+    else if (columnIndex==++i) return "P-value";
+    else if (columnIndex==++i) return "Q-value";// Number 5 is hard coded in "setDefaultInitialSelectionOfJTableFilter()"
+    else if (columnIndex==++i) return "Genes";
     else return null;
   }
 
