@@ -7,7 +7,7 @@
 \copyrightyear{2012}
 \pubyear{2012}
 
-\newcommand{\NEW}[1]{\textcolor{red}{#1}}
+\newcommand{\NEW}[1]{{#1}}%\textcolor{red}
 
 \hyphenation{
 microRNA
@@ -15,6 +15,8 @@ microRNAs
 miRNA
 miRNAs
 straight-for-ward
+net-work
+net-works
 }
 
 \begin{document}
@@ -65,7 +67,7 @@ pathway overlaid with mRNA expression data, where red means upregulation, blue i
 more saturated colors correspond to stronger differential expression. d) shows how protein modification datasets are
 visualized in the pathway. Each box below the node \emph{Egfr} represents a different modification of the corresponding
 protein and the color of the box reflects the corresponding fold-change. e) illustrates DNA
-methylation peaks in promoter regions. A bar from the middle of the black box to the left represents
+methylation peaks in promoter regions. A bar from the middle of the \NEW{grey} box to the left represents
 hypomethylation and hypermethylation is indicated by a bar to the right. The size of the bar
 corresponds to the size of the maximum DNA methylation peak. f) demonstrates the visualization of
 microRNA data by adding small triangles, representing microRNAs, and connecting them to their mRNA targets.
@@ -92,24 +94,30 @@ quantification of global gene expression on the RNA or protein level, also epige
 such as DNA methylation can be monitored on a genome-wide level using microarray technology
 \citep{Schumacher2006}.
 
+\NEW{Microarray datasets are typically not only inspected on the level of individual genes, but rather differential gene expression in the context of groups of functionally related genes (i.e., genes related to the same biological process or involved in the same pathway) is investigated by using statistical
+overrepresentation tests (e.g., Fisher test or hypergeometric test) or gene set enrichment analysis (GSEA -- \citealp{Subramanian2005}). In contrast to overrepresentation analysis methods, which require fixed sets of up- or downregulated genes, defined based on fold-change and/or \emph{p}-value cutoffs, modern GSEA-like methods do not require cutoffs to detect sets of functionally related genes showing a trend towards differential gene expression \citep{Markowetz2010}.}
+
 % Motivation fuer die Entwicklung des Tools
 Several tools exist for the visual inspection of datasets from individual platforms \citep[see][for
 some examples]{Gehlenborg2010}. However, the current inventory of publicly available tools, that are
 capable of integrating and jointly visualizing data from multiple microarray platforms, is still
-very limited. Here, we introduce a method for integrated pathway-centered visualization of
+very limited.
+%
+\NEW{While for genomic features, which are not directly linked to genes (e.g., DNA methylation or SNP data) region-based visualization methods (e.g., the UCSC genome browser -- \citealp{UCSCBrowser}) are commonly used, data from gene-centered genomic features (e.g., mRNAs, proteins) is often visualized using network-based visualization methods (e.g., Cytoscape -- \citealp{Cytoscape} or KEGG Atlas -- \citealp{KEGGAtlas}). While the former approach may provide more detailed information about individual genes or genomic loci, conclusions about higher-order mechanisms can often be more easily drawn from a pathway-based view of the data. Thus, we propose to first focus on pathways relevant to the studied phenomenon, which can be identified using enrichment analysis methods. Subsequently, network hubs or key regulators can be inspected in more detail using complementary region-based visualization methods.}
+
+Here, we introduce a method for integrated pathway-centered visualization of
 datasets, generated from the same biological samples using different microarray platforms, which
 monitor complementary genomic and epigenomic features.
-
+%
+%
 % Pathway-basierte Visualisierung vs. Regions-basierte Visualisierung
-In contrast to commonly used region-based visualization methods (e.g., the UCSC genome browser --
-\citealp{UCSCBrowser}), we propose to visualize the microarray data in the context of specific
-signaling or metabolic pathways, which can in many cases be more easily related to the biological
-problem under study, than individual genes or genomic regions.
+%In contrast to commonly used region-based visualization methods, we propose to visualize the microarray data in the context of specific
+%signaling or metabolic pathways, which can in many cases be more easily related to the biological
+%problem under study, than individual genes or genomic regions.
 %
 % InCroMAP vs. publizierte Pathway-basierte Visualisierungstools
 In recent years, diverse tools were developed, which are specialized in pathway analysis (e.g.,
-Ingenuity) or pathway visualization (e.g., Cytoscape -- \citealp{Cytoscape} or KEGG Atlas --
-\citealp{KEGGAtlas}). Some of these tools offer visualizing experimental data in a pathway (e.g.,
+Ingenuity) or pathway visualization. Some of these tools offer visualizing experimental data in a pathway (e.g.,
 KegArray -- \citealp{KEGG}, Pathline -- \citealp{Pathline}, GenMAPP -- \citealp{GenMAPP} or MGV -- \citealp{Symons2011}). For this
 purpose, the experimental data is typically mapped to a color gradient and displayed in the
 background color of the pathway nodes. GenMAPP or MGV even have capabilities to display multiple
@@ -173,7 +181,7 @@ and protein modification expression. For example, we visualized three different 
 phosphorylation at the Serine 15 (S15) site, which shows almost no expression change, a modification
 % Bitte das komma vor dem AND lassen (ein sog. "serial comma").
 of the S9 site, which is upregulated, and the basic protein itself, which is also upregulated. The
-black boxes left of the nodes represent the maximum DNA methylation fold-change peak. A bar to the
+\NEW{grey} boxes left of the nodes represent the maximum DNA methylation fold-change peak. A bar to the
 left indicates hypomethylation and a bar to the right hypermethylation. In our example, \emph{Ttk} shows
 a strong hypermethylation.
 All above mentioned genes are highlighted in yellow.
@@ -189,7 +197,7 @@ described for the mRNA nodes.}
 The basic prerequisite for generating a pathway-based visualization is visualizing the pathway
 itself. For this purpose, we are using KEGGtranslator \citep[see][]{Wrzodek2011}, which performs a
 basic conversion of the KEGG KGML documents to GraphML. In short, KEGGtranslator converts all KGML entries to nodes
-and all relations to edges. \NEW{Compounds are depicted by small circular nodes, genes or proteins are rectangular shaped nodes and group nodes are used to illustrate compounds or families.}
+and all relations to edges. \NEW{Compounds are depicted by small circular nodes, genes or proteins are rectangular shaped nodes and group nodes are used to illustrate complexes or families. The original layout, given in the KGML document, is used to position all nodes.}
 %Some basic errors are corrected automatically and appropriate shapes, colors and labels are inferred.
 Then, all nodes are annotated with diverse identifiers (e.g., Entrez Gene
 identifiers -- \citealp{EntrezGene}),
@@ -262,10 +270,10 @@ actual modification for every protein.
 % Darstellung von DNAm Daten
 The DNA methylation (DNAm) status, observed in the proximal promoter of a gene, is graphically
 represented by adding boxes to the left side of the pathway nodes. These boxes are drawn on a white
-background and contain a black bar which stretches from the middle to the left, in the case of hypomethylation and from the middle to the right, to indicate hypermethylation. Instead of discriminating between hyper- and hypomethylation, one can simply visualize the amount of differential methylation. In this case, the black bar would stretch from the left border of the box to the right border.
+background and contain a \NEW{grey} bar which stretches from the middle to the left, in the case of hypomethylation and from the middle to the right, to indicate hypermethylation. Instead of discriminating between hyper- and hypomethylation, one can simply visualize the amount of differential methylation. In this case, the \NEW{grey} bar would stretch from the left border of the box to the right border.
 
 % Berechnung des DNAm Gesamtwerts
-The length of the black bar is proportional to a summary value reflecting the DNAm status of the
+The length of the \NEW{grey} bar is proportional to a summary value reflecting the DNAm status of the
 promoter of a certain gene. This value is by default computed from the probes in a region ranging
 from -2000 bps upstream of the transcription start site to 500 bps downstream. Normally, the
 value of the maximum peak found in the promoter of a gene is visualized. For peak detection,
@@ -283,7 +291,7 @@ from the \emph{p}-values $p(b_1),\dots,p(b_n)$ using the formula $s=\frac{1}{n}\
 This binning approach has the advantage of being sensitive to local changes in DNA methylation, as promoter segments with
 significant changes in DNA methylation are highly weighted. Conversely, segments for which slight changes were observed only
 contribute marginally to the overall significance score.
-\NEW{InCroMAP, by default, approximates the peak by selecting the probe with maximum differential methylation. It further supports other options, such as the given formula $s$ to process \emph{p}-values and simple options that include mean, median, minimum and maximum. If multiple genes are associated to one node, all probes are placed in a single pool and the summarization method is applied. By default, this will lead to a visual representation of the maximum peak contained in any gene that is represented by a node.}
+\NEW{InCroMAP, by default, approximates the peak by selecting the probe with maximum differential methylation. It further supports other options, such as the given formula $s$ to process \emph{p}-values and simple options that include mean, median, minimum and maximum. If multiple genes are associated to one node, all probes are pooled together and the summarization method is applied. By default, this will lead to a visual representation of the maximum peak contained in any gene that is represented by a node.}
 
 % Darstellung der DNAm Einzelwerte
 The purpose of this visualization technique is giving researchers a hint if,
@@ -298,27 +306,6 @@ observations (i.e., sample groups).
 In order to relate the DNAm data to data from gene-centered microarrays (e.g., mRNA expression
 arrays), each probe needs to be mapped to a gene. Thus, we require annotation columns containing the
 chromosome and the genomic position of each probe to facilitate the mapping from probes to genes.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Methylation Details Picture
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{figure}[tb]
-\centering
-% Add a border
-\setlength\fboxsep{1pt}
-\setlength\fboxrule{1pt}
-\fbox{
-  \includegraphics[width=.47\textwidth]{WrzodekFig03.png}
-}
-\caption{Integrated visualization of the `MAPK signaling' pathway with a detailed view of DNA methylation
-in the proximal promoter of \emph{Egfr}. The black DNA methylation bar next to the \emph{Egfr} gene in the pathway
-plot stretches from the middle to the right of the box, which indicates strong hypermethylation. The length
-of the black bar corresponds to the height of the maximum peak of the red curve. This curve displays the probe-level
-fold-changes plotted along the promoter region of \emph{Egfr}. The light blue curve shows the DNA methylation
-profile of \emph{Egfr}, observed in another sample group.}
-\label{fig:methdetails}
-\end{figure}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Visualization of microRNA expression data}
 
@@ -345,6 +332,27 @@ data, and extended with putative miRNA-mRNA interactions. Figure~\ref{fig:visual
 shows an example result of the described procedure.
 
 %\end{methods}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Methylation Details Picture
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[t]
+\centering
+% Add a border
+\setlength\fboxsep{1pt}
+\setlength\fboxrule{1pt}
+\fbox{
+  \includegraphics[width=.47\textwidth]{WrzodekFig03.png}
+}
+\caption{Integrated visualization of the `MAPK signaling' pathway with a detailed view of DNA methylation
+in the proximal promoter of \emph{Egfr}. The \NEW{grey} DNA methylation bar next to the \emph{Egfr} gene in the pathway
+plot stretches from the middle to the right of the box, which indicates strong hypermethylation. The length
+of the \NEW{grey} bar corresponds to the height of the maximum peak of the red curve. This curve displays the probe-level
+fold-changes plotted along the promoter region of \emph{Egfr}. The light blue curve shows the DNA methylation
+profile of \emph{Egfr}, observed in another sample group.}
+\label{fig:methdetails}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Results and discussion}
 
@@ -461,7 +469,7 @@ whole MARCAR consortium.
 %\bibliographystyle{bioinformatics}
 %\bibliographystyle{plain}
 
-%\bibliography{document}
+%\bibliography{../document}
 \begin{thebibliography}{}
 
 \bibitem[Alexiou {\em et~al.}(2009)Alexiou, Maragkakis, Papadopoulos, Reczko,
@@ -578,6 +586,12 @@ Maglott, D., Ostell, J., Pruitt, K.~D., and Tatusova, T. (2005).
 \newblock {Entrez Gene}: gene-centered information at {NCBI}.
 \newblock {\em Nucleic Acids Res\/}, {\bf 33}(Database issue), D54--D58.
 
+\bibitem[Markowetz(2010)Markowetz]{Markowetz2010}
+Markowetz, F. (2010).
+\newblock How to understand the cell by breaking it: network analysis of gene
+  perturbation screens.
+\newblock {\em PLoS Comput Biol\/}, {\bf 6}(2), e1000655.
+
 \bibitem[Meyer {\em et~al.}(2010)Meyer, Wong, Styczynski, Munzner, and
   Pfister]{Pathline}
 Meyer, M., Wong, B., Styczynski, M., Munzner, T., and Pfister, H. (2010).
@@ -646,6 +660,16 @@ Smyth, G.~K. (2004).
 \newblock Linear models and empirical bayes methods for assessing differential
   expression in microarray experiments.
 \newblock {\em Stat Appl Genet Mol Biol\/}, {\bf 3}, Article3.
+
+\bibitem[Subramanian {\em et~al.}(2005)Subramanian, Tamayo, Mootha, Mukherjee,
+  Ebert, Gillette, Paulovich, Pomeroy, Golub, Lander, and
+  Mesirov]{Subramanian2005}
+Subramanian, A., Tamayo, P., Mootha, V.~K., Mukherjee, S., Ebert, B.~L.,
+  Gillette, M.~A., Paulovich, A., Pomeroy, S.~L., Golub, T.~R., Lander, E.~S.,
+  and Mesirov, J.~P. (2005).
+\newblock Gene set enrichment analysis: a knowledge-based approach for
+  interpreting genome-wide expression profiles.
+\newblock {\em Proc Natl Acad Sci U S A\/}, {\bf 102}(43), 15545--15550.
 
 \bibitem[Symons and Nieselt(2011)Symons and Nieselt]{Symons2011}
 Symons, S. and Nieselt, K. (2011).
