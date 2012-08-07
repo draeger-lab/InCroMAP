@@ -133,6 +133,7 @@ For your convenience, we already created several start-scripts to run the applic
 
 
 \chapter{How to get started}
+This chapter gives detailed information how to load data from various platforms into the InCroMAP application. The InCroMAP homepage provides example data and an additional screencast (i.e., short video tutorial) that shows how to open data and perform a first analysis with InCroMAP. This might be a good starting point for first time users.
 
 \section{Prepare microarray data}
 \label{ch:prepare}
@@ -459,7 +460,7 @@ Messenger RNA is visualized by changing the color of the rectangle-shaped nodes,
 
 \subsection{Other pathway-based visualization options}
 
-If you started by performing a KEGG pathway enrichment on your expression data and then selected a pathway from the enrichment and clicked "Visualize pathway", then the "Highlight enriched genes" option will become available in the toolbar. If this option is selected, each node in the pathway is colored grey, except for nodes that correspond to genes that were enriched in this pathway. These are highlighted in red (which is only a highlighting and does not express up- or downregulation). For example, Figure~\ref{fig:enrichmentExample} shows the result of an enrichment. If we would select the third row ("Arginine and proline metabolism") and click on "Visualize pathway", then the "GLS2" and "ALDH1B1" genes would be highlighted in red.
+If you started by performing a KEGG pathway enrichment on your expression data and then selected a pathway from the enrichment and clicked "Visualize pathway", then the "Highlight enriched genes" option will become available in the toolbar. If this option is selected, each node in the pathway is colored grey, except for nodes that correspond to genes that were enriched in this pathway. These are highlighted in yellow (which is only a highlighting and does not express up- or downregulation). For example, Figure~\ref{fig:enrichmentExample} shows the result of an enrichment. If we would select the third row ("Arginine and proline metabolism") and click on "Visualize pathway", then the "GLS2" and "ALDH1B1" genes would be highlighted in yellow.
 
 Another visualization possibility (when a KEGG pathway enrichment has been performed) is coloring pathway-reference nodes according to the enrichment p-value. This can be done by selecting "Visualize data" and "Color pathway-references according enrichment" from the toolbar. This will change the color of all pathway-reference nodes (rectangular nodes with rounded corners) according to their p-value in the enrichment. The color scheme and requirements are the same as described in Section~\ref{sec:visdatainpw}. An example of such colored reference nodes can be seen in Figure~\ref{fig:metabolicpathways}.
 
@@ -603,5 +604,11 @@ Exception in thread "AWT-EventQueue-0" java.lang.NoClassDefFoundError:
     ...
 \end{verbatim}
 The interface \texttt{com.apple.eawt.AboutHandler} was introduced to Java for Mac OS X 10.6 Update 3. If you have an earlier version of Mac OS or Java, please update your OS or Java installation. Also see the Mac OS documentation about the \texttt{AboutHandler} for more information. On a Mac, you can update your Java installation through the Software Update menu item in the main Apple menu.\newline
+
+
+\noindent \textbf{Is it possible to import data directly from the GEO database?}\newline
+Gene expression Omnibus (GEO) provides a tool called GEO2R (\url{http://www.ncbi.nlm.nih.gov/geo/geo2r/}). This can be used perfectly to export data from GEO into InCroMAP. You can call it either directly from the given URL or by clicking on the ``Analyze with GEO2R" link that is shown at the bottom of each GEO series. After successfully using this tool (at the top of the GEO2R page is a link to a tutorial video) you can click the ``Save all results" link and store the result somewhere on your computer. You maybe need to use the ``save page as" function of your browser. Afterwards, please open this file in InCroMAP, assign observations to all p-values and fold changes (logFC) and use the gene symbols as identifiers.
+
+
 
 
