@@ -1017,7 +1017,7 @@ public class VisualizeDataInPathway {
       maximumModifications = Math.max(maximumModifications, sorted.size());
     }
     
-    System.out.println(maximumModifications);
+    //System.out.println(maximumModifications);
     
     // Eventally change the layout (Reviewer question)
     if (PathwayVisualizationOptions.RELAYOUT_NODES_AFTER_SIZE_CHANGE.getValue(prefs)
@@ -1300,6 +1300,11 @@ public class VisualizeDataInPathway {
       Object kgId = TranslatorTools.getKeggIDs(n);
       // Look if it is the Title/ a PW-reference node
       boolean isPathwayReferenceNode = (kgId!=null && kgId.toString().toLowerCase().trim().startsWith("path:"));
+      
+      // Don't change the color of group nodes.
+      if (graph.getHierarchyManager().isGroupNode(n)) {
+        continue;
+      }
       
       if (isPathwayReferenceNode) {
         // Node is a pw-reference, but we just want to color genes

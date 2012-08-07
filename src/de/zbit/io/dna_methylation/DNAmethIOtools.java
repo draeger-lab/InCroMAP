@@ -191,5 +191,36 @@ public class DNAmethIOtools {
     
     return Math.abs(probe.getMiddle() - TSS);
   }
+
+  /**
+   * Extends all gene body regions by the given amounts upstream and downstream.
+   * @param upstream
+   * @param downstream
+   * @param templateRegions
+   */
+  public static void extendRegions(int upstream, int downstream,
+    List<GenericGene> genesInRegion) {
+    // Extend all gene-body regions by given amount
+    for (GenericGene g: genesInRegion) {
+      if (g.isOnForwardStrand()) {
+        g.setStart(Math.max(0, g.getStart()-upstream));
+        try {
+          g.setEnd(g.getEnd() + downstream);
+        } catch (Exception e) {
+          // We can ignore this here! It's just if we hadn't set the Start position first.
+          e.printStackTrace();
+        }
+      } else {
+        g.setStart(g.getStart()+upstream);
+        try {
+          g.setEnd(Math.max(0, g.getEnd()- downstream));
+        } catch (Exception e) {
+          // We can ignore this here! It's just if we hadn't set the Start position first.
+          e.printStackTrace();
+        }
+      }
+    }
+    Collections.sort(genesInRegion, SimpleRegion.getComparator());
+  }
   
 }

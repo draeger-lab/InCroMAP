@@ -146,7 +146,7 @@ public class GenericGene extends NSwithProbesAndRegion implements Strand {
     // Check input
     CSVReader csvReader = getStaticFileForSpecies(species);
     if (csvReader==null) {
-      log.info("No genome information available for " + species==null?"UNKNOWN":species.getScientificName() + ".");
+      log.info("No genome information available for " + ((species==null||species.getScientificName()==null)?"UNKNOWN":species.getScientificName()) + ".");
       return null;
     }
     

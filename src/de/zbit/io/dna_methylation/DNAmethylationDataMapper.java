@@ -74,6 +74,11 @@ public class DNAmethylationDataMapper {
    */
   private boolean mapToPromoters = true;
   
+  /**
+   * Provides functionalities to extend a genome region.
+   */
+  private boolean extendGeneRegions = false;
+  
   /*
    * Real internal variables
    */
@@ -104,6 +109,10 @@ public class DNAmethylationDataMapper {
       DNAmethIOtools.convertToPromoterRegions(upstream, downstream, templateRegions);
       maximumRegionLength = upstream + downstream;
     } else {
+      if (extendGeneRegions) {
+        DNAmethIOtools.extendRegions(upstream, downstream, templateRegions);
+      }
+      
       // Get maximum region size
       for (GenericGene r : templateRegions) {
         maximumRegionLength = Math.max(maximumRegionLength, r.getLength());

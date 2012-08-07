@@ -139,6 +139,8 @@ public abstract class NSwithProbesAndRegion extends NSwithProbes implements Chro
     long diff = probeEnd-start;
     if (diff==0) {
       // default value of getLength() is already 0.
+      // But maybe it changed!
+      super.removeData(Region.endKey);
     } else if (diff<=Byte.MAX_VALUE) {
       super.addData(Region.endKey, (byte)diff);
     } else if (diff<=Short.MAX_VALUE) {

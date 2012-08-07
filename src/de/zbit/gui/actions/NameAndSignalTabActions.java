@@ -395,15 +395,20 @@ public class NameAndSignalTabActions implements ActionListener {
           parent = parent.getSourceTab();
         }
       }
+      // Get species
+      Species spec = parent.getSpecies();
+      if (spec==null) {
+        spec = IntegratorUITools.showOrganismSelectorDialog(null);
+      }
       // Let use choose what to plot
       if (chart==null) {
-        chart = IntegratorChartTab.createAndShowDialog(parent, parent.getSpecies());
+        chart = IntegratorChartTab.createAndShowDialog(parent, spec);
       }
       if (chart!=null) {
         // If not canceled, show plot in a new tab
         String name = chart.getTitle().getText();
         if (name.indexOf("\n")>0) name = name.substring(0, name.indexOf("\n"));
-        IntegratorChartTab newTab = new IntegratorChartTab(IntegratorUI.getInstance(), chart, parent.getSpecies());
+        IntegratorChartTab newTab = new IntegratorChartTab(IntegratorUI.getInstance(), chart, spec);
         newTab.setSourceTab(parent);
         IntegratorUI.getInstance().addTab(newTab, name, null, UIManager.getIcon("ICON_PENCIL_16"));
       }

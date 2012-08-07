@@ -109,6 +109,7 @@
             
             <fileset dir="${KEGGtranslatorPath}/bin">
               <exclude name="de/zbit/gui/prefs/PreferencePanels.class"/>
+            	<exclude name="de/zbit/kegg/map_title.tab"/>
             	<exclude name="**/package.html"/>
             	<exclude name="overview.html"/>
             </fileset>
