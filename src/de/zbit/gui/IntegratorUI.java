@@ -61,7 +61,10 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
+import org.biopax.paxtools.model.Model;
+
 import de.zbit.AppConf;
+import de.zbit.biopax.BioPAX2KGML;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NameAndSignals;
@@ -101,6 +104,7 @@ import de.zbit.kegg.gui.TranslatePathwayDialog;
 import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorUI;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
+import de.zbit.kegg.parser.pathway.Pathway;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
@@ -893,13 +897,32 @@ public class IntegratorUI extends BaseFrame {
    * Import any BioPAX pathway.
    */
   public void openBioPAXPathwayTab() {
-    // TODO: Implement me.
-    /* Concept:
-     * 1. OpenFile dialog for BioPAX
-     * 2. Eventually (if n>1) pick a pathway dialog.
-     * 3. Open and visualize this pathway in a new tab
-     * 4. Eventually issue a warning that the file did not contain entrez gene identifiers.
-     */
+    // 1. TODO: OpenFile dialog for BioPAX
+    String fileName = "";
+    Model m = BioPAX2KGML.getModel(fileName); // this can also be done with an IO stream
+    List<String> pathwayList = BioPAX2KGML.getListOfPathways(m);
+    
+      
+
+    // 2. Eventually (if n>1) pick a pathway dialog.
+    String pwName = null;
+    if (pathwayList!=null && pathwayList.size()>0){
+   
+      //TODO determine pwName via pathway dialog
+    }
+
+    // 3. Open and visualize this pathway in a new tab
+    Pathway keggPathway = null;
+    if (pwName !=null && !pwName.isEmpty()){
+      Pathway keggPW = BioPAX2KGML.parsePathwayToKEGG(fileName, pwName, m);
+      
+   // 4. Eventually issue a warning that the file did not contain entrez gene identifiers.
+//      TODO:
+    }
+    
+    
+
+     
   }
   
   /* (non-Javadoc)

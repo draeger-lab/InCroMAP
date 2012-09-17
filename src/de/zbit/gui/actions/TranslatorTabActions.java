@@ -252,7 +252,8 @@ public class TranslatorTabActions implements ActionListener{
         GUITools.setEnabled(visData[0], removeButton.getPopUpMenu(), TPAction.REMOVE_MRNA_VISUALIZATION);
         GUITools.setEnabled(visData[2], removeButton.getPopUpMenu(), TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES);
         GUITools.setEnabled(visData[3], removeButton.getPopUpMenu(), TPAction.REMOVE_DNA_METHYLATION_BOXES);
-        GUITools.setEnabled(visData[4], removeButton.getPopUpMenu(), TPAction.REMOVE_ENRICHMENT_PVALUES);
+//        GUITools.setEnabled(visData[4], removeButton.getPopUpMenu(), TPAction.REMOVE_SNP_VISUALIZATION); // TODO:...
+        GUITools.setEnabled(visData[5], removeButton.getPopUpMenu(), TPAction.REMOVE_ENRICHMENT_PVALUES);
         
         
         // Test for RNA nodes
@@ -265,7 +266,7 @@ public class TranslatorTabActions implements ActionListener{
           removeButton.getPopUpMenu(), TPAction.REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES);
         
         // Eventually disable the whole DropDownButton.
-        removeButton.setEnabled(containsMiRNA || visData[0] || visData[2] || visData[3] || visData[4]);
+        removeButton.setEnabled(containsMiRNA || visData[0] || visData[2] || visData[3] || visData[4] || visData[5]);
         return null;
       }
     };

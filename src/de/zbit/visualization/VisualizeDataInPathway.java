@@ -57,6 +57,7 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.protein.ProteinModificationExpression;
+import de.zbit.data.snp.SNP;
 import de.zbit.graph.LineNodeRealizer;
 import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.GUITools;
@@ -221,7 +222,7 @@ public class VisualizeDataInPathway {
    */
   public boolean[] getVisualizedDataTypes() {
     // Init array with default values
-    boolean[] visualizedDataTypes = new boolean[5];
+    boolean[] visualizedDataTypes = new boolean[6];
     Arrays.fill(visualizedDataTypes, Boolean.FALSE);
     
     // Get list of visualized data
@@ -239,8 +240,10 @@ public class VisualizeDataInPathway {
         visualizedDataTypes[2]=true;
       } else if (DNAmethylation.class.isAssignableFrom(t)) {
         visualizedDataTypes[3]=true;
-      } else if (EnrichmentObject.class.isAssignableFrom(t)) {
+      } else if (SNP.class.isAssignableFrom(t)){
         visualizedDataTypes[4]=true;
+      } else if (EnrichmentObject.class.isAssignableFrom(t)) {
+        visualizedDataTypes[5]=true;
       } else {
         // EVERYTHING ELSE IS ALSO VISUALIZED AS NODE COLOR
         visualizedDataTypes[0]=true;
@@ -280,8 +283,10 @@ public class VisualizeDataInPathway {
       return visualizedDataTypes[2];
     } else if (DNAmethylation.class.isAssignableFrom(dt)) {
       return visualizedDataTypes[3];
-    } else if (EnrichmentObject.class.isAssignableFrom(dt)) {
+    } else if (SNP.class.isAssignableFrom(dt)){
       return visualizedDataTypes[4];
+    } else if (EnrichmentObject.class.isAssignableFrom(dt)) {
+      return visualizedDataTypes[5];
     } else {
       // In doubt, return false.
       //return false;
