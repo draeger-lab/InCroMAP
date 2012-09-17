@@ -78,6 +78,7 @@ import javax.swing.tree.TreePath;
  * 
  * @author Philip Milne
  * @author Scott Violet
+ * @author Clemens Wrzodek
  * @version $Rev$
  */
 public class TreeTableModelAdapter extends AbstractTableModel {
@@ -170,4 +171,5 @@ public class TreeTableModelAdapter extends AbstractTableModel {
       }
     });
   }
+  
 }

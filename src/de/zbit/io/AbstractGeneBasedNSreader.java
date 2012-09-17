@@ -120,7 +120,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   /**
    * @return  This method returns all {@link ExpectedColumn}s required
    * to read a new file with the {@link CSVImporterV2}. This is
-   * [0] an identifier and [1-10] signal columns.
+   * [0] an identifier, [1] custom annoation [x] optional and and [2(+x)-10(+x)] signal columns.
    */
   public ExpectedColumn[] getExpectedColumns() {
     List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
@@ -155,11 +155,18 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     };
     list.add(e);
     
+    // Custom, human-interpretable information
+    list.add(NameAndSignalReader.getCustomAnnotationColumn());
+    
     List<ExpectedColumn> additional = getAdditionalExpectedColumns();
     if (additional!=null) list.addAll(additional);
     
+    // Signals
     Collection<ExpectedColumn> ec = getExpectedSignalColumnsOverridable(getMaximumNumberOfSignalColumns());
-    if (ec!=null) list.addAll(ec);
+    if (ec!=null) {
+      list.addAll(ec);
+    }
+    
     return list.toArray(new ExpectedColumn[0]);
   }
 
@@ -227,7 +234,9 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
         // Read all columns and types
         setNameAndIdentifierTypes(exCol[0]);   
         
-        int offset = 1;
+        parseCustomAnnotationColumn(exCol[1]);
+        
+        int offset = 2;
         List<ExpectedColumn> additional = getAdditionalExpectedColumns(); // Just the size is required
         if (additional!=null && additional.size()>0) {
           processAdditionalExpectedColumns(ArrayUtils.asList(exCol, offset, (offset+additional.size()) ));

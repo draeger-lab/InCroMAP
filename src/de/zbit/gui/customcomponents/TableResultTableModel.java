@@ -44,6 +44,7 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
 import de.zbit.data.EnrichmentObject;
+import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
@@ -63,6 +64,7 @@ import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.sequence.region.Region;
 import de.zbit.util.SortedArrayList;
 import de.zbit.util.Species;
+import de.zbit.util.StringUtil;
 
 /**
  * A {@link TableModel} that can be used to visualize a {@link TableResult} class as {@link JTable}.
@@ -75,6 +77,10 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
   private static final long serialVersionUID = -6542792109889449114L;
   
   public static final transient Logger log = Logger.getLogger(NameAndSignalTabActions.class.getName());
+  
+  private final static Integer minusOne = new Integer(-1);
+  
+  private final static String GeneIDHeader = StringUtil.formatOptionName(GeneID.gene_id_key);
   
   /**
    * The {@link NameAndSignals} that should be represented by this {@link TableModel}.
@@ -130,12 +136,23 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    * @see javax.swing.table.TableModel#getValueAt(int, int)
    */
   public Object getValueAt(int rowIndex, int columnIndex) {
+    int rawColumnIndex = columnIndex;
     if (includeRowIndex) {
       if (columnIndex==0) return (rowIndex+1);
       columnIndex = columnIndex-1;
     }
     
-    return getValueAt(ns.get(rowIndex), columnIndex);
+    Object o = getValueAt(ns.get(rowIndex), columnIndex);
+    
+    // Change geneID "-1" to "not found"
+    if (o instanceof Number && o.equals(minusOne)) {
+      if (getColumnName(rawColumnIndex).endsWith(GeneIDHeader)) {
+        // endsWith, because of paired tables and such.
+        return "Not found";
+      }
+    }
+    
+    return o;
   }
 
   /**
@@ -163,7 +180,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
    */
   public static Object returnNumberOrNA(Object n) {
     if (n==null) return n;
-    if (n.equals(Double.NaN)) {
+    if (n.equals(Double.NaN) || n instanceof Double && Double.isNaN((Double) n)) {
       return "N/A";
     } else {
       return n;
@@ -353,7 +370,9 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     
     // Disallow reordering with paired data
     table.getTableHeader().setReorderingAllowed(false);
-    table.getTableHeader().setPreferredSize(new Dimension(table.getTableHeader().getPreferredSize().width,  (int)(table.getRowHeight(0)*2.3)));
+    // Do NEVER set a prefferred width on the table header. This leads to different widths of caption
+    // and content if the user resizes a column!!!
+    //table.getTableHeader().setPreferredSize(new Dimension(table.getTableHeader().getPreferredSize().width,  (int)(table.getRowHeight(0)*2.3)));
     
     
     return table;

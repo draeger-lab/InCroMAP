@@ -399,7 +399,12 @@ public class EnrichmentActionListener implements ActionListener {
     return geneList;
   }
 
-  public JTableFilter showJTableFilter(IntegratorTabWithTable tab) {
+  /**
+   * Show and return a {@link JTableFilter} dialog for the given tab. 
+   * @param tab
+   * @return {@link JTableFilter} dialog.
+   */
+  public static JTableFilter showJTableFilter(IntegratorTabWithTable tab) {
     String typeName = IntegratorUI.getShortTypeNameForNS(tab.getDataContentType());
     if (typeName==null) typeName = ""; else typeName += "-";
     String fileName = tab.getName();

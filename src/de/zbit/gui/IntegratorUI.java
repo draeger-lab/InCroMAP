@@ -88,6 +88,7 @@ import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
+import de.zbit.io.proxy.ProxySelection;
 import de.zbit.kegg.KEGGtranslatorOptions;
 import de.zbit.kegg.Translator;
 import de.zbit.kegg.ext.KEGGTranslatorPanelOptions;
@@ -412,6 +413,9 @@ public class IntegratorUI extends BaseFrame {
     ToolTipManager.sharedInstance().setDismissDelay(30000);
     
     instance = this;
+    
+    // Eventually load previously stored proxy server settings.
+    new ProxySelection.Tools().initializeProxyServer();
   }
 
   /**
@@ -582,6 +586,28 @@ public class IntegratorUI extends BaseFrame {
     
       importData
     };
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.gui.BaseFrame#additionalEditMenuItems()
+   */
+  @Override
+  protected JMenuItem[] additionalEditMenuItems() {
+    // Additional PROXY SERVER settings dialog
+    JMenuItem proxyMenu = GUITools.createJMenuItem(
+      EventHandler.create(ActionListener.class, new ProxySelection.Tools(), "showDialog"),
+      new ActionCommand() {
+      @Override
+      public String getToolTip() {
+        return "Configure a proxy server.";
+      }
+      @Override
+      public String getName() {
+        return "Proxy server";
+      }
+    }, UIManager.getIcon("ICON_PREFS_16"));
+    
+    return new JMenuItem[]{proxyMenu};
   }
   
   @Override

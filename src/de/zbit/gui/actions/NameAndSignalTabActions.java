@@ -31,10 +31,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
@@ -75,6 +78,7 @@ import de.zbit.sequence.region.Region;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.objectwrapper.ValuePair;
+import de.zbit.utils.FilterNSTable;
 
 /**
  * Actions for the {@link JToolBar} in {@link IntegratorTabWithTable}
@@ -97,6 +101,8 @@ public class NameAndSignalTabActions implements ActionListener {
   JMenuItem BH_cor;
   JMenuItem BFH_cor;
   JMenuItem BO_cor;
+  // Another button to toggle
+  AbstractButton filter=null;
   
   public NameAndSignalTabActions(NameAndSignalsTab parent) {
     super();
@@ -134,7 +140,13 @@ public class NameAndSignalTabActions implements ActionListener {
     REMOVE_TARGETS,
     FDR_CORRECTION_BH,
     FDR_CORRECTION_BFH,
-    FDR_CORRECTION_BO;
+    FDR_CORRECTION_BO,
+    /**
+     * This should be used with causion as not all further processing
+     * methods mind a filetered table and not all tables are capable
+     * to sync this with the underlying data structure!
+     */
+    FILTER_TABLE;
     
     /*
      * (non-Javadoc)
@@ -222,6 +234,15 @@ public class NameAndSignalTabActions implements ActionListener {
     JDropDownButton enrichmentButton = new JDropDownButton("Enrichment", 
         UIManager.getIcon("ICON_GEAR_16"), enrichment);
     bar.add(enrichmentButton);
+    
+    // Filter table
+    if (tableContent.equals(HeterogeneousNS.class)) {
+      filter = GUITools.createJButton(this,
+        NSAction.FILTER_TABLE, UIManager.getIcon("ICON_GEAR_16"), 
+        null, JToggleButton.class);
+    
+      bar.add(filter);
+    }
     
     // Visualize in Pathway
     ActionCommand pathwayCommand;
@@ -338,7 +359,9 @@ public class NameAndSignalTabActions implements ActionListener {
           l.keyPressed(F3);
         }
       }
-      
+    
+    } else if (command.equals(NSAction.FILTER_TABLE.toString())) {
+      FilterNSTable.filterToggleTable(parent, filter);
       
     } else if (command.equals(NSAction.PAIR_DATA.toString())) {
       PairData pd = new PairData(parent);
@@ -462,7 +485,12 @@ public class NameAndSignalTabActions implements ActionListener {
     } catch (Exception e1) {
       GUITools.showErrorMessage(parent, e1);
     }
-    parent.getVisualization().repaint();
+    
+    if (parent instanceof IntegratorTabWithTable) {
+      ((IntegratorTabWithTable)parent).rebuildTable();
+    } else {
+      parent.getVisualization().repaint();
+    }
   }
 
 
@@ -537,6 +565,12 @@ public class NameAndSignalTabActions implements ActionListener {
       enableRegionPlot = true;
     }
     GUITools.setEnabled(enableRegionPlot, toolBar, NSAction.PLOT_REGION);
+    
+    // Toggle the table filter button
+    if (filter!=null && parent.getVisualization()!=null && 
+        JTable.class.isAssignableFrom(parent.getVisualization().getClass())) {
+      filter.setSelected(FilterNSTable.isTableFiltered((JTable)parent.getVisualization()));
+    }
   }
 
   

@@ -69,6 +69,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.EventObject;
 import java.util.List;
 
@@ -165,6 +166,8 @@ public class JTreeTable extends JTable {
    * never receive this unless we forward it in this manner.
    */
   public void updateUI() {
+    // FIXME: This method renders the tree inactive, i.e., nodes
+    // cannot be expanded anymore! I couldn't figure out why...
     super.updateUI();
     if(tree != null) {
       tree.updateUI();
@@ -317,27 +320,22 @@ public class JTreeTable extends JTable {
       // Draw the Table border if we have focus.
       if (highlightBorder != null) {
         highlightBorder.paintBorder(this, g, 0, visibleRow *
-            getRowHeight(), getWidth(),
-            getRowHeight());
+            getRowHeight(), getWidth(), getRowHeight());
       }
     }
 
     /**
      * TreeCellRenderer method. Overridden to update the visible row.
      */
-    public Component getTableCellRendererComponent(JTable table,
-        Object value,
-        boolean isSelected,
-        boolean hasFocus,
-        int row, int column) {
+    public Component getTableCellRendererComponent(JTable table, Object value,
+      boolean isSelected, boolean hasFocus, int row, int column) {
       Color background;
       Color foreground;
-
-      if(isSelected) {
+      
+      if (isSelected) {
         background = table.getSelectionBackground();
         foreground = table.getSelectionForeground();
-      }
-      else {
+      } else {
         background = table.getBackground();
         foreground = table.getForeground();
       }
@@ -345,29 +343,24 @@ public class JTreeTable extends JTable {
       if (realEditingRow() == row && getEditingColumn() == column) {
         background = UIManager.getColor("Table.focusCellBackground");
         foreground = UIManager.getColor("Table.focusCellForeground");
-      }
-      else if (hasFocus) {
-        highlightBorder = UIManager.getBorder
-        ("Table.focusCellHighlightBorder");
+      } else if (hasFocus) {
+        highlightBorder = UIManager.getBorder("Table.focusCellHighlightBorder");
         if (isCellEditable(row, column)) {
-          background = UIManager.getColor
-          ("Table.focusCellBackground");
-          foreground = UIManager.getColor
-          ("Table.focusCellForeground");
+          background = UIManager.getColor("Table.focusCellBackground");
+          foreground = UIManager.getColor("Table.focusCellForeground");
         }
       }
-
+      
       visibleRow = row;
       setBackground(background);
-
+      
       TreeCellRenderer tcr = getCellRenderer();
       if (tcr instanceof DefaultTreeCellRenderer) {
-        DefaultTreeCellRenderer dtcr = ((DefaultTreeCellRenderer)tcr); 
+        DefaultTreeCellRenderer dtcr = ((DefaultTreeCellRenderer) tcr);
         if (isSelected) {
           dtcr.setTextSelectionColor(foreground);
           dtcr.setBackgroundSelectionColor(background);
-        }
-        else {
+        } else {
           dtcr.setTextNonSelectionColor(foreground);
           dtcr.setBackgroundNonSelectionColor(background);
         }
@@ -375,7 +368,6 @@ public class JTreeTable extends JTable {
       return this;
     }
   }
-
 
   /**
    * An editor that can be used to edit the tree column. This extends
@@ -474,8 +466,7 @@ public class JTreeTable extends JTable {
         // button).
         if (me.getModifiers() == 0 ||
             me.getModifiers() == InputEvent.BUTTON1_MASK) {
-          for (int counter = getColumnCount() - 1; counter >= 0;
-          counter--) {
+          for (int counter = getColumnCount() - 1; counter >= 0; counter--) {
             if (getColumnClass(counter) == TreeTableModel.class) {
               MouseEvent newME = new MouseEvent
               (JTreeTable.this.tree, me.getID(),
@@ -672,7 +663,7 @@ public class JTreeTable extends JTable {
    * @return a list of all items in the first row.
    */
   public List<Object> getFirstRowAsList() {
-    // Actually, this should implement RanomdAccess, but this is not possible.
+    // Actually, this should implement RandomAccess, but this is not possible.
     return new AbstractList<Object>() {
       @Override
       public Object get(int index) {
@@ -684,5 +675,45 @@ public class JTreeTable extends JTable {
       }
     };
   }
-
+    
+  /**
+   * Collapses all nodes in the Tree.
+   */
+  public void collapseAll() {
+    expandAll(false);
+  }
+  /**
+   * Expand Or Collapse all nodes in the tree.
+   * @param expand If true, expands all nodes in the tree. Otherwise, collapses all nodes in the tree.
+   */
+  public void expandAll(boolean expand) {
+    TreeNode root = (TreeNode)tree.getModel().getRoot();
+    
+    // Traverse tree from root
+    expandAll(tree, new TreePath(root), expand);
+  }
+  private void expandAll(JTree tree, TreePath parent, boolean expand) {
+    // Traverse children 
+    TreeNode node = (TreeNode)parent.getLastPathComponent();
+    if (node.getChildCount() > 0) {
+      for (Enumeration<?> e=node.children(); e.hasMoreElements(); ) {
+        TreeNode n = (TreeNode)e.nextElement();
+        TreePath path = parent.pathByAddingChild(n);
+        expandAll(tree, path, expand);
+      }
+    }
+    
+    // Expansion or collapse must be done bottom-up
+    if (expand) {
+      tree.expandPath(parent);
+    } else {
+      if (node.getParent()==null) {
+        // The root is the only node without a parent
+        // Never auto-collapse the root!
+        return;
+      }
+      tree.collapsePath(parent);
+    }
+  }
+  
 }

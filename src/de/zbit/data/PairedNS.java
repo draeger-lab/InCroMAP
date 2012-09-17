@@ -183,6 +183,7 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
    * @see de.zbit.data.NameAndSignals#getColumnName(int, java.lang.String[])
    */
   public String getColumnName(int columnIndex, String[] extensionNames) {
+    
     // NS1 Headers
     int ns1ColCount = ns1.getColumnCount();
     if (columnIndex<ns1ColCount) {

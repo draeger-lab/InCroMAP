@@ -38,6 +38,7 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
+import de.zbit.gui.JOptionPane2;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.util.objectwrapper.LabeledObject;
 import de.zbit.util.objectwrapper.ValuePair;
@@ -258,7 +259,7 @@ public class MergedSignalDialog extends JPanel {
     mergeSignal.hideCalculateMergedObservationBox();
     
     // Show and evaluate dialog
-    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), mergeSignal, "Add observation", JOptionPane.OK_CANCEL_OPTION);
+    int ret = JOptionPane2.showConfirmDialogResizable(IntegratorUI.getInstance(), mergeSignal, "Add observation", JOptionPane.OK_CANCEL_OPTION);
     if (ret!=JOptionPane.OK_OPTION) return null;
     else return mergeSignal;
   }

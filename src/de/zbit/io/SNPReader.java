@@ -92,6 +92,7 @@ public class SNPReader extends NameAndSignalReader<SNP> {
     e.setRegExPatternForInitialSuggestion("rs|ss\\d+");
     list.add(e);
     
+    list.add(NameAndSignalReader.getCustomAnnotationColumn());
     list.addAll(NameAndSignalReader.getExpectedSignalColumns(1));
     
     return list.toArray(new ExpectedColumn[0]);
@@ -125,8 +126,10 @@ public class SNPReader extends NameAndSignalReader<SNP> {
         // Set dbSNP id column
         nameCol = exCol[0].getAssignedColumn();
         
+        parseCustomAnnotationColumn(exCol[1]);
+        
         // Signal columns
-        int offset = 1;
+        int offset = 2;
         for (int i=offset; i<exCol.length; i++) {
           if (exCol[i].hasAssignedColumns()) {
             for (int j=0; j<exCol[i].getAssignedColumns().size(); j++) {

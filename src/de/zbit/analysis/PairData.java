@@ -42,6 +42,7 @@ import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
+import de.zbit.gui.JOptionPane2;
 import de.zbit.gui.dialogs.MergedSignalDialog;
 import de.zbit.gui.dialogs.MergedSignalDialog.MergeTypeForTwo;
 import de.zbit.gui.layout.LayoutHelper;
@@ -132,7 +133,7 @@ public class PairData {
       lh.add(mergeSignal);
       
       // Show and evaluate dialog
-      int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), jp, "Pair data", JOptionPane.OK_CANCEL_OPTION);
+      int ret = JOptionPane2.showConfirmDialogResizable(IntegratorUI.getInstance(), jp, "Pair data", JOptionPane.OK_CANCEL_OPTION);
       if (ret!=JOptionPane.OK_OPTION) return null;
       
       // Perform data pairing

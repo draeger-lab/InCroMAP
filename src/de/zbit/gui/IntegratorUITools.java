@@ -798,7 +798,7 @@ public class IntegratorUITools {
       
       // Show and evaluate dialog
       if (dialogTitle==null) dialogTitle = UIManager.getString("OptionPane.titleText");
-      int ret = JOptionPane.showConfirmDialog(ui, jp, dialogTitle, JOptionPane.OK_CANCEL_OPTION);
+      int ret = JOptionPane2.showConfirmDialogResizable(ui, jp, dialogTitle, JOptionPane.OK_CANCEL_OPTION);
       if (ret==JOptionPane.OK_OPTION) {
         ValuePair<String, SignalType> expSignal = (ValuePair<String, SignalType>) selExpBox.getSelectedItem();
         return new ValueTriplet<NameAndSignalsTab, String, SignalType>(
@@ -862,6 +862,8 @@ public class IntegratorUITools {
         File file = GUITools.openFileDialog(IntegratorUI.getInstance(), 
           IntegratorUI.openDir, true, JFileChooser.FILES_ONLY, (FileFilter)null);
         if (file!=null) {
+          IntegratorUI.openDir = file.getParent();
+          
           try {
             BufferedReader reader = OpenFile.openFile(file.getPath());
             StringBuffer buff = new StringBuffer();
@@ -880,7 +882,7 @@ public class IntegratorUITools {
     p.add(readFromFile, BorderLayout.SOUTH);
     
     // Show dialog and return input string.
-    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), p, "Please enter a list of genes", JOptionPane.OK_CANCEL_OPTION);
+    int ret = JOptionPane2.showConfirmDialogResizable(IntegratorUI.getInstance(), p, "Please enter a list of genes", JOptionPane.OK_CANCEL_OPTION);
     if (ret==JOptionPane.OK_OPTION) {
       return new ValueTriplet<Species, IdentifierType, String>((Species)organism.getSelectedItem(), 
           (IdentifierType)identifier.getSelectedItem(), 
@@ -975,7 +977,7 @@ public class IntegratorUITools {
     onlyExperimental.setSelected(true);
     
     // Ask user
-    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), p, 
+    int ret = JOptionPane2.showConfirmDialogResizable(IntegratorUI.getInstance(), p, 
         "Please select microRNA targets to load.", JOptionPane.OK_CANCEL_OPTION);
     if (ret==JOptionPane.OK_OPTION) {
       if (orgSel!=null) species = (Species) orgSel.getSelectedItem();
@@ -1131,7 +1133,7 @@ public class IntegratorUITools {
     
     
     // Ask user
-    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), p, 
+    int ret = JOptionPane2.showConfirmDialogResizable(IntegratorUI.getInstance(), p, 
       "Please select the data to visualize", JOptionPane.OK_CANCEL_OPTION);
     if (ret==JOptionPane.OK_OPTION) {
       if (pathways.isEnabled() && pathways.getSelectedIndices().length>0 &&
@@ -1161,6 +1163,8 @@ public class IntegratorUITools {
         File outputDir = GUITools.saveFileDialog(IntegratorUI.getInstance(), IntegratorUI.saveDir, false, false, true, 
           JFileChooser.DIRECTORIES_ONLY, (FileFilter[])null);
         if (outputDir!=null) {
+          IntegratorUI.saveDir = outputDir.getPath();
+          
           // Create result arrays
           ValuePair<?, ?>[] exps = new ValuePair<?, ?>[experiments.getSelectedIndices().length];
           for (int i=0; i<exps.length; i++)
@@ -1215,7 +1219,7 @@ public class IntegratorUITools {
       SignalOptionPanel sop = new SignalOptionPanel();
       while (ok != JOptionPane.OK_OPTION ||
           MergeTypeOptions.GENE_CENTER_SIGNALS_BY.getValue(prefs).equals(MergeType.AskUser)) {
-        ok = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), sop, 
+        ok = JOptionPane2.showConfirmDialogResizable(IntegratorUI.getInstance(), sop, 
           "Please choose how to merge multiple probes", JOptionPane.OK_CANCEL_OPTION);
       }
       sop.persist();

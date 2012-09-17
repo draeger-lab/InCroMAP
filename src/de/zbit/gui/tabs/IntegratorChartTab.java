@@ -68,6 +68,7 @@ import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
+import de.zbit.gui.JOptionPane2;
 import de.zbit.gui.actions.ChartTabActions;
 import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.io.filefilter.SBFileFilter;
@@ -623,7 +624,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     lh.add(alOthers
       );
     
-    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), panel, "Select data to visualize", JOptionPane.OK_CANCEL_OPTION);
+    int ret = JOptionPane2.showConfirmDialogResizable(IntegratorUI.getInstance(), panel, "Select data to visualize", JOptionPane.OK_CANCEL_OPTION);
     if (ret==JOptionPane.OK_OPTION) {
       
       String name;

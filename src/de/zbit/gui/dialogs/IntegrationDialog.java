@@ -50,6 +50,7 @@ import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
+import de.zbit.gui.JOptionPane2;
 import de.zbit.gui.actions.TranslatorTabActions.TPAction;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.customcomponents.TableResultTableModel;
@@ -295,7 +296,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
     }
     
     // Show and evaluate dialog
-    int ret = JOptionPane.showConfirmDialog(parent, integratedVis, "Integrated data visualization", JOptionPane.OK_CANCEL_OPTION);
+    int ret = JOptionPane2.showConfirmDialogResizable(parent, integratedVis, "Integrated data visualization", JOptionPane.OK_CANCEL_OPTION);
     if (ret!=JOptionPane.OK_OPTION) return null;
     else return integratedVis;
   }
@@ -310,7 +311,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
     }
     
     // Show and evaluate dialog
-    int ret = JOptionPane.showConfirmDialog(parent, integratedTbl, "Data integration", JOptionPane.OK_CANCEL_OPTION);
+    int ret = JOptionPane2.showConfirmDialogResizable(parent, integratedTbl, "Data integration", JOptionPane.OK_CANCEL_OPTION);
     if (ret!=JOptionPane.OK_OPTION) return null;
     else return integratedTbl;
   }
@@ -400,7 +401,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
         private static final long serialVersionUID = 7415047130386194731L;
         @Override
         protected void createTable() {
-          synchronized (super.table==null?this:super.table) {
+          synchronized (super.table==null ? this : super.table) {
             super.table = new JTreeTable(visualizer, true);
           }
           data = (List<? extends TableResult>) ((JTreeTable)table).getFirstRowAsList();

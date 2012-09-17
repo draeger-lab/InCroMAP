@@ -30,6 +30,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -610,8 +611,26 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
   public void setSecondaryProgressBar(AbstractProgressBar secondaryProgress) {
     this.secondaryProgress = secondaryProgress;
   }
+
+  /**
+   * @return an {@link ExpectedColumn} that can hold arbitrary (human-interpretable) information.
+   */
+  public static ExpectedColumn getCustomAnnotationColumn() {
+    return new ExpectedColumn("Custom annotation", null, false, true, false, false);
+  }
   
-  
+  /**
+   * Parses the 'Custom annotation' column from {@link #getCustomAnnotationColumn()}.
+   * @param expectedColumn as generated with {@link #getCustomAnnotationColumn()}.
+   */
+  protected void parseCustomAnnotationColumn(ExpectedColumn ec) {
+    if (ec.hasAssignedColumns()) {
+      List<Integer> ac = ec.getAssignedColumns();
+      for (int i=0; i<ac.size(); i++) {
+        addAdditionalData(ac.get(i), "Custom annotation" + (ac.size()>1 ? (" " + (i+1)) : "" ));
+      }
+    }
+  }
 
 
 }

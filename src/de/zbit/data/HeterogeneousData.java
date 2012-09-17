@@ -22,6 +22,8 @@
 package de.zbit.data;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -99,6 +101,14 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
    */
   private List<String> dataTypeName;
 
+  /**
+   * Extension that allows to hide some rows. Caution, this list
+   * contains all VISIBLE (!=hidden) rows.
+   * This holds indices of genes, which are childs of the root only!
+   * E.g., 0 is the first child (and first gene) below the root.
+   */
+  List<Integer> visibleRows = null;
+  
   /**
    */
   public HeterogeneousData() {
@@ -221,6 +231,13 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
   @SuppressWarnings("unchecked")
   @Override
   public Object getChild(Object parent, int index) {
+    if (parent==root) {
+      // Adjusts the row index with respect to {@link #visibleRows}.
+      if (visibleRows!=null) {
+        index = visibleRows.get(index);
+      }
+    }
+    
     int geneId = ((GeneID)parent).getGeneID();
     if (geneId==HeterogeneousNS.geneIDofRootNode) {
       // All gene-nodes are pre-created
@@ -264,12 +281,47 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
     return null;
   }
 
+  
+  /**
+   * Filter this TreeTable, such that only the given row indices are visible.
+   * @param vr indices of visible childs below the root. See
+   * {@link #visibleRows} for more explanation.
+   */
+  public void setVisibleRows(Collection<Integer> vr) {
+    if (vr==null) {
+      visibleRows = null;
+    } else if (vr instanceof List) {
+      visibleRows = (List<Integer>) vr;
+    } else {
+      visibleRows = new ArrayList<Integer>(vr);
+    }
+    
+    if (visibleRows!=null) {
+      Collections.sort(visibleRows);
+    }
+  }
+  
+  /**
+   * 
+   * @return True if {@link #visibleRows} is set and thus, the content
+   * is currently fileterd. False, if the content is currently unfiltered.
+   */
+  public boolean isSetVisibleRows() {
+    return visibleRows!=null;
+  }
+  
   /* (non-Javadoc)
    * @see javax.swing.tree.TreeModel#getChildCount(java.lang.Object)
    */
   @SuppressWarnings("unchecked")
   @Override
   public int getChildCount(Object parent) {
+    if (parent.equals(root)) {
+      if (visibleRows!=null) {
+        return visibleRows.size();
+      }
+    }
+    
     int geneId = ((GeneID)parent).getGeneID();
     if (geneId==HeterogeneousNS.geneIDofRootNode) {
       // All gene-nodes are pre-created
@@ -382,6 +434,7 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
     if (root==null || getChildCount(root)<=0) return null;
     return ((TreeNode)root).getChildAt(0);
   }
+
   
   
 }

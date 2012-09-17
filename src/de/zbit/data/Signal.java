@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -238,6 +239,10 @@ public class Signal implements Serializable, Comparable<Object>, Cloneable  {
    * @return a new list of {@link Signal}s.
    */
   public static List<Signal> merge(Collection<Signal> c, MergeType m) {
+    // HashMap changes to order of signals. This results in erros when displaying
+    // multiple NS in a table (some have different orders). Thus,
+    // create an additional list for the keys to keep the order!
+    List<ValuePair<String, SignalType>> keyList = new LinkedList<ValuePair<String,SignalType>>();
     
     // Collect all compatible signals
     Map<ValuePair<String, SignalType>, List<Number>> compatibleSignals = new HashMap<ValuePair<String, SignalType>, List<Number>>();
@@ -247,13 +252,14 @@ public class Signal implements Serializable, Comparable<Object>, Cloneable  {
       if (list==null) {
         list = new ArrayList<Number>();
         compatibleSignals.put(key, list);
+        keyList.add(key);
       }
       list.add(signal.signal);
     }
     
     // Merge the signals (e.g., taking the mean)
     List<Signal> toReturn = new ArrayList<Signal>();
-    for (ValuePair<String, SignalType> key : compatibleSignals.keySet()) {
+    for (ValuePair<String, SignalType> key : keyList) { // compatibleSignals.keySet() <- does not preserve the order!
       MergeType mTemp = m;
       if (m.equals(MergeType.Automatic)) mTemp = IntegratorUITools.autoInferMergeType(key.getB());
       double sig = calculate(mTemp, compatibleSignals.get(key));

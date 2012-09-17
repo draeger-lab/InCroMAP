@@ -44,6 +44,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.JOptionPane2;
 import de.zbit.gui.actioncommand.ActionCommandRenderer;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.layout.LayoutHelper;
@@ -223,7 +224,7 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
     }
     
     // Show and evaluate dialog
-    int ret = JOptionPane.showConfirmDialog(IntegratorUI.getInstance(), intEnrich, "Integrated enrichment", JOptionPane.OK_CANCEL_OPTION);
+    int ret = JOptionPane2.showConfirmDialogResizable(IntegratorUI.getInstance(), intEnrich, "Integrated enrichment", JOptionPane.OK_CANCEL_OPTION);
     if (ret!=JOptionPane.OK_OPTION) return null;
     else return intEnrich;
   }

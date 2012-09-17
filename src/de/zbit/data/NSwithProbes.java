@@ -145,12 +145,14 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
     Object su = super.getObjectAtColumn(columnIndex);
     
     // Change geneID "-1" to "not found"
-    if (su instanceof Number && su.equals(new Integer(-1))) {
-      String GeneIDHeader = StringUtil.formatOptionName(GeneID.gene_id_key);
-      if (getColumnName(columnIndex).equals(GeneIDHeader)) {
-        return "Not found";
-      }
-    }
+    // MOVED TO 'getValueAt' in TableResultTableModel.java (if the changes
+    // are made here, sorting capabilities are lost).
+//    if (su instanceof Number && su.equals(new Integer(-1))) {
+//      String GeneIDHeader = StringUtil.formatOptionName(GeneID.gene_id_key);
+//      if (getColumnName(columnIndex).equals(GeneIDHeader)) {
+//        return "Not found";
+//      }
+//    }
     
     return su;
   }
@@ -254,7 +256,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
      // probeName is in superMethod merged.
      Set<Integer> geneIDs = new HashSet<Integer>();
      Set<Boolean> wasGeneCentered = new HashSet<Boolean>();
-     for (T o :source) {
+     for (T o : source) {
        NSwithProbes mi = (NSwithProbes)o;
        geneIDs.add(mi.getGeneID());
        wasGeneCentered.add(mi.wasGeneCentered);
@@ -357,6 +359,13 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
            }
          }
        } else if (m instanceof GeneID) {
+         
+         // Reviewer request of AppNote: Preserve originall identifier...
+         if (m.getName()!=null && m.getData("Original name")==null) {
+            m.addData("Original name", m.getName());
+         }
+         
+         // Map gene id to symbol
          if (((GeneID) m).getGeneID()>0) {
            String symbol = mapper.map(((GeneID) m).getGeneID());
            if (symbol!=null && symbol.length()>0) {
