@@ -84,6 +84,7 @@ import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.genes.GenericGene;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -107,6 +108,8 @@ import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.NameAndSignal2PWTools;
 import de.zbit.io.DNAmethylationReader;
+import de.zbit.io.GenericGeneBasedDataReader;
+import de.zbit.io.GenericGeneReader;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.OpenFile;
 import de.zbit.io.ProteinModificationReader;
@@ -317,6 +320,12 @@ public class IntegratorUITools {
       } else if (value.equals(SNPReader.class)) {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("SNP or GWAS data", value));
         hitwords.add(hitwords.size(), new String[]{"snp", "gwas"});
+      } else if (value.equals(GenericGeneBasedDataReader.class)) {
+        itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("Generic gene-based data", value));
+        hitwords.add(hitwords.size(), new String[]{});
+      } else if (value.equals(GenericGeneReader.class)) {
+        itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("Generic region-based data", value));
+        hitwords.add(hitwords.size(), new String[]{});
       } else {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>(value.getSimpleName(), value));
         hitwords.add(hitwords.size(), new String[]{value.getSimpleName().replace("Reader", "").toLowerCase()});
@@ -1368,7 +1377,8 @@ public class IntegratorUITools {
     } else if (tab instanceof IntegratorTab &&
         ((IntegratorTab<?>)tab).isReady() ) {
       Class<?> type = ((IntegratorTab<?>) tab).getDataContentType();
-      if (mRNA.class.isAssignableFrom(type)) {
+      if (mRNA.class.isAssignableFrom(type) || 
+          GenericGene.class.isAssignableFrom(type)) {
         return UIManager.getIcon("ICON_MRNA_16");
       } else if (miRNA.class.isAssignableFrom(type)) {
         return UIManager.getIcon("ICON_MIRNA_16");

@@ -118,6 +118,14 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   private Set<String> issuedWarnings = new HashSet<String>();
   
   /**
+   * You may overwrite this method to set the required flag on gene identifier properties.
+   * @return
+   */
+  protected boolean isIdentifierRequired() {
+    return true;
+  }
+  
+  /**
    * @return  This method returns all {@link ExpectedColumn}s required
    * to read a new file with the {@link CSVImporterV2}. This is
    * [0] an identifier, [1] custom annoation [x] optional and and [2(+x)-10(+x)] signal columns.
@@ -134,7 +142,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     regExForIdTypes.set(idTypes.indexOf(IdentifierType.GeneSymbol), null);
     
     // The user may choose multiple identifier columns
-    ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),true,true,true,false,regExForIdTypes.toArray(new String[0])) {
+    ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),isIdentifierRequired(),true,true,false,regExForIdTypes.toArray(new String[0])) {
       /* (non-Javadoc)
        * @see de.zbit.gui.csv.ExpectedColumn#getInitialSuggestions(de.zbit.io.csv.CSVReader)
        */
@@ -213,7 +221,12 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     try {
       // Definitions of required and optional columns
       ExpectedColumn[] exCol = getExpectedColumns();
+      int originalSize = getExpectedColumns().length;
       CSVReader inputReader = loadConfigurationFromCache(cache, file, exCol, spec);
+      if (exCol.length!=originalSize) {
+        // Don't load corrupt information
+        exCol = getExpectedColumns();
+      }
       
       // Show the CSV Import dialog
       CSVImporterV2 c = null;

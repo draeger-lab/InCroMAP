@@ -39,6 +39,7 @@ import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.data.protein.ProteinModificationExpression;
+import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.util.objectwrapper.ValueTriplet;
 
@@ -228,9 +229,13 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
       return "Enriched";
     } else if (class1.equals(PairedNS.class)) {
       return "Other pair";
-    } 
-    
-    return class1.getSimpleName();
+    } else {
+      String text = IntegratorUI.getShortTypeNameForNS(class1);
+      if (text==null) {
+        text = class1.getSimpleName();
+      }
+      return text;
+    }
   }
   
   /**
@@ -246,9 +251,13 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
       return "Enriched";
     } else if (class1.equals(PairedNS.class)) {
       return "Other pair";
-    } 
-    
-    return class1.getSimpleName();
+    } else {
+      String text = IntegratorUI.getShortTypeNameForNS(class1);
+      if (text==null) {
+        text = class1.getSimpleName();
+      }
+      return text;
+    }
   }
 
   /* (non-Javadoc)

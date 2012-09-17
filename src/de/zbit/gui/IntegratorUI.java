@@ -66,6 +66,7 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
+import de.zbit.data.genes.GenericGene;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -84,8 +85,11 @@ import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.DNAmethylationReader;
 import de.zbit.io.EnrichmentReader;
+import de.zbit.io.GenericGeneBasedDataReader;
+import de.zbit.io.GenericGeneReader;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.ProteinModificationReader;
+import de.zbit.io.SNPReader;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.io.proxy.ProxySelection;
@@ -130,7 +134,7 @@ public class IntegratorUI extends BaseFrame {
   /**
    * The version of {@link #appName}
    */
-  public final static String appVersion = "1.2";
+  public final static String appVersion = "1.3";
   
   /**
    * A simple light blue color. Used e.g. in {@link PathwayVisualizationOptions}
@@ -215,6 +219,14 @@ public class IntegratorUI extends BaseFrame {
      */
     LOAD_DNA_METHYLATION,
     /**
+     * {@link Action} to load data with the {@link GenericGeneBasedDataReader}
+     */
+    LOAD_GENERIC_GENE_BASED,
+    /**
+     * {@link Action} to load data with the {@link GenericGeneReader}
+     */
+    LOAD_GENERIC_REGION_BASED,
+    /**
      * {@link Action} to let the user enter a custom gene list.
      */
     INPUT_GENELIST,
@@ -226,6 +238,10 @@ public class IntegratorUI extends BaseFrame {
      * {@link Action} to show a pathway selection dialog. 
      */
     NEW_PATHWAY,
+    /**
+     * {@link Action} to show a BioPAX pathway selection dialog.
+     */
+    IMPORT_BIOPAX_PATHWAY,
     /**
      * Creates pictures for many observations and pathways.
      */
@@ -263,12 +279,18 @@ public class IntegratorUI extends BaseFrame {
         return "Load protein modification data";
       case LOAD_DNA_METHYLATION:
         return "Load DNA methylation data";
+      case LOAD_GENERIC_GENE_BASED:
+        return "Import gene-based data";
+      case LOAD_GENERIC_REGION_BASED:
+        return "Import region-based data";
       case INPUT_GENELIST:
         return "Manually enter a gene list";
       case SHOW_MICRO_RNA_TARGETS:
         return "Show microRNA targets";
       case NEW_PATHWAY:
-        return "Show pathway";
+        return "Show KEGG pathway";
+      case IMPORT_BIOPAX_PATHWAY:
+        return "Import BioPAX pathway";
       case INTEGRATED_TABLE:
         return "Integrate heterogeneous data";
         
@@ -296,12 +318,18 @@ public class IntegratorUI extends BaseFrame {
           return "Load processed protein modification expression data from a file.";
         case LOAD_DNA_METHYLATION:
           return "Load processed and gene-centered DNA methylation data from a file.";
+        case LOAD_GENERIC_GENE_BASED:
+          return "Use this import feature to open any data type that contains observations and gene identifiers.";
+        case LOAD_GENERIC_REGION_BASED:
+          return "Use this import feature to open any data type that contains observations and chromosomal locations.";
         case INPUT_GENELIST:
           return "Manually enter a list of genes.";
         case SHOW_MICRO_RNA_TARGETS:
           return "Show raw microRNA targets for an organism.";
         case NEW_PATHWAY:
           return "Download and visualize a KEGG pathway.";
+        case IMPORT_BIOPAX_PATHWAY:
+          return "Import any pathway from a BioPAX file.";
         case BATCH_PATHWAY_VISUALIZATION:
           return "Batch color nodes in various pathways according to observations and save these pictures as images.";
         case INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION:
@@ -578,13 +606,20 @@ public class IntegratorUI extends BaseFrame {
       }, UIManager.getIcon("ICON_OPEN_16"))
     );
     
+    
+    // Generics
+//    JMenuItem genericGene = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openGenericGeneFile"),
+//      Action.LOAD_GENERIC_GENE_BASED, UIManager.getIcon("ICON_MRNA_16"));
+//    JMenuItem genericRegion = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openGenericRegionFile"),
+//      Action.LOAD_GENERIC_REGION_BASED, UIManager.getIcon("ICON_MRNA_16"));
+    
     return new JMenuItem[] {
         /* TOO difficult to save workspace...
          * GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "saveWorkspace"),
           Action.WORKSPACE_SAVE, UIManager.getIcon("ICON_SAVE_16"), KeyStroke.getKeyStroke('W',InputEvent.CTRL_DOWN_MASK),
           'W', false)*/
     
-      importData
+      importData //, genericGene, genericRegion
     };
   }
   
@@ -638,15 +673,32 @@ public class IntegratorUI extends BaseFrame {
 
     JMenuItem newPathway = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openPathwayTab"),
         Action.NEW_PATHWAY, UIManager.getIcon("ICON_PATHWAY_16"));
+    
+    JMenuItem bpPathway = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openBioPAXPathwayTab"),
+      Action.IMPORT_BIOPAX_PATHWAY, UIManager.getIcon("ICON_PATHWAY_16"));
 
+    JMenuItem genericGene = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openGenericGeneFile"),
+      Action.LOAD_GENERIC_GENE_BASED, UIManager.getIcon("ICON_MRNA_16"));
+    
+    JMenuItem genericRegion = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openGenericRegionFile"),
+      Action.LOAD_GENERIC_REGION_BASED, UIManager.getIcon("ICON_MRNA_16"));
+    
     importData.add(lmRNA);
     importData.add(lmiRNA);
     importData.add(lprotMod);
     importData.add(ldnaM);
     importData.addSeparator();
+    for (JMenuItem next : additionalFileMenuItems()) {
+      importData.add(next);
+    }
+    importData.add(genericGene);
+    importData.add(genericRegion);
+    importData.addSeparator();
     importData.add(genelist);
     importData.add(miRNAtargets);
     importData.add(newPathway);
+    importData.add(bpPathway);
+    
     
     /*
      * Tools tab.
@@ -716,6 +768,16 @@ public class IntegratorUI extends BaseFrame {
         Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_DNAM_16"));
       load.add(ldnaM);
       load.addSeparator();
+      
+      // Generics
+      JMenuItem genericGene = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openGenericGeneFile"),
+        Action.LOAD_GENERIC_GENE_BASED, UIManager.getIcon("ICON_MRNA_16"));
+      load.add(genericGene);
+      JMenuItem genericRegion = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openGenericRegionFile"),
+        Action.LOAD_GENERIC_REGION_BASED, UIManager.getIcon("ICON_MRNA_16"));
+      load.add(genericRegion);
+      
+      load.addSeparator();
       if (fileHistoryDuplicate==null) {
         fileHistoryDuplicate = createFileHistory();
       }
@@ -776,6 +838,14 @@ public class IntegratorUI extends BaseFrame {
     openFile(null, miRNAReader.class);
   }
   
+  public void openGenericGeneFile() {
+    openFile(null, GenericGeneBasedDataReader.class);
+  }
+  
+  public void openGenericRegionFile() {
+    openFile(null, GenericGeneReader.class);
+  }
+  
   /**
    * Shows a custom input genelist dialog to the user and adds this
    * list of genes to the {@link #tabbedPane}.
@@ -817,6 +887,19 @@ public class IntegratorUI extends BaseFrame {
     TranslatePathwayDialog d = new TranslatePathwayDialog(Format.JPG);
     d.setTranslatorPanelClassToInitialize(IntegratorPathwayPanel.class);
     TranslatePathwayDialog.showAndEvaluateDialog(tabbedPane, kpal, d);   
+  }
+  
+  /**
+   * Import any BioPAX pathway.
+   */
+  public void openBioPAXPathwayTab() {
+    // TODO: Implement me.
+    /* Concept:
+     * 1. OpenFile dialog for BioPAX
+     * 2. Eventually (if n>1) pick a pathway dialog.
+     * 3. Open and visualize this pathway in a new tab
+     * 4. Eventually issue a warning that the file did not contain entrez gene identifiers.
+     */
   }
   
   /* (non-Javadoc)
@@ -914,6 +997,8 @@ public class IntegratorUI extends BaseFrame {
     else if (ProteinModificationExpression.class.isAssignableFrom(cl)) panelDataContent = "Protein";
     else if (DNAmethylation.class.isAssignableFrom(cl)) panelDataContent = "DNA methylation";
     else if (miRNA.class.isAssignableFrom(cl)) panelDataContent = "miRNA"; // Also includes derivates (miRNAandTarget)
+    else if (mRNA.class.isAssignableFrom(cl)) panelDataContent = "mRNA or gene-based";
+    else if (GenericGene.class.isAssignableFrom(cl)) panelDataContent = "Generic region-based";
     else if (NameAndSignals.class.isAssignableFrom(cl)) panelDataContent = cl.getSimpleName();
     else panelDataContent = null; // Don't say "Object" or such
     return panelDataContent;
@@ -1156,7 +1241,9 @@ public class IntegratorUI extends BaseFrame {
     
     // If it is a webstart application, then reflections don't
     // work => include a static list as fallback.
-    return new Class[]{mRNAReader.class, miRNAReader.class, DNAmethylationReader.class, ProteinModificationReader.class};
+    // Since 2012-09-17 (App.Note Review) include additional readers
+    return new Class[]{mRNAReader.class, miRNAReader.class, DNAmethylationReader.class, ProteinModificationReader.class, 
+        SNPReader.class, GenericGeneBasedDataReader.class, GenericGeneReader.class};
   }
 
   /**

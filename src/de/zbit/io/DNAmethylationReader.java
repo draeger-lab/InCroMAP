@@ -22,17 +22,12 @@
 package de.zbit.io;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
-import de.zbit.data.NSwithProbes;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
-import de.zbit.io.dna_methylation.DNAmethylationDataMapper;
-import de.zbit.sequence.region.ChromosomeTools;
-import de.zbit.sequence.region.Region;
 
 
 /**
@@ -49,11 +44,6 @@ public class DNAmethylationReader extends AbstractGeneAndRegionBasedNSreader<DNA
    * Column containining chromosome and position information (REGEX: "CHR.{1,2}?FS\\d+").
    */
   protected int chromosomeAndPositionCol=-1;
-  
-  /**
-   * This mapper allows to assign gene-ids for {@link Region}s.
-   */
-  private transient DNAmethylationDataMapper toGeneMapper = null;
   
   
   /* (non-Javadoc)
@@ -180,16 +170,8 @@ public class DNAmethylationReader extends AbstractGeneAndRegionBasedNSreader<DNA
         }
         return line[chromosomeAndPositionCol];
       }
-      
-      if (chromosomeCol>=line.length || probeStartCol>=line.length) {
-        return null;
-      }
-      // chromosomeCol <0 || probeStartCol <0 would be an invalid configuration and
-      // should lead to an exception! This is intended.
-      return String.format("CHR%sFS%s", ChromosomeTools.parseChromosomeFromString(line[chromosomeCol]), line[probeStartCol]);
-    } else {
-      return line[nameCol];
     }
+    return super.getName(line);
   }
   
   /* (non-Javadoc)
@@ -205,7 +187,7 @@ public class DNAmethylationReader extends AbstractGeneAndRegionBasedNSreader<DNA
     
     //Note: identifier is expected to be the first column!
     if (expCols.get(0).hasAssignedColumns()) {
-      // A) We have a mapping to genes
+      // A) We already have a mapping to genes
       return true;
     } else if (isStartAndChromosomeAssigned(expCols)) {
       // B) We have separate chromosome and position columns
@@ -227,54 +209,13 @@ public class DNAmethylationReader extends AbstractGeneAndRegionBasedNSreader<DNA
     else {
       String message = "You must assign at least one of the following columns:\n"+
       "- any gene \"Identifier\"\n"+
-      "- the \"Chromosome\" and \"Probe position start\" columns\n"+
+      "- the \"Chromosome\" and \"" + posStartText + "\" columns\n" +
       "- the \"Chromosome & Position\" column.\n"+
       "\n"+
       "If a gene-identifer is explicitly given, no mapping will be performed. In the later two cases, all data will be mapped on genes or gene promoters.\n"+
       "In any case, it is recommended to have chromosomal positions with your data.";
       GUITools.showErrorMessage(null, message);
       return false;
-    }
-  }
-  
-  /**
-   * Initialize the Genomic mapper WITH A GUI.
-   * @return true if the user confirmed the dialog.
-   */
-  private boolean initializeGenomicMapper() {
-    toGeneMapper = DNAmethylationDataMapper.createInstanceWithGUI();
-    return toGeneMapper!=null;
-  }
-
-  /* (non-Javadoc)
-   * @see de.zbit.io.NameAndSignalReader#done(java.util.Collection)
-   */
-  @Override
-  protected void done(Collection<DNAmethylation> ret) {
-    super.done(ret);
-    
-    // For convenience, show gene syambols to the user
-    if (nameCol<0) {
-      try {
-        NSwithProbes.convertNamesToGeneSymbols(ret, species);
-      } catch (Exception e) {
-        // It was anyways just for convenience...
-        e.printStackTrace();
-      }
-    }
-  }
-  
-  
-  /* (non-Javadoc)
-   * @see de.zbit.io.NameAndSignalReader#init()
-   */
-  @Override
-  protected void init() {
-    super.init();
-    
-    // Read the genomic coordinates
-    if (nameCol<0 && toGeneMapper!=null) {
-      toGeneMapper.initialize(species);
     }
   }
   

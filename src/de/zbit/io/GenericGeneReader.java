@@ -31,6 +31,8 @@ import de.zbit.util.Species;
 
 /**
  * A reader for {@link GenericGene}.
+ * This can read any region-based data types and perform a mapping onto
+ * specific genes.
  * @author Clemens Wrzodek
  * @version $Rev$
  */
@@ -57,6 +59,25 @@ public class GenericGeneReader extends AbstractGeneAndRegionBasedNSreader<Generi
   private Region filterForRegion = null;
   
   /**
+   * It is better to define separate generic readers, a default
+   * one (primarily for internal use) that can handle all information,
+   * one that performs a gene identifier based mapping to the genome
+   * (e.g., by entrez id) and another one that performs a region-based
+   * mapping (by chr:start-end).
+   * @author Clemens Wrzodek
+   * @version $Rev$
+   */
+  public enum readerType {
+    DEFAULT, GENE, REGION
+  };
+  
+  /**
+   * Specify the type of this reader. See {@link readerType}.
+   */
+  private readerType type = readerType.DEFAULT;
+  
+  
+  /**
    * This is ONLY for use in combination with {@link #importWithGUI(String)} afterwards.
    */
   public GenericGeneReader() {
@@ -80,12 +101,23 @@ public class GenericGeneReader extends AbstractGeneAndRegionBasedNSreader<Generi
     this.strandCol = strandCol;
   }
   
+  /**
+   * Specify the type of this reader. See {@link readerType}.
+   * @param type
+   */
+  public void setReaderType(readerType type) {
+    this.type = type;
+  }
+  
 
   /* (non-Javadoc)
    * @see de.zbit.io.AbstractGeneAndRegionBasedNSreader#isRangeRequired()
    */
   @Override
   protected boolean isRangeRequired() {
+    if (type==readerType.GENE) {
+      return false;
+    }
     return true;
   }
   
@@ -111,7 +143,7 @@ public class GenericGeneReader extends AbstractGeneAndRegionBasedNSreader<Generi
   protected List<ExpectedColumn> getAdditionalExpectedColumns() {
     List<ExpectedColumn> l = super.getAdditionalExpectedColumns();
     indexOfStrandColumnInExColumnList = l.size();
-    l.add(new ExpectedColumn("Strand", isRangeRequired()));
+    l.add(new ExpectedColumn("Strand", false));
     l.add(new ExpectedColumn("Description", false));
     return l;
   }

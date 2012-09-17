@@ -155,6 +155,19 @@ public class DNAmethylationDataMapper {
     return approved;
   }
 
+  /**
+   * Does the same as {@link #map(Region)}. Just added 
+   * for convenience.
+   * @param toMap
+   * @return
+   */
+  public DNAmethylation map(DNAmethylation toMap) {
+    Integer geneID = map ((Region)toMap);
+    if (geneID==null && discardNonAssignableProbes) {
+      return null;
+    }
+    return  toMap;
+  }
 
   /**
    * Assigns a {@link GeneID} to <code>toMap</code>. 
@@ -162,7 +175,7 @@ public class DNAmethylationDataMapper {
    * @return <code>NULL</code> if this region should be
    * discarded. Else, returnes <code>toMap</code>.
    */
-  public DNAmethylation map(DNAmethylation toMap) {
+  public Integer map(Region toMap) {
     /*
      * If you have a NullPointerException here, you probably
      * forgot to call "initialize(Species)"!
@@ -172,16 +185,28 @@ public class DNAmethylationDataMapper {
       takeOnlyUniqueHits, templateRegions, toMap, mapToPromoters?upstream:0);
     
     // Discard it or set GeneID
-    if (mappedOn == null || mappedOn.getGeneID()==GeneID.default_geneID) {
-      //toMap.setGeneID(GeneID.default_geneID);
-      if (discardNonAssignableProbes) {
-        return null;
+    //if (toMap instanceof DNAmethylation)
+    Integer geneID = mappedOn!=null ? mappedOn.getGeneID() : null;
+    if (toMap instanceof GeneID || GeneID.class.isAssignableFrom(toMap.getClass())) {
+      if (mappedOn == null || mappedOn.getGeneID()==GeneID.default_geneID) {
+        //toMap.setGeneID(GeneID.default_geneID);
+        if (discardNonAssignableProbes) {
+          return null;
+        }
+      } else {
+        ((GeneID) toMap).setGeneID(mappedOn.getGeneID());
       }
-    } else {
-      toMap.setGeneID(mappedOn.getGeneID());
     }
     
-    return toMap;
+    return geneID;
+  }
+  
+  /**
+   * Determine if non-assignable stuff should be discarded.
+   * @return
+   */
+  public boolean isDiscardNonAssignableProbes() {
+    return discardNonAssignableProbes;
   }
 
 

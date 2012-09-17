@@ -67,11 +67,13 @@ public class GenericGene extends NSwithProbesAndRegion implements Strand {
    * @param chromosome
    * @param start
    * @param end
+   * @param strand
    */
-  public GenericGene(String geneName, Integer geneID, String chromosome, int start, int end, byte strand) {
+  public GenericGene(String geneName, Integer geneID, String chromosome, int start, int end, Byte strand) {
     super(null, geneName, geneID, chromosome, start, end);
     unsetProbeName();
-    setIsOnReverseStrand(strand<0);
+    // Strand is OPTIONAL!
+    setIsOnReverseStrand(strand!=null && strand<0);
   }
 
   /* (non-Javadoc)
