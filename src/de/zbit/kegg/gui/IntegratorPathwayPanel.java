@@ -222,6 +222,9 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
           }
           nodeLabel = "<font size=\"4\">"+c.toString()+"</font><br/>"; // .replace(",", ",<br/>")
           
+        } else if (mapDescription.equals(GraphMLmaps.NODE_NAME) && nodeLabel==null) {
+          nodeLabel = c.toString();
+            
         } else if (mapDescription.equals(GraphMLmaps.EDGE_TYPE)) {
           nodeLabel = "<b><h2>asd"+c.toString().replace(",", ",<br/>")+"</h2></b><br/>";
         } else if (mapDescription.equals(GraphMLmaps.NODE_DESCRIPTION)) {

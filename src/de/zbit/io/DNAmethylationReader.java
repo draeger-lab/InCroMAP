@@ -212,7 +212,7 @@ public class DNAmethylationReader extends AbstractGeneAndRegionBasedNSreader<DNA
       "- the \"Chromosome\" and \"" + posStartText + "\" columns\n" +
       "- the \"Chromosome & Position\" column.\n"+
       "\n"+
-      "If a gene-identifer is explicitly given, no mapping will be performed. In the later two cases, all data will be mapped on genes or gene promoters.\n"+
+      "If a gene-identifer is explicitly given, no mapping will be performed. In the latter two cases, all data will be mapped on genes or gene promoters.\n"+
       "In any case, it is recommended to have chromosomal positions with your data.";
       GUITools.showErrorMessage(null, message);
       return false;

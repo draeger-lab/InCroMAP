@@ -29,7 +29,7 @@ package de.zbit.math;
  * <li>Number of Genes from the input gene list, that are in the current
  * enrichment class (e.g., pathway)</ol>
  * <b>The first two are fixed for each instance and thus, should be declared in the
- * constructor</b>, whereas the later two are given to the method {@link #getPvalue(long, long)}.
+ * constructor</b>, whereas the latter two are given to the method {@link #getPvalue(long, long)}.
  * 
  * @author Clemens Wrzodek
  * @version $Rev$

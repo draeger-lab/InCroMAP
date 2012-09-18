@@ -108,6 +108,7 @@ import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.kegg.gui.TranslatorUI;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.kegg.parser.pathway.Pathway;
+import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
@@ -907,47 +908,59 @@ public class IntegratorUI extends BaseFrame {
       SBFileFilter.createBioPAXFileFilter());
     if (file==null || !file.exists()) {
       return;
+    } else {
+      openDir = file.getParent();
     }
     BioPAXpathway bp = new BioPAXpathway(file);
     List<String> pathwayList = bp.getListOfPathways();
     
-    // 2. Eventually (if n>1) pick a pathway dialog.
+    // 2. Eventually (if n>1) let the user pick a pathway.
     String pwName = null;
     if (pathwayList!=null && pathwayList.size()>1){
       // BioPAX files allow packing multiple pathways into one file => let the user choose one.
-      JLabeledComponent outputFormat = new JLabeledComponent(
+      JLabeledComponent pwSel = new JLabeledComponent(
         "The selected file contains multiple pathways. Please select one:", true, pathwayList);
 //      outputFormat.setSortHeaders(false);
 //      outputFormat.setHeaders(itemsForModel);
       
       // Let user choose
       String title = file!=null?String.format("Select pathway from '%s'", file.getName()):appName;
-      int button = JOptionPane.showOptionDialog(this, outputFormat, title,
+      int button = JOptionPane.showOptionDialog(this, pwSel, title,
         JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
       
       // Return chosen class
       if (button!=JOptionPane.OK_OPTION) return;
-//      LabeledObject<Class<?>> selected = (LabeledObject<Class<?>>) outputFormat.getSelectedItem();
-//      return selected.getObject();
+      pwName = pwSel.getSelectedItem().toString();
     } else if (pathwayList.size()==1) {
       pwName = pathwayList.iterator().next();
     }
 
-    // 3. Open and visualize this pathway in a new tab
+    // 3. Convert to KGML
     Pathway keggPathway = bp.getKGMLpathway(pwName);
+    
+    // 4. Get species
+    Species spec = BioPAXpathway.getSpecies(keggPathway);
+    if (spec==null) {
+      // Ask user
+      spec = IntegratorUITools.showOrganismSelectorDialog(this);
+    }
       
-   // 4. Eventually issue a warning that the file did not contain entrez gene identifiers.
-//      TODO:
+   // 5. Ensure that we have entrez ids (try to map others)
+    boolean containsEntrez = BioPAXpathway.checkForEntrezGeneIDs(keggPathway, spec, getStatusBar().getProgressBar());
+    if (!containsEntrez) {
+      // Issue a warning that the file did not contain entrez gene identifiers.
+      GUITools.showErrorMessage(null, "The BioPAX file did not contain any XRefs that could be mapped to Entrez Gene.\nYou will not be able to visualize data within this pathway.");
+    }
     
     
-    // Open and visualize this pathway in a new tab
+    // 6. Open and visualize this pathway in a new tab
     if (keggPathway!=null) {
       if (pwName==null || pwName.trim().length()<1) {
         pwName = "Unknown";
       }
       TranslatorPanel<?> tp = new IntegratorPathwayPanel(keggPathway, new KEGGPathwayActionListener(null));
       if (tp!=null) {
-        ((IntegratorPathwayPanel)tp).setSpecies(null); // TODO: Get species from file and map to internal species
+        ((IntegratorPathwayPanel)tp).setSpecies(spec);
         String name = (keggPathway.getTitle()!=null && keggPathway.getTitle().trim().length()>0) ? keggPathway.getTitle() : file.getName();
         addTab(tp, name, String.format("BioPAX pathway '%s' from file '%s'.", pwName, file.getName()), UIManager.getIcon("ICON_PATHWAY_16"));
       } 
@@ -1000,6 +1013,10 @@ public class IntegratorUI extends BaseFrame {
 //        }
         currentSpecies = TranslatorTabActions.getSpeciesOfPathway((TranslatorGraphPanel) o, IntegratorUITools.organisms);
         // ----
+        if (currentSpecies==null && o instanceof IntegratorPathwayPanel) {
+          // Try to read annotated species from pw (is used by BioPAX pws)
+          currentSpecies = ((IntegratorPathwayPanel) o).getSpecies();
+        }
         
         TranslatorTabActions actions = translatorActionMap.get(o);
         if (actions==null) {

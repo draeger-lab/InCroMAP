@@ -182,7 +182,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
    * @return number of observation/ signal columns to be available to the user.
    */
   protected int getMaximumNumberOfSignalColumns() {
-    return 30;
+    return 15;
   }
   
   /**
