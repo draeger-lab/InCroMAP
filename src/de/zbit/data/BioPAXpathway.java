@@ -22,14 +22,13 @@
 package de.zbit.data;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 import org.biopax.paxtools.model.Model;
 
 import de.zbit.biopax.BioPAX2KGML;
-import de.zbit.gui.IntegratorUITools;
 import de.zbit.kegg.parser.pathway.Pathway;
-import de.zbit.util.Species;
 
 /**
  * A simple wrapper and holder class for BioPAX pathway models.
@@ -73,25 +72,25 @@ public class BioPAXpathway {
     return model;
   }
   
-  /**
-   * 
-   * @return
-   */
-  public Species getSpecies() {
-    /*
-     * TODO: Implement this. It would also be sufficient (and maybe even better)
-     * to return the NCBI taxonomy id here instead of an species object.
-     */
-    return null;
-  }
+
 
   /**
    * @param pwName a file may contain multiple pathways. Specify the pathway name here.
    * @return
    */
   public Pathway getKGMLpathway(String pwName) {
-    // TODO: pwName may be null.
-    return BioPAX2KGML.parsePathwayToKEGG(biopaxFile!=null?biopaxFile.getName():null, pwName, model);
+    Pathway p = null;
+    if (pwName == null){
+      Collection<Pathway> pathways = BioPAX2KGML.createPathwaysFromModel(model, null, false, null);
+      if (pathways!=null && pathways.size()>0){
+          // That's possible because there is no pathway defined to be selected, following we return 
+          // just one pathway object!
+          p = pathways.iterator().next();
+      }
+    } else {
+      p = BioPAX2KGML.parsePathwayToKEGG(biopaxFile!=null?biopaxFile.getName():null, pwName, model);
+    }
+    return p;
   }
   
 }
