@@ -355,11 +355,13 @@ public class TranslatorTabActions implements ActionListener{
   public static Species getSpeciesOfPathway(TranslatorPanel<?> tp, List<Species> spec) {
     File f = tp.getInputFile();
     if (f==null) return null;
-    if (spec==null) try {
-      spec = Species.generateSpeciesDataStructure();
-    } catch (IOException e) {
-      e.printStackTrace();
-      return null;
+    if (spec==null) {
+      try {
+        spec = Species.generateSpeciesDataStructure();
+      } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+      }
     }
     
     // Return prefix of input file (e.g., "mmu00124.xml" => "mmu").

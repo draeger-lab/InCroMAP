@@ -60,6 +60,7 @@ import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.actions.TranslatorTabActions;
 import de.zbit.gui.actions.TranslatorTabActions.TPAction;
+import de.zbit.gui.customcomponents.SpeciesHolder;
 import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.gui.dialogs.VisualizeDataInPathwayDialog;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
@@ -282,8 +283,8 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     Species spec=null;
     if (source==null) return null;
     
-    if (source instanceof IntegratorPathwayPanel) {
-      spec = ((IntegratorPathwayPanel)source).getSpecies();
+    if (source instanceof SpeciesHolder) {
+      spec = ((SpeciesHolder)source).getSpecies();
     }
     
     if (spec==null) {

@@ -21,6 +21,7 @@
  */
 package de.zbit.kegg.gui;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,6 +63,8 @@ import de.zbit.graph.io.def.GraphMLmaps;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.actions.TranslatorTabActions;
+import de.zbit.gui.customcomponents.SpeciesHolder;
 import de.zbit.gui.customcomponents.TableResultTableModel;
 import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.gui.tabs.IntegratorChartTab;
@@ -70,6 +73,7 @@ import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 import de.zbit.kegg.parser.pathway.Pathway;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.math.MathUtils;
+import de.zbit.util.NotifyingWorker;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.TranslatorTools;
@@ -79,7 +83,7 @@ import de.zbit.util.TranslatorTools;
  * @author Clemens Wrzodek
  * @version $Rev$
  */
-public class IntegratorPathwayPanel extends TranslatorGraphPanel {
+public class IntegratorPathwayPanel extends TranslatorGraphPanel implements SpeciesHolder {
   private static final long serialVersionUID = -981908109792103420L;
   /**
    * {@link Species} for this panel.
@@ -111,6 +115,14 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
   public IntegratorPathwayPanel(Pathway keggPathway, ActionListener translationResult) {
     super(keggPathway, Format.JPG, translationResult);
     TranslatorPanelTools.setupBackgroundImage(this);
+  }
+  
+  /**
+   * @param pathwayImporter
+   * @param translationResult
+   */
+  public IntegratorPathwayPanel(NotifyingWorker<?, ?> pathwayImporter, ActionListener translationResult) {
+    super(pathwayImporter, Format.JPG, translationResult);
   }
   
   
@@ -455,6 +467,40 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
     return newLabel.toString();
   }
   
+  
+  /* (non-Javadoc)
+   * @see de.zbit.graph.gui.TranslatorPanel#actionPerformed(java.awt.event.ActionEvent)
+   */
+  @Override
+  public synchronized void actionPerformed(ActionEvent e) {
+    // We need some novel communication with the worker to set the species
+    // and a better name for the tab.
+    switch(e.getID()) {
+      case 11: // Set a title for the tab
+        int idx = IntegratorUI.getInstance().getTabIndex(this);
+        if (idx>=0 && e.getActionCommand()!=null) {
+          IntegratorUI.getInstance().getTabbedPane().setTitleAt(idx, e.getActionCommand());
+        }
+        break;
+        
+      case 12: // Set a tooltip for the tab
+        int idx2 = IntegratorUI.getInstance().getTabIndex(this);
+        if (idx2>=0 && e.getActionCommand()!=null) {
+          IntegratorUI.getInstance().getTabbedPane().setToolTipTextAt(idx2, e.getActionCommand());
+        }
+        break;
+        
+      case 13: // Set the species
+        if (e.getSource()!=null && e.getSource() instanceof Species) {
+          setSpecies((Species) e.getSource());
+        }
+        break;
+        
+      default:
+        super.actionPerformed(e);
+    }
+  }
+  
   /**
    * 
    * @param species
@@ -467,7 +513,12 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
    * @return
    */
   public Species getSpecies() {
-    return species;
+    if (species!=null) {
+      return species;
+    } else {
+      // Try to infer from pathway
+      return TranslatorTabActions.getSpeciesOfPathway(this, IntegratorUITools.organisms);
+    }
   }
   
 }

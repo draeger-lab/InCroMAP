@@ -46,6 +46,7 @@ import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
+import de.zbit.gui.customcomponents.SpeciesHolder;
 import de.zbit.gui.layout.VerticalLayout;
 import de.zbit.util.Species;
 import de.zbit.util.progressbar.AbstractProgressBar;
@@ -58,7 +59,7 @@ import de.zbit.util.progressbar.gui.ProgressBarSwing;
  * @version $Rev$
  * @param <T> type of the data that is visualized in this tab.
  */
-public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrameTab, Comparable<IntegratorTab<?>> {
+public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrameTab, SpeciesHolder, Comparable<IntegratorTab<?>> {
   private static final long serialVersionUID = 653444691629282605L;
   public static final transient Logger log = Logger.getLogger(IntegratorTab.class.getName());
   
@@ -168,6 +169,14 @@ public abstract class IntegratorTab <T> extends JScrollPane implements BaseFrame
    */
   public Species getSpecies() {
     return getSpecies(true);
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.gui.customcomponents.SpeciesHolder#setSpecies(de.zbit.util.Species)
+   */
+  @Override
+  public void setSpecies(Species species) {
+    this.species = species;
   }
   
   /**
