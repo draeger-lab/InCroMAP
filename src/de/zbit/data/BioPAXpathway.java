@@ -22,9 +22,12 @@
 package de.zbit.data;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,14 +40,17 @@ import de.zbit.kegg.parser.pathway.Graphics;
 import de.zbit.kegg.parser.pathway.Pathway;
 import de.zbit.kegg.parser.pathway.ext.EntryExtended;
 import de.zbit.mapper.AbstractMapper;
+import de.zbit.mapper.GeneID2KeggIDMapper;
 import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.DatabaseIdentifiers.IdentifierDatabases;
 import de.zbit.util.Species;
+import de.zbit.util.StringUtil;
 import de.zbit.util.progressbar.AbstractProgressBar;
 
 /**
- * A simple wrapper and holder class for BioPAX pathway models.
+ * A wrapper and holder class for BioPAX pathway models.
+ * Contains many features and enhancements that are required specifically for BioPAX files.
  * 
  * @author Clemens Wrzodek
  * @version $Rev$
@@ -223,12 +229,60 @@ public class BioPAXpathway {
     
     // Try to revert original KEGG identifiers
     if (containsEntrez) {
-      mapEntryNamesFromEntrezToKEGG();
+      mapEntryNamesFromEntrezToKEGG(p, species);
     }
     
     return containsEntrez;
   }
   
+  
+  /**
+   * Tries to replace invalid entry names (i.e. kegg ids in KGML) with restored
+   * KEGG ids by mapping entrez gene ids to KEGG ids.
+   * @param p
+   * @param species
+   */
+  private static void mapEntryNamesFromEntrezToKEGG(Pathway p, Species species) {
+    GeneID2KeggIDMapper mapper=null;
+    try {
+      mapper = new GeneID2KeggIDMapper(species);
+    } catch (IOException e1) {
+      log.log(Level.WARNING, "Could not establish GeneID2KeggIDMapper.", e1);
+    }
+    
+    if (mapper!=null && mapper.isReady() && p.isSetEntries()) {
+      for (Entry e : p.getEntries()) {
+        if (e.getName().toLowerCase().startsWith("unknown") && e instanceof EntryExtended) {
+          EntryExtended ee = (EntryExtended) e;
+          if (ee.isSetIdentifierForDatabase(IdentifierDatabases.EntrezGene)) {
+            
+            // We have entrez ids, but not KEGG ids => Try to map them to KEGG ids.
+            Collection<String> ids = ee.getDatabaseIdentifiers().get(IdentifierDatabases.EntrezGene);
+            Set<String> newName = new HashSet<String>();
+            if (ids!=null) {
+              for (String id: ids) {
+                try {
+                  String kegg = mapper.map(Integer.parseInt(id));
+                  if (kegg!=null && kegg.length()>0) {
+                    newName.add(kegg);
+                  }
+                } catch (Exception ex) {
+                  ex.printStackTrace();
+                  // Not really important...
+                }
+              }
+            }
+            
+            // Eventually set the collected KEGG ids as new name
+            if (newName.size()>0) {
+              e.setName(StringUtil.implode(newName, " "));
+            }
+            
+          }
+        }
+      }
+    }
+  }
 
   /**
    * Tries to enrich the annotated identifiers of pathway <code>p</code>
