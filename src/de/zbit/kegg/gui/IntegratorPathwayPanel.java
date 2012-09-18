@@ -104,6 +104,15 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel {
     this (pathwayID, Format.JPG, translationResult);
   }
   
+  /**
+   * @param keggPathway
+   * @param translationResult
+   */
+  public IntegratorPathwayPanel(Pathway keggPathway, ActionListener translationResult) {
+    super(keggPathway, Format.JPG, translationResult);
+    TranslatorPanelTools.setupBackgroundImage(this);
+  }
+  
   
   /* (non-Javadoc)
    * @see de.zbit.kegg.gui.TranslatorGraphLayerPanel#isDetailPanelAvailable()

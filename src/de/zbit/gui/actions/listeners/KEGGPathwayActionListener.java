@@ -121,7 +121,12 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     }
   };
   
-  
+  /**
+   * 
+   * @param source Optional: The source tab from which this one originates.
+   * Mostly referring to the expression data or enrichment p-values that
+   * should be visualized in the pathway. <code>NULL</code> permitted.
+   */
   public KEGGPathwayActionListener(BaseFrameTab source) {
     this.source = source;
   }

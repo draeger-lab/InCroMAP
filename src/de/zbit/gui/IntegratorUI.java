@@ -50,6 +50,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
@@ -65,6 +66,7 @@ import org.biopax.paxtools.model.Model;
 
 import de.zbit.AppConf;
 import de.zbit.biopax.BioPAX2KGML;
+import de.zbit.data.BioPAXpathway;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NameAndSignals;
@@ -95,6 +97,7 @@ import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.SNPReader;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
+import de.zbit.io.filefilter.SBFileFilter;
 import de.zbit.io.proxy.ProxySelection;
 import de.zbit.kegg.KEGGtranslatorOptions;
 import de.zbit.kegg.Translator;
@@ -108,6 +111,7 @@ import de.zbit.kegg.parser.pathway.Pathway;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
+import de.zbit.util.objectwrapper.LabeledObject;
 import de.zbit.util.objectwrapper.ValuePair;
 import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.prefs.KeyProvider;
@@ -897,32 +901,57 @@ public class IntegratorUI extends BaseFrame {
    * Import any BioPAX pathway.
    */
   public void openBioPAXPathwayTab() {
-    // 1. TODO: OpenFile dialog for BioPAX
-    String fileName = "";
-    Model m = BioPAX2KGML.getModel(fileName); // this can also be done with an IO stream
-    List<String> pathwayList = BioPAX2KGML.getListOfPathways(m);
     
-      
-
+    // 1. OpenFile dialog for BioPAX
+    File file = GUITools.openFileDialog(this, openDir, false, JFileChooser.FILES_ONLY,
+      SBFileFilter.createBioPAXFileFilter());
+    if (file==null || !file.exists()) {
+      return;
+    }
+    BioPAXpathway bp = new BioPAXpathway(file);
+    List<String> pathwayList = bp.getListOfPathways();
+    
     // 2. Eventually (if n>1) pick a pathway dialog.
     String pwName = null;
-    if (pathwayList!=null && pathwayList.size()>0){
-   
-      //TODO determine pwName via pathway dialog
+    if (pathwayList!=null && pathwayList.size()>1){
+      // BioPAX files allow packing multiple pathways into one file => let the user choose one.
+      JLabeledComponent outputFormat = new JLabeledComponent(
+        "The selected file contains multiple pathways. Please select one:", true, pathwayList);
+//      outputFormat.setSortHeaders(false);
+//      outputFormat.setHeaders(itemsForModel);
+      
+      // Let user choose
+      String title = file!=null?String.format("Select pathway from '%s'", file.getName()):appName;
+      int button = JOptionPane.showOptionDialog(this, outputFormat, title,
+        JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+      
+      // Return chosen class
+      if (button!=JOptionPane.OK_OPTION) return;
+//      LabeledObject<Class<?>> selected = (LabeledObject<Class<?>>) outputFormat.getSelectedItem();
+//      return selected.getObject();
+    } else if (pathwayList.size()==1) {
+      pwName = pathwayList.iterator().next();
     }
 
     // 3. Open and visualize this pathway in a new tab
-    Pathway keggPathway = null;
-    if (pwName !=null && !pwName.isEmpty()){
-      Pathway keggPW = BioPAX2KGML.parsePathwayToKEGG(fileName, pwName, m);
+    Pathway keggPathway = bp.getKGMLpathway(pwName);
       
    // 4. Eventually issue a warning that the file did not contain entrez gene identifiers.
 //      TODO:
+    
+    
+    // Open and visualize this pathway in a new tab
+    if (keggPathway!=null) {
+      if (pwName==null || pwName.trim().length()<1) {
+        pwName = "Unknown";
+      }
+      TranslatorPanel<?> tp = new IntegratorPathwayPanel(keggPathway, new KEGGPathwayActionListener(null));
+      if (tp!=null) {
+        ((IntegratorPathwayPanel)tp).setSpecies(null); // TODO: Get species from file and map to internal species
+        String name = (keggPathway.getTitle()!=null && keggPathway.getTitle().trim().length()>0) ? keggPathway.getTitle() : file.getName();
+        addTab(tp, name, String.format("BioPAX pathway '%s' from file '%s'.", pwName, file.getName()), UIManager.getIcon("ICON_PATHWAY_16"));
+      } 
     }
-    
-    
-
-     
   }
   
   /* (non-Javadoc)
