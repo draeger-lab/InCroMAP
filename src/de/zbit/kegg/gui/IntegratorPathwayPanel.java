@@ -49,6 +49,7 @@ import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 
 import y.base.DataMap;
 import y.base.Edge;
+import y.base.Graph;
 import y.base.Node;
 import y.base.NodeMap;
 import y.view.Graph2D;
@@ -57,6 +58,7 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.VisualizedData;
 import de.zbit.data.methylation.DNAmethylation;
+import de.zbit.graph.GraphTools;
 import de.zbit.graph.io.Graph2Dwriter;
 import de.zbit.graph.io.def.GenericDataMap;
 import de.zbit.graph.io.def.GraphMLmaps;
@@ -238,7 +240,7 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
           nodeLabel = c.toString();
             
         } else if (mapDescription.equals(GraphMLmaps.EDGE_TYPE)) {
-          nodeLabel = "<b><h2>asd"+c.toString().replace(",", ",<br/>")+"</h2></b><br/>";
+          nodeLabel = "<b><h2>"+c.toString().replace(",", ",<br/>")+"</h2></b><br/>";
         } else if (mapDescription.equals(GraphMLmaps.NODE_DESCRIPTION)) {
           // Nice idea, unfortunately descriptions come before names...
 //          String[] descriptions = c.toString().split(",");
@@ -256,6 +258,8 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
               image+=Pathway.getPathwayPreviewPicture(s);
             } else if (s.startsWith("CPD:")) {
               image+=Pathway.getCompoundPreviewPicture(s);
+            } else if (s.startsWith("RN:")) {
+              image+=Pathway.getReactionPreviewPicture(s);
             }
           }
           
@@ -341,6 +345,26 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
 //          additional.append(String.format(
 //            "<p><b>%s:</b><br/>%s</p>",
 //            mapDescription, c.toString().replace("\n", "<br/>")));
+        }
+      }
+      
+      // If no name could be figured out, try to fallback to the KEGG ID
+      if (nodeLabel==null && nodeOrEdge instanceof Node) {
+        nodeLabel = GraphTools.getNodeInfoIDs((Node)nodeOrEdge, GraphMLmaps.NODE_KEGG_ID);
+      }
+    }
+    
+    // If no name could be figured out, try to fallback to Graph-label
+    if (nodeLabel==null) {
+      if (nodeOrEdge instanceof Node) {
+        Graph g = ((Node)nodeOrEdge).getGraph();
+        if (g instanceof Graph2D) {
+          nodeLabel = ((Graph2D) g).getRealizer((Node)nodeOrEdge).getLabelText();
+        }
+      } else if (nodeOrEdge instanceof Edge) {
+        Graph g = ((Edge)nodeOrEdge).getGraph();
+        if (g instanceof Graph2D) {
+          nodeLabel = ((Graph2D) g).getRealizer((Edge)nodeOrEdge).getLabelText();
         }
       }
     }

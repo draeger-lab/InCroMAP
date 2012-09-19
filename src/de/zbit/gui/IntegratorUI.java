@@ -910,21 +910,8 @@ public class IntegratorUI extends BaseFrame {
     BioPAXimporterInCroMAP importer = new BioPAXimporterInCroMAP(file);
     IntegratorPathwayPanel tp = new IntegratorPathwayPanel(importer, new KEGGPathwayActionListener(null));
     addTab(tp, file.getName());
-    
-    
-    // 6. Open and visualize this pathway in a new tab
-//    if (keggPathway!=null) {
-//      if (pwName==null || pwName.trim().length()<1) {
-//        pwName = "Unknown";
-//      }
-//      TranslatorPanel<?> tp = new IntegratorPathwayPanel(keggPathway, new KEGGPathwayActionListener(null));
-//      if (tp!=null) {
-//        ((IntegratorPathwayPanel)tp).setSpecies(spec);
-//        String name = (keggPathway.getTitle()!=null && keggPathway.getTitle().trim().length()>0) ? keggPathway.getTitle() : file.getName();
-//        addTab(tp, name, String.format("BioPAX pathway '%s' from file '%s'.", pwName, file.getName()), UIManager.getIcon("ICON_PATHWAY_16"));
-//      } 
-//    }
   }
+  
   
   /* (non-Javadoc)
    * @see de.zbit.gui.BaseFrame#createMainComponent()

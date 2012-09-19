@@ -60,6 +60,7 @@ import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.data.snp.SNP;
 import de.zbit.graph.LineNodeRealizer;
 import de.zbit.graph.gui.TranslatorPanel;
+import de.zbit.graph.io.def.GraphMLmaps;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
@@ -77,6 +78,7 @@ import de.zbit.kegg.gui.KGMLSelectAndDownload;
 import de.zbit.kegg.io.BatchKEGGtranslator;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
+import de.zbit.kegg.parser.pathway.EntryType;
 import de.zbit.math.rescale.AbstractRescale;
 import de.zbit.math.rescale.LinearRescale;
 import de.zbit.math.rescale.LogarithmicRescale;
@@ -1306,8 +1308,15 @@ public class VisualizeDataInPathway {
       // Look if it is the Title/ a PW-reference node
       boolean isPathwayReferenceNode = (kgId!=null && kgId.toString().toLowerCase().trim().startsWith("path:"));
       
-      // Don't change the color of group nodes.
-      if (graph.getHierarchyManager().isGroupNode(n)) {
+      // Look if it's a reaction or compound node
+      Object nodeType = TranslatorTools.getNodeInfoIDs(n, GraphMLmaps.NODE_TYPE);
+      if (nodeType!=null) {
+        nodeType = nodeType.toString().toLowerCase().trim();
+      }
+      
+      // Don't change the color of group, reaction or compound nodes.
+      if (graph.getHierarchyManager().isGroupNode(n) || nodeType!=null && 
+          (nodeType.equals("reaction") || nodeType.equals("compound") || nodeType.equals("small molecule"))) {
         continue;
       }
       

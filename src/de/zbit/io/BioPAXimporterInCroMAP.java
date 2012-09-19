@@ -56,7 +56,7 @@ public class BioPAXimporterInCroMAP extends BioPAXImporter {
   @Override
   protected void showWarningThatNoEntrezIDsAreInThePathway() {
     // Issue a warning that the file did not contain entrez gene identifiers.
-    GUITools.showErrorMessage(null, "The BioPAX file did not contain any XRefs that could be mapped to Entrez Gene.\nYou will not be able to visualize data within this pathway.");
+    GUITools.showWarningMessage(null, "The BioPAX file did not contain any XRefs for proteins that could be mapped to Entrez Gene identifiers.\nYou will not be able to visualize data within this pathway.");
   }
 
   /* (non-Javadoc)
@@ -74,21 +74,5 @@ public class BioPAXimporterInCroMAP extends BioPAXImporter {
   protected List<Species> availableOrganisms() {
     return IntegratorUITools.organisms;
   }
-
-  
-  /*
-    // 6. Open and visualize this pathway in a new tab
-    if (keggPathway!=null) {
-      if (pwName==null || pwName.trim().length()<1) {
-        pwName = "Unknown";
-      }
-      TranslatorPanel<?> tp = new IntegratorPathwayPanel(keggPathway, new KEGGPathwayActionListener(null));
-      if (tp!=null) {
-        ((IntegratorPathwayPanel)tp).setSpecies(spec);
-        String name = (keggPathway.getTitle()!=null && keggPathway.getTitle().trim().length()>0) ? keggPathway.getTitle() : file.getName();
-        addTab(tp, name, String.format("BioPAX pathway '%s' from file '%s'.", pwName, file.getName()), UIManager.getIcon("ICON_PATHWAY_16"));
-      } 
-    }
-   */
   
 }
