@@ -373,7 +373,10 @@ public class IntegratorUI extends BaseFrame {
     KEGGtranslatorOptions.REMOVE_WHITE_GENE_NODES.setDefaultValue(false);
     KEGGtranslatorOptions.SBML_OPTIONS.setVisible(false);
     
-    KEGGtranslatorOptions.AUTOCOMPLETE_REACTIONS.setVisible(false);
+    // Visible because reviewer 3 of AppNote paper wants us to
+    // infer "missing metabolic links"
+    // TODO: Make this option invisible again as soon as InCroMAP is published. Also remove this description from the FAQ.
+    //KEGGtranslatorOptions.AUTOCOMPLETE_REACTIONS.setVisible(false);
     KEGGtranslatorOptions.AUTOCOMPLETE_REACTIONS.setDefaultValue(false);
     
     TranslatorPanelOptions.SHOW_PROPERTIES_TABLE.setDefaultValue(false);
@@ -457,6 +460,12 @@ public class IntegratorUI extends BaseFrame {
       prefsIO = SBPreferences.getPreferencesFor(IntegratorIOOptions.class);
     }
     TranslatorGraphLayerPanel.optionClass = KEGGTranslatorPanelOptions.class;
+    
+    try {
+      SBPreferences prefs = SBPreferences.getPreferencesFor(GUIOptions.class);
+      openDir = GUIOptions.OPEN_DIR.getValue(prefs).getPath();
+      saveDir = GUIOptions.SAVE_DIR.getValue(prefs).getPath();
+    } catch (Exception e) {} // Not important
   }
   
   /**
