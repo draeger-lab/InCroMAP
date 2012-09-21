@@ -331,6 +331,13 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     double[][] XYdata = getXYdata(nsList, signalAndName);
     dataset.addSeries(seriesName, XYdata);
     int seriesNumber=1;
+    
+    BasicStroke stroke = new BasicStroke( // XXX: We could add an option for the line width here.
+      3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+      1.0f, null, 0.0f);
+    renderer.setBaseStroke(stroke);
+    renderer.setSeriesStroke(0, stroke );
+    
     if (includeOthers!=DO_NOT_INCLUDE_OTHER_SERIES && nsList.size()>0) {
       Collection<ValuePair<String, SignalType>> availableSignals = nsList.iterator().next().getSignalNames();
       for (ValuePair<String, SignalType> sVd:availableSignals) {
@@ -338,6 +345,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
         if (sVd.equals(signalAndName) || !sVd.getB().equals(sigType)) continue;
         
         dataset.addSeries(sVd.getA(), getXYdata(nsList, sVd)); // getSeriesName(null, sVd)
+        renderer.setSeriesStroke(seriesNumber, stroke );
         if (includeOthers==INCLUDE_OTHER_SERIES_WITH_LIGHT_COLORS) {
           renderer.setSeriesPaint(seriesNumber, veryLightColors[(seriesNumber-1)%veryLightColors.length] );
         }

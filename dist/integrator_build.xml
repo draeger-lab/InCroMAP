@@ -36,7 +36,10 @@
   	<property name="SysBioPath" location="${base}/../SysBio" />
 
     <!-- the path to KEGGtranslator -->
-     <property name="KEGGtranslatorPath" location="${base}/../KEGGConverter" />
+    <property name="KEGGtranslatorPath" location="${base}/../KEGGConverter" />
+  	
+    <!-- the path to SBVC -->
+    <property name="SBVCPath" location="${base}/../SBVC" />
   	
     <!-- the path to the Integrator sources -->
   	<property name="src" location="${base}/src"/>
@@ -115,6 +118,19 @@
             </fileset>
             <zipfileset excludes="META-INF/*.SF" src="${KEGGtranslatorPath}/lib/y.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="${KEGGtranslatorPath}/lib/keggapi.jar"/>
+    	
+      <!-- Since 1.3, support for visualization of BioPAX pathways -->
+      <fileset dir="${SBVCPath}/bin/de/zbit/biopax">
+        <exclude name="**/package.html"/>
+      </fileset>
+      <fileset file="${SBVCPath}/bin/de/zbit/sbvc/io/BioPAXImporter.class"/>
+      <!-- PaxTools -->
+      <zipfileset excludes="META-INF/*" src="${SBVCPath}/lib/paxtools-4.1.1_customJenaFix.jar">
+      	<exclude name="javax/xml/namespace/QName.class"/>
+      	<exclude name="org/apache/commons/logging/**/*"/>
+        <exclude name="**/package.html"/>
+        <exclude name="overview.html"/>
+      </zipfileset>
     	
     </jar>
   </target>
