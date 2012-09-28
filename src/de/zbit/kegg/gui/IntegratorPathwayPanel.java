@@ -501,9 +501,14 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
     // and a better name for the tab.
     switch(e.getID()) {
       case 11: // Set a title for the tab
+        String title = e.getActionCommand();
+        if (title.length()>40) {
+          title = title.substring(0,37) + "...";
+        }
+        
         int idx = IntegratorUI.getInstance().getTabIndex(this);
         if (idx>=0 && e.getActionCommand()!=null) {
-          IntegratorUI.getInstance().getTabbedPane().setTitleAt(idx, e.getActionCommand());
+          IntegratorUI.getInstance().getTabbedPane().setTitleAt(idx, title);
         }
         break;
         
