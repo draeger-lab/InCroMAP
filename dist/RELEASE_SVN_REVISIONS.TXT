@@ -17,3 +17,10 @@
   KEGGtranslator 348
   SysBio 974
 
+
+* Integrator 1.3.0 (released finally in September 2012 (2012-09-28)) is based on the following subversion revisions:
+  Integrator 166
+  KEGGtranslator 369
+  SysBio 1002
+  SBVC 165
+

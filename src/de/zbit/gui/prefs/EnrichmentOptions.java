@@ -22,7 +22,6 @@
 package de.zbit.gui.prefs;
 
 import de.zbit.graph.gui.options.TranslatorPanelOptions;
-import de.zbit.kegg.KEGGtranslatorOptions;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.OptionGroup;
