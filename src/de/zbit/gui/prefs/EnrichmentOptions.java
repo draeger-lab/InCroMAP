@@ -21,9 +21,12 @@
  */
 package de.zbit.gui.prefs;
 
+import de.zbit.graph.gui.options.TranslatorPanelOptions;
+import de.zbit.kegg.KEGGtranslatorOptions;
 import de.zbit.util.prefs.KeyProvider;
 import de.zbit.util.prefs.Option;
 import de.zbit.util.prefs.OptionGroup;
+import de.zbit.util.prefs.Range;
 
 /**
  * Various options required for enrichments.
@@ -36,11 +39,21 @@ public interface EnrichmentOptions extends KeyProvider {
   public static Option<Boolean> COUNT_MIRNA_TARGETS_FOR_LIST_RATIO = new Option<Boolean>("COUNT_MIRNA_TARGETS_FOR_LIST_RATIO", Boolean.class,
       "If true, counts the number of miRNA targets to calculate the list ratio in enrichments. If false, the number of microRNAs, regardless " +
       "of the number of targets is used to calculate the list ratio (and p-value).", Boolean.FALSE, "Count miRNA targets for list ratio");
+  
+  public static Option<Boolean> REMOVE_UNINFORMATIVE_TERMS = new Option<Boolean>("REMOVE_UNINFORMATIVE_TERMS", Boolean.class,
+      "If true, removes very large GO terms/Pathways.", Boolean.TRUE);
+  
+  /**
+   * Select percentage for removing GO terms.
+   */
+  public static final Option<Integer> MINIMUM_SIZE_OF_TERMS_TO_REMOVE = new Option<Integer>("MINIMUM_SIZE_OF_TERMS_TO_REMOVE", Integer.class,
+      "Removes all enrichment terms (GO, Pathways, etc.) whose size is greater than or equal to this value..",
+      new Range<Integer>(Integer.class, "{[0,10000]}"), 400, REMOVE_UNINFORMATIVE_TERMS, TranslatorPanelOptions.TRUE_RANGE);
  
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static final OptionGroup ENRICHMENT_OPTIONS = new OptionGroup(
       "Enrichment options","Select options for gene set enrichments.",
-      COUNT_MIRNA_TARGETS_FOR_LIST_RATIO);
+      COUNT_MIRNA_TARGETS_FOR_LIST_RATIO, REMOVE_UNINFORMATIVE_TERMS, MINIMUM_SIZE_OF_TERMS_TO_REMOVE);
   
 }

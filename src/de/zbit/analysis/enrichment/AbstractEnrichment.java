@@ -336,6 +336,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<T> geneList, IdentifierType idType) {
+    SBPreferences prefs = SBPreferences.getPreferencesFor(EnrichmentOptions.class);
     
     // We have to take the gene lists in EnrichmentObjects, thus
     // the geneList is no more of type T.
@@ -372,7 +373,6 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     int geneListSize = geneList2.size();
     boolean countMicroRNAs = false;
     if (NameAndSignals.containsMicroRNA(geneList2)) {
-      SBPreferences prefs = SBPreferences.getPreferencesFor(EnrichmentOptions.class);
       countMicroRNAs = !EnrichmentOptions.COUNT_MIRNA_TARGETS_FOR_LIST_RATIO.getValue(prefs);
       if (!countMicroRNAs) {
         // display number of targets in pw / total number of targets
@@ -385,6 +385,10 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       prog.setNumberOfTotalCalls(pwList.size());
     }
     
+    // Get some preferences
+    boolean removeTerms = EnrichmentOptions.REMOVE_UNINFORMATIVE_TERMS.getValue(prefs);
+    int removeTermThreshold = EnrichmentOptions.MINIMUM_SIZE_OF_TERMS_TO_REMOVE.getValue(prefs);
+    
     // Create EnrichmentObjects
     List<EnrichmentObject<EnrichIDType>> ret = new LinkedList<EnrichmentObject<EnrichIDType>>();
     for (Map.Entry<EnrichIDType, Set<?>> entry : pwList.entrySet()) {
@@ -394,6 +398,9 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       
       // Total # genes in pw
       int pwSize=geneID2enrich_ID.getEnrichmentClassSize(entry.getKey());
+      if (removeTerms && pwSize>=removeTermThreshold) {
+        continue;
+      }
       
       // List ratio
       int subsetOfList = entry.getValue().size();

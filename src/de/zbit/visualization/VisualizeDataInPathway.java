@@ -78,7 +78,6 @@ import de.zbit.kegg.gui.KGMLSelectAndDownload;
 import de.zbit.kegg.io.BatchKEGGtranslator;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
-import de.zbit.kegg.parser.pathway.EntryType;
 import de.zbit.math.rescale.AbstractRescale;
 import de.zbit.math.rescale.LinearRescale;
 import de.zbit.math.rescale.LogarithmicRescale;
