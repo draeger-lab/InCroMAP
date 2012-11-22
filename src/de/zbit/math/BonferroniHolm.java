@@ -78,11 +78,18 @@ public class BonferroniHolm implements FDRCorrection {
     int m = sourceListSize==0?pValues.size():Math.max(sourceListSize, pValues.size());
     
     // Apply (pVal*N/Rank) BH correction
+    double lastQ=Double.NaN;
     for (int i = 0; i <pValues.size(); i++) {
       ValuePair<ID, Double> vp = pValues.get(i);
       double q = vp.getB()*(m-i);
       
-      vp.setB(Math.min(q, 1));
+      if (Double.isNaN(lastQ)) {
+        lastQ = q;
+      } 
+      
+      // (1) Preserve monotonicity and (2) do never set a value greater than one 
+      vp.setB(Math.min(Math.max(q, lastQ), 1));
+      lastQ = vp.getB().doubleValue();
     }
   }
 
@@ -117,11 +124,18 @@ public class BonferroniHolm implements FDRCorrection {
     int m = sourceListSize==0?enrichments.size():Math.max(sourceListSize, enrichments.size());
     
     // Apply (pVal*N/Rank) BH correction
+    double lastQ=Double.NaN;
     for (int i = 0; i <enrichments.size(); i++) {
       EnrichmentObject<?> vp = enrichments.get(i);
       double q = vp.getPValue().doubleValue()*(m-i);
       
-      vp.setQValue(Math.min(q, 1));
+      if (Double.isNaN(lastQ)) {
+        lastQ = q;
+      } 
+      
+      // (1) Preserve monotonicity and (2) do never set a value greater than one 
+      vp.setQValue(Math.min(Math.max(q, lastQ), 1));
+      lastQ = vp.getQValue().doubleValue();
     }
   }  
   

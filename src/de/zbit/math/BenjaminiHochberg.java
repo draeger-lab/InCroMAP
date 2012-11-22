@@ -53,11 +53,13 @@ public class BenjaminiHochberg implements FDRCorrection {
     int m = pValues.size();
     
     // Apply (pVal*N/Rank) BH correction
+    double last_q = pValues.get(m-1).getB();
     for (int i = (m-1); i > 0; i--) {
       ValuePair<ID, Double> vp = pValues.get(i-1);
       double q = vp.getB()*m/i;
       
-      vp.setB(Math.min(q, 1));
+      last_q = Math.min(Math.min(q, last_q), 1);
+      vp.setB(last_q);
     }
   }
 
@@ -98,7 +100,8 @@ public class BenjaminiHochberg implements FDRCorrection {
       vp = enrichments.get(i-1);
       double q = vp.getPValue().doubleValue()*m/i;
       
-      vp.setQValue(Math.min(q, 1));
+      // (1) Preserve monotonicity and (2) do never set a value greater than one 
+      vp.setQValue(Math.min(Math.min(q, enrichments.get(i).getQValue().doubleValue()), 1));
     }
   }  
 }
