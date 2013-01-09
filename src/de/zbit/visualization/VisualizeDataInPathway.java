@@ -1314,7 +1314,7 @@ public class VisualizeDataInPathway {
       }
       
       // Don't change the color of group, reaction or compound nodes.
-      if (graph.getHierarchyManager().isGroupNode(n) || nodeType!=null && 
+      if ((graph.getHierarchyManager()!=null && graph.getHierarchyManager().isGroupNode(n)) || nodeType!=null && 
           (nodeType.equals("reaction") || nodeType.equals("compound") || nodeType.equals("small molecule"))) {
         continue;
       }

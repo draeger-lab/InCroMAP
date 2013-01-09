@@ -424,7 +424,7 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
         CategoryPlot plot = new CategoryPlot(dataset, xAxis, yAxis, renderer);
         
         final ChartPanel chartPanel = new ChartPanel(new JFreeChart(plot));
-        chartPanel.setPreferredSize(new java.awt.Dimension(500, 300));
+        chartPanel.setPreferredSize(new java.awt.Dimension(500, 300)); // 225 height is a good value 
 
       
         ph.add(new JLabel("<html><body><b><h3>Microarray data assigned to this node:</h3></b></body></html>"));

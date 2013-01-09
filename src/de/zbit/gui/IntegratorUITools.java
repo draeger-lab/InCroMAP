@@ -746,9 +746,16 @@ public class IntegratorUITools {
    * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.
    */
   @SuppressWarnings("rawtypes")
-  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorTab initialSelection, String dialogTitle, Species filterForSpecies) {
+  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(
+    IntegratorTab initialSelection, String dialogTitle, Species filterForSpecies) {
     // Create a list of available datasets
     List<LabeledObject<NameAndSignalsTab>> datasets = getNameAndSignalTabsWithSignals(filterForSpecies);
+    
+    if (datasets==null || datasets.size()<1) {
+      GUITools.showMessage(String.format("Could not find any %s datasets with observations.", 
+        filterForSpecies==null?"input":filterForSpecies.getName()), IntegratorUI.appName);
+      return null;
+    }
     
     // Remove all DNA methylation datasets that contain no p-value signals
     //IntegratorUITools.filterNSTabs(datasets, DNAmethylation.class, SignalType.pValue);//Keyword: DNAm-pValue
@@ -765,7 +772,8 @@ public class IntegratorUITools {
    * @return ValueTriplet of (TabIndex In {@link IntegratorUI#getTabbedPane()}, ExperimentName, {@link SignalType}) or null.
    */
   @SuppressWarnings("rawtypes")
-  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(IntegratorTab initialSelection, String dialogTitle, List<LabeledObject<NameAndSignalsTab>> datasets) {
+  public static <T extends NameAndSignals> ValueTriplet<NameAndSignalsTab, String, SignalType> showSelectExperimentBox(
+    IntegratorTab initialSelection, String dialogTitle, List<LabeledObject<NameAndSignalsTab>> datasets) {
     IntegratorUI ui = IntegratorUI.getInstance();
     final JPanel jp = new JPanel(new BorderLayout());
     int initialSelIdx=0;
@@ -1435,7 +1443,8 @@ public class IntegratorUITools {
       } catch (Exception e ){} // not important
     }
     if (tabs==null || tabs.size()<1) {
-      GUITools.showMessage("Could not find any pathway enrichment tabs. Please perform a pathway enrichment first.", IntegratorUI.appName);
+      GUITools.showMessage("Could not find any pathway enrichment tabs" + 
+        (spec==null?"":(" for "+spec.getName())) + ". Please perform a pathway enrichment first.", IntegratorUI.appName);
       return null;
     }
     return IntegratorUITools.showSelectExperimentBox(null, dialogTitle,tabs);

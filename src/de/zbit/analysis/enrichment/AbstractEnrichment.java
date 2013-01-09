@@ -422,7 +422,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       qVal.setQvalue(ret);
     }
     
-    // Initially sort returned list by pValue
+    // Initially sort returned list by pValue (better than q-value because finer grained)
     Collections.sort(ret, Signal.getComparator(EnrichmentObject.signalNameForPvalues, SignalType.pValue));
     
     return ret;

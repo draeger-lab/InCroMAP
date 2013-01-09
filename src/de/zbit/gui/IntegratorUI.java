@@ -89,6 +89,7 @@ import de.zbit.io.DNAmethylationReader;
 import de.zbit.io.EnrichmentReader;
 import de.zbit.io.GenericGeneBasedDataReader;
 import de.zbit.io.GenericGeneReader;
+import de.zbit.io.GraphMLimporter;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.SNPReader;
@@ -246,6 +247,10 @@ public class IntegratorUI extends BaseFrame {
      */
     IMPORT_BIOPAX_PATHWAY,
     /**
+     * {@link Action} to show a GraphML graph selection dialog.
+     */
+    IMPORT_GraphML,
+    /**
      * Creates pictures for many observations and pathways.
      */
     BATCH_PATHWAY_VISUALIZATION,
@@ -294,6 +299,8 @@ public class IntegratorUI extends BaseFrame {
         return "Show KEGG pathway";
       case IMPORT_BIOPAX_PATHWAY:
         return "Import BioPAX pathway";
+      case IMPORT_GraphML:
+        return "Import GraphML graph";
       case INTEGRATED_TABLE:
         return "Integrate heterogeneous data";
         
@@ -333,6 +340,8 @@ public class IntegratorUI extends BaseFrame {
           return "Download and visualize a KEGG pathway.";
         case IMPORT_BIOPAX_PATHWAY:
           return "Import any pathway from a BioPAX file.";
+        case IMPORT_GraphML:
+          return "Import any graph from a GraphML-formatted file.";
         case BATCH_PATHWAY_VISUALIZATION:
           return "Batch color nodes in various pathways according to observations and save these pictures as images.";
         case INTEGRATED_HETEROGENEOUS_DATA_VISUALIZATION:
@@ -688,6 +697,9 @@ public class IntegratorUI extends BaseFrame {
     
     JMenuItem bpPathway = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openBioPAXPathwayTab"),
       Action.IMPORT_BIOPAX_PATHWAY, UIManager.getIcon("ICON_PATHWAY_16"));
+    
+    JMenuItem bpGraph = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openGraphMLTab"),
+      Action.IMPORT_GraphML, UIManager.getIcon("ICON_PATHWAY_16"));
 
     JMenuItem genericGene = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openGenericGeneFile"),
       Action.LOAD_GENERIC_GENE_BASED, UIManager.getIcon("ICON_MRNA_16"));
@@ -700,16 +712,18 @@ public class IntegratorUI extends BaseFrame {
     importData.add(lprotMod);
     importData.add(ldnaM);
     importData.addSeparator();
+    importData.add(genericGene);
+    importData.add(genericRegion);
     for (JMenuItem next : additionalFileMenuItems()) {
       importData.add(next);
     }
-    importData.add(genericGene);
-    importData.add(genericRegion);
     importData.addSeparator();
     importData.add(genelist);
     importData.add(miRNAtargets);
+    importData.addSeparator();
     importData.add(newPathway);
     importData.add(bpPathway);
+    importData.add(bpGraph);
     
     
     /*
@@ -917,6 +931,23 @@ public class IntegratorUI extends BaseFrame {
     
     // Create a tab
     BioPAXimporterInCroMAP importer = new BioPAXimporterInCroMAP(file);
+    IntegratorPathwayPanel tp = new IntegratorPathwayPanel(importer, new KEGGPathwayActionListener(null));
+    addTab(tp, file.getName());
+  }
+  
+  public void openGraphMLTab() {
+    
+    // OpenFile dialog for GraphML
+    File file = GUITools.openFileDialog(this, openDir, false, JFileChooser.FILES_ONLY,
+      SBFileFilter.createGraphMLFileFilter(), SBFileFilter.createGMLFileFilter());
+    if (file==null || !file.exists()) {
+      return;
+    } else {
+      openDir = file.getParent();
+    }
+    
+    // Create a tab
+    GraphMLimporter importer = new GraphMLimporter(file);
     IntegratorPathwayPanel tp = new IntegratorPathwayPanel(importer, new KEGGPathwayActionListener(null));
     addTab(tp, file.getName());
   }

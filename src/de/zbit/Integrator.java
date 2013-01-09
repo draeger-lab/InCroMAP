@@ -204,4 +204,10 @@ public class Integrator extends Launcher {
     return new IntegratorUI(appConf);
   }
   
+  @Override
+  public boolean showsGUI() {
+    // This is a gui-only application.
+    return true;
+  }
+  
 }

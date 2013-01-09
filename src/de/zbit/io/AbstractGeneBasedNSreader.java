@@ -505,7 +505,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     // Change name to a more human readable one.
     boolean addSecondIDasAdditionalInfo=false;
     if (preferredNameColumn>=0) {
-      name = line[preferredNameColumn];
+      name = line[preferredNameColumn].trim();
       if (secondID!=null && (!secondID.getA().equals(preferredNameColumn))) {
         addSecondIDasAdditionalInfo = true;
       }

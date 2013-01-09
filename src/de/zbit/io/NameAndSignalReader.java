@@ -425,7 +425,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
    * @return
    */
   protected String getName(String[] line) {
-    return line[nameCol];
+    return line[nameCol].trim(); // .trim() required, because line might end with \r
   }
 
   /**
