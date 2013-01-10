@@ -24,3 +24,11 @@
   SysBio 1002
   SBVC 165
 
+
+* Integrator 1.4.0 (released finally in January 2013 (2013-01-10)) is based on the following subversion revisions:
+  Integrator 166
+  KEGGtranslator 379
+  SysBio 1002
+  SBVC 168
+
+
