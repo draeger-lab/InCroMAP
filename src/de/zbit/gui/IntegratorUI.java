@@ -30,6 +30,7 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionListener;
 import java.beans.EventHandler;
+import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.Collection;
@@ -1319,6 +1320,11 @@ public class IntegratorUI extends BaseFrame {
   @Override
   public File saveFileAs() {
     return saveFile();
+  }
+
+  @Override
+  public void propertyChange(PropertyChangeEvent evt) {
+	  // This feature is currently not supported.
   }
   
 }
