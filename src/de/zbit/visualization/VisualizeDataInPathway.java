@@ -78,6 +78,7 @@ import de.zbit.kegg.gui.KGMLSelectAndDownload;
 import de.zbit.kegg.io.BatchKEGGtranslator;
 import de.zbit.kegg.io.KEGG2yGraph;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
+import de.zbit.kegg.parser.pathway.EntryType;
 import de.zbit.math.rescale.AbstractRescale;
 import de.zbit.math.rescale.LinearRescale;
 import de.zbit.math.rescale.LogarithmicRescale;
@@ -1291,6 +1292,11 @@ public class VisualizeDataInPathway {
         nodesToResetColor.remove(n);
         // ---------------------------------
         
+        // XXX: NOTE: we COULD include the two-colored node style here for pw-refs.
+//        if (experimentName.equals(EnrichmentObject.signalNameForPvalues)) {
+//          
+//        }
+        
       } else if (parent!=null) {
         // Node has been created for a specific parent, but it is
         // not this one => don't recolor it, simply skip it.
@@ -1315,7 +1321,8 @@ public class VisualizeDataInPathway {
       
       // Don't change the color of group, reaction or compound nodes.
       if ((graph.getHierarchyManager()!=null && graph.getHierarchyManager().isGroupNode(n)) || nodeType!=null && 
-          (nodeType.equals("reaction") || nodeType.equals("compound") || nodeType.equals("small molecule"))) {
+          (nodeType.equals("reaction") || nodeType.equals("compound") || nodeType.equals("small molecule")
+          || nodeType.equals(EntryType.other.toString()))) { // "other" is used for, e.g., KEGG BRITE
         continue;
       }
       

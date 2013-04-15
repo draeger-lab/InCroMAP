@@ -94,6 +94,7 @@ import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
+import de.zbit.gui.actions.listeners.ExportPathwayData;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.csv.CSVImporterV2;
@@ -398,6 +399,27 @@ public class IntegratorUITools {
     
     return showPathway;
   }
+  
+  /**
+   * Add a "Export pathway data" {@link JMenuItem} to the given
+   * {@link JPopupMenu}.
+   * 
+   * @param l
+   * @param append
+   * @return
+   */
+  public static JMenuItem createExportPathwayDataPathwayPopup(ExportPathwayData l, JPopupMenu append) {
+    JMenuItem showPathway = GUITools.createJMenuItem(l,
+        ExportPathwayData.PATHWAY_EXPORT,
+        UIManager.getIcon("ICON_SAVE_16"));
+    
+    if (append!=null) {
+      append.add(showPathway);
+    }
+    
+    return showPathway;
+  }
+  
   
   public static JPopupMenu createVisualizeGenomicRegionPopup(NameAndSignalTabActions l, JPopupMenu append) {
     JMenuItem showPathway = GUITools.createJMenuItem(l,

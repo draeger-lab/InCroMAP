@@ -52,6 +52,7 @@ import de.zbit.data.TableResult;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
+import de.zbit.gui.actions.listeners.ExportPathwayData;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.table.JTableSearch;
 import de.zbit.gui.table.TableRowSorterMixed;
@@ -275,7 +276,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
           popUp.addSeparator();
           KEGGPathwayActionListener al2 = new KEGGPathwayActionListener(tab);
           final JMenuItem visualizePopUp = IntegratorUITools.createKeggPathwayPopup(al2, popUp);
-          IntegratorUITools.addRightMousePopup(jc, popUp);
+          
           // Show pathway on double click
           jc.addMouseListener(new MouseAdapter(){
             public void mouseClicked(MouseEvent e){
@@ -284,6 +285,10 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
               }
             }
           });
+          
+          // Add tabular export of pathway data
+          ExportPathwayData al3 = new ExportPathwayData(tab);
+          IntegratorUITools.createExportPathwayDataPathwayPopup(al3, popUp);          
         }
       } else {
         if (Region.class.isAssignableFrom(tab.getDataContentType())) {

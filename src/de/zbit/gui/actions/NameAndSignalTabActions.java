@@ -125,7 +125,7 @@ public class NameAndSignalTabActions implements ActionListener {
      * Same as {@link #VISUALIZE_IN_PATHWAY} but restricts
      * the data to the current table selection.
      */
-    VISUALIZE_SELETED_DATA_IN_PATHWAY,
+    VISUALIZE_SELECTED_DATA_IN_PATHWAY,
     ADD_OBSERVATION,
     SEARCH_TABLE,
     PAIR_DATA,
@@ -187,7 +187,7 @@ public class NameAndSignalTabActions implements ActionListener {
       switch (this) {
         case VISUALIZE_IN_PATHWAY:
           return "Show a KEGG pathway and visualize the selected data (e.g., color nodes accoring to fold changes).";
-        case VISUALIZE_SELETED_DATA_IN_PATHWAY:
+        case VISUALIZE_SELECTED_DATA_IN_PATHWAY:
           return "Show a KEGG pathway and visualize only the selected items in this pathway.";
         case ADD_GENE_SYMBOLS:
           return "Show gene symbols as names, using a NCBI gene id to gene symbol converter.";
@@ -313,13 +313,13 @@ public class NameAndSignalTabActions implements ActionListener {
       
       JPopupMenu fdr = new JPopupMenu("FDR correction");
       BH_cor = GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class);
+          NSAction.FDR_CORRECTION_BH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class,true);
       fdr.add(BH_cor);
       BFH_cor = GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class);
+          NSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class,true);
       fdr.add(BFH_cor);
       BO_cor = GUITools.createJMenuItem(this,
-          NSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class);
+          NSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class,true);
       fdr.add(BO_cor);
       JDropDownButton fdrButton = new JDropDownButton("FDR correction", 
           UIManager.getIcon("ICON_MATH_16"), fdr);

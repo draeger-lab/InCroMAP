@@ -150,7 +150,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         GUITools.showErrorMessage(null, e1);
       }
       
-    } else if (e.getActionCommand().equals(NSAction.VISUALIZE_SELETED_DATA_IN_PATHWAY.toString())) {
+    } else if (e.getActionCommand().equals(NSAction.VISUALIZE_SELECTED_DATA_IN_PATHWAY.toString())) {
       try {
         if (source instanceof IntegratorTabWithTable) {
           // TODO: One could implement functionality to limit visualization to selected data/genes.

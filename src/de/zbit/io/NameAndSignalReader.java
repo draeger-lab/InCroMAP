@@ -30,7 +30,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -113,6 +115,11 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
    * a number.
    */
   private int totalNumbersParsed=0;
+  
+  /**
+   * Try to avoid raising the same exceptions over and over.
+   */
+  private Set<String> issuedErrors = new HashSet<String>();
   
   /**
    * Import a file with a GUI. There are many helper methods that allow to quickly
@@ -447,7 +454,9 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
           try {
             signal = Float.parseFloat(line[vp.getA()]);
           } catch (NumberFormatException e) {
-            log.log(Level.WARNING, "Error while parsing signal number.", e);
+            if (e.getMessage()==null || issuedErrors.add(e.getMessage())) {
+              log.log(Level.WARNING, "Error while parsing signal number." + e.getMessage(), e);
+            }
             errornousNumbersInSignals++;
             if (line[vp.getA()].indexOf(getOtherDecimalSeparator())>=0){
               // Count errors that could poentiatlly get fixed
