@@ -210,7 +210,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
         geneIDs.add(Integer.parseInt(gene.toString()));
       } else { //mRNA miRNA EnrichmentObject and such...
         geneIDs.addAll(NameAndSignals.getGeneIds(gene));
-        mr.addAll(NameAndSignals.getGenes(gene));
+        mr.addAll(NameAndSignals.getNameAndSignals(gene));
       }
       
       if (!checkGeneIDs(geneIDs)) {

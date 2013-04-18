@@ -44,6 +44,8 @@ import javax.swing.tree.TreeNode;
 
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.compound.Compound;
+import de.zbit.data.compound.CompoundID;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAandTarget;
@@ -573,6 +575,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     int idType = getIdentifierType(ns);
     if (idType==1) {
       return ((GeneID)ns).getGeneID();
+    } else if (idType==2) {
+      return ((CompoundID)ns).getCompoundID();
     } else if (idType==3) {
       return ns.getData(EnrichmentObject.idKey);
     } else {
@@ -597,7 +601,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * NameAndSignal.
    * @param <T>
    * @param nsClass class of the {@link NameAndSignals}.
-   * @return 1 for GeneID ({@link GeneID#getGeneID()}) or 0 for {@link #getName()}
+   * @return 1 for GeneID ({@link GeneID#getGeneID()}), 2 for CompoundID 
+   * ({@link CompoundID#getCompoundID()}), 3 for enrichments or 0 for {@link #getName()}
    * @see #getType(Object)
    */
   public static int getIdentifierType(Class<? extends NameAndSignals> nsClass) {
@@ -605,15 +610,14 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         !miRNA.class.isAssignableFrom(nsClass)) {
       // Label
       return 1;
-      // Method is called to identify corresponding genes in a pathway
-      // => We need the geneID for ProteinModificationExpression
-//    } else if (ProteinModificationExpression.class.isAssignableFrom(nsClass)) {
-//      return 2;
+    } else if (CompoundID.class.isAssignableFrom(nsClass)) {
+      return 2;
+      
     } else if (EnrichmentObject.class.isAssignableFrom(nsClass)) {
       // enrichment (e.g. kegg) id
       return 3;
     } else {
-      // GeneID
+      // probably GeneID
       return 0;
     }
   }
@@ -765,6 +769,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   /**
    * Groups the given {@link NameAndSignals}s by <ul>
    * <li>GeneID for {@link mRNA}s (or {@link GeneID}s)</li>
+   * <li>CompoundID for {@link Compound}s (or {@link CompoundID}s)</li>
    * <li>Recursive for genesInClass() for {@link EnrichmentObject}s</li>
    * <li>{@link ProteinModificationExpression#getUniqueLabel()}</li>
    * <li>Name for all others (e.g., {@link miRNA}s)</li></ul>
@@ -797,7 +802,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
 //      } else 
       if (forceGroupByGeneID && mi instanceof GeneID) {
         name = Integer.toString(((GeneID)mi).getGeneID());
+      } else if (forceGroupByGeneID && mi instanceof CompoundID) {
+        name = Integer.toString(((CompoundID)mi).getCompoundID());
       }
+      
       else if (mi instanceof EnrichmentObject) {
         // A little bit more complicated for EnrichmentObjects,
         // return a list of genes in the class here!
@@ -1211,37 +1219,78 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   }
   
   /**
-   * Get {@link NameAndSignals} from o
-   * @param o any iterable, array or combinations of both over {@link NameAndSignals} or derived classes.
+   * Get the CompoundIDs from <T extends NameAndSignals> or Integer (direct CompoundID). 
+   * Can also be mixed lists and arrays of these types.
+   * @param o
    * @return
    */
-  public static Collection<NameAndSignals> getGenes(Object o) {
-    Set<NameAndSignals> geneIds = new HashSet<NameAndSignals>();
-    if (o==null) return geneIds; // return an empty set
+  @SuppressWarnings("rawtypes")
+  public static Set<Integer> getCompoundIds(Object o) {
+    Set<Integer> cpdIds = new HashSet<Integer>();
+    if (o==null) return cpdIds;
     
     if (o instanceof Iterable) {
-      for (Object o2 : ((Iterable<?>)o)) {
-        geneIds.addAll(getGenes(o2));
+      for (Object o2 : ((Iterable)o)) {
+        cpdIds.addAll(getCompoundIds(o2));
       }
       
     } else if (o.getClass().isArray()) {
       for (int i=0; i<Array.getLength(o); i++) {
-        geneIds.addAll(getGenes(Array.get(o, i)));
+        cpdIds.addAll(getCompoundIds(Array.get(o, i)));
+      }
+      
+      
+    } else if (o instanceof CompoundID) {
+      cpdIds.add(((CompoundID)o).getCompoundID());
+      
+    } else if (o instanceof Integer) {
+      cpdIds.add((Integer)o);
+      
+    } else if (o instanceof EnrichmentObject) {
+      for (Object o2: ((EnrichmentObject)o).getGenesInClass()) {
+        cpdIds.addAll(getCompoundIds(o2));
+      }
+      
+    } else {
+      log.severe("Please implement 2CompoundID for " + o.getClass());
+    }
+    
+    return cpdIds;
+  }
+  
+  /**
+   * Get {@link NameAndSignals} from o
+   * @param o any iterable, array or combinations of both over {@link NameAndSignals} or derived classes.
+   * @return
+   */
+  public static Collection<NameAndSignals> getNameAndSignals(Object o) {
+    Set<NameAndSignals> nses = new HashSet<NameAndSignals>();
+    if (o==null) return nses; // return an empty set
+    
+    if (o instanceof Iterable) {
+      for (Object o2 : ((Iterable<?>)o)) {
+        nses.addAll(getNameAndSignals(o2));
+      }
+      
+    } else if (o.getClass().isArray()) {
+      for (int i=0; i<Array.getLength(o); i++) {
+        nses.addAll(getNameAndSignals(Array.get(o, i)));
       }
       
     } else if (o instanceof NameAndSignals || NameAndSignals.class.isAssignableFrom(o.getClass())) {
-      geneIds.add(((NameAndSignals)o));
+      nses.add(((NameAndSignals)o));
       
     } else {
       log.severe("Cannot get NameAndSignals for " + o.getClass());
     }
     
-    return geneIds;
+    return nses;
   }
   
   /**
    * Counts the number of unique genes in the list and returns them (as geneIDs).
-   * For {@link miRNA}s, all target gene ids are taken and for everything else
+   * CompoundIDs will be returned as NEGATIVE NUMBERS to avoid colissions with geneIDs.
+   * <p>For {@link miRNA}s, all target gene ids are taken and for everything else
    * (that implements {@link GeneID}, the gene id is taken.
    * @param nsList any gene list. Makes especially sense for <b>heterogeneous</b> lists!
    * @return
@@ -1261,12 +1310,17 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
           }
         }
       } else if (ns instanceof GeneID) {
-        ret.add(((GeneID) ns).getGeneID());
+        int gi = ((GeneID) ns).getGeneID();
+        if (gi!=GeneID.default_geneID.intValue()) {
+          ret.add(gi);
+        }
+      } else if (ns instanceof CompoundID) {
+        int ci = ((CompoundID) ns).getCompoundID();
+        if (ci!=CompoundID.default_CompoundID.intValue()) {
+          ret.add(ci*-1); // Negative to avoid collisions with GeneIDs!
+        }
       }
     }
-    
-    // Remove default gene id (= n/a)
-    ret.remove(GeneID.default_geneID);
     
     return ret;
   }
@@ -1529,7 +1583,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
 
   /**
    * Removes all objects that implement {@link GeneID}, but have an
-   * unset or invalid GeneID.
+   * unset or invalid GeneID. Also removed all invalid {@link CompoundID} entries.
    * @param newList
    */
   public static void removeGenesWithoutGeneID(Iterable<? extends NameAndSignals> newList) {
@@ -1539,6 +1593,11 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       if (o instanceof GeneID) {
         int geneID = ((GeneID) o).getGeneID();
         if (geneID<=0) {
+          it.remove();
+        }
+      } else if (o instanceof CompoundID) {
+        int cpdID = ((CompoundID) o).getCompoundID();
+        if (cpdID<=0) {
           it.remove();
         }
       }

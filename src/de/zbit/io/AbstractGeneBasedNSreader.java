@@ -68,7 +68,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
   
   /**
    * Type of Identifier. Anything else than
-   * Numberic (GeneID) will be mapped to this.
+   * Numeric (GeneID) will be mapped to this.
    */
   private IdentifierType idType;
   

@@ -45,6 +45,7 @@ import de.zbit.analysis.enrichment.MSigDB_GSEA_Enrichment;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.compound.CompoundID;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.GUITools;
@@ -305,16 +306,23 @@ public class EnrichmentActionListener implements ActionListener {
   }
 
   /**
+   * Note: also works for compounds.
    * @return list of selected genes for the enrichment.
    */
   private List<?> getGeneList() {
     List<?> geneList = source.getSelectedItems();
     
+    // Get content string
+    String content = "genes";
+    if (CompoundID.class.isAssignableFrom(source.getDataContentType())) {
+      content = "compounds";
+    }
+    
     // Eventually ask user
     if (withDialog) {
       boolean showFilterDialog=true;
       if (geneList!=null && geneList.size()>1) {
-        int ret = GUITools.showQuestionMessage(source, "Do you want to take the selected genes for the enrichment analysis?", "Enrichment analysis", "Yes", "No");
+        int ret = GUITools.showQuestionMessage(source, "Do you want to take the selected " + content + " for the enrichment analysis?", "Enrichment analysis", "Yes", "No");
         if (ret==0) {
           showFilterDialog=false;
         }

@@ -81,5 +81,11 @@ public interface GraphMLmapsExtended extends GraphMLmaps {
    * this node has. The stored value is an {@link Integer}.
    */
   public static final String NODE_NUMBER_OF_CHILDREN = "ChildNodes";
+
+  /**
+   * Maps a Compound node to an HMDB identifier. Note: This is NOT naturally
+   * available from KEGGtranslator and must be established manually!
+   */
+  public static final String NODE_HMDB_ID = "HMDB_ID";
   
 }

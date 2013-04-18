@@ -49,9 +49,12 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
+import de.zbit.data.compound.CompoundID;
+import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
+import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.actions.listeners.ExportPathwayData;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.table.JTableSearch;
@@ -265,9 +268,17 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
     // Add enrichment capabilities
     if (tab instanceof IntegratorTabWithTable) {
       EnrichmentActionListener al = new EnrichmentActionListener((IntegratorTabWithTable)tab);
-      JPopupMenu popUp = IntegratorUITools.createEnrichmentPopup(al);
+      JPopupMenu popUp = new JPopupMenu("Enrichments");
+      if (CompoundID.class.isAssignableFrom(tab.getDataContentType())) {
+        // Compounds can only be used for KEGG enrichments.
+        popUp.add(GUITools.createJMenuItem(al, Enrichments.KEGG_ENRICHMENT));
+      } else if (GeneID.class.isAssignableFrom(tab.getDataContentType())) {
+        // GeneIDs can be used for all other enrichments (including KEGG).
+        popUp = IntegratorUITools.createEnrichmentPopup(al);
+      }
       IntegratorUITools.addRightMousePopup(jc, popUp);
 
+      
 
       // Other data type dependent capabilities
       if (tab.getDataContentType().equals(EnrichmentObject.class)) {
