@@ -28,7 +28,9 @@ import java.util.logging.Level;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.MappingUtils.IdentifierType;
+import de.zbit.mapper.compounds.CompoundID2CommonNameMapper;
 import de.zbit.util.StringUtil;
 
 /**
@@ -208,7 +210,7 @@ public class Compound extends NameAndSignals implements CompoundID {
    */
   public static void convertInstancesToSymbols(Iterable<? extends NameAndSignals> data) throws Exception {
     log.config("Loading CompoundSymbol mapping...");
-    HMDB2CompoundSymbolMapper mapper = IntegratorUITools.get2GeneSymbolMapping();
+    CompoundID2CommonNameMapper mapper = IntegratorUITools.get2CommonNameMapping();
     for (NameAndSignals m: data) {
       if (m instanceof CompoundID) {
         

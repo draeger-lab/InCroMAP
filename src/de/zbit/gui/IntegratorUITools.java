@@ -94,8 +94,8 @@ import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
-import de.zbit.gui.actions.listeners.ExportPathwayData;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
+import de.zbit.gui.actions.listeners.ExportPathwayData;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.dialogs.IntegratedEnrichmentDialog;
@@ -126,6 +126,7 @@ import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierClass;
 import de.zbit.mapper.MappingUtils.IdentifierType;
+import de.zbit.mapper.compounds.CompoundID2CommonNameMapper;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
@@ -955,6 +956,28 @@ public class IntegratorUITools {
       }
     }
     return (GeneID2GeneSymbolMapper) mapper;
+  }
+  
+  /**
+   * Returns a 2CompoundID mapping.
+   * <p>Every created instance is cached for later usage.
+   * @param species
+   * @return 
+   */
+  public static CompoundID2CommonNameMapper get2CommonNameMapping() {
+    String key = CompoundID2CommonNameMapper.class.getSimpleName();
+    Object mapper = UIManager.get(key);
+    if (mapper==null) {
+      try {
+        mapper = new CompoundID2CommonNameMapper();
+      } catch (IOException e) {
+        GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
+      }
+      if (mapper!=null) {
+        UIManager.put(key, mapper);
+      }
+    }
+    return (CompoundID2CommonNameMapper) mapper;
   }
   
   /**
