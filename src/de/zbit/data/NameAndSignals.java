@@ -1544,5 +1544,14 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       }
     }
   }
+
+  /**
+   * Be VERY careful with that. Actually, the after instanciating,
+   * the name should never change!
+   * @param symbol
+   */
+  public void setDisplayName(String symbol) {
+    name = symbol;
+  }
   
 }
