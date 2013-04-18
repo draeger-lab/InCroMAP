@@ -46,6 +46,7 @@ import de.zbit.integrator.ReaderCacheElement;
 import de.zbit.io.csv.CSVReader;
 import de.zbit.mapper.AbstractMapper;
 import de.zbit.mapper.MappingUtils;
+import de.zbit.mapper.MappingUtils.IdentifierClass;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Species;
@@ -132,8 +133,8 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
    */
   public ExpectedColumn[] getExpectedColumns() {
     List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
-    List<IdentifierType> idTypes = new ArrayList<IdentifierType>(Arrays.asList(IdentifierType.values()));
-    List<String> regExForIdTypes = new ArrayList<String>(Arrays.asList(MappingUtils.getRegularExpressionsForAllIdentifierTypes()));
+    List<IdentifierType> idTypes = new ArrayList<IdentifierType>(Arrays.asList(IdentifierType.getGeneIdentifierTypes()));
+    List<String> regExForIdTypes = new ArrayList<String>(Arrays.asList(MappingUtils.getRegularExpressionsFor(IdentifierClass.Gene)));
     // Remove unknown
     regExForIdTypes.remove(idTypes.indexOf(IdentifierType.Unknown));
     idTypes.remove(IdentifierType.Unknown);

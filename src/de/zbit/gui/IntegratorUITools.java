@@ -124,6 +124,7 @@ import de.zbit.kegg.gui.OrganismSelector;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
+import de.zbit.mapper.MappingUtils.IdentifierClass;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Species;
@@ -205,8 +206,8 @@ public class IntegratorUITools {
     return null;
   }
   
-  public static JLabeledComponent getIdentifierSelector() {
-    JLabeledComponent l = new JLabeledComponent("Please select an identifier",true,IdentifierType.values());
+  public static JLabeledComponent getIdentifierSelector(IdentifierClass clas) {
+    JLabeledComponent l = new JLabeledComponent("Please select an identifier",true,IdentifierType.getAllIdentifers(clas));
     l.setSelectedItem(IdentifierType.GeneSymbol);
     // Make a flexible layout
     l.setLayout(new FlowLayout());
@@ -879,7 +880,7 @@ public class IntegratorUITools {
     // Ask user for species and Identifiertype in the north.
     JPanel north = new JPanel(new BorderLayout());
     JLabeledComponent organism = getOrganismSelector();
-    JLabeledComponent identifier = getIdentifierSelector();
+    JLabeledComponent identifier = getIdentifierSelector(IdentifierClass.Gene);
     north.add(organism, BorderLayout.NORTH);
     north.add(identifier, BorderLayout.CENTER);
     north.add(new JLabel("Please enter a list of genes, separated by new lines."), BorderLayout.SOUTH);

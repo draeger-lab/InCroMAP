@@ -139,7 +139,7 @@ public class IntegratorUI extends BaseFrame {
   /**
    * The version of {@link #appName}
    */
-  public final static String appVersion = "1.4";
+  public final static String appVersion = "1.5";
   
   /**
    * A simple light blue color. Used e.g. in {@link PathwayVisualizationOptions}
@@ -1322,7 +1322,6 @@ public class IntegratorUI extends BaseFrame {
     return saveFile();
   }
 
-  @Override
   public void propertyChange(PropertyChangeEvent evt) {
 	  // This feature is currently not supported.
   }
