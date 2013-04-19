@@ -94,7 +94,7 @@ public class Compound extends NameAndSignals implements CompoundID {
    * does not call any mapper or such.
    */
   public String getSymbol() {
-    Object s = super.getData(IdentifierType.CompoundSynonym.toString());
+    Object s = super.getData(IdentifierType.CommonName.toString());
     return s==null?getName():s.toString();
   }
   

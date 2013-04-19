@@ -502,6 +502,7 @@ public class IntegratorUITools {
    * @return
    */
   public static Integer getPriority(IdentifierType type) {
+  	//Gene ID priorities
     if (type.equals(IdentifierType.NCBI_GeneID)) return 0;
     else if (type.equals(IdentifierType.Ensembl)) return 1;
     else if (type.equals(IdentifierType.KeggGenes)) return 1;
@@ -514,6 +515,21 @@ public class IntegratorUITools {
     
     else if (type.equals(IdentifierType.GeneSymbol)) return 2;
     else if (type.equals(IdentifierType.Unknown)) return 3;
+    //Compound ID priorities
+    else if (type.equals(IdentifierType.HMDB)) return 1;
+    else if (type.equals(IdentifierType.ChEBI)) return 1;
+    else if (type.equals(IdentifierType.CAS)) return 1;
+    else if (type.equals(IdentifierType.InChI)) return 1;
+    else if (type.equals(IdentifierType.InChIKey)) return 1;
+    else if (type.equals(IdentifierType.KeggCompound)) return 1;
+    else if (type.equals(IdentifierType.ChemSpider)) return 1;
+    else if (type.equals(IdentifierType.ChEBI)) return 1;
+    else if (type.equals(IdentifierType.PubChem_compound)) return 1;
+    
+    else if (type.equals(IdentifierType.CommonName)) return 2;
+    else if (type.equals(IdentifierType.UnknownCompound)) return 3;
+    else {
+    
     else {
       log.log(Level.SEVERE, "Please implement priority for " + type);
       return 3;

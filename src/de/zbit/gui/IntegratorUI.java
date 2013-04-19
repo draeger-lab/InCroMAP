@@ -86,6 +86,7 @@ import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.BioPAXimporterInCroMAP;
+import de.zbit.io.CompoundReader;
 import de.zbit.io.DNAmethylationReader;
 import de.zbit.io.EnrichmentReader;
 import de.zbit.io.GenericGeneBasedDataReader;
@@ -865,6 +866,10 @@ public class IntegratorUI extends BaseFrame {
     openFile(null, miRNAReader.class);
   }
   
+  public void openCompoundfile() {
+    openFile(null, CompoundReader.class);
+  }
+  
   public void openGenericGeneFile() {
     openFile(null, GenericGeneBasedDataReader.class);
   }
@@ -1299,7 +1304,7 @@ public class IntegratorUI extends BaseFrame {
     // work => include a static list as fallback.
     // Since 2012-09-17 (App.Note Review) include additional readers
     return new Class[]{mRNAReader.class, miRNAReader.class, DNAmethylationReader.class, ProteinModificationReader.class, 
-        SNPReader.class, GenericGeneBasedDataReader.class, GenericGeneReader.class};
+        SNPReader.class, GenericGeneBasedDataReader.class, GenericGeneReader.class,CompoundReader.class};
   }
 
   /**
