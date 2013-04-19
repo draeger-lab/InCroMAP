@@ -233,6 +233,10 @@ public class IntegratorUI extends BaseFrame {
      */
     LOAD_GENERIC_REGION_BASED,
     /**
+     * {@link Action} to load data with the {@link CompoundReader}
+     */
+    LOAD_COMPOUND,
+    /**
      * {@link Action} to let the user enter a custom gene list.
      */
     INPUT_GENELIST,
@@ -293,6 +297,8 @@ public class IntegratorUI extends BaseFrame {
         return "Import gene-based data";
       case LOAD_GENERIC_REGION_BASED:
         return "Import region-based data";
+      case LOAD_COMPOUND:
+        return "Load metabolomics data";
       case INPUT_GENELIST:
         return "Manually enter a gene list";
       case SHOW_MICRO_RNA_TARGETS:
@@ -334,6 +340,8 @@ public class IntegratorUI extends BaseFrame {
           return "Use this import feature to open any data type that contains observations and gene identifiers.";
         case LOAD_GENERIC_REGION_BASED:
           return "Use this import feature to open any data type that contains observations and chromosomal locations.";
+        case LOAD_COMPOUND:
+          return "Use this import feature to open any data type that contains mass spectrometry data.";
         case INPUT_GENELIST:
           return "Manually enter a list of genes.";
         case SHOW_MICRO_RNA_TARGETS:
@@ -411,7 +419,7 @@ public class IntegratorUI extends BaseFrame {
     String iconPaths[] = {"IntegratorIcon_16.png","IntegratorIcon_32.png","IntegratorIcon_48.png","IntegratorIcon_128.png","IntegratorIcon_256.png"
         ,"ICON_PATHWAY_16.png", "ICON_MATH_16.png", "IntegratorIcon_16_straight.png"
         ,"ICON_MSIGDB_16.png", "ICON_GO_16.png", "ICON_KEGG_16.png"
-        ,"ICON_MRNA_16.png", "ICON_MIRNA_16.png", "ICON_DNAM_16.png", "ICON_PROTEIN_16.png"};
+        ,"ICON_MRNA_16.png", "ICON_MIRNA_16.png", "ICON_DNAM_16.png", "ICON_PROTEIN_16.png","ICON_COMPOUND_16.png"};
     for (String path : iconPaths) {
       URL url = IntegratorUI.class.getResource("img/" + path);
       if (url!=null) {
@@ -709,10 +717,15 @@ public class IntegratorUI extends BaseFrame {
     JMenuItem genericRegion = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openGenericRegionFile"),
       Action.LOAD_GENERIC_REGION_BASED, UIManager.getIcon("ICON_MRNA_16"));
     
+    JMenuItem compoundData = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openCompoundFile"),
+        Action.LOAD_COMPOUND, UIManager.getIcon("ICON_COMPOUND_16"));
+      
+    
     importData.add(lmRNA);
     importData.add(lmiRNA);
     importData.add(lprotMod);
     importData.add(ldnaM);
+    importData.add(compoundData);
     importData.addSeparator();
     importData.add(genericGene);
     importData.add(genericRegion);
@@ -795,6 +808,10 @@ public class IntegratorUI extends BaseFrame {
       JMenuItem ldnaM = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openDNAmethylationFile"),
         Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_DNAM_16"));
       load.add(ldnaM);
+      
+      JMenuItem lcpd = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openCompoundFile"),
+          Action.LOAD_COMPOUND, UIManager.getIcon("ICON_COMPOUND_16"));
+      load.add(lcpd);
       load.addSeparator();
       
       // Generics
@@ -866,7 +883,7 @@ public class IntegratorUI extends BaseFrame {
     openFile(null, miRNAReader.class);
   }
   
-  public void openCompoundfile() {
+  public void openCompoundFile() {
     openFile(null, CompoundReader.class);
   }
   

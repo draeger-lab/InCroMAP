@@ -1210,6 +1210,12 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     } else if (o instanceof GeneID) {
       // This must be below miRNAs !
       geneIds.add(((GeneID)o).getGeneID());
+    
+    //TODO correct mapping also for compundID?
+    } else if (o instanceof CompoundID) {
+      // This must be below miRNAs !
+      geneIds.add(((CompoundID)o).getCompoundID());
+       
       
     } else {
       log.severe("Please implement 2GeneID for " + o.getClass());

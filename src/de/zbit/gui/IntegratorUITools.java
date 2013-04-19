@@ -528,8 +528,7 @@ public class IntegratorUITools {
     
     else if (type.equals(IdentifierType.CommonName)) return 2;
     else if (type.equals(IdentifierType.UnknownCompound)) return 3;
-    else {
-    
+   
     else {
       log.log(Level.SEVERE, "Please implement priority for " + type);
       return 3;
