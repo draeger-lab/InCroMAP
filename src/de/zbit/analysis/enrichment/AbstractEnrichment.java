@@ -208,6 +208,17 @@ public abstract class AbstractEnrichment<EnrichIDType> {
         }
       } else if (idType!=null && idType.equals(IdentifierType.NCBI_GeneID)) {
         geneIDs.add(Integer.parseInt(gene.toString()));
+        
+        // This is just one possibility of how to include compounds. I'll have
+        // to think about this before we include it here. We have to include it
+        // at some other point in addition, else, the KEGG Enrichment data reader
+        // is only reading gene ids of KEGG pathways and the results will be
+        // nonsense, even if we include this part here.
+//      } else if (gene instanceof CompoundID) {
+//        // Enrichment on compounds. Only possible for KEGG enrichments until now...
+//        geneIDs.add(((CompoundID) gene).getCompoundID());
+//        isCompoundData = true;
+        
       } else { //mRNA miRNA EnrichmentObject and such...
         geneIDs.addAll(NameAndSignals.getGeneIds(gene));
         mr.addAll(NameAndSignals.getNameAndSignals(gene));

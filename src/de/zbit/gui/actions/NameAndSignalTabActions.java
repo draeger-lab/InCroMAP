@@ -46,12 +46,14 @@ import org.jfree.chart.JFreeChart;
 
 import de.zbit.analysis.PairData;
 import de.zbit.data.EnrichmentObject;
+import de.zbit.data.GeneID;
 import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
+import de.zbit.data.compound.CompoundID;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -64,6 +66,7 @@ import de.zbit.gui.JDropDownButton;
 import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
 import de.zbit.gui.actions.listeners.KEGGPathwayActionListener;
+import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.dialogs.IntegratedEnrichmentDialog;
 import de.zbit.gui.dialogs.IntegrationDialog;
 import de.zbit.gui.dialogs.MergedSignalDialog;
@@ -103,6 +106,8 @@ public class NameAndSignalTabActions implements ActionListener {
   JMenuItem BO_cor;
   // Another button to toggle
   AbstractButton filter=null;
+  // ... and another one
+  JDropDownButton enrichmentButton;
   
   public NameAndSignalTabActions(NameAndSignalsTab parent) {
     super();
@@ -231,7 +236,7 @@ public class NameAndSignalTabActions implements ActionListener {
     
     EnrichmentActionListener al = new EnrichmentActionListener(parent, true);
     JPopupMenu enrichment = IntegratorUITools.createEnrichmentPopup(al);
-    JDropDownButton enrichmentButton = new JDropDownButton("Enrichment", 
+    enrichmentButton = new JDropDownButton("Enrichment", 
         UIManager.getIcon("ICON_GEAR_16"), enrichment);
     bar.add(enrichmentButton);
     
@@ -565,6 +570,14 @@ public class NameAndSignalTabActions implements ActionListener {
       enableRegionPlot = true;
     }
     GUITools.setEnabled(enableRegionPlot, toolBar, NSAction.PLOT_REGION);
+    
+    // Compounds can only be used for KEGG PATHWAY enrichment
+    if (parent.getExampleData()!=null && !(parent.getExampleData() instanceof GeneID)) {
+      GUITools.setEnabled(false, enrichmentButton.getPopUpMenu(), Enrichments.GO_ENRICHMENT, Enrichments.MSIGDB_ENRICHMENT);
+      if (!(parent.getExampleData() instanceof CompoundID)) {
+        GUITools.setEnabled(false, enrichmentButton.getPopUpMenu(), Enrichments.KEGG_ENRICHMENT);
+      }
+    }
     
     // Toggle the table filter button
     if (filter!=null && parent.getVisualization()!=null && 

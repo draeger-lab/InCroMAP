@@ -108,6 +108,7 @@ import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.NameAndSignal2PWTools;
+import de.zbit.io.CompoundReader;
 import de.zbit.io.DNAmethylationReader;
 import de.zbit.io.GenericGeneBasedDataReader;
 import de.zbit.io.GenericGeneReader;
@@ -324,6 +325,9 @@ public class IntegratorUITools {
       } else if (value.equals(SNPReader.class)) {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("SNP or GWAS data", value));
         hitwords.add(hitwords.size(), new String[]{"snp", "gwas"});
+      } else if (value.equals(CompoundReader.class)) {
+        itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("Metabolite data", value));
+        hitwords.add(hitwords.size(), new String[]{"compound", "metab", "metabolite", "metabolomics", "spectrometry"});
       } else if (value.equals(GenericGeneBasedDataReader.class)) {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("Generic gene-based data", value));
         hitwords.add(hitwords.size(), new String[]{});
@@ -516,8 +520,10 @@ public class IntegratorUITools {
     
     else if (type.equals(IdentifierType.GeneSymbol)) return 2;
     else if (type.equals(IdentifierType.Unknown)) return 3;
+    
+    
     //Compound ID priorities
-    else if (type.equals(IdentifierType.HMDB)) return 1;
+    else if (type.equals(IdentifierType.HMDB)) return 0;
     else if (type.equals(IdentifierType.ChEBI)) return 1;
     else if (type.equals(IdentifierType.CAS)) return 1;
     else if (type.equals(IdentifierType.InChI)) return 1;

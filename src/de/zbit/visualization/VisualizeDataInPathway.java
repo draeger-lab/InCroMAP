@@ -53,6 +53,7 @@ import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.VisualizedData;
+import de.zbit.data.compound.Compound;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -893,7 +894,8 @@ public class VisualizeDataInPathway {
       
     } else {
       if (!(mRNA.class.isAssignableFrom(inputType) || miRNA.class.isAssignableFrom(inputType)
-          || PairedNS.class.isAssignableFrom(inputType) || EnrichmentObject.class.isAssignableFrom(inputType))) {
+          || PairedNS.class.isAssignableFrom(inputType) || EnrichmentObject.class.isAssignableFrom(inputType) ||
+          Compound.class.isAssignableFrom(inputType)) ) {
         log.warning("No visualization method implemented for " + inputType.getSimpleName() + ". Using node-color-visualization.");
       }
     
