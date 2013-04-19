@@ -622,15 +622,8 @@ public class NameAndSignal2PWTools {
    * This will initialize the {@link GraphMLmapsExtended#NODE_HMDB_ID} mapping.
    */
   private void createNode2HMDBmapping() {
-    // XXX: Note: It would make sense to Cache this mapping is this might be called quite often here.
-    KeggCompound2CompoundIDMapper map;
-    try {
-      map = new KeggCompound2CompoundIDMapper();
-    } catch (IOException e1) {
-      log.log(Level.SEVERE, "Could not init KEGG_ID to HMDB-Compound-ID mapping.", e1);
-      return;
-    }
-    
+    KeggCompound2CompoundIDMapper map = IntegratorUITools.getKegg2CompoundIDMapping();
+ 
     // Assign a space-separated HMDB-id-string to each node
     for (Node n: graph.getNodeArray()) {
       Object KEGG_id = tools.getInfo(n, GraphMLmaps.NODE_KEGG_ID);

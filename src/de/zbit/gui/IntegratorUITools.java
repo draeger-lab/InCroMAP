@@ -127,6 +127,7 @@ import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierClass;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.compounds.CompoundID2CommonNameMapper;
+import de.zbit.mapper.compounds.KeggCompound2CompoundIDMapper;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
@@ -974,9 +975,8 @@ public class IntegratorUITools {
   }
   
   /**
-   * Returns a 2CompoundID mapping.
+   * Returns a 2CommmonName mapping.
    * <p>Every created instance is cached for later usage.
-   * @param species
    * @return 
    */
   public static CompoundID2CommonNameMapper get2CommonNameMapping() {
@@ -993,6 +993,27 @@ public class IntegratorUITools {
       }
     }
     return (CompoundID2CommonNameMapper) mapper;
+  }
+  
+  /**
+   * Returns a KeggCompound2CompoundID mapping.
+   * <p>Every created instance is cached for later usage.
+   * @return 
+   */
+  public static KeggCompound2CompoundIDMapper getKegg2CompoundIDMapping() {
+    String key = KeggCompound2CompoundIDMapper.class.getSimpleName();
+    Object mapper = UIManager.get(key);
+    if (mapper==null) {
+      try {
+        mapper = new KeggCompound2CompoundIDMapper();
+      } catch (IOException e) {
+        GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
+      }
+      if (mapper!=null) {
+        UIManager.put(key, mapper);
+      }
+    }
+    return (KeggCompound2CompoundIDMapper) mapper;
   }
   
   /**
