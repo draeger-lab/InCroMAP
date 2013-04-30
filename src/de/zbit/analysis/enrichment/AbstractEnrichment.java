@@ -39,6 +39,7 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.compound.CompoundID;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAandTarget;
@@ -209,15 +210,18 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       } else if (idType!=null && idType.equals(IdentifierType.NCBI_GeneID)) {
         geneIDs.add(Integer.parseInt(gene.toString()));
         
-        // This is just one possibility of how to include compounds. I'll have
-        // to think about this before we include it here. We have to include it
-        // at some other point in addition, else, the KEGG Enrichment data reader
-        // is only reading gene ids of KEGG pathways and the results will be
-        // nonsense, even if we include this part here.
-//      } else if (gene instanceof CompoundID) {
-//        // Enrichment on compounds. Only possible for KEGG enrichments until now...
-//        geneIDs.add(((CompoundID) gene).getCompoundID());
-//        isCompoundData = true;
+
+        /* XXX NOTE: This is very dangerous, as GeneIDs and compoundIDs are just mapped
+         * to integers here. Thus, other classes cannot distinguish anymore between them.
+         * The consequence is, that you can, e.g., perform an (invalid) GO enrichment on
+         * compound IDs that expects GeneIDs and gets Compound IDS as integers => the result
+         * is nonsense.
+         * 
+         * Thus, the Class CompoundID2ListOfKeggPathways expects compound IDs to be NEGATIVE!
+         */
+      } else if (gene instanceof CompoundID) {
+        // Enrichment on compounds. Only possible for KEGG enrichments until now...
+        geneIDs.add(((CompoundID) gene).getCompoundID()*-1);
         
       } else { //mRNA miRNA EnrichmentObject and such...
         geneIDs.addAll(NameAndSignals.getGeneIds(gene));
@@ -233,7 +237,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       
       // Add each geneID to pathway
       for (Integer geneID: geneIDs) {
-        if (geneID==null || geneID.intValue()<1) continue;
+        if (geneID==null || geneID.intValue()==0) continue;
         
         // Get pathways, in which this gene is contained
         Collection<EnrichIDType> pws=null;
@@ -318,7 +322,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
   public static boolean checkGeneIDs(Collection<Integer> geneID) {
     if (geneID==null || geneID.size()<1) return false;
     for (Integer i: geneID) {
-      if (i!=null && i.intValue()>0) return true;
+      if (i!=null && i.intValue()!=0) return true;
     }
     return false;
   }

@@ -1209,7 +1209,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       
     } else if (o instanceof GeneID) {
       // This must be below miRNAs !
-      geneIds.add(((GeneID)o).getGeneID());
+      int gID = ((GeneID)o).getGeneID();
+      if (gID>0) {
+        geneIds.add(gID);
+      }
       
     } else {
       log.severe("Please implement 2GeneID for " + o.getClass());
@@ -1583,7 +1586,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
 
   /**
    * Removes all objects that implement {@link GeneID}, but have an
-   * unset or invalid GeneID. Also removed all invalid {@link CompoundID} entries.
+   * unset or invalid GeneID. Also removes all invalid {@link CompoundID} entries.
    * @param newList
    */
   public static void removeGenesWithoutGeneID(Iterable<? extends NameAndSignals> newList) {

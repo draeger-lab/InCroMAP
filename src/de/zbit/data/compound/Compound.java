@@ -135,11 +135,19 @@ public class Compound extends NameAndSignals implements CompoundID {
       if (value.equals(default_CompoundID)) {
         return "Unknown";
       } else {
-        String valueString = value.toString(); // 1 => "1"
-        return "HMDB" + StringUtil.replicateCharacter('0', 5-valueString.length()) + valueString;
+        return toHMDBString(value);
       }
     }
     return o;
+  }
+
+  /**
+   * @param value a {@link CompoundID} as integer or numeric string.
+   * @return "HMDB000010" or similar things.
+   */
+  public static String toHMDBString(Object value) {
+    String valueString = value.toString(); // 1 => "1"
+    return "HMDB" + StringUtil.replicateCharacter('0', 5-valueString.length()) + valueString;
   }
   
   /* (non-Javadoc)

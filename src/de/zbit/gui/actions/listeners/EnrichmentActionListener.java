@@ -41,6 +41,7 @@ import javax.swing.UIManager;
 import de.zbit.analysis.enrichment.AbstractEnrichment;
 import de.zbit.analysis.enrichment.GOEnrichment;
 import de.zbit.analysis.enrichment.KEGGPathwayEnrichment;
+import de.zbit.analysis.enrichment.KEGGPathwayEnrichmentCompounds;
 import de.zbit.analysis.enrichment.MSigDB_GSEA_Enrichment;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.GeneID;
@@ -190,6 +191,7 @@ public class EnrichmentActionListener implements ActionListener {
       GUITools.showErrorMessage(source, "No elements selected for enrichment analysis.");
       return;
     } else if (!checkGeneList(geneList, true)) return;
+    final boolean listContainsCompoundIDs = listContainsCompoundIDs(geneList);
     final String loadingString = "Performing enrichment analysis...";
     
     // Log this action.
@@ -209,7 +211,11 @@ public class EnrichmentActionListener implements ActionListener {
           if (e.getActionCommand().equals(Enrichments.GO_ENRICHMENT.toString())) {
             enrich = new GOEnrichment(species, getProgressBar());
           } else if (e.getActionCommand().equals(Enrichments.KEGG_ENRICHMENT.toString())) {
-            enrich = new KEGGPathwayEnrichment(species, getProgressBar());
+            if (!listContainsCompoundIDs) {
+              enrich = new KEGGPathwayEnrichment(species, getProgressBar());
+            } else {
+              enrich = new KEGGPathwayEnrichmentCompounds(species, getProgressBar());
+            }
           } else if (e.getActionCommand().equals(Enrichments.MSIGDB_ENRICHMENT.toString())) {
             enrich = new MSigDB_GSEA_Enrichment(species, getProgressBar());
           } else {
@@ -276,6 +282,21 @@ public class EnrichmentActionListener implements ActionListener {
   }
   
   
+  /**
+   * Check if a list contains compounds.
+   * @param geneList
+   * @return {@code TRUE} if {@code geneList} contains at least one
+   * item that is an instance of {@link CompoundID}.
+   */
+  public static boolean listContainsCompoundIDs(List<?> geneList) {
+    for (Object o : geneList) {
+      if (o instanceof CompoundID) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Checks the gene list e.g. if it contains miRNAs and
    * if these miRNAs contain targets.

@@ -31,11 +31,12 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.compound.Compound;
 import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtarget;
-import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
+import de.zbit.mapper.compounds.CompoundID2CommonNameMapper;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 
@@ -73,12 +74,13 @@ public class IterableRenderer extends DefaultTableCellRenderer {
   @Override
   protected void setValue(Object value) {
     GeneID2GeneSymbolMapper mapper = IntegratorUITools.get2GeneSymbolMapping(species);
+    CompoundID2CommonNameMapper cpdMapper = IntegratorUITools.get2CommonNameMapping();
     String initialString = "<html><body><nobr>";
     String space = "&nbsp;";
     if (value==null) setText("");
     else {
       if (value instanceof Iterable || Iterable.class.isAssignableFrom(value.getClass())) {
-        StringBuffer buff = getCommaStringFromIterable(value, mapper, initialString, space);
+        StringBuffer buff = getCommaStringFromIterable(value, mapper, cpdMapper, initialString, space);
         buff.append("</nobr></body></html>");
         setText(buff.toString());
       } else {
@@ -97,7 +99,7 @@ public class IterableRenderer extends DefaultTableCellRenderer {
    * @return
    */
   public static StringBuffer getCommaStringFromIterable(Object value,
-      GeneID2GeneSymbolMapper mapper, String initialString, String space) {
+      GeneID2GeneSymbolMapper mapper, CompoundID2CommonNameMapper cpdMapper, String initialString, String space) {
     StringBuffer buff = new StringBuffer(initialString);
     Map<String, List<miRNAtarget>> miRNAandTarget = new HashMap<String, List<miRNAtarget>>();
     
@@ -126,7 +128,7 @@ public class IterableRenderer extends DefaultTableCellRenderer {
           
         } else if (v instanceof Integer) {
           // Gene IDs
-          String symbol = toSymbol((Integer) v,mapper);
+          String symbol = toSymbol((Integer) v, mapper, cpdMapper);
           buff.append(symbol);
           
         } else if (v.getClass().equals(String.class)) {
@@ -146,7 +148,7 @@ public class IterableRenderer extends DefaultTableCellRenderer {
       List<miRNAtarget> l = miRNAandTarget.get(miR);
       for (int i=0; i<l.size(); i++) {
         if (i>0) buff.append(","+space);
-        String symbol = toSymbol((Integer) l.get(i).getTarget(),mapper);
+        String symbol = toSymbol((Integer) l.get(i).getTarget(),mapper, cpdMapper);
         buff.append(symbol);
       }
     }
@@ -158,13 +160,20 @@ public class IterableRenderer extends DefaultTableCellRenderer {
    * Try to convert the given GeneID to a Gene Symbol.
    * @param GeneID
    * @param mapper
+   * @param cpdMapper 
    * @return
    */
-  public static String toSymbol(int GeneID, GeneID2GeneSymbolMapper mapper) {
-    if (mapper==null) return Integer.toString(GeneID);
+  public static String toSymbol(int GeneID, GeneID2GeneSymbolMapper mapper, CompoundID2CommonNameMapper cpdMapper) {
     String s=null;
     try {
-      s = mapper.map(GeneID);
+      if (GeneID>0) {
+        if (mapper==null) return Integer.toString(GeneID);
+        s = mapper.map(GeneID);
+      } else if (GeneID<0) {
+        if (cpdMapper==null) return Compound.toHMDBString(Integer.toString(GeneID));
+        s = cpdMapper.map(GeneID*-1);
+      }
+      
     } catch (Exception e) {}
     return (s!=null && s.length()>0)?s:Integer.toString(GeneID);
   }

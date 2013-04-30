@@ -47,6 +47,7 @@ import y.view.Graph2D;
 import y.view.NodeLabel;
 import y.view.NodeRealizer;
 import de.zbit.data.EnrichmentObject;
+import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
@@ -54,6 +55,7 @@ import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.VisualizedData;
 import de.zbit.data.compound.Compound;
+import de.zbit.data.compound.CompoundID;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -1243,6 +1245,8 @@ public class VisualizeDataInPathway {
   @SuppressWarnings("unchecked")
   public int colorNodesAccordingToSignals(SignalColor recolorer, String tabName, String experimentName, SignalType type) {
     boolean inputContainedMicroRNAnodes=false;
+    boolean inputContainedCompoundNodes=false;
+    boolean inputContainedGeneNodes=false;
     boolean inputContainedmRNAnodes=false;
     MergeType sigMerge = IntegratorUITools.getMergeTypeSilent(type);
     Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES.getValue(prefs);
@@ -1268,6 +1272,8 @@ public class VisualizeDataInPathway {
         if (ns==null) continue;
         if (ns instanceof miRNA) inputContainedMicroRNAnodes=true;
         else inputContainedmRNAnodes=true;
+        if (ns instanceof CompoundID) inputContainedCompoundNodes=true;
+        if (ns instanceof GeneID) inputContainedGeneNodes=true;
         
         // Novel: Also consider referenced things
         List<Signal> signals = NameAndSignal2PWTools.getSignals(ns);
@@ -1323,10 +1329,19 @@ public class VisualizeDataInPathway {
       
       // Don't change the color of group, reaction or compound nodes.
       if ((graph.getHierarchyManager()!=null && graph.getHierarchyManager().isGroupNode(n)) || nodeType!=null && 
-          (nodeType.equals("reaction") || nodeType.equals("compound") || nodeType.equals("small molecule")
-          || nodeType.equals(EntryType.other.toString()))) { // "other" is used for, e.g., KEGG BRITE
+          (nodeType.equals("reaction") || nodeType.equals(EntryType.other.toString()))) { // "other" is used for, e.g., KEGG BRITE
         continue;
       }
+      
+      if (nodeType.equals("compound") || nodeType.equals("small molecule")) {
+        if (!inputContainedCompoundNodes) {
+          continue;
+        }
+      } else if (inputContainedCompoundNodes && !inputContainedGeneNodes) {
+        // Input was only compounds, no genes but this is a gene node => Don't gray it out.
+        continue;
+      }
+      
       
       if (isPathwayReferenceNode) {
         // Node is a pw-reference, but we just want to color genes
