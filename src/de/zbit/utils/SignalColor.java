@@ -130,15 +130,17 @@ public class SignalColor {
     }
     
     
-    if (!isPvalue) {      
+    if (!isPvalue) {
       // Determine logarithmized (negative) fcs or not.
       double[] minMax;
       boolean dataIsLogarithmized = true;
-      if (nsList!=null) {
-        double[] realMinMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
-        if (realMinMax[0]<0) dataIsLogarithmized=true;
-        else dataIsLogarithmized=false;
-      }
+      // DEACTIVATED. If one pathway only contains upregulated genes, the data is considered as
+      // "not logarithmized". Thus, a static dataIsLogarithmized=true is more precise than this auto-detection.
+//      if (nsList!=null) {
+//        double[] realMinMax = NameAndSignals.getMinMaxSignalGlobal(nsList, experimentName, type);
+//        if (realMinMax[0]<0) dataIsLogarithmized=true;
+//        else dataIsLogarithmized=false;
+//      }
       
       // Make a symmetric min and max (-3 to +3) instead of -2.9 to + 3.2 because of better coloring then.
       minMax = new double[]{-maxFC.doubleValue(), maxFC.doubleValue()};
