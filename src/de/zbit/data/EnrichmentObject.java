@@ -482,7 +482,7 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
     
     else if (columnIndex==++i) return "P-value";
     else if (columnIndex==++i) return "Q-value";// Number 5 is hard coded in "setDefaultInitialSelectionOfJTableFilter()"
-    else if (columnIndex==++i) return "Genes";
+    else if (columnIndex==++i) return "Genes/Compounds";
     else return null;
   }
 

@@ -41,6 +41,7 @@ import de.zbit.data.PairedNS;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.TableResult;
+import de.zbit.data.compound.Compound;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -81,7 +82,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
    */
   @SuppressWarnings("unchecked")
   private static Class<? extends NameAndSignals>[] toVisualize = new Class[]{
-    mRNA.class, miRNA.class, DNAmethylation.class, ProteinModificationExpression.class
+    mRNA.class, miRNA.class, DNAmethylation.class, ProteinModificationExpression.class,Compound.class
   };
   
   /**

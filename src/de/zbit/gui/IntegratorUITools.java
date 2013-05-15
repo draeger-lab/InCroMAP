@@ -84,6 +84,7 @@ import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.compound.Compound;
 import de.zbit.data.genes.GenericGene;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
@@ -1483,6 +1484,8 @@ public class IntegratorUITools {
         return UIManager.getIcon("ICON_PROTEIN_16");
       } else if (DNAmethylation.class.isAssignableFrom(type)) {
         return UIManager.getIcon("ICON_DNAM_16");
+      } else if (Compound.class.isAssignableFrom(type)) {
+        return UIManager.getIcon("ICON_COMPOUND_16");
         
       } else if (EnrichmentObject.class.isAssignableFrom(type)) {
         return UIManager.getIcon("ICON_GEAR_16");
