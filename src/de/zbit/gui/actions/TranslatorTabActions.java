@@ -40,6 +40,7 @@ import javax.swing.UIManager;
 import y.base.Node;
 import y.view.Graph2D;
 import de.zbit.data.EnrichmentObject;
+import de.zbit.data.compound.Compound;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
@@ -114,7 +115,8 @@ public class TranslatorTabActions implements ActionListener{
     REMOVE_PROTEIN_MODIFICATION_BOXES,
     REMOVE_MRNA_VISUALIZATION,
     REMOVE_DNA_METHYLATION_BOXES,
-    REMOVE_ENRICHMENT_PVALUES;
+    REMOVE_ENRICHMENT_PVALUES,
+    REMOVE_COMPOUND_VISUALIZATION;
     
     /*
      * (non-Javadoc)
@@ -142,6 +144,8 @@ public class TranslatorTabActions implements ActionListener{
         return "Remove mRNA visualization";
       case REMOVE_DNA_METHYLATION_BOXES:
         return "Remove DNA methylation boxes";
+      case REMOVE_COMPOUND_VISUALIZATION:
+        return "Remove compound visualization";
         
       default:
         return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
@@ -173,7 +177,9 @@ public class TranslatorTabActions implements ActionListener{
         case REMOVE_PROTEIN_MODIFICATION_BOXES:
           return "Removes all boxes that have been inserted for protein or gene modifications.";
         case REMOVE_MRNA_VISUALIZATION:
-          return "Resets the background color of all nodes.";
+          return "Resets the background color of all gene nodes.";
+        case REMOVE_COMPOUND_VISUALIZATION:
+          return "Resets the background color of all compound nodes.";
         case REMOVE_DNA_METHYLATION_BOXES:
           return "Remove all boxes from nodes that represent DNA methylation values.";
           
@@ -220,6 +226,7 @@ public class TranslatorTabActions implements ActionListener{
     // Remove nodes
     JPopupMenu remove = new JPopupMenu("Remove");
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MRNA_VISUALIZATION, UIManager.getIcon("ICON_TRASH_16")));
+    remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_COMPOUND_VISUALIZATION, UIManager.getIcon("ICON_TRASH_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_MIRNA_NODES, UIManager.getIcon("ICON_TRASH_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES, UIManager.getIcon("ICON_TRASH_16")));
     remove.add(GUITools.createJMenuItem(this, TPAction.REMOVE_PROTEIN_MODIFICATION_BOXES, UIManager.getIcon("ICON_TRASH_16")));
@@ -254,7 +261,7 @@ public class TranslatorTabActions implements ActionListener{
         GUITools.setEnabled(visData[3], removeButton.getPopUpMenu(), TPAction.REMOVE_DNA_METHYLATION_BOXES);
 //        GUITools.setEnabled(visData[4], removeButton.getPopUpMenu(), TPAction.REMOVE_SNP_VISUALIZATION); // TODO:...
         GUITools.setEnabled(visData[5], removeButton.getPopUpMenu(), TPAction.REMOVE_ENRICHMENT_PVALUES);
-        
+        GUITools.setEnabled(visData[6], removeButton.getPopUpMenu(), TPAction.REMOVE_COMPOUND_VISUALIZATION);
         
         // Test for RNA nodes
         TranslatorTools tools = new TranslatorTools(parent);
@@ -266,7 +273,7 @@ public class TranslatorTabActions implements ActionListener{
           removeButton.getPopUpMenu(), TPAction.REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES);
         
         // Eventually disable the whole DropDownButton.
-        removeButton.setEnabled(containsMiRNA || visData[0] || visData[2] || visData[3] || visData[4] || visData[5]);
+        removeButton.setEnabled(containsMiRNA || visData[0] || visData[2] || visData[3] || visData[4] || visData[5] || visData[6]);
         return null;
       }
     };
@@ -302,6 +309,11 @@ public class TranslatorTabActions implements ActionListener{
       
     } else if (command.equals(TPAction.REMOVE_MRNA_VISUALIZATION.toString())) {
       new VisualizeDataInPathway(parent).removeVisualization(mRNA.class);
+      enableRemoveButtonsAsRequired(removeButton);
+      parent.repaint();
+      
+    } else if (command.equals(TPAction.REMOVE_COMPOUND_VISUALIZATION.toString())) {
+      new VisualizeDataInPathway(parent).removeVisualization(Compound.class);
       enableRemoveButtonsAsRequired(removeButton);
       parent.repaint();
 

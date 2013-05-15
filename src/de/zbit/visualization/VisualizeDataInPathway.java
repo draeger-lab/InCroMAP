@@ -227,7 +227,7 @@ public class VisualizeDataInPathway {
    */
   public boolean[] getVisualizedDataTypes() {
     // Init array with default values
-    boolean[] visualizedDataTypes = new boolean[6];
+    boolean[] visualizedDataTypes = new boolean[7];
     Arrays.fill(visualizedDataTypes, Boolean.FALSE);
     
     // Get list of visualized data
@@ -249,6 +249,8 @@ public class VisualizeDataInPathway {
         visualizedDataTypes[4]=true;
       } else if (EnrichmentObject.class.isAssignableFrom(t)) {
         visualizedDataTypes[5]=true;
+      } else if (Compound.class.isAssignableFrom(t)) {
+        visualizedDataTypes[6]=true;
       } else {
         // EVERYTHING ELSE IS ALSO VISUALIZED AS NODE COLOR
         visualizedDataTypes[0]=true;
