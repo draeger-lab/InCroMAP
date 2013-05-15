@@ -37,7 +37,7 @@ import de.zbit.util.progressbar.AbstractProgressBar;
  * @version $Rev$
  */
 public class KEGGPathwayEnrichmentCompounds extends AbstractEnrichment<String> {
-
+	
   /**
    * @param spec
    * @param prog
@@ -79,7 +79,7 @@ public class KEGGPathwayEnrichmentCompounds extends AbstractEnrichment<String> {
        * we get an enrichment for Compounds AND Genes.
        * Please note that compound IDs must be NEGATIVE (in order to distinguish from geneIDs). 
        */
-      geneID2enrich_ID = new CompoundID2ListOfKEGGpathways(false, species, prog);
+      geneID2enrich_ID = new CompoundID2ListOfKEGGpathways(true, species, prog);
     }
     else if (species!=null && geneID2enrich_ID!=null) {
       String keggAbbr = ((GeneID2ListOfKEGGpathways)geneID2enrich_ID).getSpeciesKEGGabbreviation();

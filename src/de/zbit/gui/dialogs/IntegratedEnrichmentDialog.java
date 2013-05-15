@@ -41,12 +41,15 @@ import javax.swing.ListSelectionModel;
 
 import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.compound.CompoundID;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JOptionPane2;
+import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.actioncommand.ActionCommandRenderer;
 import de.zbit.gui.actions.listeners.EnrichmentActionListener;
+import de.zbit.gui.actions.listeners.EnrichmentActionListener.Enrichments;
 import de.zbit.gui.layout.LayoutHelper;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.kegg.Translator;
@@ -99,6 +102,28 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
    */
   private JRadioButton or=null;
 
+  /**
+   * Several actions for {@link IntegratedEnrichmentDialog} are defined
+   * here.
+   * @author Lars Rosenbaum
+   */
+  
+  public static enum IntEnrDialogAction implements ActionCommand{
+  	/**
+  	 * Changed the enrichment to be used
+  	 */
+  	CHANGED_ENRICHMENT_TYPE;
+
+  	@Override
+    public String getName() {
+			return null;
+    }
+
+		@Override
+    public String getToolTip() {
+			return null;
+		}
+  }
   
   public IntegratedEnrichmentDialog() throws Exception {
     createDialog();
@@ -113,7 +138,7 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
     lh.add(orgSel,2);
     
     // Create experiments list
-    datasets = new JList();
+    datasets = new JList<Object>();
     datasets.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     JScrollPane expScroll = new JScrollPane(datasets);
     expScroll.setMaximumSize(new Dimension(320,240));
@@ -127,6 +152,8 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
     enrichment = new JComboBox(EnrichmentActionListener.Enrichments.values());
     enrichment.setRenderer(new ActionCommandRenderer(true));
     enrichment.setBorder(BorderFactory.createTitledBorder("Select enrichment"));
+    enrichment.setActionCommand(IntEnrDialogAction.CHANGED_ENRICHMENT_TYPE.toString());
+    enrichment.addActionListener(this);
     lh.add(enrichment,2);
     
     // Write current data sets to selectors and update on species selection
@@ -161,11 +188,16 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
     
     // Create a list of available datasets  
     List<LabeledObject<NameAndSignalsTab>> datasets = IntegratorUITools.getNameAndSignalTabs(species, false, (Class<? extends NameAndSignals>) null);
-    // Only show items with GeneID
+    // Only show items with GeneID or CompoundID
     for (int i=0; i<datasets.size(); i++) {
       Object example = datasets.get(i).getObject().getExampleData();
-      if (example==null || !(example instanceof GeneID)) {
+      if (example==null || !(example instanceof GeneID || example instanceof CompoundID)) {
         datasets.remove(i);
+        i--;
+      }
+      //CompoundID enrichment only possible with KEGG enrichment, thus remove data sets with compound IDs
+      else if ((example instanceof CompoundID) && !enrichment.getSelectedItem().toString().equals(Enrichments.KEGG_ENRICHMENT.toString())){
+      	datasets.remove(i);
         i--;
       }
     }
@@ -189,6 +221,9 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
   public void actionPerformed(ActionEvent e) {
     if (e.getActionCommand().toString().equals(OrganismSelector.LOADING_COMPLETE_ACTION_COMMAND)) {
       setAndEraseDefaultSelection();
+    }
+    if (e.getActionCommand().toString().equals(IntEnrDialogAction.CHANGED_ENRICHMENT_TYPE.toString())){
+    	this.updateDatasetSelectionBox();
     }
   }
   
@@ -254,6 +289,5 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
       al.actionPerformed(new ActionEvent(selectedTabs, 0, dialog.enrichment.getSelectedItem().toString(), dialog.and.isSelected()?1:0));
     }
   }
-  
-  
+
 }
