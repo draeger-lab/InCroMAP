@@ -192,6 +192,7 @@ public class EnrichmentActionListener implements ActionListener {
       return;
     } else if (!checkGeneList(geneList, true)) return;
     final boolean listContainsCompoundIDs = listContainsCompoundIDs(geneList);
+    final boolean listContainsGeneIDs = listContainsGeneIDs(geneList);
     final String loadingString = "Performing enrichment analysis...";
     
     // Log this action.
@@ -214,7 +215,7 @@ public class EnrichmentActionListener implements ActionListener {
             if (!listContainsCompoundIDs) {
               enrich = new KEGGPathwayEnrichment(species, getProgressBar());
             } else {
-              enrich = new KEGGPathwayEnrichmentCompounds(species, getProgressBar());
+              enrich = new KEGGPathwayEnrichmentCompounds(species, listContainsGeneIDs, getProgressBar());
             }
           } else if (e.getActionCommand().equals(Enrichments.MSIGDB_ENRICHMENT.toString())) {
             enrich = new MSigDB_GSEA_Enrichment(species, getProgressBar());
@@ -291,6 +292,21 @@ public class EnrichmentActionListener implements ActionListener {
   public static boolean listContainsCompoundIDs(List<?> geneList) {
     for (Object o : geneList) {
       if (o instanceof CompoundID) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  /**
+   * Check if a list contains genes.
+   * @param geneList
+   * @return {@code TRUE} if {@code geneList} contains at least one
+   * item that is an instance of {@link GeneID}.
+   */
+  public static boolean listContainsGeneIDs(List<?> geneList) {
+    for (Object o : geneList) {
+      if (o instanceof GeneID) {
         return true;
       }
     }

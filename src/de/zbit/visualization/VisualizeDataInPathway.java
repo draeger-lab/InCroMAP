@@ -219,11 +219,14 @@ public class VisualizeDataInPathway {
   
   /**
    * Get information which data types are currently visualized in the graph
-   * @return boolean array of size 4:
+   * @return boolean array of size 7:
    * <ol><li>mRNA (or unknown)</li>
    * <li>miRNA</li>
    * <li>ProteinModificationExpression</li>
-   * <li>DNA methylation</li></ol>
+   * <li>DNA methylation</li>
+   * <li>SNP</li>
+   * <li>Enrichments</li>
+   * <li>Compound</li></ol>
    */
   public boolean[] getVisualizedDataTypes() {
     // Init array with default values
@@ -383,9 +386,11 @@ public class VisualizeDataInPathway {
     for (VisualizedData visualizedData : dataToRemove) {
       if (ProteinModificationExpression.class.isAssignableFrom(toRemove)
           || DNAmethylation.class.isAssignableFrom(toRemove)) {
+        // Protein- and DNA methylation data is visualized with a separate label
         removeVisualizedLabels(visualizedData.getTabName().toString(), 
           visualizedData.getExperimentName(), visualizedData.getSigType());          
       } else {
+        // Assumend to be visualized by node color or similar properties
         removeVisualization(visualizedData.getTabName().toString(), 
           visualizedData.getExperimentName(), visualizedData.getSigType());
       }
