@@ -25,9 +25,9 @@ import java.io.IOException;
 import java.util.logging.Level;
 
 import de.zbit.mapper.AbstractMapper;
+import de.zbit.mapper.KEGGspeciesAbbreviation;
 import de.zbit.mapper.KeggPathwayID2PathwayName;
 import de.zbit.mapper.enrichment.CompoundID2ListOfKEGGpathways;
-import de.zbit.mapper.enrichment.GeneID2ListOfKEGGpathways;
 import de.zbit.util.Species;
 import de.zbit.util.progressbar.AbstractProgressBar;
 
@@ -41,13 +41,14 @@ public class KEGGPathwayEnrichmentCompounds extends AbstractEnrichment<String> {
   /**
    * This is a small helper that cancels the first call to
    * {@link #initializeEnrichmentMappings()} from the super constructor, because
-   * the {@link #additionallyReadGenes} has not been set at this time.
+   * the {@link #additionallyReadGenes} flag has not been set at this time.
    * 
-   * The variable is set to <code>false</code> and
+   * <p>
+   * The variable is set to <code>true</code> and
    * {@link #initializeEnrichmentMappings()} is called again manually in the
    * constuctor of this class.
    */
-  boolean skipFirstInitializationFromSuperConstructor = true;
+  boolean executeInitialization = false;
   
   /**
    * If true, this mapping will read genes AND compounds. If false, only the
@@ -63,7 +64,7 @@ public class KEGGPathwayEnrichmentCompounds extends AbstractEnrichment<String> {
   public KEGGPathwayEnrichmentCompounds(Species spec, boolean readGenesAndCompounds, AbstractProgressBar prog) throws IOException {
     super(spec, prog);
     additionallyReadGenes = readGenesAndCompounds;
-    skipFirstInitializationFromSuperConstructor = false;
+    executeInitialization = true;
     initializeEnrichmentMappings();
   }
   
@@ -94,7 +95,7 @@ public class KEGGPathwayEnrichmentCompounds extends AbstractEnrichment<String> {
    */
   @Override
   protected void initializeEnrichmentMappings() throws IOException {
-    if (skipFirstInitializationFromSuperConstructor) {
+    if (!executeInitialization) {
       return;
     }
     
@@ -106,7 +107,7 @@ public class KEGGPathwayEnrichmentCompounds extends AbstractEnrichment<String> {
       geneID2enrich_ID = new CompoundID2ListOfKEGGpathways(additionallyReadGenes, species, prog);
     }
     else if (species!=null && geneID2enrich_ID!=null) {
-      String keggAbbr = ((GeneID2ListOfKEGGpathways)geneID2enrich_ID).getSpeciesKEGGabbreviation();
+      String keggAbbr = ((KEGGspeciesAbbreviation)geneID2enrich_ID).getSpeciesKEGGabbreviation();
       if (!keggAbbr.equals(species.getKeggAbbr())) {
         log.log(Level.WARNING, String.format("Incompatible Species in pathway enrichment: %s and %s %s", 
           keggAbbr, species.getKeggAbbr(), species));

@@ -33,6 +33,7 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.io.mRNAReader;
 import de.zbit.mapper.AbstractMapper;
+import de.zbit.mapper.KEGGspeciesAbbreviation;
 import de.zbit.mapper.KeggPathwayID2PathwayName;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.enrichment.GeneID2ListOfKEGGpathways;
@@ -96,7 +97,7 @@ public class KEGGPathwayEnrichment extends AbstractEnrichment<String> {
       geneID2enrich_ID = new GeneID2ListOfKEGGpathways(species, prog);
     }
     else if (species!=null && geneID2enrich_ID!=null) {
-      String keggAbbr = ((GeneID2ListOfKEGGpathways)geneID2enrich_ID).getSpeciesKEGGabbreviation();
+      String keggAbbr = ((KEGGspeciesAbbreviation)geneID2enrich_ID).getSpeciesKEGGabbreviation();
       if (!keggAbbr.equals(species.getKeggAbbr())) {
         log.log(Level.WARNING, String.format("Incompatible Species in pathway enrichment: %s and %s %s", 
           keggAbbr, species.getKeggAbbr(), species));
