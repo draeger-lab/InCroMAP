@@ -539,7 +539,11 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       }
       
       // Let the extending classes also merge their private variables
-      newObject.merge(c, newObject, m);
+      try{
+      	newObject.merge(c, newObject, m);
+      }catch(Exception e){
+      		System.out.println(e.toString());
+      	}
     }
     
     return newObject;
@@ -824,6 +828,10 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         // multiple GeneIDs!
         name = mi.getUniqueLabel();
         
+      } else if (mi instanceof CompoundID) {
+      	// Genes AND Compounds might be mixed if they both return e.g. 247 as id. prevent this
+      	name = Compound.toHMDBString(((CompoundID) mi).getCompoundID());
+      	
       } else {
         name = getIdentifier(mi).toString();
       }
