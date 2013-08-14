@@ -165,10 +165,10 @@ InCroMAP is freely available under the LGPL3 license at http://www.cogsys.cs.uni
 DISCUSS PREPROCESSING OF DATA WITH R AND OpenMS \cite{Sturm2008}.
 In a typical use case of InCroMAP the user first imports his preprocessed multi-level omics data, given in tabular format. Then, the deregulated genes for each platform are determined based on appropriate cutoffs and relevant pathways related to the biological background of the experiments are inferred. For this purpose, InCroMAP employs a special pathway enrichment algorithm which integrates deregulated genes across multiple platforms. The resulting pathways can then be selected for further visual inspection from a table in which each pathway is associated with a significance value (see Figure FIGUREb). Alternatively, the metabolic overview function of InCroMAP can be used to generate an interactive global map of cellular metabolism, in which each subordinate metabolic pathway is colored according to the significance of its enrichment with deregulated genes (see Figure XXb). 
 
-\subsection{Genomic and proteomic data}
+\subsection{Visualization of transcriptomics and proteomics data}
 In addition to the automatic recognition of identifiers used by the most common oligonucleotide microarray manufacturers (e.g., Affymetrix, Agilent, etc.), we support generic formats to enable the import of processed omics data, provided that each measurement can be either associated to a certain gene or genomic region. Pathways of interest can then either be automatically downloaded from KEGG or imported from other sources in BioPAX format. Being rendered in an interactive graph viewer, the pathway nodes (i.e., genes) can be overlaid with expression data from mRNAs and multiple protein products. Additionally, miRNAs can be connected to a given pathway based on experimentally confirmed or predicted interactions to their target mRNAs. If desired, the tool also visualizes differential methylation of proximal gene promoters, which is by default computed based on the largest peak observed in the upstream region of the transcription start site.
 
-\subsection{Metabolomics}
+\subsection{Visualization of metabolomics data}
 database identifiers , such as PubChem \cite{Wang2009}, HMDB \cite{Wishart2009}, KEGG \cite{Kanehisa2006}, or LIPID MAPS \cite{Sud2007},
 \section{Results}
 
