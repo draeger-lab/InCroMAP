@@ -43,7 +43,7 @@
 %% use the graphics package for simple commands
 %% \usepackage{graphics}
 %% or use the graphicx package for more complicated commands
-%% \usepackage{graphicx}
+\usepackage{graphicx}
 %% or use the epsfig package if you prefer to use the old commands
 %% \usepackage{epsfig}
 
@@ -153,6 +153,13 @@ A plethora of tools were developed for the inspection of data from individual pl
 In this contribution we present a new version of InCroMAP \cite{Wrzodek2012a,Wrzodek2012b}, a standalone Java software which was originally designed for the enrichment analysis and pathway-based visualization of genomic and proteomic data, where multiple biological layers were monitored in the same set of samples. The original version supports the integrated analysis of heterogeneous genomic and epigenomic features, such as mRNA, miRNA, and DNAm, as well as abundance profiles of protein modifications. Furthermore, InCroMAP can import data from any platform that contains expression values that can be either associated to a certain gene or a genomic region. The application was developed to provide a high ease of use. Consequently, all information required, for example, for the mapping between different entity identifiers or the annotation of miRNA with mRNA targets, is either directly included in the tool or dynamically downloaded in the background. In the new version of InCroMAP, we also support the enrichment analysis and pathaway-based visualization of annotated metabolomics data. The tool can import data annotated with some common metabolic database identifier (e.g. HMDB \cite{Wishart2009}) or automatically recognize common compound or IUPAC names. METABOLIC OVERVIEW FEATURE
 
 InCroMAP is freely available under the LGPL3 license at http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP, including a comprehensive user’s guide and several example files.
+
+\begin{figure*}
+\center
+\includegraphics[width=0.9\textwidth]{incromap_overview.pdf}
+\caption{\textbf{Overview of typical data analysis workflow}. Da sieht man halt wie geil InCroMAP ist...}
+\label{fig:incromap-overview}
+\end{figure*}
 
 \section{Methods}
 DISCUSS PREPROCESSING OF DATA WITH R AND OpenMS \cite{Sturm2008}.
