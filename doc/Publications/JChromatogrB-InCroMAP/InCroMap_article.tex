@@ -162,6 +162,13 @@ InCroMAP is freely available under the LGPL3 license at http://www.cogsys.cs.uni
 \label{fig:incromap-workflow}
 \end{figure*}
 
+\begin{figure*}[t]
+\center
+\includegraphics[width=1.0\textwidth]{InCroMAP_examples.pdf}
+\caption{\textbf{Pathway visualization and metabolic overview}. Beispiel von Pathway Visualisierung und Metabolic overview mit Legende.}
+\label{fig:incromap-examples}
+\end{figure*}
+
 \section{Methods}
 DISCUSS PREPROCESSING OF DATA WITH R AND OpenMS \cite{Sturm2008}.
 In a typical use case of InCroMAP the user first imports his preprocessed multi-level omics data, given in tabular format. Then, the deregulated genes for each platform are determined based on appropriate cutoffs and relevant pathways related to the biological background of the experiments are inferred. For this purpose, InCroMAP employs a special pathway enrichment algorithm which integrates deregulated genes across multiple platforms. The resulting pathways can then be selected for further visual inspection from a table in which each pathway is associated with a significance value (see Figure FIGUREb). Alternatively, the metabolic overview function of InCroMAP can be used to generate an interactive global map of cellular metabolism, in which each subordinate metabolic pathway is colored according to the significance of its enrichment with deregulated genes (see Figure XXb). 
