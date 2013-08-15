@@ -6,9 +6,10 @@
 00052	Galactose metabolism
 00053	Ascorbate and aldarate metabolism
 00061	Fatty acid biosynthesis
-00062	Fatty acid elongation in mitochondria
+00062	Fatty acid elongation
 00071	Fatty acid metabolism
 00072	Synthesis and degradation of ketone bodies
+00073	Cutin, suberine and wax biosynthesis
 00100	Steroid biosynthesis
 00120	Primary bile acid biosynthesis
 00121	Secondary bile acid biosynthesis
@@ -42,6 +43,7 @@
 00362	Benzoate degradation
 00363	Bisphenol degradation
 00364	Fluorobenzoate degradation
+00365	Furfural degradation
 00380	Tryptophan metabolism
 00400	Phenylalanine, tyrosine and tryptophan biosynthesis
 00401	Novobiocin biosynthesis
@@ -49,7 +51,7 @@
 00410	beta-Alanine metabolism
 00430	Taurine and hypotaurine metabolism
 00440	Phosphonate and phosphinate metabolism
-00450	Selenoamino acid metabolism
+00450	Selenocompound metabolism
 00460	Cyanoamino acid metabolism
 00471	D-Glutamine and D-glutamate metabolism
 00472	D-Arginine and D-ornithine metabolism
@@ -58,18 +60,18 @@
 00500	Starch and sucrose metabolism
 00510	N-Glycan biosynthesis
 00511	Other glycan degradation
-00512	O-Glycan biosynthesis
-00513	High-mannose type N-glycan biosynthesis
-00514	O-Mannosyl glycan biosynthesis
+00512	Mucin type O-Glycan biosynthesis
+00513	Various types of N-glycan biosynthesis
+00514	Other types of O-glycan biosynthesis
 00520	Amino sugar and nucleotide sugar metabolism
 00521	Streptomycin biosynthesis
 00522	Biosynthesis of 12-, 14- and 16-membered macrolides
 00523	Polyketide sugar unit biosynthesis
 00524	Butirosin and neomycin biosynthesis
 00531	Glycosaminoglycan degradation
-00532	Glycosaminoglycan biosynthesis - chondroitin sulfate
+00532	Glycosaminoglycan biosynthesis - chondroitin sulfate / dermatan sulfate
 00533	Glycosaminoglycan biosynthesis - keratan sulfate
-00534	Glycosaminoglycan biosynthesis - heparan sulfate
+00534	Glycosaminoglycan biosynthesis - heparan sulfate / heparin
 00540	Lipopolysaccharide biosynthesis
 00550	Peptidoglycan biosynthesis
 00561	Glycerolipid metabolism
@@ -102,7 +104,7 @@
 00670	One carbon pool by folate
 00680	Methane metabolism
 00710	Carbon fixation in photosynthetic organisms
-00720	Reductive carboxylate cycle (CO2 fixation)
+00720	Carbon fixation pathways in prokaryotes
 00730	Thiamine metabolism
 00740	Riboflavin metabolism
 00750	Vitamin B6 metabolism
@@ -122,7 +124,7 @@
 00905	Brassinosteroid biosynthesis
 00906	Carotenoid biosynthesis
 00908	Zeatin biosynthesis
-00909	Sesquiterpenoid biosynthesis
+00909	Sesquiterpenoid and triterpenoid biosynthesis
 00910	Nitrogen metabolism
 00920	Sulfur metabolism
 00930	Caprolactam degradation
@@ -141,6 +143,7 @@
 00981	Insect hormone biosynthesis
 00982	Drug metabolism - cytochrome P450
 00983	Drug metabolism - other enzymes
+00984	Steroid degradation
 01010	Overview of biosynthetic pathways
 01040	Biosynthesis of unsaturated fatty acids
 01051	Biosynthesis of ansamycins
@@ -162,14 +165,19 @@
 01100	Metabolic pathways
 01110	Biosynthesis of secondary metabolites
 01120	Microbial metabolism in diverse environments
-01510	Human brain
+01200	Carbon metabolism
+01210	2-Oxocarboxylic acid metabolism
+01220	Degradation of aromatic compounds
+01230	Biosynthesis of amino acids
 02010	ABC transporters
 02020	Two-component system
 02030	Bacterial chemotaxis
 02040	Flagellar assembly
 02060	Phosphotransferase system (PTS)
+03008	Ribosome biogenesis in eukaryotes
 03010	Ribosome
 03013	RNA transport
+03015	mRNA surveillance pathway
 03018	RNA degradation
 03020	RNA polymerase
 03022	Basal transcription factors
@@ -184,6 +192,7 @@
 03430	Mismatch repair
 03440	Homologous recombination
 03450	Non-homologous end-joining
+03460	Fanconi anemia pathway
 04010	MAPK signaling pathway
 04011	MAPK signaling pathway - yeast
 04012	ErbB signaling pathway
@@ -191,7 +200,10 @@
 04020	Calcium signaling pathway
 04060	Cytokine-cytokine receptor interaction
 04062	Chemokine signaling pathway
+04064	NF-kappa B signaling pathway
+04066	HIF-1 signaling pathway
 04070	Phosphatidylinositol signaling system
+04075	Plant hormone signal transduction
 04080	Neuroactive ligand-receptor interaction
 04110	Cell cycle
 04111	Cell cycle - yeast
@@ -209,6 +221,7 @@
 04145	Phagosome
 04146	Peroxisome
 04150	mTOR signaling pathway
+04151	PI3K-Akt signaling pathway
 04210	Apoptosis
 04260	Cardiac muscle contraction
 04270	Vascular smooth muscle contraction
@@ -219,6 +232,9 @@
 04350	TGF-beta signaling pathway
 04360	Axon guidance
 04370	VEGF signaling pathway
+04380	Osteoclast differentiation
+04390	Hippo signaling pathway
+04391	Hippo signaling pathway - fly
 04510	Focal adhesion
 04512	ECM-receptor interaction
 04514	Cell adhesion molecules (CAMs)
@@ -240,13 +256,22 @@
 04662	B cell receptor signaling pathway
 04664	Fc epsilon RI signaling pathway
 04666	Fc gamma R-mediated phagocytosis
+04668	TNF signaling pathway
 04670	Leukocyte transendothelial migration
 04672	Intestinal immune network for IgA production
-04710	Circadian rhythm - mammal
+04710	Circadian rhythm
 04711	Circadian rhythm - fly
 04712	Circadian rhythm - plant
+04713	Circadian entrainment
 04720	Long-term potentiation
+04721	Synaptic vesicle cycle
 04722	Neurotrophin signaling pathway
+04723	Retrograde endocannabinoid signaling
+04724	Glutamatergic synapse
+04725	Cholinergic synapse
+04726	Serotonergic synapse
+04727	GABAergic synapse
+04728	Dopaminergic synapse
 04730	Long-term depression
 04740	Olfactory transduction
 04742	Taste transduction
@@ -254,14 +279,20 @@
 04745	Phototransduction - fly
 04810	Regulation of actin cytoskeleton
 04910	Insulin signaling pathway
+04911	Insulin secretion
 04912	GnRH signaling pathway
+04913	Ovarian steroidogenesis
 04914	Progesterone-mediated oocyte maturation
+04915	Estrogen signaling pathway
 04916	Melanogenesis
+04917	Prolactin signaling pathway
+04918	Thyroid hormone synthesis
 04920	Adipocytokine signaling pathway
 04930	Type II diabetes mellitus
 04940	Type I diabetes mellitus
 04950	Maturity onset diabetes of the young
 04960	Aldosterone-regulated sodium reabsorption
+04961	Endocrine and other factor-regulated calcium reabsorption
 04962	Vasopressin-regulated water reabsorption
 04964	Proximal tubule bicarbonate reclamation
 04966	Collecting duct acid secretion
@@ -270,25 +301,49 @@
 04972	Pancreatic secretion
 04973	Carbohydrate digestion and absorption
 04974	Protein digestion and absorption
+04975	Fat digestion and absorption
+04976	Bile secretion
+04977	Vitamin digestion and absorption
+04978	Mineral absorption
 05010	Alzheimer's disease
 05012	Parkinson's disease
 05014	Amyotrophic lateral sclerosis (ALS)
 05016	Huntington's disease
 05020	Prion diseases
+05030	Cocaine addiction
+05031	Amphetamine addiction
+05032	Morphine addiction
+05033	Nicotine addiction
+05034	Alcoholism
 05100	Bacterial invasion of epithelial cells
 05110	Vibrio cholerae infection
 05111	Vibrio cholerae pathogenic cycle
 05120	Epithelial cell signaling in Helicobacter pylori infection
 05130	Pathogenic Escherichia coli infection
 05131	Shigellosis
+05132	Salmonella infection
+05133	Pertussis
+05134	Legionellosis
 05140	Leishmaniasis
-05142	Chagas disease
+05142	Chagas disease (American trypanosomiasis)
+05143	African trypanosomiasis
 05144	Malaria
 05145	Toxoplasmosis
 05146	Amoebiasis
 05150	Staphylococcus aureus infection
+05152	Tuberculosis
 05160	Hepatitis C
+05161	Hepatitis B
+05162	Measles
+05164	Influenza A
+05166	HTLV-I infection
+05168	Herpes simplex infection
+05169	Epstein-Barr virus infection
 05200	Pathways in cancer
+05202	Transcriptional misregulation in cancer
+05203	Viral carcinogenesis
+05204	Chemical carcinogenesis
+05205	Proteoglycans in cancer
 05210	Colorectal cancer
 05211	Renal cell carcinoma
 05212	Pancreatic cancer
@@ -305,7 +360,9 @@
 05223	Non-small cell lung cancer
 05310	Asthma
 05320	Autoimmune thyroid disease
+05321	Inflammatory bowel disease (IBD)
 05322	Systemic lupus erythematosus
+05323	Rheumatoid arthritis
 05330	Allograft rejection
 05332	Graft-versus-host disease
 05340	Primary immunodeficiency
@@ -325,9 +382,9 @@
 07020	Macrolides and ketolides
 07021	Aminoglycosides
 07023	Rifamycins
-07024	Statins
+07024	HMG-CoA reductase inhibitors
 07025	Quinolines
-07026	Azoles
+07026	Antifungal agents
 07027	Antidepressants
 07028	Antipsychotics
 07029	Phenothiazines
@@ -337,26 +394,31 @@
 07033	Anticonvulsants
 07034	Eicosanoids
 07035	Prostaglandins
-07036	Calcium channel-blocking drugs
+07036	Calcium channel blocking drugs
 07037	Antiarrhythmic drugs
-07038	Antacids
+07038	Antiulcer drugs
 07039	Opioid analgesics
 07040	Antineoplastics - alkylating agents
 07041	Antineoplastics - antimetabolic agents
 07042	Antineoplastics - agents from natural products
 07043	Antineoplastics - hormones
-07044	Antivirals
+07044	Antiviral agents
 07045	Antineoplastics - protein kinases inhibitors
 07046	Immunosuppressive agents
 07047	Osteoporosis drugs
 07048	Antimigraines
+07049	Antithrombosis agents
+07050	Antirheumatics - DMARDs and biological agents
+07051	Antidiabetics
+07052	Antidyslipidemic agents
+07053	Anti-HIV agents
+07054	Antiglaucoma agents
+07055	Sulfonamide derivatives - overview
+07056	Agents for Alzheimer-type dementia
+07057	Antiparkinsonian agents
 07110	Benzoic acid family
-07111	2-Aminothiazole family
 07112	1,2-Diphenyl substitution family
-07113	Furan family
 07114	Naphthalene family
-07115	Sulfonamide family
-07116	Butyrophenone family
 07117	Benzodiazepine family
 07211	Serotonin receptor agonists/antagonists
 07212	Histamine H1 receptor antagonists
@@ -378,3 +440,8 @@
 07228	Eicosanoid receptor agonists/antagonists
 07229	Angiotensin receptor and endothelin receptor antagonists
 07230	GABA-A receptor agonists/antagonists
+07231	Sodium channel blocking drugs
+07232	Potassium channel blocking and opening drugs
+07233	Ion transporter inhibitors
+07234	Neurotransmitter transporter inhibitors
+07235	N-Metyl-D-aspartic acid receptor antagonists
