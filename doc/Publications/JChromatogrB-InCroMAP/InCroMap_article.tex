@@ -117,8 +117,8 @@
 \author[uni]{Lars Rosenbaum}
 \author[uni]{Johannes Eichner}
 \author[uni]{Clemens Wrzodek}
-\author[klinikum,dzd]{Rainer Lehmann}
-\author[uni]{and Andreas Zell}
+\author[uni]{Andreas Zell}
+\author[klinikum,dzd]{and Rainer Lehmann}
 \address[uni]{Center for Bioinformatics, University of T\"ubingen, T\"ubingen, Germany}
 \address[klinikum]{Division of Clinical Chemistry and Pathobiochemistry (Central Laboratory), University Hospital T\"ubingen, T\"ubingen, Germany}
 \address[dzd]{Institute of Diabetes Research and Metabolic Diseases, Member of the German Center for Diabetes Research, University of T\"ubingen, T\"ubingen, Germany}
@@ -151,21 +151,21 @@ Today, high-throughput methods for the analysis of biological systems, such as m
 
 A plethora of tools were developed for the inspection of data from individual platforms (see \cite{Gehlenborg2010} for examples). Furthermore, solutions for the combined visualization of transcriptomics (mRNA) and metabolomics data exist \cite{Garcia-Alcalde2011,Waegele2012}. Both Paintomics \cite{Garcia-Alcalde2011} and MassTRIX \cite{Waegele2012} are web-service based tools that are able to visualize mRNA microarray and identified metabolomics data in KEGG \cite{Kanehisa2006} pathways. MassTRIX is able to handle unidentified metabolic data by comparing a mass against theoretical adducts stored in metabolomics databases. An example of a tool that can handle several heterogeneous types of omics data is the commercial Ingenuity Pathway Analysis software (www.ingenuity.com). However, Ingenuity does not provide an integrated visualization of multi-level omics data. Thus, most available high-level analysis tools are not freely available, focused on certain specialized platforms, or not able to perform an integrated analysis of many different types of heterogeneous data. However, complex interactions between multiple layers of gene regulation can only be inferred by the integration of omics datasets across multiple platforms, which requires novel analysis tools with appropriate visualizations.
 
-In this contribution we present an extended version of InCroMAP \cite{Wrzodek2012a,Wrzodek2012b}. Up to the present, InCroMAP is a stand-alone Java software which provides an enrichment analysis and pathway-based visualization of genomic and proteomic data, where multiple biological layers were monitored in the same set of samples. The current version supports the integrated analysis of heterogeneous genomic and epigenomic features, such as mRNA, miRNA, and DNAm, as well as abundance profiles of post translational protein modifications. Furthermore, InCroMAP can import data from any platform that contains expression values that can be either associated to a certain gene or a genomic region. The application was developed to provide a high ease of use. Consequently, all information required, for example, for the mapping between different entity identifiers or the annotation of miRNAs with mRNA targets, is either directly included in the tool or dynamically downloaded in the background. However, up to now the application has not been able to process metabolomics. Thus, in the extended version of InCroMAP, we also support the enrichment analysis and pathway-based visualization of annotated metabolomics data. The tool can import data annotated with specific metabolic database identifier (e.g. HMDB \cite{Wishart2009}) or automatically recognize common compound or IUPAC names. METABOLIC OVERVIEW FEATURE
+In this contribution we present an extended version of InCroMAP \cite{Wrzodek2012a,Wrzodek2012b}. Up to the present, InCroMAP is a stand-alone Java software which provides an enrichment analysis and pathway-based visualization of genomic and proteomic data, where multiple biological layers were monitored in the same set of samples. The current version supports the integrated analysis of heterogeneous genomic and epigenomic features, such as mRNA, miRNA, and DNAm, as well as abundance profiles of post translational protein modifications. Furthermore, InCroMAP can import data from any platform that contains expression values that can be either associated to a certain gene or a genomic region. The application was developed to provide a high ease of use. Consequently, all information required, for example, for the mapping between different feature identifiers or the annotation of miRNAs with mRNA targets, is either directly included in the tool or dynamically downloaded in the background. However, up to now the application has not been able to process metabolomics. Thus, in the extended version of InCroMAP, we also support the enrichment analysis and pathway-based visualization of annotated metabolomics data. The tool can import data annotated with specific metabolic database identifier (e.g. HMDB \cite{Wishart2009}) or automatically recognize common compound or IUPAC names.
 
 InCroMAP is freely available under the LGPL3 license at http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP, including a comprehensive user’s guide and several example files.
 
 \begin{figure*}
 \center
 \includegraphics[width=0.9\textwidth]{InCroMAP_workflow.pdf}
-\caption{\textbf{Overview of typical data analysis workflow}. Da sieht man halt wie geil InCroMAP ist...}
+\caption{The flow chart depicts the general workflow for performing an analysis with InCroMAP. Each data type is pre-processed (e.g. feature detection, feature extraction, and annotation) using a appropriate, platform dependent tool. After pre-processing, the data is normalized and statistically analyzed with a statistics software, which yields p-values or fold changes for each of the features. After these steps the data can be easily importet to InCroMAP and an enrichment analysis can be performed. From the enrichment, a user can choose to visualize the information of all platforms in a chosen pathway or to generate a metabolic overview to identify certain metabolic pathways.}
 \label{fig:incromap-workflow}
 \end{figure*}
 
 \begin{figure*}[t]
 \center
 \includegraphics[width=1.0\textwidth]{InCroMAP_examples.pdf}
-\caption{\textbf{Pathway visualization and metabolic overview}. Beispiel von Pathway Visualisierung und Metabolic overview mit Legende.}
+\caption{(A) shows the metabolic overview with visualized metabolic data and pathway enrichment p-values. (B) shows the Wnt signaling pathway with visualized data from all supported platforms. Both visualizations were generated with the example data provided on the project web page.}
 \label{fig:incromap-examples}
 \end{figure*}
 
