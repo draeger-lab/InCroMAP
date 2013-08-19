@@ -175,15 +175,22 @@ In a typical use case of InCroMAP (see Figure \ref{fig:incromap-workflow}), the 
 \label{fig:incromap-examples}
 \end{figure*}
 
-\subsection{Enrichment analysis}
+\subsection{Data import}
+TODO JOHANNES: TYPE OF DATA
+In addition to the automatic recognition of identifiers used by the most common oligonucleotide microarray manufacturers (e.g., Affymetrix, Agilent, etc.), we support generic formats to enable the import of processed omics data, provided that each measurement can be either associated to a certain gene, genomic region, or metabolite. Pathways of interest can then either be automatically downloaded from KEGG or imported from other sources in BioPAX format. 
 
+\subsection{Enrichment analysis}
+Integrated overrepresentation analysis extended form \cite{Backes2007}
 
 
 \subsection{Metabolic overview}
+TODO JOHANNES
 Visualization as compound nodes with potential names
 common name automatically assigned to each node
+
 \subsection{Pathway-based visualization}
-In addition to the automatic recognition of identifiers used by the most common oligonucleotide microarray manufacturers (e.g., Affymetrix, Agilent, etc.), we support generic formats to enable the import of processed omics data, provided that each measurement can be either associated to a certain gene or genomic region. Pathways of interest can then either be automatically downloaded from KEGG or imported from other sources in BioPAX format. Being rendered in an interactive graph viewer, the pathway nodes (i.e., genes) can be overlaid with expression data from mRNAs and multiple protein products. Additionally, miRNAs can be connected to a given pathway based on experimentally confirmed or predicted interactions to their target mRNAs. If desired, the tool also visualizes differential methylation of proximal gene promoters, which is by default computed based on the largest peak observed in the upstream region of the transcription start site.
+TODO JOHANNES
+Being rendered in an interactive graph viewer, the pathway nodes (i.e., genes) can be overlaid with expression data from mRNAs and multiple protein products. Additionally, miRNAs can be connected to a given pathway based on experimentally confirmed or predicted interactions to their target mRNAs. If desired, the tool also visualizes differential methylation of proximal gene promoters, which is by default computed based on the largest peak observed in the upstream region of the transcription start site.
 
 
 \section{Results and discussion}
@@ -194,6 +201,11 @@ future databases lipidmaps\cite{Sud2007} and reactome \cite{Eustachio2011}
 Discuss problems in enrichment shortly (cite 1 paper)
 Example data on webserver
 Cite studies where it helped and pictures were added from incromap
+
+\section{Acknowledgement}
+This project was supported by the Competence Network for Diabetes mellitus funded
+by the BMBF (FKZ 01GI0803-04) and a grant from to the German Center for Diabetes Research (DZD eV). Furthermore, the project received funding from the Innovative Medicine Initiative Joint Undertaking (IMI JU) [115001] (MARCAR project).
+
 %% The Appendices part is started with the command \appendix;
 %% appendix sections are then done as normal sections
 %% \appendix
@@ -210,6 +222,7 @@ Cite studies where it helped and pictures were added from incromap
 %%
 
 %% References with bibTeX database:
+
 
 \bibliographystyle{elsarticle-num}
 \bibliography{literature}
