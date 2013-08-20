@@ -26,12 +26,14 @@ for (species in all.species) {
   
   curr.ko.table <- ko.table[which(ko.table[,1] %in% rel.path.ids),]
   curr.ko.table[,1] <- paste("path:", species, curr.ko.table[,1], sep="")
-  curr.ko.table[,2] <- as.vector(rel.gene.ids[curr.ko.table[,2]])
+  ko.gene.idx <- grep("^ko:", curr.ko.table[,2])
+  curr.ko.table[ko.gene.idx,2] <- as.vector(rel.gene.ids[curr.ko.table[ko.gene.idx,2]])
   unmapped.idx <- which(is.na(curr.ko.table[,2]))
   if (length(unmapped.idx) > 0) {
     curr.ko.table <- curr.ko.table[-unmapped.idx,]
   }
-  curr.ko.table[,3] <- paste(species, ":", curr.ko.table[,3], sep="")
+  species.gene.idx <- grep(paste("^", species, ":", sep=""), curr.ko.table[,2])
+  curr.ko.table[species.gene.idx,3] <- paste(species, ":", curr.ko.table[species.gene.idx,3], sep="")
 
   # write table with pathway to gene mapping
   write.table(curr.ko.table, file=paste(output.dir, species, ".list", sep=""), sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
