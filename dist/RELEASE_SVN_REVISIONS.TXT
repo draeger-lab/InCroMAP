@@ -37,5 +37,11 @@
   KEGGtranslator 386
   SysBio 1272
   SBVC 168
+  
+* Integrator 1.5.1 (released finally in June 2013 (2013-06-11)) is based on the following subversion revisions:
+  Integrator 202
+  KEGGTranslator 386
+  SysBio 1274
+  SBVC 2013-04-08-SBVC_for_InCroMAP.jar -> based on 177
 
 
