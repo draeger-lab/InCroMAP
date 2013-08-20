@@ -81,7 +81,7 @@ public class IntegrationDialog extends JPanel implements ActionListener {
    * The user may choose one dataset each.
    */
   @SuppressWarnings("unchecked")
-  private static Class<? extends NameAndSignals>[] toVisualize = new Class[]{
+  private Class<? extends NameAndSignals>[] toVisualize = new Class[]{
     mRNA.class, miRNA.class, DNAmethylation.class, ProteinModificationExpression.class,Compound.class
   };
   
@@ -123,6 +123,13 @@ public class IntegrationDialog extends JPanel implements ActionListener {
   
   public IntegrationDialog(boolean showPathwaySelector, boolean showMergeTypeSelectos) throws Exception {
     createIntegrationDialog(showPathwaySelector, showMergeTypeSelectos);
+  }
+  
+  /* Constructor needed to hide potential entities from integration dialog
+   * e.g., Compounds from "Integrate heterogeneous data" */
+  public IntegrationDialog(boolean showPathwaySelector, boolean showMergeTypeSelectos, Class<? extends NameAndSignals>[] toVisualize) throws Exception {
+    this.toVisualize = toVisualize;
+  	createIntegrationDialog(showPathwaySelector, showMergeTypeSelectos);
   }
   
   private void createIntegrationDialog(final boolean showPathwaySelector, boolean showMergeTypeSelectos) throws Exception {
@@ -302,10 +309,12 @@ public class IntegrationDialog extends JPanel implements ActionListener {
     else return integratedVis;
   }
   
+  @SuppressWarnings("unchecked")
   public static IntegrationDialog showIntegratedTreeTableDialog(Component parent) {
     IntegrationDialog integratedTbl;
     try {
-      integratedTbl = new IntegrationDialog(false, true);
+      integratedTbl = new IntegrationDialog(false, true,
+      		new Class[]{mRNA.class, miRNA.class, DNAmethylation.class, ProteinModificationExpression.class});
     } catch (Exception e) {
       GUITools.showErrorMessage(null, e);
       return null;
