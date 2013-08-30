@@ -520,7 +520,7 @@ public class IntegratorUITools {
     else if (type.equals(IdentifierType.Agilent)) return 1;
     
     else if (type.equals(IdentifierType.GeneSymbol)) return 2;
-    else if (type.equals(IdentifierType.Unknown)) return 3;
+    else if (type.equals(IdentifierType.UnknownGene)) return 3;
     
     
     //Compound ID priorities

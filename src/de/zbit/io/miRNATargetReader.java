@@ -97,7 +97,7 @@ public class miRNATargetReader {
   /**
    * Target identifier.
    */
-  protected IdentifierType targetIDtype=IdentifierType.Unknown;
+  protected IdentifierType targetIDtype=IdentifierType.UnknownGene;
   
   /**
    * A ProgressBar that allows displaying various progresses
@@ -200,11 +200,11 @@ public class miRNATargetReader {
       return null;
     }
     //IdentifierType targetIDtype = this.targetIDtype;
-    if (targetIDtype==null || targetIDtype.equals(IdentifierType.Unknown)) {
+    if (targetIDtype==null || targetIDtype.equals(IdentifierType.UnknownGene)) {
       targetIDtype = checkColumnContent(in, col_Target);
     }
     // Check identifier
-    if (targetIDtype.equals(IdentifierType.Unknown)) {
+    if (targetIDtype.equals(IdentifierType.UnknownGene)) {
       log.warning("Could not infere type of target identifiers!");
       return null;
     }

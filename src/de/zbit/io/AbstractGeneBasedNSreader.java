@@ -136,8 +136,8 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     List<IdentifierType> idTypes = new ArrayList<IdentifierType>(Arrays.asList(IdentifierType.getGeneIdentifierTypes()));
     List<String> regExForIdTypes = new ArrayList<String>(Arrays.asList(MappingUtils.getRegularExpressionsFor(IdentifierClass.Gene)));
     // Remove unknown
-    regExForIdTypes.remove(idTypes.indexOf(IdentifierType.Unknown));
-    idTypes.remove(IdentifierType.Unknown);
+    regExForIdTypes.remove(idTypes.indexOf(IdentifierType.UnknownGene));
+    idTypes.remove(IdentifierType.UnknownGene);
     // Do not set the gene id regex (simple number... to unspecific)
     regExForIdTypes.set(idTypes.indexOf(IdentifierType.NCBI_GeneID), null);
     regExForIdTypes.set(idTypes.indexOf(IdentifierType.GeneSymbol), null);
