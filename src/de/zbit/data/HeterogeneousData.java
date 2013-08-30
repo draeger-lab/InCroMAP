@@ -239,14 +239,14 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
       }
     }
     
-    int geneId = ((GeneID)parent).getGeneID();
+    int geneId = ((GeneID)parent).getID();
     if (geneId==HeterogeneousNS.geneIDofRootNode) {
       // All gene-nodes are pre-created
       return ((TreeNode)parent).getChildAt(index);
     } else if (geneId==geneIDofTypeNode) {
       // Is a TYPE-Node => Return probe
       if (((HeterogeneousNS)parent).getChildCount()<=0) {
-        geneId = ((GeneID) ((HeterogeneousNS)parent).getParent() ).getGeneID();
+        geneId = ((GeneID) ((HeterogeneousNS)parent).getParent() ).getID();
         int l = (Integer) ((HeterogeneousNS)parent).getData("_PARENT_LIST_NUMBER");
         List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
         if (probes==null || probes.size()<=0) return null;
@@ -323,13 +323,13 @@ public class HeterogeneousData extends AbstractTreeTableModel<HeterogeneousNS> i
       }
     }
     
-    int geneId = ((GeneID)parent).getGeneID();
+    int geneId = ((GeneID)parent).getID();
     if (geneId==HeterogeneousNS.geneIDofRootNode) {
       // All gene-nodes are pre-created
       return ((TreeNode)parent).getChildCount();
     } else if (geneId==geneIDofTypeNode) {
       // Is a TYPE-Node => Return probe
-      geneId = ((GeneID) ((HeterogeneousNS)parent).getParent() ).getGeneID();
+      geneId = ((GeneID) ((HeterogeneousNS)parent).getParent() ).getID();
       int l = (Integer) ((HeterogeneousNS)parent).getData("_PARENT_LIST_NUMBER");
       List<NameAndSignals> probes = (List<NameAndSignals>) maps.get(l).get(Integer.toString(geneId));
       return probes==null?0:probes.size();

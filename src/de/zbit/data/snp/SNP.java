@@ -48,7 +48,7 @@ public class SNP extends NSwithProbes {
    */
   @Override
   protected Object clone() throws CloneNotSupportedException {
-    SNP nm = new SNP(name, getGeneID());
+    SNP nm = new SNP(name, getID());
     return super.clone(nm);
   }
   

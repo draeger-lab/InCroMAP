@@ -1,16 +1,21 @@
 package de.zbit.data.id;
 
+import java.util.Collection;
+
+import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal.MergeType;
 import de.zbit.mapper.MappingUtils.IdentifierClass;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 
 /**
- * An abstract mapper that can download a csv file or read an
- * supplied / already downloaded file and build an internal map
- * from one column to another.
- * Afterwards, one sourceIdentifier can be mapped to the
- * corresponding targetIdentifier.
- * @author Clemens Wrzodek
- * @version $Rev: 1282 $
+ * Interface for object that can be assigned some ID.
+ * 
+ * <p>If implementing this interfaceor a subclass, please also override
+ * the {@link NameAndSignals#merge(Collection, NameAndSignals, MergeType)}
+ * method and avoid taking mean or other stupid things of IDs.
+ * Instead, if data is not gene-centric anymore, return {@link GenericID#getDefaultID()}
+ * 
+ * @author Lars Rosenbaum
  */
 
 public interface GenericID<ObjectType> {

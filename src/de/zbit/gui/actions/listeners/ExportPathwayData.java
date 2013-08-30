@@ -226,7 +226,7 @@ public class ExportPathwayData implements ActionListener {
         dataMap = new HashMap<Integer, Collection<NameAndSignals>>(signals.size());
         for (NameAndSignals ns : signals) {
           if (ns instanceof GeneID) {
-            Utils.addToMapOfSets(dataMap, new Integer(((GeneID) ns).getGeneID()), ns);
+            Utils.addToMapOfSets(dataMap, new Integer(((GeneID) ns).getID()), ns);
           }
         }
         

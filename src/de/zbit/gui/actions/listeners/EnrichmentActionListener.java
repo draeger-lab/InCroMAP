@@ -493,7 +493,7 @@ public class EnrichmentActionListener implements ActionListener {
           modified = true;
         }
       } else if (item instanceof GeneID) {
-        if (!newItemsGeneIDs.contains(((GeneID) item).getGeneID())) {
+        if (!newItemsGeneIDs.contains(((GeneID) item).getID())) {
           e.remove();
           modified = true;
         }

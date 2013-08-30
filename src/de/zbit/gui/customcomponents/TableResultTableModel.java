@@ -84,7 +84,7 @@ public class TableResultTableModel<T extends TableResult> extends AbstractTableM
   
   private final static Integer minusOne = new Integer(-1);
   
-  private final static String GeneIDHeader = StringUtil.formatOptionName(GeneID.gene_id_key);
+  private final static String GeneIDHeader = StringUtil.formatOptionName(GeneID.gene_id_key.toString());
   
   /**
    * The {@link NameAndSignals} that should be represented by this {@link TableModel}.

@@ -330,7 +330,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
   /**
    * Returns enriched classes (e.g., pathways). If you have an array of genes, please use
    * {@link Arrays#asList(Object...)} 
-   * <p>Note: {@link mRNA}s without {@link mRNA#getGeneID()} are NOT being
+   * <p>Note: {@link mRNA}s without {@link mRNA#getID()} are NOT being
    * removed and NOT ignored. Thus, they are counted to the totalGeneList
    * size and have an influence on the pValue. If you remove all genes / probes
    * that have no assigned geneID, you might get better pValues !

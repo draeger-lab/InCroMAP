@@ -186,15 +186,15 @@ public class DNAmethylationDataMapper {
     
     // Discard it or set GeneID
     //if (toMap instanceof DNAmethylation)
-    Integer geneID = mappedOn!=null ? mappedOn.getGeneID() : null;
+    Integer geneID = mappedOn!=null ? mappedOn.getID() : null;
     if (toMap instanceof GeneID || GeneID.class.isAssignableFrom(toMap.getClass())) {
-      if (mappedOn == null || mappedOn.getGeneID()==GeneID.default_geneID) {
+      if (mappedOn == null || mappedOn.getID()==GeneID.default_geneID) {
         //toMap.setGeneID(GeneID.default_geneID);
         if (discardNonAssignableProbes) {
           return null;
         }
       } else {
-        ((GeneID) toMap).setGeneID(mappedOn.getGeneID());
+        ((GeneID) toMap).setID(mappedOn.getID());
       }
     }
     

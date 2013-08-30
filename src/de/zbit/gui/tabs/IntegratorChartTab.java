@@ -713,7 +713,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     
     int geneID=-1;
     if (template instanceof GeneID) {
-      geneID = ((GeneID) template).getGeneID();
+      geneID = ((GeneID) template).getID();
     }
     boolean hasGeneID = geneID>0;
     
@@ -721,7 +721,7 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
     while (l.hasNext()) {
       T ns = l.next();
       if (hasGeneID) {
-        if (geneID==((GeneID)ns).getGeneID()) {
+        if (geneID==((GeneID)ns).getID()) {
           nsList.add(ns);
         }
       } else {

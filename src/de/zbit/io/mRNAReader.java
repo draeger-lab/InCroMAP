@@ -119,7 +119,7 @@ public class mRNAReader extends AbstractGeneBasedNSreader<mRNA> {
     
     int noGI=0;
     for (mRNA mRNA : c) {
-      if (mRNA.getGeneID()<0) noGI++;
+      if (mRNA.getID()<0) noGI++;
       System.out.println(mRNA);
     }
     System.out.println(noGI + " mRNAs without Gene ID.");

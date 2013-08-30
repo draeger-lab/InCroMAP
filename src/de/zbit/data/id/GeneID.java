@@ -24,8 +24,9 @@ package de.zbit.data.id;
 import java.util.Collection;
 
 import de.zbit.data.NameAndSignals;
-import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.mapper.MappingUtils.IdentifierClass;
+import de.zbit.mapper.MappingUtils.IdentifierType;
 
 /**
  * Interface for object that can be assigned a NCBI Entrez Gene ID.
@@ -33,33 +34,28 @@ import de.zbit.data.Signal.MergeType;
  * <p>If implementing this interface, please also override
  * the {@link NameAndSignals#merge(Collection, NameAndSignals, MergeType)}
  * method and avoid taking mean or other stupid things of geneIDs.
- * Instead, if data is not gene-centric anymore, return {@value #default_geneID}
+ * Instead, if data is not gene-centric anymore, return {@link GenericID#getDefaultID()}
  * 
  * @author Clemens Wrzodek
  * @version $Rev: 132 $
  */
-public interface GeneID {
+public interface GeneID extends GenericID<Integer>{
   
   /**
    * The key to use in the {@link #addData(String, Object)} map to add
    * the corresponding NCBI Gene ID (Entrez).
    */
-  public final static String gene_id_key = "Gene_ID";
+  public final static IdentifierType gene_id_key = IdentifierType.NCBI_GeneID;
+  
+  /**
+   * The class of entitity the ID represents, here: Gene
+   */
+  public final static IdentifierClass gene_id_class = IdentifierClass.Gene;
   
   /**
    * Means gene id has not been set or mRNA has no associated gene id.
    */
+  //Lars: Very problematic to always do checks >0 in Code... should be: equals(default_geneID)
   public final static Integer default_geneID = -1;
-  
-  /**
-   * Set the corresponding NCBI Gene ID.
-   * @param geneID
-   */
-  public void setGeneID(int geneID);
-  
-  /**
-   * @return associated NCBI Gene ID.
-   */
-  public int getGeneID();
   
 }

@@ -181,14 +181,14 @@ public class miRNAReader extends NameAndSignalReader<miRNA> {
       try {
         Integer geneId = miRNA2GeneIdMapper.map(m.getPrecursorName());
         if (geneId!=null && !Double.isNaN(geneId) && geneId>0) {
-          m.setGeneID(geneId);
+          m.setID(geneId);
         } else {
-          m.setGeneID(mRNA.default_geneID);
+          m.setID(mRNA.default_geneID);
         }
       } catch (Exception e) {
         // Ignore
         log.log(Level.FINE, "Could not map miRNA systematic name 2 GeneID.", e);
-        m.setGeneID(mRNA.default_geneID);
+        m.setID(mRNA.default_geneID);
       }
     }
     

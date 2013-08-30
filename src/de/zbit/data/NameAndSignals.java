@@ -579,7 +579,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   public static <T extends NameAndSignals> Object getIdentifier(T ns) {
     int idType = getIdentifierType(ns);
     if (idType==1) {
-      return ((GeneID)ns).getGeneID();
+      return ((GeneID)ns).getID();
     } else if (idType==2) {
       return ((CompoundID)ns).getCompoundID();
     } else if (idType==3) {
@@ -606,7 +606,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * NameAndSignal.
    * @param <T>
    * @param nsClass class of the {@link NameAndSignals}.
-   * @return 1 for GeneID ({@link GeneID#getGeneID()}), 2 for CompoundID 
+   * @return 1 for GeneID ({@link GeneID#getID()}), 2 for CompoundID 
    * ({@link CompoundID#getCompoundID()}), 3 for enrichments or 0 for {@link #getName()}
    * @see #getType(Object)
    */
@@ -806,7 +806,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
 //        name = Integer.toString(((GeneID)mi).getGeneID());
 //      } else 
       if (forceGroupByGeneID && mi instanceof GeneID) {
-        name = Integer.toString(((GeneID)mi).getGeneID());
+        name = Integer.toString(((GeneID)mi).getID());
       } else if (forceGroupByGeneID && mi instanceof CompoundID) {
         name = Integer.toString(((CompoundID)mi).getCompoundID());
       }
@@ -1218,7 +1218,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       
     } else if (o instanceof GeneID) {
       // This must be below miRNAs !
-      int gID = ((GeneID)o).getGeneID();
+      int gID = ((GeneID)o).getID();
       if (gID>0) {
         geneIds.add(gID);
       }
@@ -1322,7 +1322,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
           }
         }
       } else if (ns instanceof GeneID) {
-        int gi = ((GeneID) ns).getGeneID();
+        int gi = ((GeneID) ns).getID();
         if (gi!=GeneID.default_geneID.intValue()) {
           ret.add(gi);
         }
@@ -1565,7 +1565,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     return new Comparator<GeneID>() {
       @Override
       public int compare(GeneID o1, GeneID o2) {
-        return o1.getGeneID()-o2.getGeneID();
+        return o1.getID()-o2.getID();
       }
     };
   }
@@ -1603,7 +1603,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     while (it.hasNext()) {
       NameAndSignals o = it.next();
       if (o instanceof GeneID) {
-        int geneID = ((GeneID) o).getGeneID();
+        int geneID = ((GeneID) o).getID();
         if (geneID<=0) {
           it.remove();
         }

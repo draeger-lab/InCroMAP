@@ -42,6 +42,8 @@ import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.mapper.MappingUtils.IdentifierClass;
+import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
@@ -277,31 +279,31 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
   }
 
   /* (non-Javadoc)
-   * @see de.zbit.data.GeneID#setGeneID(int)
+   * @see de.zbit.data.GenericID#setID(int)
    */
   @Override
-  public void setGeneID(int geneID) {
+  public void setID(Integer geneID) {
     if (ns1 instanceof GeneID) {
-      ((GeneID)ns1).setGeneID(geneID);
+      ((GeneID)ns1).setID(geneID);
     }
     if (ns2 instanceof GeneID) {
-      ((GeneID)ns2).setGeneID(geneID);
+      ((GeneID)ns2).setID(geneID);
     }
   }
 
   /* (non-Javadoc)
-   * @see de.zbit.data.GeneID#getGeneID()
+   * @see de.zbit.data.GenericID#getID()
    */
   @Override
-  public int getGeneID() {
+  public Integer getID() {
     // Both ids are supposed to match, if a PairedNS instance is created!
     int id1 = default_geneID;
     int id2 = default_geneID;
     if (ns1 instanceof GeneID) {
-      id1 = ((GeneID)ns1).getGeneID();
+      id1 = ((GeneID)ns1).getID();
     }
     if (ns2 instanceof GeneID) {
-      id2 = ((GeneID)ns2).getGeneID();
+      id2 = ((GeneID)ns2).getID();
     }
     
     /* XXX Remark:
@@ -321,6 +323,30 @@ public class PairedNS<T1 extends NameAndSignals, T2 extends NameAndSignals> exte
     if (id2!=id1) return default_geneID;
     
     return default_geneID;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.GenericID#getDefaultID()
+   */
+  @Override
+  public Integer getDefaultID(){
+  	return GeneID.default_geneID;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.GenericID#getIDClass()
+   */
+  @Override
+  public IdentifierClass getIDClass(){
+  	return GeneID.gene_id_class;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.GenericID#getIDType()
+   */
+  @Override
+  public IdentifierType getIDType(){
+  	return GeneID.gene_id_key;
   }
   
   /**

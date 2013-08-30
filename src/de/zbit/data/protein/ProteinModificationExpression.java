@@ -30,6 +30,8 @@ import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.id.GeneID;
+import de.zbit.mapper.MappingUtils.IdentifierClass;
+import de.zbit.mapper.MappingUtils.IdentifierType;
 
 /**
  * A generic class to hold protein modification
@@ -69,7 +71,7 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
     this(geneName);
     setAnalyteID(analyteID);
     setModification(modification);
-    setGeneID(geneID);
+    setID(geneID);
   }
   
   
@@ -93,22 +95,47 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
   
   
   /* (non-Javadoc)
-   * @see de.zbit.data.GeneID#getGeneID()
+   * @see de.zbit.data.GenericID#getID()
    */
   @Override
-  public int getGeneID() {
-    Integer i = (Integer) super.getData(gene_id_key);
-    return i==null?default_geneID:i;
+  public Integer getID() {
+    Integer i = (Integer) super.getData(getIDType().toString());
+    return i==null?getDefaultID():i;
   }
   
   
   /* (non-Javadoc)
-   * @see de.zbit.data.GeneID#setGeneID(int)
+   * @see de.zbit.data.GenericID#setID(int)
    */
   @Override
-  public void setGeneID(int geneID) {
-    super.addData(gene_id_key, new Integer(geneID));
+  public void setID(Integer geneID) {
+    super.addData(getIDType().toString(), new Integer(geneID));
   }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.GenericID#getDefaultID()
+   */
+  @Override
+  public Integer getDefaultID(){
+  	return GeneID.default_geneID;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.GenericID#getIDClass()
+   */
+  @Override
+  public IdentifierClass getIDClass(){
+  	return GeneID.gene_id_class;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.GenericID#getIDType()
+   */
+  @Override
+  public IdentifierType getIDType(){
+  	return GeneID.gene_id_key;
+  }
+  
   
   /* (non-Javadoc)
    * @see de.zbit.data.NameAndSignal#merge(java.util.Collection, de.zbit.data.NameAndSignal, de.zbit.data.Signal.MergeType)
@@ -119,11 +146,11 @@ public class ProteinModificationExpression extends NameAndSignals implements Gen
     Set<Integer> geneIDs = new HashSet<Integer>();
     for (T o :source) {
       GeneID mi = (GeneID)o;
-      geneIDs.add(mi.getGeneID());
+      geneIDs.add(mi.getID());
     }
     
     // Set gene id, if same or unset if they differ
-    ((GeneID)target).setGeneID(geneIDs.size()==1?geneIDs.iterator().next():default_geneID);
+    ((GeneID)target).setID(geneIDs.size()==1?geneIDs.iterator().next():default_geneID);
   }
   
   /* (non-Javadoc)

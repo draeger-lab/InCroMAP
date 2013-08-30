@@ -64,7 +64,7 @@ public class mRNA extends NSwithProbes {
    */
   @Override
   protected Object clone() throws CloneNotSupportedException {
-    mRNA nm = new mRNA(name, getGeneID());
+    mRNA nm = new mRNA(name, getID());
     return super.clone(nm);
   }
 

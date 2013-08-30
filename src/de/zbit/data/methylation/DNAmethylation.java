@@ -78,7 +78,7 @@ public class DNAmethylation extends NSwithProbesAndRegion {
    */
   @Override
   protected Object clone() throws CloneNotSupportedException {
-    DNAmethylation nm = new DNAmethylation(name, getGeneID());
+    DNAmethylation nm = new DNAmethylation(name, getID());
     return super.clone(nm);
   }
     

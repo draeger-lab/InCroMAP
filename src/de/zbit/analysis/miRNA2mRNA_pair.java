@@ -182,7 +182,7 @@ public class miRNA2mRNA_pair {
           mRNA_minFC = Math.min(mRNA_minFC, fc.doubleValue());
         }
       }
-      int geneID = (mr instanceof GeneID)?((GeneID)mr).getGeneID():-1;
+      int geneID = (mr instanceof GeneID)?((GeneID)mr).getID():-1;
       if (geneID<=0) continue;
       
       Collection<T> mr_targets = geneIDmap.get(geneID);
@@ -371,13 +371,13 @@ public class miRNA2mRNA_pair {
       curRow[9] = vt.getC().getSignalValue(SignalType.pValue, experimentName)+"";
       curRow[10]= mrna_fc+"";
       curRow[11]= vt.getC().getData("description").toString();
-      curRow[12]= Integer.toString(vt.getC().getGeneID());
+      curRow[12]= Integer.toString(vt.getC().getID());
       
       // Pathways of mRNA target
       curRow[13]= "";
-      if (vt.getC().getGeneID()>0 && pws!=null) {
+      if (vt.getC().getID()>0 && pws!=null) {
         try {
-          Collection<String> c = pws.map(vt.getC().getGeneID());
+          Collection<String> c = pws.map(vt.getC().getID());
           if (c!=null && c.size()>0) {
             curRow[13] = ArrayUtils.implode(c.toArray(new String[0]), ", ");
           }

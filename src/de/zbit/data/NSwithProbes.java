@@ -32,6 +32,7 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
+import de.zbit.mapper.MappingUtils.IdentifierClass;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
@@ -84,7 +85,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
     setProbeName(probeName);
     //if (geneID!=null && geneID!=default_geneID && geneID>0)
     if (geneID==null) geneID = default_geneID;
-    setGeneID(geneID);
+    setID(geneID);
   }
   
   
@@ -92,17 +93,41 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
    * @see de.zbit.data.GeneID#setGeneID(int)
    */
   @Override
-  public void setGeneID(int geneID) {
-    super.addData(gene_id_key, new Integer(geneID));
+  public void setID(Integer geneID) {
+    super.addData(getIDType().toString(), new Integer(geneID));
   }
   
   /* (non-Javadoc)
-   * @see de.zbit.data.GeneID#getGeneID()
+   * @see de.zbit.data.GenericID#getID()
    */
   @Override
-  public int getGeneID() {
-    Integer i = (Integer) super.getData(gene_id_key);
-    return i==null?default_geneID:i;
+  public Integer getID() {
+    Integer i = (Integer) super.getData(getIDType().toString());
+    return i==null?getDefaultID():i;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.GenericID#getDefaultID()
+   */
+  @Override
+  public Integer getDefaultID(){
+  	return GeneID.default_geneID;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.GenericID#getIDClass()
+   */
+  @Override
+  public IdentifierClass getIDClass(){
+  	return GeneID.gene_id_class;
+  }
+  
+  /* (non-Javadoc)
+   * @see de.zbit.data.GenericID#getIDType()
+   */
+  @Override
+  public IdentifierType getIDType(){
+  	return GeneID.gene_id_key;
   }
   
   /**
@@ -204,7 +229,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
      // Compare geneID and probe name
      if (o instanceof NSwithProbes) {
        NSwithProbes ot = (NSwithProbes) o;
-       if (r==0) r = getGeneID()-ot.getGeneID();
+       if (r==0) r = getID()-ot.getID();
        
        // Compare probe name
        if (r==0) {
@@ -234,7 +259,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
    @Override
    public int hashCode() {
      String probeName = getProbeName();
-     return super.hashCode() + getGeneID() + (probeName!=null?probeName.hashCode():7) ;
+     return super.hashCode() + getID() + (probeName!=null?probeName.hashCode():7) ;
    }
    
    /* (non-Javadoc)
@@ -259,7 +284,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
      Set<Boolean> wasGeneCentered = new HashSet<Boolean>();
      for (T o : source) {
        NSwithProbes mi = (NSwithProbes)o;
-       geneIDs.add(mi.getGeneID());
+       geneIDs.add(mi.getID());
        wasGeneCentered.add(mi.wasGeneCentered);
      }
      
@@ -269,10 +294,10 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
      
      // Set gene id, if same or unset if they differ
      if (geneIDs.size()==1) {
-       ((GeneID)target).setGeneID(geneIDs.iterator().next());
+       ((GeneID)target).setID(geneIDs.iterator().next());
      } else {
        // Reset gene-id
-       ((GeneID)target).setGeneID(default_geneID);
+       ((GeneID)target).setID(default_geneID);
        if (((NSwithProbes)target).isGeneCentered()) {
          ((NSwithProbes)target).wasGeneCentered = true;
          // Cannot ensure that gene is centered. Better unset flag!
@@ -343,7 +368,7 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
    
 
    /**
-    * Convert {@link #getGeneID()}s to gene symbols and set names
+    * Convert {@link #getID()}s to gene symbols and set names
     * to the symbol.
     * @param data
     * @param species
@@ -367,8 +392,8 @@ public abstract class NSwithProbes extends NameAndSignals implements GeneID {
          }
          
          // Map gene id to symbol
-         if (((GeneID) m).getGeneID()>0) {
-           String symbol = mapper.map(((GeneID) m).getGeneID());
+         if (((GeneID) m).getID()>0) {
+           String symbol = mapper.map(((GeneID) m).getID());
            if (symbol!=null && symbol.length()>0) {
              m.name = symbol;
            }

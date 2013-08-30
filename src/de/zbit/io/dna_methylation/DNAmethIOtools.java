@@ -107,7 +107,7 @@ public class DNAmethIOtools {
           it.remove();
         }
       } else {
-        dnam.setGeneID(mappedOn.getGeneID());
+        dnam.setID(mappedOn.getID());
       }
     }
     

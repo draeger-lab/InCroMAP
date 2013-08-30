@@ -273,7 +273,7 @@ public abstract class AbstractGeneAndRegionBasedNSreader<T extends NameAndSignal
     // overwriting methods may implement their own additional means to
     // map the object to a geneID!
     if (geneID==null && toGeneMapper!=null && toGeneMapper.isDiscardNonAssignableProbes() &&
-        (obj instanceof GeneID && ((GeneID)obj).getGeneID()==GeneID.default_geneID)) {
+        (obj instanceof GeneID && ((GeneID)obj).getID()==GeneID.default_geneID)) {
       obj = null;
     }
     

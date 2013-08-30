@@ -299,7 +299,7 @@ public class VisualizeGenesInChartTab {
     // Create a lookup-table
     Map<Integer, GenericGene> geneIDLookUp = new HashMap<Integer, GenericGene>();
     for (GenericGene g: rend.getGenesInRegion()) {
-      geneIDLookUp.put(g.getGeneID(), g);
+      geneIDLookUp.put(g.getID(), g);
     }
     
     // Now match all NS to its gene
@@ -307,7 +307,7 @@ public class VisualizeGenesInChartTab {
     for (NameAndSignals ns : dataSource.getData()) {
       if (ns instanceof GeneID) {
         // we also WANT miRNA here to map to its geneID, not the target!
-        int gId = ((GeneID) ns).getGeneID();
+        int gId = ((GeneID) ns).getID();
         if (gId>0) {
           GenericGene match = geneIDLookUp.get(gId);
           if (match!=null) {
