@@ -49,12 +49,12 @@ import org.jfree.data.general.SeriesChangeEvent;
 import org.jfree.data.xy.DefaultIntervalXYDataset;
 import org.jfree.data.xy.XYDataset;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.genes.GenericGene;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.graph.SymbolAxisWithArbitraryStart;
 import de.zbit.graph.XYGenesBarRenderer;

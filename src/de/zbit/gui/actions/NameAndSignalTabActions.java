@@ -46,14 +46,14 @@ import org.jfree.chart.JFreeChart;
 
 import de.zbit.analysis.PairData;
 import de.zbit.data.EnrichmentObject;
-import de.zbit.data.GeneID;
 import de.zbit.data.HeterogeneousNS;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
-import de.zbit.data.compound.CompoundID;
+import de.zbit.data.id.CompoundID;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;

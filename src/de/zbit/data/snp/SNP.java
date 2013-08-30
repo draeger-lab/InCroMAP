@@ -21,9 +21,9 @@
  */
 package de.zbit.data.snp;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.Signal;
+import de.zbit.data.id.GeneID;
 
 /**
  * A generic class to hold a {@link SNP} with {@link Signal}s and containing {@link GeneID}.

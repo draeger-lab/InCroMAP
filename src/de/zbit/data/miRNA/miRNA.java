@@ -33,10 +33,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.data.id.GeneID;
 
 /**
  * A generic class to hold miRNAs with Signals and Targets.

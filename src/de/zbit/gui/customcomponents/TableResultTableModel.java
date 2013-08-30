@@ -44,12 +44,12 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
 import de.zbit.data.EnrichmentObject;
-import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.PairedNS;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
-import de.zbit.data.compound.CompoundID;
+import de.zbit.data.id.CompoundID;
+import de.zbit.data.id.GeneID;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.actions.NameAndSignalTabActions;

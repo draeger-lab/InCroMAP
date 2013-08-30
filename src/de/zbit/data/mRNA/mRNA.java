@@ -21,9 +21,9 @@
  */
 package de.zbit.data.mRNA;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.Signal;
+import de.zbit.data.id.GeneID;
 
 
 /**

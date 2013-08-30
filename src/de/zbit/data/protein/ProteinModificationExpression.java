@@ -26,10 +26,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.data.id.GeneID;
 
 /**
  * A generic class to hold protein modification

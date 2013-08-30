@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import de.zbit.data.GeneID;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.gui.csv.ExpectedColumn;
 

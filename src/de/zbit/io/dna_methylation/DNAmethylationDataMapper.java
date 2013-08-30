@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.genes.GenericGene;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.prefs.PreferencesDialog;
 import de.zbit.sequence.region.Region;

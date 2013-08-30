@@ -57,11 +57,11 @@ import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.ui.Layer;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.VisualizedData;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.gui.BaseFrame.BaseAction;
 import de.zbit.gui.GUITools;

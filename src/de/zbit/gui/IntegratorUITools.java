@@ -526,7 +526,6 @@ public class IntegratorUITools {
     //Compound ID priorities
     else if (type.equals(IdentifierType.HMDB)) return 0;
     else if (type.equals(IdentifierType.ChEBI)) return 1;
-    else if (type.equals(IdentifierType.CAS)) return 1;
     else if (type.equals(IdentifierType.InChI)) return 1;
     else if (type.equals(IdentifierType.InChIKey)) return 1;
     else if (type.equals(IdentifierType.KeggCompound)) return 1;

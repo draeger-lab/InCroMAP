@@ -35,6 +35,7 @@ import javax.swing.tree.TreeNode;
 
 import de.zbit.analysis.miRNA2mRNA_pair;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;

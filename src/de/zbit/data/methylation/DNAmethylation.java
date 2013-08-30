@@ -23,8 +23,8 @@ package de.zbit.data.methylation;
 
 import java.util.logging.Logger;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.NSwithProbesAndRegion;
+import de.zbit.data.id.GeneID;
 
 /**
  * A generic class to hold DNA methylation data with annotated genes

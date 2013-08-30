@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import de.zbit.data.Signal.MergeType;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.IntegratorUITools;

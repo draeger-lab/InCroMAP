@@ -25,9 +25,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.id.GeneID;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;

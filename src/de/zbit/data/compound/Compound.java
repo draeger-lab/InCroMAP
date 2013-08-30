@@ -28,6 +28,7 @@ import java.util.logging.Level;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
+import de.zbit.data.id.CompoundID;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.compounds.CompoundID2CommonNameMapper;

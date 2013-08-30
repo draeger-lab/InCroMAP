@@ -38,6 +38,7 @@ import javax.swing.treetable.TreeTableModel;
 
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.customcomponents.TableResultTableModel;

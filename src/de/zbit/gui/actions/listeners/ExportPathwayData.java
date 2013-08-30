@@ -34,9 +34,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import de.zbit.data.EnrichmentObject;
-import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.id.GeneID;
 import de.zbit.gui.BaseFrameTab;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;

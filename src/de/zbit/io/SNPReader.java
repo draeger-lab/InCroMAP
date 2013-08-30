@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.snp.SNP;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;

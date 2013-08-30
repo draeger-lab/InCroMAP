@@ -1,6 +1,6 @@
 /*
- * $Id$
- * $URL$
+ * $Id: GeneID.java 132 2012-03-26 13:40:15Z wrzodek $
+ * $URL: https://rarepos.cs.uni-tuebingen.de/svn-path/Integrator/trunk/src/de/zbit/data/GeneID.java $
  * ---------------------------------------------------------------------
  * This file is part of Integrator, a program integratively analyze
  * heterogeneous microarray datasets. This includes enrichment-analysis,
@@ -9,7 +9,7 @@
  * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
  * obtain the latest version of Integrator.
  *
- * Copyright (C) 2011-2013 by the University of Tuebingen, Germany.
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
  *
  * Integrator is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public License
@@ -19,7 +19,7 @@
  * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
  * ---------------------------------------------------------------------
  */
-package de.zbit.data.compound;
+package de.zbit.data.id;
 
 import java.util.Collection;
 
@@ -28,46 +28,38 @@ import de.zbit.data.Signal;
 import de.zbit.data.Signal.MergeType;
 
 /**
- * Interface for objects that can be assigned to HMDB-Compound-IDs.
+ * Interface for object that can be assigned a NCBI Entrez Gene ID.
  * 
  * <p>If implementing this interface, please also override
  * the {@link NameAndSignals#merge(Collection, NameAndSignals, MergeType)}
- * method and avoid taking mean or other stupid things of Compound-IDs.
- * Instead, if data is not compound-centric anymore, return {@value #default_CompoundID}
+ * method and avoid taking mean or other stupid things of geneIDs.
+ * Instead, if data is not gene-centric anymore, return {@value #default_geneID}
  * 
  * @author Clemens Wrzodek
- * @version $Rev$
+ * @version $Rev: 132 $
  */
-public interface CompoundID {
-
+public interface GeneID {
+  
   /**
    * The key to use in the {@link #addData(String, Object)} map to add
-   * the corresponding HMDB ID.
+   * the corresponding NCBI Gene ID (Entrez).
    */
-  public final static String compound_id_key = "HMDB_ID";
+  public final static String gene_id_key = "Gene_ID";
   
   /**
-   * Means compound id has not been set or has no associated id.
+   * Means gene id has not been set or mRNA has no associated gene id.
    */
-  public final static Integer default_CompoundID = -1;
+  public final static Integer default_geneID = -1;
   
   /**
-   * Set the corresponding Compound ID as HMDB identifier.
-   * Example: "HMDB00001" is "1".
-   * @param hmdbID
+   * Set the corresponding NCBI Gene ID.
+   * @param geneID
    */
-  public void setCompoundID(int hmdbID);
+  public void setGeneID(int geneID);
   
   /**
-   * This should accept HMDB ids as strings (e.g., "HMDB00001")
-   * and store them as an integer ("1").
-   * @param hmdbID
+   * @return associated NCBI Gene ID.
    */
-  public void setCompoundID(String hmdbID);
+  public int getGeneID();
   
-  /**
-   * @return associated HMDB ID in integer representation.
-   */
-  public int getCompoundID();
- 
 }

@@ -39,9 +39,9 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
-import de.zbit.data.GeneID;
 import de.zbit.data.NameAndSignals;
-import de.zbit.data.compound.CompoundID;
+import de.zbit.data.id.CompoundID;
+import de.zbit.data.id.GeneID;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
