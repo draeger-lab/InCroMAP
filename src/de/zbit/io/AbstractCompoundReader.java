@@ -1,24 +1,25 @@
 /*
- * $Id: CompoundReader.java 2013-04-18 10:05:12Z rosenbaum $
- * $URL: https://rarepos.cs.uni-tuebingen.de/svn-path/Integrator/trunk/src/de/zbit/io/CompoundReader.java $
- * ---------------------------------------------------------------------
- * This file is part of Integrator, a program integratively analyze
- * heterogeneous microarray datasets. This includes enrichment-analysis,
- * pathway-based visualization as well as creating special tabular
- * views and many other features. Please visit the project homepage at
- * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
- * obtain the latest version of Integrator.
- *
- * Copyright (C) 2011 by the University of Tuebingen, Germany.
- *
- * Integrator is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU Lesser General Public License
- * as published by the Free Software Foundation. A copy of the license
- * agreement is provided in the file named "LICENSE.txt" included with
- * this software distribution and also available online as
- * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
- * ---------------------------------------------------------------------
- */
+  * $Id:  AbstractCompoundReader.java 15:35:59 rosenbaum $
+  * $URL: AbstractCompoundReader.java $
+  * ---------------------------------------------------------------------
+  * This file is part of Integrator, a program integratively analyze
+  * heterogeneous microarray datasets. This includes enrichment-analysis,
+  * pathway-based visualization as well as creating special tabular
+  * views and many other features. Please visit the project homepage at
+  * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
+  * obtain the latest version of Integrator.
+  *
+  * Copyright (C) 2011-2013 by the University of Tuebingen, Germany.
+  *
+  * Integrator is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public License
+  * as published by the Free Software Foundation. A copy of the license
+  * agreement is provided in the file named "LICENSE.txt" included with
+  * this software distribution and also available online as
+  * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+  * ---------------------------------------------------------------------
+  */
+
 package de.zbit.io;
 
 import java.awt.Component;
@@ -36,10 +37,9 @@ import java.util.logging.Logger;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.data.compound.Compound;
-import de.zbit.data.mRNA.mRNA;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
 import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.integrator.ReaderCache;
@@ -55,29 +55,31 @@ import de.zbit.util.objectwrapper.ValuePair;
 import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
- * An extension of {@link NameAndSignalReader} to read
- * metabolite-based data, that might contain various compound identifiers
- * such as DB Ids (HMDB, CAS,... ) or a common compound synonym, signals and further
- * additional columns.
- * 
+ * An Abstract extension of {@link NamesAndSignalReader} to read
+ * compound data, that might contain various compound identifiers,
+ * signals and further additional columns
  * @author Lars Rosenbaum
- * @version $Rev: 183 $
+ * @version $Rev$
+ * @param <T> {@link NameAndSignals} to read from input file
  */
-public class CompoundReader extends NameAndSignalReader<Compound> {
 
-  private static final long serialVersionUID = -7376513377238689268L;
 
-	public static final transient Logger log = Logger.getLogger(CompoundReader.class.getName());
+public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends NameAndSignalReader<T> {
+  public static final transient Logger log = Logger.getLogger(AbstractCompoundReader.class.getName());
   
   /**
-   * Type of Identifier. Anything else than
-   * Numeric (CompoundID) will be mapped to this.
+   * Type of Identifier
    */
   private IdentifierType idType;
   
   /**
-   * Map the ID to an HMDB compound id. If this is null, the input is 
-   * expected to be an HMD compound id without! the HMDB prefix.
+   * Not required and may be null. However later needed for enrichment
+   */
+  protected Species species;
+  
+  /**
+   * Map the ID to an NCBI gene id. If this is null, the input is 
+   * expected to be an NCBI gene id.
    */
   private AbstractMapper<String, Integer> mapper = null;
   
@@ -94,11 +96,11 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
   
   /**
    * A second identifier that is used as Backup, <B>only if the
-   * first identifier is the CompoundID</B>.
-   * Assigns this identifier as name, instead of the CompoundID.
-   * And if the CompoundID is not defined, tries to map this Identifier
-   * to a CompoundID. It is recommended using Common Name as secondary
-   * and CompoundID as primary identifiers, though, other combinations
+   * first identifier is the GeneID</B>.
+   * Assigns this identifier as name, instead of the GeneID.
+   * And if the GeneID is not defined, tries to map this Identifier
+   * to a GeneID. It is recommended using GeneSymbols as secondary
+   * and GeneID as primary identifiers, though, other combinations
    * work too.
    */
   private ValuePair<Integer, IdentifierType> secondID = null;
@@ -132,13 +134,9 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
     List<ExpectedColumn> list = new ArrayList<ExpectedColumn>();
     List<IdentifierType> idTypes = new ArrayList<IdentifierType>(Arrays.asList(IdentifierType.getCompoundIdentifierTypes()));
     List<String> regExForIdTypes = new ArrayList<String>(Arrays.asList(MappingUtils.getRegularExpressionsFor(IdentifierClass.Compound)));
-    //Remove unknown
+    // Remove unknown
     regExForIdTypes.remove(idTypes.indexOf(IdentifierType.UnknownCompound));
     idTypes.remove(IdentifierType.UnknownCompound);
-    // Do not set the gene id regex (simple number... to unspecific)
-    regExForIdTypes.set(idTypes.indexOf(IdentifierType.CompoundID), null);
-    //Detection of common names possible
-    //regExForIdTypes.set(idTypes.indexOf(IdentifierType.CommonName), null);
     
     // The user may choose multiple identifier columns
     ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),isIdentifierRequired(),true,true,false,regExForIdTypes.toArray(new String[0])) {
@@ -149,11 +147,11 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
       public int[] getInitialSuggestions(CSVReader r) {
         int[] su = super.getInitialSuggestions(r);
         // Try to enhance auto detection of identifiers with unspecific regex'es
-        if (su[0]<0) {
-          su[0] = r.getColumnContaining("HMDB");
+         if (su[0]<0) {
+          su[0] = r.getColumnContaining("CommonName");
         }
         if (su[4]<0) {
-          su[4] = r.getColumnContaining("Name");
+          su[4] = r.getColumnContaining("PubChem_compound");
         }
           
         return su;
@@ -175,13 +173,7 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
     
     return list.toArray(new ExpectedColumn[0]);
   }
-  
-  
-  protected List<ExpectedColumn> getAdditionalExpectedColumns(){return null;}
 
-  protected void processAdditionalExpectedColumns(List<ExpectedColumn> additional) {}
-
-  
   /**
    * @return number of observation/ signal columns to be available to the user.
    */
@@ -202,21 +194,42 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
     return NameAndSignalReader.getExpectedSignalColumns(maxNumberOfObservations);
   }
 
+  /**
+   * By default, a "Identifier" column and some Signal columns are added
+   * as expected columns. If you required further ones, please implement
+   * this method and return further required columns. Else, return null.
+   * @return Additional columns required in addition to gene identifier
+   * and signals.
+   */
+  protected abstract List<ExpectedColumn> getAdditionalExpectedColumns();
+  
+  /**
+   * Process user selected assignments for {@link #getAdditionalExpectedColumns()}.
+   * List should be the same as given by {@link #getAdditionalExpectedColumns()} (signal
+   * and id cols have been removed).
+   * @param additional
+   */
+  protected abstract void processAdditionalExpectedColumns(List<ExpectedColumn> additional);
+
+
+
   /* (non-Javadoc)
    * @see de.zbit.io.NameAndSignalReader#importWithGUI(java.awt.Component, java.lang.String, de.zbit.integrator.ReaderCache)
    */
   @Override
-  public Collection<Compound> importWithGUI(Component parent, String file, ReaderCache cache) {
-
-    //NOT NEEDED FOR COMPOUNDS: Create a new panel that allows selection of species
-    //JLabeledComponent spec = IntegratorUITools.getOrganismSelector();
+  public Collection<T> importWithGUI(Component parent, String file, ReaderCache cache) {
+  	
+  	//Not needed for compounds but Integrator will anyway ask in enrichment
+  	//so we do it here
+    // Create a new panel that allows selection of species
+    JLabeledComponent spec = IntegratorUITools.getOrganismSelector();
     
     // Create and show the import dialog
     try {
       // Definitions of required and optional columns
       ExpectedColumn[] exCol = getExpectedColumns();
       int originalSize = getExpectedColumns().length;
-      CSVReader inputReader = loadConfigurationFromCache(cache, file, exCol, null);
+      CSVReader inputReader = loadConfigurationFromCache(cache, file, exCol, spec);
       if (exCol.length!=originalSize) {
         // Don't load corrupt information
         exCol = getExpectedColumns();
@@ -228,14 +241,15 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
       boolean manuallyCheckedAssignments = false;
       while (dialogConfirmed && !manuallyCheckedAssignments) {
         c = new CSVImporterV2(inputReader, exCol);
-        dialogConfirmed = IntegratorUITools.showCSVImportDialog(parent, c, null);
+        dialogConfirmed = IntegratorUITools.showCSVImportDialog(parent, c, spec);
         manuallyCheckedAssignments = dialogConfirmed && additionalColumnAssignmentCheck(c);
       }
       
       // Process user input and read data
       if (dialogConfirmed) {
         // Store in cache
-        if (cache!=null) cache.add(ReaderCacheElement.createInstance(c, null));
+        this.species = (Species) spec.getSelectedItem();
+        if (cache!=null) cache.add(ReaderCacheElement.createInstance(c, species));
         
         // Read all columns and types
         setNameAndIdentifierTypes(exCol[0]);   
@@ -298,14 +312,14 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
    */
   @Override
   public Species getSpecies() {
-    return null;
+    return species;
   }
   
   /**
-   * If you don't want to initialize any 2CompoundID mapper, set
+   * If you don't want to initialize any 2DatabaseMainID mapper, set
    * this to true (only makes sense if you
    * {@link #addSecondIdentifier(int, IdentifierType)} and
-   * read primary the compoundID already).
+   * read primary database identifier already).
    * @param dontInitilize
    */
   public void setDontInitializeToGeneIDmapper(boolean dontInitilize) {
@@ -314,7 +328,7 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
   
   /**
    * If true, will not warn, e.g. when an integer
-   * could not ger parsed from a string.
+   * could not get parsed from a string.
    * @param b
    */
   public void setSupressWarnings(boolean b) {
@@ -376,20 +390,27 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
   /**
    * This is ONLY for use in combination with {@link #importWithGUI(String)} afterwards.
    */
-  public CompoundReader() {
+  public AbstractCompoundReader() {
     super(-1);
   }
   
-
-  public CompoundReader(int identifierCol, IdentifierType idType) {
+  public AbstractCompoundReader(int identifierCol, IdentifierType idType) {
     super(identifierCol);
     this.idType = idType;
     this.preferredNameColumn = identifierCol;
   }
   
+
+  public AbstractCompoundReader(int identifierCol, IdentifierType idType, Species species) {
+    super(identifierCol);
+    this.idType = idType;
+    this.species = species;
+    this.preferredNameColumn = identifierCol;
+  }
+  
   /**
    * It is strongly recommended setting the primary identifier to a
-   * compoundID column and this (secondary) identifier to a gene symbol
+   * GeneID column and this (secondary) identifier to a gene symbol
    * column. See {@link #secondID} for more information!
    * @see #secondID
    * @param col
@@ -397,7 +418,7 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
    */
   public void addSecondIdentifier(int col, IdentifierType type) {
     secondID = new ValuePair<Integer, IdentifierType>(col, type);
-    if (type.equals(IdentifierType.GeneSymbol)) {
+    if (type.equals(IdentifierType.CommonName)) {
       preferredNameColumn = col;
     }
   }
@@ -407,15 +428,15 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
    * @see de.zbit.io.NameAndSignalReader#read(de.zbit.io.CSVReader)
    */
   @Override
-  public Collection<Compound> read(CSVReader inputCSV) throws IOException, Exception {
+  public Collection<T> read(CSVReader inputCSV) throws IOException, Exception {
     // Init Mapper (primary for idType)
     if (!doNotInitializeTheMapper) {
       if (idType!=null && !idType.equals(IdentifierType.CompoundID)) {
-        mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), null);
+        mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
       } else if (secondID!=null) {
         // Only if primary identifier does not require a mapper,
         // init one for the secondary identifier
-        mapper = MappingUtils.initialize2GeneIDMapper(secondID.getB(), getSecondaryProgressBar(), null);
+        mapper = MappingUtils.initialize2GeneIDMapper(secondID.getB(), getSecondaryProgressBar(), species);
       }
       if (mapper!=null) mapper.readMappingData();
     }
@@ -425,7 +446,7 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
      */
     
     // Read file
-    Collection<Compound> ret =  super.read(inputCSV);
+    Collection<T> ret =  super.read(inputCSV);
     
     // Free resources
     mapper = null;
@@ -436,17 +457,17 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
    * @see de.zbit.io.NameAndSignalReader#read(java.lang.String[])
    */
   @Override
-  public Collection<Compound> read(String[] identifiers) throws IOException, Exception {
+  public Collection<T> read(String[] identifiers) throws IOException, Exception {
     // Init Mapper (primary for idType)
     if (!doNotInitializeTheMapper) {
       if (!idType.equals(IdentifierType.CompoundID)) {
-        mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), null);
+        mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
       }
       if (mapper!=null) mapper.readMappingData();
     }
     
     // Read file
-    Collection<Compound> ret =  super.read(identifiers);
+    Collection<T> ret =  super.read(identifiers);
     
     // Free resources
     mapper = null;
@@ -457,29 +478,29 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
    * @see de.zbit.io.NameAndSignalReader#createObject(java.lang.String, java.lang.String[])
    */
   @Override
-  protected Compound createObject(String name, String[] line) throws Exception {
-    // Map to CompoundID
-    Integer compoundID = null;
+  protected T createObject(String name, String[] line) throws Exception {
+    // Map to GeneID
+    Integer geneID = null;
     if (idType!=null && !idType.equals(IdentifierType.CompoundID)) {
-      compoundID = mapper.map(name);
+      geneID = mapper.map(name);
     } else {
-      // Primary identifier is a compound id.
+      // Primary identifier is a gene id.
       try {
-        compoundID = Integer.parseInt(name);
-        if (compoundID<=0) compoundID=null;
+        geneID = Integer.parseInt(name);
+        if (geneID<=0) geneID=null;
       } catch (NumberFormatException e) {
-        String warning = String.format("Could not parse CompoundID from String '%s'.", name);
+        String warning = String.format("Could not parse ID from String '%s'.", name);
         logWarning(warning);
         
-        compoundID=null;
+        geneID=null;
       }
       
       // Use the second identifier as Backup
       // and to store a better name
       if (secondID!=null) {
         String secondIdentifier = line[secondID.getA()];
-        if (compoundID==null && mapper!=null) {
-          compoundID = mapper.map(secondIdentifier);
+        if (geneID==null && mapper!=null) {
+          geneID = mapper.map(secondIdentifier);
         }
         name = secondIdentifier;
       }
@@ -494,35 +515,13 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
       }
     }
     
-    // Create 
-    Compound m = createObject(name, compoundID, line);
+    // Create mRNA
+    T m = createObject(name, geneID, line);
     
     // SecondID is normally the name. If not, still keep this
     // information as additional information.
     if (addSecondIDasAdditionalInfo && m!=null) {
       m.addData(secondID.getB().toString(), line[secondID.getA()]);
-    }
-    
-    return m;
-  }
-  
-  /**
-   * Create Compound from the CSV file.
-   * The name and compoundID is already parsed and
-   * also the signals is being taken care of.
-   * Additional values from the CSV file can be parsed here.
-   * Else, the return is simply
-   * @param name most human readable common compound name
-   * @param compoundID <b>might be <code>NULL</code></b>, if unknown!
-   * @param line current line of CSV file
-   * @return instance of Compound
-   */
-  protected Compound createObject(String name, Integer compoundID, String[] line) {
-    Compound m;
-    if (compoundID!=null) {
-      m = new Compound(name, compoundID);
-    } else {
-      m = new Compound(name);
     }
     
     return m;
@@ -548,5 +547,22 @@ public class CompoundReader extends NameAndSignalReader<Compound> {
       }
     }
   }
-
+  
+  /**
+   * Create your instance of T from the CSV file.
+   * The name and ID is already parsed and
+   * also the signals is being taken care of.
+   * Additional values from the CSV file can be parsed here.
+   * Else, the return is simply
+   * <pre>
+   * return new MyClass(name, geneID);
+   * </pre> 
+   * @param name most human readable gene name
+   * @param geneID <b>might be <code>NULL</code></b>, if unknown!
+   * @param line current line of CSV file
+   * @return instance of T
+   */
+  protected abstract T createObject(String name, Integer geneID, String[] line);
+  
 }
+
