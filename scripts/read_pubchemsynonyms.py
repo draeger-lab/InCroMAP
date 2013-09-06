@@ -89,16 +89,16 @@ def write_metab(fh,metabolite):
   fh.write(metabolite['id'])
   fh.write('\t')
   if 'hmdb' in metabolite:
-    fh.write(";".join(metabolite['hmdb']))
+    fh.write("|".join(metabolite['hmdb']))
   fh.write('\t')
   if 'kegg' in metabolite:
-    fh.write(";".join(metabolite['kegg']))
+    fh.write("|".join(metabolite['kegg']))
   fh.write('\t')
   if 'chebi' in metabolite:
-    fh.write(";".join(metabolite['chebi']))
+    fh.write("|".join(metabolite['chebi']))
   fh.write('\t')
   if 'lmid' in metabolite:
-    fh.write(";".join(metabolite['lmid']))
+    fh.write("|".join(metabolite['lmid']))
   fh.write('\n')
 
 if __name__ == "__main__":

@@ -39,8 +39,8 @@ def main(argv):
     sys.exit(2)
   
   o_pc = codecs.open(outprefix+".txt",'w', 'utf-8')
-  o_pc.write('InChIKey\tName\tHMDB\tLMID\tPC_compound\tKegg\tCHEBI\n')
-  
+  o_pc.write('InChIKey\tName\tHMDB\tLMID\tKegg\tCHEBI\tPC_compound\n')
+
   inchimap = read_inchifile(inchifile)
   meshmap = read_meshfile(meshfile)
   
