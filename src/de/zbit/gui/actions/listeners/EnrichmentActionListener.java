@@ -41,7 +41,6 @@ import javax.swing.UIManager;
 import de.zbit.analysis.enrichment.AbstractEnrichment;
 import de.zbit.analysis.enrichment.GOEnrichment;
 import de.zbit.analysis.enrichment.KEGGPathwayEnrichment;
-import de.zbit.analysis.enrichment.KEGGPathwayEnrichmentCompounds;
 import de.zbit.analysis.enrichment.MSigDB_GSEA_Enrichment;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
@@ -212,11 +211,7 @@ public class EnrichmentActionListener implements ActionListener {
           if (e.getActionCommand().equals(Enrichments.GO_ENRICHMENT.toString())) {
             enrich = new GOEnrichment(species, getProgressBar());
           } else if (e.getActionCommand().equals(Enrichments.KEGG_ENRICHMENT.toString())) {
-            if (!listContainsCompoundIDs) {
-              enrich = new KEGGPathwayEnrichment(species, getProgressBar());
-            } else {
-              enrich = new KEGGPathwayEnrichmentCompounds(species, listContainsGeneIDs, getProgressBar());
-            }
+              enrich = new KEGGPathwayEnrichment(species,listContainsGeneIDs,listContainsCompoundIDs,getProgressBar());
           } else if (e.getActionCommand().equals(Enrichments.MSIGDB_ENRICHMENT.toString())) {
             enrich = new MSigDB_GSEA_Enrichment(species, getProgressBar());
           } else {
@@ -242,7 +237,7 @@ public class EnrichmentActionListener implements ActionListener {
         } else {*/
           //GUITools.showErrorMessage(source, String.format("Enrichment for %s is not yet implemented.", geneList.get(0).getClass()));
         try {
-          l = enrich.getEnrichments(geneList, null);
+          l = enrich.getEnrichments(geneList,null,null);
         } catch (Throwable e) {
           e.printStackTrace();
           GUITools.showErrorMessage(null, e);

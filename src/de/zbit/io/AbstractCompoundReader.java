@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
@@ -78,10 +79,17 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
   protected Species species;
   
   /**
-   * Map the ID to an NCBI gene id. If this is null, the input is 
-   * expected to be an NCBI gene id.
+   * Compiled InChiKey regexp
    */
-  private AbstractMapper<String, Integer> mapper = null;
+  private static Pattern inchikeyPattern = Pattern.compile(
+  		MappingUtils.getRegularExpressionForIdentifier(IdentifierType.InChIKey));
+  
+  
+  /**
+   * Map the ID to an InChIKey. If this is null, the input is 
+   * expected to be a correct InChIKey
+   */
+  private AbstractMapper<String, Set<String>> mapper = null;
   
   /**
    * If true, this class will not try to initialize the
@@ -96,11 +104,11 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
   
   /**
    * A second identifier that is used as Backup, <B>only if the
-   * first identifier is the GeneID</B>.
-   * Assigns this identifier as name, instead of the GeneID.
-   * And if the GeneID is not defined, tries to map this Identifier
-   * to a GeneID. It is recommended using GeneSymbols as secondary
-   * and GeneID as primary identifiers, though, other combinations
+   * first identifier is an InChIKey</B>.
+   * Assigns this identifier as name, instead of the InChIKey.
+   * And if the InChIKey is not defined, tries to map this Identifier
+   * to an InChIKey. It is recommended using CompoundNames as secondary
+   * and some database ID as primary identifiers, though, other combinations
    * work too.
    */
   private ValuePair<Integer, IdentifierType> secondID = null;
@@ -147,11 +155,11 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
       public int[] getInitialSuggestions(CSVReader r) {
         int[] su = super.getInitialSuggestions(r);
         // Try to enhance auto detection of identifiers with unspecific regex'es
-         if (su[0]<0) {
-          su[0] = r.getColumnContaining("CommonName");
+         if (su[1]<0) {
+          su[0] = r.getColumnContaining("CompoundName");
         }
-        if (su[4]<0) {
-          su[4] = r.getColumnContaining("PubChem_compound");
+        if (su[1]<0) {
+          su[6] = r.getColumnContaining("PC_compound");
         }
           
         return su;
@@ -316,13 +324,13 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
   }
   
   /**
-   * If you don't want to initialize any 2DatabaseMainID mapper, set
+   * If you don't want to initialize any 2InChIKey mapper, set
    * this to true (only makes sense if you
    * {@link #addSecondIdentifier(int, IdentifierType)} and
-   * read primary database identifier already).
+   * read primary with InChIKey).
    * @param dontInitilize
    */
-  public void setDontInitializeToGeneIDmapper(boolean dontInitilize) {
+  public void setDontInitializeToCompoundIDmapper(boolean dontInitilize) {
     this.doNotInitializeTheMapper = dontInitilize;
   }
   
@@ -376,7 +384,7 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
    preferredNameColumn = l.get(l.size()-1).getA();
    // But still, Gene symbols should be preferred to descriptions
    for (int i=l.size()-1; i>=0; i--) {
-     if (l.get(i).getB().equals(IdentifierType.CommonName)) {
+     if (l.get(i).getB().equals(IdentifierType.CompoundName)) {
        preferredNameColumn = l.get(i).getA();
        if (i>=2) { // If it is no primary or secondary identifier,  do not add it twice...
          removeAdditionalData(l.get(i).getA(), l.get(i).getB().toString());
@@ -418,7 +426,7 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
    */
   public void addSecondIdentifier(int col, IdentifierType type) {
     secondID = new ValuePair<Integer, IdentifierType>(col, type);
-    if (type.equals(IdentifierType.CommonName)) {
+    if (type.equals(IdentifierType.CompoundName)) {
       preferredNameColumn = col;
     }
   }
@@ -431,12 +439,12 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
   public Collection<T> read(CSVReader inputCSV) throws IOException, Exception {
     // Init Mapper (primary for idType)
     if (!doNotInitializeTheMapper) {
-      if (idType!=null && !idType.equals(IdentifierType.CompoundID)) {
-        mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
+      if (idType!=null && !idType.equals(IdentifierType.InChIKey)) {
+        mapper = MappingUtils.initialize2InChIKeyMapper(idType, getSecondaryProgressBar());
       } else if (secondID!=null) {
         // Only if primary identifier does not require a mapper,
         // init one for the secondary identifier
-        mapper = MappingUtils.initialize2GeneIDMapper(secondID.getB(), getSecondaryProgressBar(), species);
+        mapper = MappingUtils.initialize2InChIKeyMapper(secondID.getB(), getSecondaryProgressBar());
       }
       if (mapper!=null) mapper.readMappingData();
     }
@@ -460,8 +468,8 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
   public Collection<T> read(String[] identifiers) throws IOException, Exception {
     // Init Mapper (primary for idType)
     if (!doNotInitializeTheMapper) {
-      if (!idType.equals(IdentifierType.CompoundID)) {
-        mapper = MappingUtils.initialize2GeneIDMapper(idType, getSecondaryProgressBar(), species);
+      if (!idType.equals(IdentifierType.InChIKey)) {
+        mapper = MappingUtils.initialize2InChIKeyMapper(idType, getSecondaryProgressBar());
       }
       if (mapper!=null) mapper.readMappingData();
     }
@@ -480,27 +488,23 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
   @Override
   protected T createObject(String name, String[] line) throws Exception {
     // Map to GeneID
-    Integer geneID = null;
-    if (idType!=null && !idType.equals(IdentifierType.CompoundID)) {
-      geneID = mapper.map(name);
+    String inchikey = null;
+    if (idType!=null && !idType.equals(IdentifierType.InChIKey)) {
+      Set<String> set = mapper.map(name);
+    	if(set!=null)inchikey = set.iterator().next();
     } else {
-      // Primary identifier is a gene id.
-      try {
-        geneID = Integer.parseInt(name);
-        if (geneID<=0) geneID=null;
-      } catch (NumberFormatException e) {
-        String warning = String.format("Could not parse ID from String '%s'.", name);
-        logWarning(warning);
-        
-        geneID=null;
-      }
-      
+      // Primary identifier is an inchikey
+    	if(inchikeyPattern.matcher(name).matches()){
+    		inchikey = name;
+    	}
+    	
       // Use the second identifier as Backup
       // and to store a better name
       if (secondID!=null) {
         String secondIdentifier = line[secondID.getA()];
-        if (geneID==null && mapper!=null) {
-          geneID = mapper.map(secondIdentifier);
+        if (inchikey==null && mapper!=null) {
+        	Set<String> set = mapper.map(secondIdentifier);
+        	if(set!=null)inchikey = set.iterator().next();
         }
         name = secondIdentifier;
       }
@@ -516,7 +520,7 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
     }
     
     // Create mRNA
-    T m = createObject(name, geneID, line);
+    T m = createObject(name, inchikey, line);
     
     // SecondID is normally the name. If not, still keep this
     // information as additional information.
@@ -555,14 +559,14 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
    * Additional values from the CSV file can be parsed here.
    * Else, the return is simply
    * <pre>
-   * return new MyClass(name, geneID);
+   * return new MyClass(name, inchikey);
    * </pre> 
    * @param name most human readable gene name
-   * @param geneID <b>might be <code>NULL</code></b>, if unknown!
+   * @param inchikey <b>might be <code>NULL</code></b>, if unknown!
    * @param line current line of CSV file
    * @return instance of T
    */
-  protected abstract T createObject(String name, Integer geneID, String[] line);
+  protected abstract T createObject(String name, String inchikey, String[] line);
   
 }
 

@@ -58,7 +58,7 @@ import de.zbit.graph.io.def.GraphMLmaps;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.kegg.io.KEGG2yGraph;
-import de.zbit.mapper.compounds.KeggCompound2CompoundIDMapper;
+import de.zbit.mapper.compounds.KeggCompound2InChIKeyMapper;
 import de.zbit.util.TranslatorTools;
 import de.zbit.util.objectwrapper.ValuePairUncomparable;
 import de.zbit.util.objectwrapper.ValueTriplet;
@@ -372,7 +372,7 @@ public class NameAndSignal2PWTools {
     
     // Get GeneID 2 Node map
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
-    Map<Integer, List<Node>> ci2n_map = null; // CompoundID2Node mapping
+    Map<String, List<Node>> ci2n_map = null; // CompoundID2Node mapping
     Map<String, List<Node>> mi2n_map = tools.getRNA2NodeMap();
     Map<String, List<Node>> pw2n_map = tools.getPathwayReferenceNodeMap();
     
@@ -409,10 +409,10 @@ public class NameAndSignal2PWTools {
       } else if (ns instanceof Compound) {
         // We do not always need the 2CompoundID mapping, so we don't pre-init it.
         if (ci2n_map==null) {
-          ci2n_map = getCompoundID2NodeMap();
+          ci2n_map = getInChIKey2NodeMap();
         }
-        Integer cpdID = ((Compound) ns).getCompoundID();
-        if (cpdID!=null && cpdID>0) {
+        String cpdID = ((Compound) ns).getID();
+        if (cpdID!=null && !cpdID.equals(((Compound) ns).getDefaultID())) {
           node = ci2n_map.get(cpdID);
         } else {
           node = null;
@@ -502,32 +502,31 @@ public class NameAndSignal2PWTools {
 
 
   /**
-   * Return a map from HMDB CompoundID to corresponding {@link Node}.
-   * @return map from HMDB CompoundID to List of nodes.
+   * Return a map from InChIKey to corresponding {@link Node}.
+   * @return map from InChIKey to List of nodes.
    */
-  private Map<Integer, List<Node>> getCompoundID2NodeMap() {
+  private Map<String, List<Node>> getInChIKey2NodeMap() {
     // If we want to map compounds we HAVE TO create our mapping manually first
-    if (tools.getMap(GraphMLmapsExtended.NODE_HMDB_ID)==null) {
-      createNode2HMDBmapping();
+    if (tools.getMap(GraphMLmapsExtended.NODE_COMPOUND_ID)==null) {
+      createNode2InChIKeymapping();
     }
 
-    // Build a map from GeneID 2 Node
-    Map<Integer, List<Node>> id2node = new HashMap<Integer, List<Node>>();
+    // Build a map from InChIKey 2 Node
+    Map<String, List<Node>> id2node = new HashMap<String, List<Node>>();
     
-    NodeMap hmdb = (NodeMap) tools.getMap(GraphMLmapsExtended.NODE_HMDB_ID);
+    NodeMap inchi = (NodeMap) tools.getMap(GraphMLmapsExtended.NODE_COMPOUND_ID);
     for (Node n : graph.getNodeArray()) {
-      Object hmdbIds = hmdb.get(n);
-      if (hmdbIds!=null && hmdbIds.toString().length()>0) {
-        String[] ids = hmdbIds.toString().split(",|\\s"); // comma or space separated.
+      Object inchiIds = inchi.get(n);
+      if (inchiIds!=null && inchiIds.toString().length()>0) {
+        String[] ids = inchiIds.toString().split(",|\\s|\\|"); // comma, space, or "|" separated.
         for (String id: ids) {
           if (id==null || id.trim().length()<1) continue;
           try {
-            // Get Node collection for compound ID
-            Integer intId = Integer.parseInt(id);
-            List<Node> list = id2node.get(intId);
+            // Get Node collection for InChIKey
+            List<Node> list = id2node.get(id);
             if (list==null) {
               list = new LinkedList<Node>();
-              id2node.put(intId, list);
+              id2node.put(id, list);
             }
             // Add node to list.
             list.add(n);
@@ -557,8 +556,8 @@ public class NameAndSignal2PWTools {
     Map<Object, List<T>> id2NSmapper = NameAndSignals.getNSIdentifierToNSmap(nsList);
     
     // If we want to map compounds we HAVE TO create our mapping manually first
-    if (desiredIdentifier==2 && tools.getMap(GraphMLmapsExtended.NODE_HMDB_ID)==null) {
-      createNode2HMDBmapping();
+    if (desiredIdentifier==2 && tools.getMap(GraphMLmapsExtended.NODE_COMPOUND_ID)==null) {
+      createNode2InChIKeymapping();
     }
     
     for (Node n: graph.getNodeArray()) {
@@ -569,8 +568,8 @@ public class NameAndSignal2PWTools {
       Object identifier = null;
       if (desiredIdentifier==1) { //GeneIDs
         identifier = tools.getInfo(n, GraphMLmaps.NODE_GENE_ID);
-      } else if (desiredIdentifier==2) { //HMDB (Compound) IDs
-        identifier = tools.getInfo(n, GraphMLmapsExtended.NODE_HMDB_ID);
+      } else if (desiredIdentifier==2) { //InChIKeys
+        identifier = tools.getInfo(n, GraphMLmapsExtended.NODE_COMPOUND_ID);
       } else if (desiredIdentifier==0) { //Names
         identifier = tools.getInfo(n, GraphMLmaps.NODE_LABEL);
       } else if (desiredIdentifier==3) { //Names        
@@ -621,34 +620,36 @@ public class NameAndSignal2PWTools {
   /**
    * This will initialize the {@link GraphMLmapsExtended#NODE_HMDB_ID} mapping.
    */
-  private void createNode2HMDBmapping() {
-    KeggCompound2CompoundIDMapper map = IntegratorUITools.getKegg2CompoundIDMapping();
+  private void createNode2InChIKeymapping() {
+    KeggCompound2InChIKeyMapper map = IntegratorUITools.getKegg2InChIKeyMapping();
  
     // Assign a space-separated HMDB-id-string to each node
     for (Node n: graph.getNodeArray()) {
       Object KEGG_id = tools.getInfo(n, GraphMLmaps.NODE_KEGG_ID);
-      StringBuffer hmdbString = new StringBuffer();
+      StringBuffer idString = new StringBuffer();
       if (KEGG_id!=null) {
         String[] ids = KEGG_id.toString().split(",|\\s"); // comma or space separated.
         for (String id: ids) {
           if (id==null || id.trim().length()<1) continue;
           try {
-            Integer hmdb = map.mapSavely(id);
-            if (hmdb!=null) {
-              if (hmdbString.length()>0) {
-                hmdbString.append(' ');
-              }
-              hmdbString.append(hmdb);
+          	 Set<String> inchikeys = map.map(id);
+             if (inchikeys!=null) {
+            	 for(String ikey: inchikeys){
+            		 if (idString.length()>0) {
+            			 idString.append('|');
+            		 		}
+            		 idString.append(ikey);
+            	 }
             }
           } catch (Exception e) {
-            log.log(Level.WARNING, "Could not get compoundID for node.", e);
+            log.log(Level.WARNING, "Could not get InChIKey for node.", e);
           }
         }
       }
       
-      // Set HMDB identifiers
-      if (hmdbString.length()>0) {
-        tools.setInfo(n, GraphMLmapsExtended.NODE_HMDB_ID, hmdbString.toString());
+      // Set identifiers
+      if (idString.length()>0) {
+        tools.setInfo(n, GraphMLmapsExtended.NODE_COMPOUND_ID, idString.toString());
       }
     }
   }

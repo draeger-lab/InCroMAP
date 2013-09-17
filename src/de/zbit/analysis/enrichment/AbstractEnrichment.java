@@ -39,6 +39,7 @@ import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.compound.Compound;
 import de.zbit.data.id.CompoundID;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.miRNA.miRNA;
@@ -77,6 +78,11 @@ public abstract class AbstractEnrichment<EnrichIDType> {
   protected EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID=null;
     
   /**
+   * Mapping from InChIKey 2 Enrichment class ids (e.g., KEGG Pathway ID) 
+   */
+  protected EnrichmentMapper<String, EnrichIDType> inchikey2enrich_ID=null;
+      
+  /**
    * Mapping from Enrichment class ID to Name (e.g. KEGG Pathway Name)
    */
   protected AbstractMapper<EnrichIDType, String> enrich_ID2Name=null;
@@ -100,6 +106,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
   /**
    * Create a new enrichment analysis.
    * @param geneID2enrich_ID see {@link #geneID2enrich_ID}
+   * @param inchikey2enrich_ID see {@link #inchikey2enrich_ID}
    * @param enrich_IDID2Name see {@link #enrich_ID2Name}
    * @param spec see {@link #species}
    * @param prog see {@link #prog}
@@ -107,9 +114,10 @@ public abstract class AbstractEnrichment<EnrichIDType> {
    * or if one of the mappers is null and the application could not initialize
    * the mapper, because of an {@link IOException}.
    */
-  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID, AbstractMapper<EnrichIDType, String> enrich_IDID2Name, Species spec, AbstractProgressBar prog) throws IOException {
+  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID, EnrichmentMapper<String, EnrichIDType> inchikey2enrich_ID, AbstractMapper<EnrichIDType, String> enrich_IDID2Name, Species spec, AbstractProgressBar prog) throws IOException {
     super();
     this.geneID2enrich_ID = geneID2enrich_ID;
+    this.inchikey2enrich_ID = inchikey2enrich_ID;
     this.enrich_ID2Name = enrich_IDID2Name;
     this.prog = prog;
     this.species = spec;
@@ -117,35 +125,37 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     // Eventually initialize null variables
     initializeEnrichmentMappings();
   }
-  /** @see #AbstractEnrichment(EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
+  
+  /** @see #AbstractEnrichment(EnrichmentMapper, EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
    */
-  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID, AbstractMapper<EnrichIDType, String> enrich_IDID2Name, AbstractProgressBar prog) throws IOException {
-    this(geneID2enrich_ID, enrich_IDID2Name, null, prog);
+  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID, EnrichmentMapper<String, EnrichIDType> inchikey2enrich_ID, AbstractMapper<EnrichIDType, String> enrich_IDID2Name, AbstractProgressBar prog) throws IOException {
+    this(geneID2enrich_ID, inchikey2enrich_ID, enrich_IDID2Name, null, prog);
   }
-  /** @see #AbstractEnrichment(EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
+  
+  /** @see #AbstractEnrichment(EnrichmentMapper, EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
    */
   public AbstractEnrichment(Species spec, AbstractProgressBar prog) throws IOException {
-    this(null,null, spec, prog);
+    this(null,null,null, spec, prog);
   }
-  /** @see #AbstractEnrichment(EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
+  /** @see #AbstractEnrichment(EnrichmentMapper, EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
    */
-  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID, AbstractMapper<EnrichIDType, String> enrich_IDID2Name) throws IOException {
-    this (geneID2enrich_ID,enrich_IDID2Name, null);
+  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID, EnrichmentMapper<String, EnrichIDType> inchikey2enrich_ID, AbstractMapper<EnrichIDType, String> enrich_IDID2Name) throws IOException {
+    this (geneID2enrich_ID,inchikey2enrich_ID,enrich_IDID2Name, null);
   }
-  /** @see #AbstractEnrichment(EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
+  /** @see #AbstractEnrichment(EnrichmentMapper, EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
    */
   public AbstractEnrichment(Species spec) throws IOException {
     this (spec, null);
   }
-  /** @see #AbstractEnrichment(EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
+  /** @see #AbstractEnrichment(EnrichmentMapper, EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
    */
-  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID, AbstractProgressBar prog) throws IOException {
-    this(geneID2enrich_ID,null,prog);
+  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID, EnrichmentMapper<String, EnrichIDType> inchikey2enrich_ID, AbstractProgressBar prog) throws IOException {
+    this(geneID2enrich_ID,inchikey2enrich_ID,null,prog);
   }
-  /** @see #AbstractEnrichment(EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
+  /** @see #AbstractEnrichment(EnrichmentMapper, EnrichmentMapper, AbstractMapper, Species, AbstractProgressBar)
    */
-  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID) throws IOException {
-    this(geneID2enrich_ID,null,null);
+  public AbstractEnrichment(EnrichmentMapper<Integer, EnrichIDType> geneID2enrich_ID, EnrichmentMapper<String, EnrichIDType> inchikey2enrich_ID) throws IOException {
+    this(geneID2enrich_ID,inchikey2enrich_ID,null,null);
   }
   
   /**
@@ -180,7 +190,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
    * @return a mapping from EnrichedObjects (e.g., Pathways) to [NameAndSignals-List (if available) or Integer (GeneIDs)].
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  private <T> Map<EnrichIDType, Set<?>> getContainedEnrichments(Collection<T> geneList, IdentifierType idType) {
+  private <T> Map<EnrichIDType, Set<?>> getContainedGeneEnrichments(Collection<T> idList, IdentifierType idType) {
 
     // Initialize mapper from InputID to GeneID
     AbstractMapper<String, Integer> mapper=null;
@@ -195,7 +205,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     
     // Mapping from (e.g., Pathway) 2 Genes from geneList contained in this pathway.
     Map<EnrichIDType, Set<?>> enrichClass2Genes = new HashMap<EnrichIDType, Set<?>>();
-    for(T gene: geneList) {
+    for(T gene: idList) {
       
       // Get Entrez gene ID of gene
       Collection<Integer> geneIDs = new LinkedList<Integer>();
@@ -210,19 +220,6 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       } else if (idType!=null && idType.equals(IdentifierType.NCBI_GeneID)) {
         geneIDs.add(Integer.parseInt(gene.toString()));
         
-
-        /* XXX NOTE: This is very dangerous, as GeneIDs and compoundIDs are just mapped
-         * to integers here. Thus, other classes cannot distinguish anymore between them.
-         * The consequence is, that you can, e.g., perform an (invalid) GO enrichment on
-         * compound IDs that expects GeneIDs and gets Compound IDS as integers => the result
-         * is nonsense.
-         * 
-         * Thus, the Class CompoundID2ListOfKeggPathways expects compound IDs to be NEGATIVE!
-         */
-      } else if (gene instanceof CompoundID) {
-        // Enrichment on compounds. Only possible for KEGG enrichments until now...
-        geneIDs.add(((CompoundID) gene).getCompoundID()*-1);
-        
       } else { //mRNA miRNA EnrichmentObject and such...
         geneIDs.addAll(NameAndSignals.getGeneIds(gene));
         mr.addAll(NameAndSignals.getNameAndSignals(gene));
@@ -231,7 +228,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       if (!checkGeneIDs(geneIDs)) {
         String geneN = gene.toString();
         if (gene instanceof NameAndSignals) geneN = ((NameAndSignals) gene).getUniqueLabel();
-        log.log(Level.WARNING, "Could not get Entrez Gene ID for " + geneN);
+        log.log(Level.FINEST, "Could not get Entrez Gene ID for " + geneN + ". Might be a compound.");
         continue;
       }
       
@@ -278,6 +275,104 @@ public abstract class AbstractEnrichment<EnrichIDType> {
   }
   
   /**
+   * Maps all given compounds to a enrichment object (e.g., pathway) centered view.
+   * 
+   * 
+   * <p>The Type of the returned {@link Map#values()} depends on the type of the input geneList.
+   * If your input list consists of {@link Compound}, the {@link Map#values()} will also contain
+   * {@link Compound}s, else it will always contain {@link String}s, representing the Compound ID!
+   * 
+   * @param <T> A type that is mappable to InChIKeys (speciefied by idType).
+   * @param idList
+   * @param idType
+   * @return a mapping from EnrichedObjects (e.g., Pathways) to [NameAndSignals-List (if available) or String (InChIKeys)].
+   */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private <T> Map<EnrichIDType, Set<?>> getContainedCompoundEnrichments(Collection<T> idList, IdentifierType idType) {
+
+    // Initialize mapper from InputID to InChiKey
+    AbstractMapper<String,Set<String>> mapper=null;
+    if (idType!=null && !idType.equals(IdentifierType.InChIKey)) {
+      try {
+        mapper = MappingUtils.initialize2InChIKeyMapper(idType, prog);
+      } catch (IOException e) {
+        log.log(Level.WARNING, "Could not read mapping file to map your compound identifiers to InChIKeys.", e);
+        return null;
+      }
+    }
+    
+    // Mapping from (e.g., Pathway) 2 Compounds from idList contained in this pathway.
+    Map<EnrichIDType, Set<?>> enrichClass2Compounds = new HashMap<EnrichIDType, Set<?>>();
+    for(T compound: idList) {
+      
+      // Get Entrez gene ID of gene
+      Collection<String> cpdIDs = new LinkedList<String>();
+      Collection<NameAndSignals> mr = new LinkedList<NameAndSignals>();
+      if (mapper != null){
+        try {
+          cpdIDs.addAll(mapper.map(compound.toString()));
+        } catch (Exception e) {
+          log.log(Level.WARNING, "Could not map " + compound.toString(), e);
+          continue;
+        }
+      } else if (idType!=null && idType.equals(IdentifierType.InChIKey)) {
+        cpdIDs.add(compound.toString());
+        
+      } else { //mRNA miRNA EnrichmentObject and such...
+        cpdIDs.addAll(NameAndSignals.getCompoundIds(compound));
+        mr.addAll(NameAndSignals.getNameAndSignals(compound));
+      }
+      
+      if (!checkCompoundIDs(cpdIDs)) {
+        String compoundN = compound.toString();
+        if (compound instanceof NameAndSignals) compoundN = ((NameAndSignals) compound).getUniqueLabel();
+        log.log(Level.FINEST, "Could not get InChIKey for " + compoundN + ". Might be a gene.");
+        continue;
+      }
+      
+      // Add each InChIKey to pathway
+      for (String cpdID: cpdIDs) {
+        if (cpdID==null || cpdID.equals(CompoundID.default_compoundID) || cpdID.equals("")) continue;
+        
+        // Get pathways, in which this gene is contained
+        Collection<EnrichIDType> pws=null;
+        try {
+          // Map Gene_id id 2 pathways in which this gene is contained
+          pws = inchikey2enrich_ID.map(cpdID);
+        } catch (Exception e) {
+          log.log(Level.WARNING, "Could not get Enrichment objects for " + cpdID, e);
+        }
+        
+        // Add to list
+        if (pws!=null && pws.size()>0) {
+          for (EnrichIDType pw : pws) {
+            // Ensure that PW is in our map
+            Set pwCompounds = enrichClass2Compounds.get(pw);
+            if (pwCompounds==null) {
+              if (mr!=null && mr.size()>0) {
+                pwCompounds = new HashSet<NameAndSignals>();
+              } else {
+                pwCompounds = new HashSet<Integer>();
+              }
+              enrichClass2Compounds.put(pw, pwCompounds);
+            }
+            
+            // Add current compound to pw list
+            if (mr!=null && mr.size()>0) {
+              // Do NOT reassign the mr-variable here (loss of targets if miRNA occurs in mutliple pathways).
+              pwCompounds.addAll(mr);
+            } else {
+              pwCompounds.add(cpdID);
+            }
+          }
+        }
+      }
+    }
+    
+    return enrichClass2Compounds;
+  }
+  
+  /**
    * Convert lists of {@link miRNA}s to single {@link miRNAandTarget} relations.
    * This allows to display the actual target that caused the pathway to popup
    * in the enrichment.
@@ -314,6 +409,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     }
     return mr;
   }
+  
   /**
    * @param geneID
    * @return true if and only if the list contains at least one valid
@@ -323,6 +419,19 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     if (geneID==null || geneID.size()<1) return false;
     for (Integer i: geneID) {
       if (i!=null && i.intValue()!=0) return true;
+    }
+    return false;
+  }
+  
+  /**
+   * @param compoundID
+   * @return true if and only if the list contains at least one valid
+   * geneID.
+   */
+  public static boolean checkCompoundIDs(Collection<String> compoundID) {
+    if (compoundID==null || compoundID.size()<1) return false;
+    for (String s: compoundID) {
+      if (s!=null && !s.equals("")) return true;
     }
     return false;
   }
@@ -339,7 +448,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
    * @return
    */
   public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<mRNA> geneList) {
-    return getEnrichments(geneList, null);
+    return getEnrichments(geneList, null,null);
   }
   
   /**
@@ -350,7 +459,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
    * @param idType
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<T> geneList, IdentifierType idType) {
+  public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<T> geneList, IdentifierType geneIdType, IdentifierType cpdIdType) {
     SBPreferences prefs = SBPreferences.getPreferencesFor(EnrichmentOptions.class);
     
     // We have to take the gene lists in EnrichmentObjects, thus
@@ -365,18 +474,28 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     // Else, it may occur that you have more genes in a pathway that this pathway contains and
     // Hypergeometric test then returns 0 which is an obvious fault.
     if (NameAndSignals.isNameAndSignals(geneList2)) {
-      log.info("Gene centering input list...");
+      log.info("Centering input list...");
       // Remark: "geneCentered()" Converts miRNAandTargets to miRNAs!
       // MergeType does NOT make any difference, because signals of input data are not processed
       Collection newList = NameAndSignals.geneCentered((Collection<? extends NameAndSignals>)geneList2, IntegratorUITools.getMergeTypeSilent());
-      NameAndSignals.removeGenesWithoutGeneID(newList);
+      NameAndSignals.removeEntitiesWithoutID(newList);
       if (newList!=null && newList.size()>0) {
         geneList2 = newList;
       }
     }
     
     // Map enriched objects on gene list
-    Map<EnrichIDType, Set<?>> pwList = getContainedEnrichments(geneList2, idType);
+    Map<EnrichIDType, Set<?>> pwGeneList = null;
+    if(geneID2enrich_ID!=null) {
+    	pwGeneList = getContainedGeneEnrichments(geneList2, geneIdType);
+    }
+    // Map enriched objects on compound list
+    Map<EnrichIDType, Set<?>> pwCompoundList = null;
+    if(inchikey2enrich_ID!=null){
+    	pwCompoundList = getContainedCompoundEnrichments(geneList2, cpdIdType);
+    }
+    
+    
     
     // Init the enriched id 2 readable name mapping (e.g. Kegg Pathway ID 2 Kegg Pathway Name mapping)
     if (enrich_ID2Name==null) {
@@ -394,10 +513,10 @@ public abstract class AbstractEnrichment<EnrichIDType> {
         geneListSize = NameAndSignals.getAllUniqueGenes(geneList2).size();
       }
     }
-    EnrichmentPvalue pval = new HypergeometricTest(geneID2enrich_ID.getGenomeSize(), geneListSize);
+    EnrichmentPvalue pval = new HypergeometricTest(geneID2enrich_ID.getSumOfEntitiesInClasses(), geneListSize);
     if (prog!=null) {
       prog.reset();
-      prog.setNumberOfTotalCalls(pwList.size());
+      prog.setNumberOfTotalCalls(pwGeneList.size());
     }
     
     // Get some preferences
@@ -406,7 +525,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     
     // Create EnrichmentObjects
     List<EnrichmentObject<EnrichIDType>> ret = new LinkedList<EnrichmentObject<EnrichIDType>>();
-    for (Map.Entry<EnrichIDType, Set<?>> entry : pwList.entrySet()) {
+    for (Map.Entry<EnrichIDType, Set<?>> entry : pwGeneList.entrySet()) {
       if (prog!=null) prog.DisplayBar();
       
       String pw_name = getEnrichedObjectName(entry.getKey(), enrich_ID2Name);
@@ -427,7 +546,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       
       // Create result object
       EnrichmentObject<EnrichIDType> o = new EnrichmentObject<EnrichIDType>(pw_name,entry.getKey(),
-          subsetOfList, geneListSize, pwSize, geneID2enrich_ID.getGenomeSize(),
+          subsetOfList, geneListSize, pwSize, geneID2enrich_ID.getSumOfEntitiesInClasses(),
           pval, entry.getValue());
       ret.add(o);
     }

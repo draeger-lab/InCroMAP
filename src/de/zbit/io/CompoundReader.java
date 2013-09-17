@@ -22,14 +22,11 @@
 
 package de.zbit.io;
 
-import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
 import de.zbit.data.compound.Compound;
 import de.zbit.gui.csv.ExpectedColumn;
-import de.zbit.mapper.MappingUtils;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.Species;
 
@@ -39,7 +36,8 @@ import de.zbit.util.Species;
  */
 
 public class CompoundReader extends AbstractCompoundReader<Compound> {
-  public static final transient Logger log = Logger.getLogger(CompoundReader.class.getName());
+  private static final long serialVersionUID = 6976711313821303725L;
+	public static final transient Logger log = Logger.getLogger(CompoundReader.class.getName());
   
 
   /**
@@ -78,14 +76,14 @@ public class CompoundReader extends AbstractCompoundReader<Compound> {
    * Additional values from the CSV file can be parsed here.
    * Else, the return is simply
    * @param name most human readable common compound name
-   * @param compoundID <b>might be <code>NULL</code></b>, if unknown!
+   * @param inchikey <b>might be <code>NULL</code></b>, if unknown!
    * @param line current line of CSV file
    * @return instance of Compound
    */
-  protected Compound createObject(String name, Integer compoundID, String[] line) {
+  protected Compound createObject(String name, String inchikey, String[] line) {
     Compound m;
-    if (compoundID!=null) {
-      m = new Compound(name, compoundID);
+    if (inchikey!=null) {
+      m = new Compound(name, inchikey);
     } else {
       m = new Compound(name);
     }

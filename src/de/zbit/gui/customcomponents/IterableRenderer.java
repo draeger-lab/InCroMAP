@@ -31,12 +31,13 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
-import de.zbit.data.compound.Compound;
+import de.zbit.data.id.CompoundID;
+import de.zbit.data.id.GeneID;
 import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtarget;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
-import de.zbit.mapper.compounds.CompoundID2CommonNameMapper;
+import de.zbit.mapper.compounds.InChIKey2CompoundNameMapper;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 
@@ -74,7 +75,7 @@ public class IterableRenderer extends DefaultTableCellRenderer {
   @Override
   protected void setValue(Object value) {
     GeneID2GeneSymbolMapper mapper = IntegratorUITools.get2GeneSymbolMapping(species);
-    CompoundID2CommonNameMapper cpdMapper = IntegratorUITools.get2CommonNameMapping();
+    InChIKey2CompoundNameMapper cpdMapper = IntegratorUITools.get2CompoundNameMapping();
     String initialString = "<html><body><nobr>";
     String space = "&nbsp;";
     if (value==null) setText("");
@@ -99,7 +100,7 @@ public class IterableRenderer extends DefaultTableCellRenderer {
    * @return
    */
   public static StringBuffer getCommaStringFromIterable(Object value,
-      GeneID2GeneSymbolMapper mapper, CompoundID2CommonNameMapper cpdMapper, String initialString, String space) {
+      GeneID2GeneSymbolMapper mapper, InChIKey2CompoundNameMapper cpdMapper, String initialString, String space) {
     StringBuffer buff = new StringBuffer(initialString);
     Map<String, List<miRNAtarget>> miRNAandTarget = new HashMap<String, List<miRNAtarget>>();
     
@@ -128,11 +129,13 @@ public class IterableRenderer extends DefaultTableCellRenderer {
           
         } else if (v instanceof Integer) {
           // Gene IDs
-          String symbol = toSymbol((Integer) v, mapper, cpdMapper);
+          String symbol = toSymbol((Integer) v, mapper);
           buff.append(symbol);
           
         } else if (v.getClass().equals(String.class)) {
-          buff.append((String)v);
+        	//Possibly compound IDs
+        	String name = toCompoundName((String) v, cpdMapper);
+          buff.append(name);
           
         } else {
           log.severe("Plese implement renderer for " + v.getClass());
@@ -148,7 +151,7 @@ public class IterableRenderer extends DefaultTableCellRenderer {
       List<miRNAtarget> l = miRNAandTarget.get(miR);
       for (int i=0; i<l.size(); i++) {
         if (i>0) buff.append(","+space);
-        String symbol = toSymbol((Integer) l.get(i).getTarget(),mapper, cpdMapper);
+        String symbol = toSymbol((Integer) l.get(i).getTarget(),mapper);
         buff.append(symbol);
       }
     }
@@ -163,19 +166,33 @@ public class IterableRenderer extends DefaultTableCellRenderer {
    * @param cpdMapper 
    * @return
    */
-  public static String toSymbol(int GeneID, GeneID2GeneSymbolMapper mapper, CompoundID2CommonNameMapper cpdMapper) {
+  public static String toSymbol(int geneID, GeneID2GeneSymbolMapper mapper) {
     String s=null;
     try {
-      if (GeneID>0) {
-        if (mapper==null) return Integer.toString(GeneID);
-        s = mapper.map(GeneID);
-      } else if (GeneID<0) {
-        if (cpdMapper==null) return Compound.toHMDBString(Integer.toString(GeneID));
-        s = cpdMapper.map(GeneID*-1);
-      }
-      
+      if (geneID!=GeneID.default_geneID) {
+        if (mapper==null) return Integer.toString(geneID);
+        s = mapper.map(geneID);
+      }       
     } catch (Exception e) {}
-    return (s!=null && s.length()>0)?s:Integer.toString(GeneID);
+    return (s!=null && s.length()>0)?s:Integer.toString(geneID);
+  }
+  
+  /**
+   * Try to convert the given string from an InChIKey to a CompoundName.
+   * @param key
+   * @param mapper
+   * @param cpdMapper 
+   * @return
+   */
+  public static String toCompoundName(String key,  InChIKey2CompoundNameMapper mapper) {
+    String s=null;
+    try {
+      if (!key.equals(CompoundID.default_compoundID)) {
+        if (mapper==null) return key;
+        s = mapper.map(key);
+      }       
+    } catch (Exception e) {}
+    return (s!=null && s.length()>0)?s:key;
   }
   
   /* (non-Javadoc)

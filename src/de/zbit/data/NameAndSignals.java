@@ -581,7 +581,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     if (idType==1) {
       return ((GeneID)ns).getID();
     } else if (idType==2) {
-      return ((CompoundID)ns).getCompoundID();
+      return ((CompoundID)ns).getID();
     } else if (idType==3) {
       return ns.getData(EnrichmentObject.idKey);
     } else {
@@ -808,7 +808,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       if (forceGroupByGeneID && mi instanceof GeneID) {
         name = Integer.toString(((GeneID)mi).getID());
       } else if (forceGroupByGeneID && mi instanceof CompoundID) {
-        name = Integer.toString(((CompoundID)mi).getCompoundID());
+        name = ((CompoundID)mi).getID();
       }
       
       else if (mi instanceof EnrichmentObject) {
@@ -830,8 +830,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         name = mi.getUniqueLabel();
         
       } else if (mi instanceof CompoundID) {
-      	// Genes AND Compounds might be mixed if they both return e.g. 247 as id. prevent this
-      	name = Compound.toHMDBString(((CompoundID) mi).getCompoundID());
+      	name = ((CompoundID) mi).getID();
       	
       } else {
         name = getIdentifier(mi).toString();
@@ -1219,11 +1218,12 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     } else if (o instanceof GeneID) {
       // This must be below miRNAs !
       int gID = ((GeneID)o).getID();
-      if (gID>0) {
+      if (gID!=GeneID.default_geneID) {
         geneIds.add(gID);
       }
       
     } else {
+    	if(! (o instanceof String || o instanceof CompoundID))
       log.severe("Please implement 2GeneID for " + o.getClass());
     }
     
@@ -1237,8 +1237,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * @return
    */
   @SuppressWarnings("rawtypes")
-  public static Set<Integer> getCompoundIds(Object o) {
-    Set<Integer> cpdIds = new HashSet<Integer>();
+  public static Set<String> getCompoundIds(Object o) {
+    Set<String> cpdIds = new HashSet<String>();
     if (o==null) return cpdIds;
     
     if (o instanceof Iterable) {
@@ -1253,18 +1253,21 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
       
       
     } else if (o instanceof CompoundID) {
-      cpdIds.add(((CompoundID)o).getCompoundID());
+      cpdIds.add(((CompoundID)o).getID());
       
-    } else if (o instanceof Integer) {
-      cpdIds.add((Integer)o);
+    } else if (o instanceof String) {
+      cpdIds.add((String)o);
       
     } else if (o instanceof EnrichmentObject) {
       for (Object o2: ((EnrichmentObject)o).getGenesInClass()) {
         cpdIds.addAll(getCompoundIds(o2));
       }
-      
+
     } else {
-      log.severe("Please implement 2CompoundID for " + o.getClass());
+    	//Check if it is a gene
+    	if(! (o instanceof Integer || o instanceof GeneID) ){
+    		log.severe("Please implement 2InChIKey for " + o.getClass());
+    	}
     }
     
     return cpdIds;
@@ -1301,7 +1304,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
   
   /**
    * Counts the number of unique genes in the list and returns them (as geneIDs).
-   * CompoundIDs will be returned as NEGATIVE NUMBERS to avoid colissions with geneIDs.
+   * CompoundIDs will be returned as NEGATIVE NUMBERS to avoid collisions with geneIDs.
    * <p>For {@link miRNA}s, all target gene ids are taken and for everything else
    * (that implements {@link GeneID}, the gene id is taken.
    * @param nsList any gene list. Makes especially sense for <b>heterogeneous</b> lists!
@@ -1326,10 +1329,37 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
         if (gi!=GeneID.default_geneID.intValue()) {
           ret.add(gi);
         }
-      } else if (ns instanceof CompoundID) {
-        int ci = ((CompoundID) ns).getCompoundID();
-        if (ci!=CompoundID.default_CompoundID.intValue()) {
-          ret.add(ci*-1); // Negative to avoid collisions with GeneIDs!
+      //} else if (ns instanceof CompoundID) {
+      //  int ci = ((CompoundID) ns).getCompoundID();
+      //  if (ci!=CompoundID.default_CompoundID.intValue()) {
+       //   ret.add(ci*-1); // Negative to avoid collisions with GeneIDs!
+      //  }
+      }
+    }
+    
+    return ret;
+  }
+  
+  /**
+   * Counts the number of unique genes in the list and returns them (as geneIDs).
+   * CompoundIDs are Strings to avoid collisions with geneIDs.
+   * <p>For {@link miRNA}s, all target gene ids are taken and for everything else
+   * (that implements {@link GeneID}, the gene id is taken.
+   * @param nsList any gene list. Makes especially sense for <b>heterogeneous</b> lists!
+   * @return
+   */
+  public static Collection<String> getAllUniqueCompounds(Collection<? extends NameAndSignals> nsList) {
+    Set<String> ret = new HashSet<String>();
+    if (nsList==null) return ret;
+    
+    // Count all geneIDs
+    Iterator<? extends NameAndSignals> it = nsList.iterator();
+    while (it.hasNext()) {
+      NameAndSignals ns = it.next();
+      if (ns instanceof CompoundID) {
+        String ci = ((CompoundID) ns).getID();
+        if (!ci.equals(((CompoundID) ns).getDefaultID())) {
+          ret.add(ci);
         }
       }
     }
@@ -1598,7 +1628,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * unset or invalid GeneID. Also removes all invalid {@link CompoundID} entries.
    * @param newList
    */
-  public static void removeGenesWithoutGeneID(Iterable<? extends NameAndSignals> newList) {
+  public static void removeEntitiesWithoutID(Iterable<? extends NameAndSignals> newList) {
     Iterator<? extends NameAndSignals> it = newList.iterator();
     while (it.hasNext()) {
       NameAndSignals o = it.next();
@@ -1608,8 +1638,8 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
           it.remove();
         }
       } else if (o instanceof CompoundID) {
-        int cpdID = ((CompoundID) o).getCompoundID();
-        if (cpdID<=0) {
+        String cpdID = ((CompoundID) o).getID();
+        if (cpdID.equals(((CompoundID) o).getDefaultID())) {
           it.remove();
         }
       }

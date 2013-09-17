@@ -86,6 +86,6 @@ public interface GraphMLmapsExtended extends GraphMLmaps {
    * Maps a Compound node to an HMDB identifier. Note: This is NOT naturally
    * available from KEGGtranslator and must be established manually!
    */
-  public static final String NODE_HMDB_ID = "HMDB_ID";
+  public static final String NODE_COMPOUND_ID = "COMPOUND_ID";
   
 }

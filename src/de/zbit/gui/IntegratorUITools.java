@@ -128,8 +128,8 @@ import de.zbit.kegg.gui.TranslatorGraphPanel;
 import de.zbit.mapper.GeneID2GeneSymbolMapper;
 import de.zbit.mapper.MappingUtils.IdentifierClass;
 import de.zbit.mapper.MappingUtils.IdentifierType;
-import de.zbit.mapper.compounds.CompoundID2CommonNameMapper;
-import de.zbit.mapper.compounds.KeggCompound2CompoundIDMapper;
+import de.zbit.mapper.compounds.InChIKey2CompoundNameMapper;
+import de.zbit.mapper.compounds.KeggCompound2InChIKeyMapper;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
@@ -524,16 +524,14 @@ public class IntegratorUITools {
     
     
     //Compound ID priorities
-    else if (type.equals(IdentifierType.HMDB)) return 0;
-    else if (type.equals(IdentifierType.ChEBI)) return 1;
-    else if (type.equals(IdentifierType.InChI)) return 1;
-    else if (type.equals(IdentifierType.InChIKey)) return 1;
+    else if (type.equals(IdentifierType.InChIKey)) return 0;
+    else if (type.equals(IdentifierType.HMDB)) return 1;
+    else if (type.equals(IdentifierType.LIPIDMAPS)) return 1;
     else if (type.equals(IdentifierType.KeggCompound)) return 1;
-    else if (type.equals(IdentifierType.ChemSpider)) return 1;
-    else if (type.equals(IdentifierType.ChEBI)) return 1;
-    else if (type.equals(IdentifierType.PubChem_compound)) return 1;
+    else if (type.equals(IdentifierType.CHEBI)) return 1;
+    else if (type.equals(IdentifierType.PC_compound)) return 1;
     
-    else if (type.equals(IdentifierType.CommonName)) return 2;
+    else if (type.equals(IdentifierType.CompoundName)) return 2;
     else if (type.equals(IdentifierType.UnknownCompound)) return 3;
    
     else {
@@ -981,16 +979,16 @@ public class IntegratorUITools {
   }
   
   /**
-   * Returns a 2CommmonName mapping.
+   * Returns a 2CompoundName mapping.
    * <p>Every created instance is cached for later usage.
    * @return 
    */
-  public static CompoundID2CommonNameMapper get2CommonNameMapping() {
-    String key = CompoundID2CommonNameMapper.class.getSimpleName();
+  public static InChIKey2CompoundNameMapper get2CompoundNameMapping() {
+    String key = InChIKey2CompoundNameMapper.class.getSimpleName();
     Object mapper = UIManager.get(key);
     if (mapper==null) {
       try {
-        mapper = new CompoundID2CommonNameMapper();
+        mapper = new InChIKey2CompoundNameMapper();
       } catch (IOException e) {
         GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
       }
@@ -998,20 +996,20 @@ public class IntegratorUITools {
         UIManager.put(key, mapper);
       }
     }
-    return (CompoundID2CommonNameMapper) mapper;
+    return (InChIKey2CompoundNameMapper) mapper;
   }
   
   /**
-   * Returns a KeggCompound2CompoundID mapping.
+   * Returns a KeggCompound2InChIKey mapping.
    * <p>Every created instance is cached for later usage.
    * @return 
    */
-  public static KeggCompound2CompoundIDMapper getKegg2CompoundIDMapping() {
-    String key = KeggCompound2CompoundIDMapper.class.getSimpleName();
+  public static KeggCompound2InChIKeyMapper getKegg2InChIKeyMapping() {
+    String key = KeggCompound2InChIKeyMapper.class.getSimpleName();
     Object mapper = UIManager.get(key);
     if (mapper==null) {
       try {
-        mapper = new KeggCompound2CompoundIDMapper();
+        mapper = new KeggCompound2InChIKeyMapper();
       } catch (IOException e) {
         GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
       }
@@ -1019,7 +1017,7 @@ public class IntegratorUITools {
         UIManager.put(key, mapper);
       }
     }
-    return (KeggCompound2CompoundIDMapper) mapper;
+    return (KeggCompound2InChIKeyMapper) mapper;
   }
   
   /**

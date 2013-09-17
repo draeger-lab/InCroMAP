@@ -24,14 +24,14 @@ package de.zbit.data.compound;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.id.CompoundID;
 import de.zbit.gui.IntegratorUITools;
+import de.zbit.mapper.MappingUtils.IdentifierClass;
 import de.zbit.mapper.MappingUtils.IdentifierType;
-import de.zbit.mapper.compounds.CompoundID2CommonNameMapper;
+import de.zbit.mapper.compounds.InChIKey2CompoundNameMapper;
 import de.zbit.util.StringUtil;
 
 /**
@@ -52,42 +52,12 @@ public class Compound extends NameAndSignals implements CompoundID {
 
   /**
    * @param name
-   * @param compoundID as hmdbID
+   * @param compoundID is an InChIKey
    */
-  public Compound(String name, Integer compoundID) {
+  public Compound(String name, String compoundID) {
     super(name);
-    if (compoundID==null) compoundID = default_CompoundID;
-    setCompoundID(compoundID);
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.data.compound.CompoundID#setCompoundID(int)
-   */
-  @Override
-  public void setCompoundID(int hmdbID) {
-    super.addData(compound_id_key, new Integer(hmdbID));
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.data.compound.CompoundID#setCompoundID(java.lang.String)
-   */
-  @Override
-  public void setCompoundID(String hmdbID) {
-    // Parse from string such as "HMDB00001"
-    try {
-      setCompoundID(Integer.parseInt(hmdbID.substring(4)));
-    } catch (Exception e) {
-      log.log(Level.WARNING, "Could not parse HMDB identifier number.", e);
-    }
-  }
-  
-  /* (non-Javadoc)
-   * @see de.zbit.data.compound.CompoundID#getCompoundID()
-   */
-  @Override
-  public int getCompoundID() {
-    Integer i = (Integer) super.getData(compound_id_key);
-    return i==null?default_CompoundID:i;
+    if (compoundID==null) compoundID = getDefaultID();
+    setID(compoundID);
   }
   
   /**
@@ -95,7 +65,7 @@ public class Compound extends NameAndSignals implements CompoundID {
    * does not call any mapper or such.
    */
   public String getSymbol() {
-    Object s = super.getData(IdentifierType.CommonName.toString());
+    Object s = super.getData(IdentifierType.CompoundName.toString());
     return s==null?getName():s.toString();
   }
   
@@ -110,7 +80,7 @@ public class Compound extends NameAndSignals implements CompoundID {
     // Compare ID
     if (o instanceof Compound) {
       Compound ot = (Compound) o;
-      if (r==0) r = getCompoundID()-ot.getCompoundID();
+      if (r==0) r = getID().compareTo(ot.getID());
       //---
     }
     
@@ -122,7 +92,7 @@ public class Compound extends NameAndSignals implements CompoundID {
    */
   @Override
   public int hashCode() {
-    return super.hashCode() + getCompoundID();
+    return super.hashCode() + getID().hashCode();
   }
   
   /* (non-Javadoc)
@@ -131,26 +101,16 @@ public class Compound extends NameAndSignals implements CompoundID {
   @Override
   protected Object additionalDataToString(String key, Object value) {
     Object o = super.additionalDataToString(key, value);
-    if (key.equals(compound_id_key)) {
-      // Format: "1" => "HMDB00001"
-      if (value.equals(default_CompoundID)) {
+    if (key.equals(getIDType())) {
+      if (value.equals(getDefaultID())) {
         return "Unknown";
       } else {
-        return toHMDBString(value);
+        return value;
       }
     }
     return o;
   }
 
-  /**
-   * @param value a {@link CompoundID} as integer or numeric string.
-   * @return "HMDB000010" or similar things.
-   */
-  public static String toHMDBString(Object value) {
-    String valueString = value.toString(); // 1 => "1"
-    return "HMDB" + StringUtil.replicateCharacter('0', 5-valueString.length()) + valueString;
-  }
-  
   /* (non-Javadoc)
    * @see de.zbit.data.NameAndSignals#merge(java.util.Collection, de.zbit.data.NameAndSignals, de.zbit.data.Signal.MergeType)
    */
@@ -165,11 +125,11 @@ public class Compound extends NameAndSignals implements CompoundID {
     */
 
     // Merge private variables to target (=> CompoundID)
-    Set<Integer> compoundIDs = new HashSet<Integer>();
+    Set<String> compoundIDs = new HashSet<String>();
 //    Set<Boolean> wasGeneCentered = new HashSet<Boolean>();
     for (T o : source) {
       Compound mi = (Compound)o;
-      compoundIDs.add(mi.getCompoundID());
+      compoundIDs.add(mi.getID());
 //      wasGeneCentered.add(mi.wasGeneCentered);
     }
     
@@ -179,10 +139,10 @@ public class Compound extends NameAndSignals implements CompoundID {
     
     // Set compound id, if same or unset if they differ
     if (compoundIDs.size()==1) {
-      ((Compound)target).setCompoundID(compoundIDs.iterator().next());
+      ((Compound)target).setID(compoundIDs.iterator().next());
     } else {
       // Reset compound-id
-      ((Compound)target).setCompoundID(default_CompoundID);
+      ((Compound)target).setID(getDefaultID());
 //      if (((Compound)target).isGeneCentered()) {
 //        ((Compound)target).wasGeneCentered = true;
 //        // Cannot ensure that gene is centered. Better unset flag!
@@ -218,8 +178,8 @@ public class Compound extends NameAndSignals implements CompoundID {
    * @throws Exception
    */
   public static void convertInstancesToSymbols(Iterable<? extends NameAndSignals> data) throws Exception {
-    log.config("Loading CompoundSymbol mapping...");
-    CompoundID2CommonNameMapper mapper = IntegratorUITools.get2CommonNameMapping();
+    log.config("Loading 2CompoundSymbol mapping...");
+    InChIKey2CompoundNameMapper mapper = IntegratorUITools.get2CompoundNameMapping();
     for (NameAndSignals m: data) {
       if (m instanceof CompoundID) {
         
@@ -229,8 +189,8 @@ public class Compound extends NameAndSignals implements CompoundID {
         }
         
         // Map compound id to symbol
-        if (((CompoundID) m).getCompoundID()>0) {
-          String symbol = mapper.map(((CompoundID) m).getCompoundID());
+        if (!((CompoundID) m).getID().equals(CompoundID.default_compoundID)) {
+          String symbol = mapper.map(((CompoundID) m).getID());
           if (symbol!=null && symbol.length()>0) {
             m.setDisplayName(symbol);
           }
@@ -240,7 +200,47 @@ public class Compound extends NameAndSignals implements CompoundID {
         return;
       }
     }
-    log.config("Converted CompoundIDs to compound symbols.");
+    log.config("Converted InChIKeys to compound symbols.");
   }
-  
+
+	/* (non-Javadoc)
+	 * @see de.zbit.data.id.GenericID#getIDClass()
+	 */
+  @Override
+  public IdentifierClass getIDClass() {
+	  return CompoundID.compound_id_class;
+  }
+
+	/* (non-Javadoc)
+	 * @see de.zbit.data.id.GenericID#getIDType()
+	 */
+  @Override
+  public IdentifierType getIDType() {
+	  return CompoundID.compound_id_key;
+  }
+
+	/* (non-Javadoc)
+	 * @see de.zbit.data.id.GenericID#getDefaultID()
+	 */
+  @Override
+  public String getDefaultID() {
+  	return CompoundID.default_compoundID;
+  }
+
+	/* (non-Javadoc)
+	 * @see de.zbit.data.id.GenericID#setID(java.lang.Object)
+	 */
+  @Override
+  public void setID(String id) {
+  	super.addData(compound_id_key.toString(), id);
+  }
+
+	/* (non-Javadoc)
+	 * @see de.zbit.data.id.GenericID#getID()
+	 */
+  @Override
+  public String getID() {
+  	String s = (String) super.getData(getIDType().toString());
+    return s==null?getDefaultID():s;
+  }
 }
