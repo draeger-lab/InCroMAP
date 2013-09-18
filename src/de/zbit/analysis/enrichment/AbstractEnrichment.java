@@ -495,8 +495,28 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     	pwCompoundList = getContainedCompoundEnrichments(geneList2, cpdIdType);
     }
     
-    
-    
+    //Merge both lists
+    //Unlink pointers to separate lists for safety: They should not be used afterwards!
+    Map<EnrichIDType,Set<?>> pwMergedList = null;
+    if(pwGeneList!=null){
+    	pwMergedList = pwGeneList;
+    	pwGeneList = null;
+    	if(pwCompoundList != null){
+    		for(Map.Entry<EnrichIDType, Set<?>> entry : pwCompoundList.entrySet()) {
+    			Set geneSet = pwMergedList.get(entry.getKey());
+    			if(geneSet==null)
+    				pwMergedList.put(entry.getKey(), entry.getValue());
+    			else
+    				geneSet.addAll(entry.getValue());
+    		}
+    	}
+    }else{
+    	if(pwCompoundList!=null){
+    		pwMergedList = pwCompoundList;
+    		pwCompoundList = null;
+    	}
+    }
+        
     // Init the enriched id 2 readable name mapping (e.g. Kegg Pathway ID 2 Kegg Pathway Name mapping)
     if (enrich_ID2Name==null) {
       enrich_ID2Name = getDefaultEnrichmentID2NameMapping();
@@ -513,10 +533,17 @@ public abstract class AbstractEnrichment<EnrichIDType> {
         geneListSize = NameAndSignals.getAllUniqueGenes(geneList2).size();
       }
     }
-    EnrichmentPvalue pval = new HypergeometricTest(geneID2enrich_ID.getSumOfEntitiesInClasses(), geneListSize);
+    int backGroundSize = 0;
+    if(geneID2enrich_ID!=null)
+    	backGroundSize+=geneID2enrich_ID.getTotalSumOfEntitiesInAllClasses();
+    if(inchikey2enrich_ID!=null)
+    	backGroundSize+=inchikey2enrich_ID.getTotalSumOfEntitiesInAllClasses();
+    
+    
+    EnrichmentPvalue pval = new HypergeometricTest(backGroundSize, geneListSize);
     if (prog!=null) {
       prog.reset();
-      prog.setNumberOfTotalCalls(pwGeneList.size());
+      prog.setNumberOfTotalCalls(pwMergedList.size());
     }
     
     // Get some preferences
@@ -525,13 +552,18 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     
     // Create EnrichmentObjects
     List<EnrichmentObject<EnrichIDType>> ret = new LinkedList<EnrichmentObject<EnrichIDType>>();
-    for (Map.Entry<EnrichIDType, Set<?>> entry : pwGeneList.entrySet()) {
+    for (Map.Entry<EnrichIDType, Set<?>> entry : pwMergedList.entrySet()) {
       if (prog!=null) prog.DisplayBar();
       
       String pw_name = getEnrichedObjectName(entry.getKey(), enrich_ID2Name);
       
-      // Total # genes in pw
-      int pwSize=geneID2enrich_ID.getEnrichmentClassSize(entry.getKey());
+      // Total # genes+compounds in pw
+      int pwSize=0;
+      if(geneID2enrich_ID!=null)
+      	pwSize += geneID2enrich_ID.getEnrichmentClassSize(entry.getKey());
+      if(inchikey2enrich_ID!=null)
+      	pwSize += inchikey2enrich_ID.getEnrichmentClassSize(entry.getKey());
+      
       if (removeTerms && pwSize>=removeTermThreshold) {
         continue;
       }
@@ -546,7 +578,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
       
       // Create result object
       EnrichmentObject<EnrichIDType> o = new EnrichmentObject<EnrichIDType>(pw_name,entry.getKey(),
-          subsetOfList, geneListSize, pwSize, geneID2enrich_ID.getSumOfEntitiesInClasses(),
+          subsetOfList, geneListSize, pwSize, backGroundSize,
           pval, entry.getValue());
       ret.add(o);
     }
