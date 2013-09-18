@@ -518,7 +518,7 @@ public class NameAndSignal2PWTools {
     for (Node n : graph.getNodeArray()) {
       Object inchiIds = inchi.get(n);
       if (inchiIds!=null && inchiIds.toString().length()>0) {
-        String[] ids = inchiIds.toString().split(",|\\s|\\|"); // comma, space, or "|" separated.
+        String[] ids = inchiIds.toString().split("\\|"); // space separated.
         for (String id: ids) {
           if (id==null || id.trim().length()<1) continue;
           try {
@@ -579,13 +579,15 @@ public class NameAndSignal2PWTools {
       
       // Split and and to identifiers list
       if (identifier!=null) {
-        String[] ids = identifier.toString().split(",|\\s"); // comma or space separated.
+        String[] ids = identifier.toString().split(",|\\s|\\|"); //comma, space, or  "|" separated
         for (String id: ids) {
           if (id==null || id.trim().length()<1) continue;
           try {
             Object toAdd = id;
-            if (desiredIdentifier==1 || desiredIdentifier==2) { //GeneIDs / HMDB-compound-ids 
+            if (desiredIdentifier==1) { //GeneIDs
               toAdd = Integer.parseInt(id);
+            } else if (desiredIdentifier==2) {// InChIKey
+            	toAdd = id.toUpperCase().trim();
             } else if (desiredIdentifier==3) { //KEGG Ids lowercased and trimmed 
               toAdd = id.toLowerCase().trim();
             }
@@ -628,7 +630,7 @@ public class NameAndSignal2PWTools {
       Object KEGG_id = tools.getInfo(n, GraphMLmaps.NODE_KEGG_ID);
       StringBuffer idString = new StringBuffer();
       if (KEGG_id!=null) {
-        String[] ids = KEGG_id.toString().split(",|\\s"); // comma or space separated.
+        String[] ids = KEGG_id.toString().split("\\|"); // "|" separated.
         for (String id: ids) {
           if (id==null || id.trim().length()<1) continue;
           try {

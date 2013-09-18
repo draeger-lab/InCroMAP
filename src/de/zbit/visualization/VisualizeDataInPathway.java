@@ -891,7 +891,7 @@ public class VisualizeDataInPathway {
       }
     }
     
-    // Branch between mRNA and miRNA (=> Node color) and other types (=> labels)
+    // Branch between mRNA/Compound and miRNA (=> Node color) and other types (=> labels)
     int nodesColored = 0;
     if (ProteinModificationExpression.class.isAssignableFrom(inputType)) {
       // Protein modifications as boxes (node labels) below nodes
