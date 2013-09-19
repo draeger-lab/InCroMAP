@@ -534,6 +534,13 @@ public class EnrichmentObject<EnrichIDType> extends NameAndSignals {
   }
   
   /**
+   * @return a {@link HashSet} with unique compoundIDs from compounds in this {@link EnrichmentObject}.
+   */
+  public Collection<String> getCompoundIDsFromCompoundsInClass() {
+  	return NameAndSignals.getCompoundIds(genesInClass);
+  }
+  
+  /**
    * @param col any iterable.
    * @return true if and only if this iterable contains {@link EnrichmentObject} objects.
    */

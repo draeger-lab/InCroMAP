@@ -113,7 +113,7 @@ public class NameAndSignal2PWTools {
   /**
    * Common tools.
    */
-  protected TranslatorTools tools;
+  protected TranslatorToolsExtended tools;
   
   
   /**
@@ -131,7 +131,7 @@ public class NameAndSignal2PWTools {
       hm = new HierarchyManager(graph);
       graph.setHierarchyManager(hm);
     }
-    tools = new TranslatorTools(graph);
+    tools = new TranslatorToolsExtended(graph);
   }
   
   
@@ -409,7 +409,7 @@ public class NameAndSignal2PWTools {
       } else if (ns instanceof Compound) {
         // We do not always need the 2CompoundID mapping, so we don't pre-init it.
         if (ci2n_map==null) {
-          ci2n_map = getInChIKey2NodeMap();
+          ci2n_map = tools.getInChIKey2NodeMap();
         }
         String cpdID = ((Compound) ns).getID();
         if (cpdID!=null && !cpdID.equals(((Compound) ns).getDefaultID())) {
@@ -500,48 +500,6 @@ public class NameAndSignal2PWTools {
     return nsList;
   }
 
-
-  /**
-   * Return a map from InChIKey to corresponding {@link Node}.
-   * @return map from InChIKey to List of nodes.
-   */
-  private Map<String, List<Node>> getInChIKey2NodeMap() {
-    // If we want to map compounds we HAVE TO create our mapping manually first
-    if (tools.getMap(GraphMLmapsExtended.NODE_COMPOUND_ID)==null) {
-      createNode2InChIKeymapping();
-    }
-
-    // Build a map from InChIKey 2 Node
-    Map<String, List<Node>> id2node = new HashMap<String, List<Node>>();
-    
-    NodeMap inchi = (NodeMap) tools.getMap(GraphMLmapsExtended.NODE_COMPOUND_ID);
-    for (Node n : graph.getNodeArray()) {
-      Object inchiIds = inchi.get(n);
-      if (inchiIds!=null && inchiIds.toString().length()>0) {
-        String[] ids = inchiIds.toString().split("\\|"); // space separated.
-        for (String id: ids) {
-          if (id==null || id.trim().length()<1) continue;
-          try {
-            // Get Node collection for InChIKey
-            List<Node> list = id2node.get(id);
-            if (list==null) {
-              list = new LinkedList<Node>();
-              id2node.put(id, list);
-            }
-            // Add node to list.
-            list.add(n);
-          } catch (NumberFormatException e) {
-            log.log(Level.WARNING, "Could not get compoundID for node.", e);
-          }
-        }
-      }
-    }
-    
-    return id2node;
-  }
-
-
-
   /**
    * Get a list of {@link NameAndSignals} for every {@link Node}.
    * @param <T> any {@link NameAndSignals} derived class
@@ -557,7 +515,7 @@ public class NameAndSignal2PWTools {
     
     // If we want to map compounds we HAVE TO create our mapping manually first
     if (desiredIdentifier==2 && tools.getMap(GraphMLmapsExtended.NODE_COMPOUND_ID)==null) {
-      createNode2InChIKeymapping();
+      tools.createNode2InChIKeymapping();
     }
     
     for (Node n: graph.getNodeArray()) {
@@ -616,47 +574,6 @@ public class NameAndSignal2PWTools {
     
     return n2ns;
   }
-
-
-
-  /**
-   * This will initialize the {@link GraphMLmapsExtended#NODE_HMDB_ID} mapping.
-   */
-  private void createNode2InChIKeymapping() {
-    KeggCompound2InChIKeyMapper map = IntegratorUITools.getKegg2InChIKeyMapping();
- 
-    // Assign a space-separated HMDB-id-string to each node
-    for (Node n: graph.getNodeArray()) {
-      Object KEGG_id = tools.getInfo(n, GraphMLmaps.NODE_KEGG_ID);
-      StringBuffer idString = new StringBuffer();
-      if (KEGG_id!=null) {
-        String[] ids = KEGG_id.toString().split("\\|"); // "|" separated.
-        for (String id: ids) {
-          if (id==null || id.trim().length()<1) continue;
-          try {
-          	 Set<String> inchikeys = map.map(id);
-             if (inchikeys!=null) {
-            	 for(String ikey: inchikeys){
-            		 if (idString.length()>0) {
-            			 idString.append('|');
-            		 		}
-            		 idString.append(ikey);
-            	 }
-            }
-          } catch (Exception e) {
-            log.log(Level.WARNING, "Could not get InChIKey for node.", e);
-          }
-        }
-      }
-      
-      // Set identifiers
-      if (idString.length()>0) {
-        tools.setInfo(n, GraphMLmapsExtended.NODE_COMPOUND_ID, idString.toString());
-      }
-    }
-  }
-
-
 
   /**
    * Collect all signals in the given list.

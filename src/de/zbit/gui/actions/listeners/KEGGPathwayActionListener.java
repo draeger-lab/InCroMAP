@@ -41,16 +41,12 @@ import javax.swing.JTable;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
-import y.layout.organic.SmartOrganicLayouter;
-import y.layout.router.OrganicEdgeRouter;
 import y.view.Graph2D;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.miRNA.miRNA;
-import de.zbit.graph.GraphTools;
 import de.zbit.graph.gui.TranslatorPanel;
-import de.zbit.graph.gui.options.TranslatorPanelOptions;
 import de.zbit.gui.BaseFrameTab;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
@@ -68,9 +64,8 @@ import de.zbit.gui.prefs.SignalOptions;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NameAndSignalsTab;
-import de.zbit.kegg.KeggTools;
+import de.zbit.integrator.TranslatorToolsExtended;
 import de.zbit.kegg.Translator;
-import de.zbit.kegg.ext.KEGGTranslatorPanelOptions;
 import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.kegg.gui.TranslatorUI;
@@ -183,13 +178,17 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
         visualizeData((TranslatorPanel) source,vt.getA(),vt.getB(), vt.getC());
       }
       
-    } else if (e.getActionCommand().equals(TPAction.HIGHLIGHT_ENRICHED_GENES.toString()) &&
+    } else if (e.getActionCommand().equals(TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS.toString()) &&
         source instanceof TranslatorPanel) {
       TranslatorPanel source = (TranslatorPanel) this.source;
-      if (source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())!=null) {
+      if (source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS.toString())!=null) {
         // Highlight source genes
-        Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())).getGeneIDsFromGenesInClass();
-        hightlightGenes(source, geneIDs);
+        Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS.toString())).getGeneIDsFromGenesInClass();
+        Collection<String> compoundIDs = ((EnrichmentObject<?>)source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS.toString())).getCompoundIDsFromCompoundsInClass();
+        if(geneIDs.size()>0)
+        	hightlightGenes(source, geneIDs);
+        if(compoundIDs.size()>0)
+        	highlightCompounds(source,compoundIDs);
       }
       
     } else if (e.getActionCommand().equals(TranslatorUI.Action.OPEN_PATHWAY.toString())) {
@@ -251,10 +250,14 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
             visualizeData(source,vt.getA(),vt.getB(), vt.getC());
           } 
           
-        } else if (source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())!=null) {
+        } else if (source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS.toString())!=null) {
           // At least highlight source gene nodes
-          Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())).getGeneIDsFromGenesInClass();
-          hightlightGenes(source, geneIDs);
+        	Collection<Integer> geneIDs = ((EnrichmentObject<?>)source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS.toString())).getGeneIDsFromGenesInClass();
+          Collection<String> compoundIDs = ((EnrichmentObject<?>)source.getData(TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS.toString())).getCompoundIDsFromCompoundsInClass();
+          if(geneIDs.size()>0)
+          	hightlightGenes(source, geneIDs);
+          if(compoundIDs.size()>0)
+          	highlightCompounds(source,compoundIDs);
         }
         
       }
@@ -502,6 +505,21 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
   }
   
   /**
+   * Highlight nodes with given compoundIDs
+   * @param source
+   * @param compoundIDs
+   */
+  private void highlightCompounds(TranslatorPanel<Graph2D> source, Iterable<String> compoundIDs){
+  	SBPreferences prefs = SBPreferences.getPreferencesFor(PathwayVisualizationOptions.class);
+    Color colorForUnaffectedNodes = PathwayVisualizationOptions.COLOR_FOR_NO_VALUE.getValue(prefs);
+
+    Color affectedColor = Color.YELLOW;
+    TranslatorToolsExtended tools = new TranslatorToolsExtended(source);
+    tools.highlightCompounds(compoundIDs,affectedColor, colorForUnaffectedNodes, true);
+    source.repaint();
+  }
+  
+  /**
    * Download the pathways, selected in the source {@link JTable} and
    * add a {@link TranslatorPanel} for each one.
    * <p>This method is used in {@link EnrichmentObject}s.
@@ -546,7 +564,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     IntegratorPathwayPanel pwTab = new IntegratorPathwayPanel(pwId, this);
     String name = pwId;
     if (pwo!=null) {
-      pwTab.setData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString(), pwo);
+      pwTab.setData(TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS.toString(), pwo);
       name = pwo.getName();
     }
     

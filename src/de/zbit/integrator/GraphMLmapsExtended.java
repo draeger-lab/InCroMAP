@@ -83,7 +83,7 @@ public interface GraphMLmapsExtended extends GraphMLmaps {
   public static final String NODE_NUMBER_OF_CHILDREN = "ChildNodes";
 
   /**
-   * Maps a Compound node to an HMDB identifier. Note: This is NOT naturally
+   * Maps a Compound node to an InChIKey identifier. Note: This is NOT naturally
    * available from KEGGtranslator and must be established manually!
    */
   public static final String NODE_COMPOUND_ID = "COMPOUND_ID";

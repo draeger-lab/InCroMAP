@@ -107,7 +107,7 @@ public class TranslatorTabActions implements ActionListener{
     VISUALIZE_DATA,
     VISUALIZE_ENRICHMENT_PVALUES,
     ADD_MIRNAS,
-    HIGHLIGHT_ENRICHED_GENES,
+    HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS,
     SEARCH_GRAPH,
     
     REMOVE_MIRNA_NODES,
@@ -133,7 +133,8 @@ public class TranslatorTabActions implements ActionListener{
         return "Color pathway-references according enrichment"; //"Visualize enrichment p-values";
       case REMOVE_ENRICHMENT_PVALUES:
         return "Reset colored pathway-reference nodes";
-        
+      case HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS:
+      	return "Highlight enriched genes/compounds";
       case REMOVE_MIRNA_NODES:
         return "Remove miRNA nodes";
       case REMOVE_NOT_DIFFERENTIALLY_EXPRESSED_MIRNA_NODES:
@@ -165,8 +166,8 @@ public class TranslatorTabActions implements ActionListener{
           return "Color pathway-reference nodes accoring to p-values or signals of enriched genes.";
         case REMOVE_ENRICHMENT_PVALUES:
           return "Removes all changes made while coloring pathway-reference-nodes.";
-        case HIGHLIGHT_ENRICHED_GENES:
-          return "Highlight genes from source enrichment.";
+        case HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS:
+          return "Highlight genes/compounds from source enrichment.";
         case SEARCH_GRAPH:
           return "Search for a string in gene names of all nodes";
         case ADD_MIRNAS:
@@ -219,7 +220,7 @@ public class TranslatorTabActions implements ActionListener{
     
     
     JButton highlight = GUITools.createJButton(al2,
-        TPAction.HIGHLIGHT_ENRICHED_GENES, UIManager.getIcon("ICON_GEAR_16"));
+        TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS, UIManager.getIcon("ICON_GEAR_16"));
     bar.add(highlight);
     
     
@@ -471,8 +472,8 @@ public class TranslatorTabActions implements ActionListener{
     
     // Enable or disable enrichment highlighting
     if (state) {
-      state = (parent.getData(TPAction.HIGHLIGHT_ENRICHED_GENES.toString())!=null);
-      GUITools.setEnabled(state, toolBar, TPAction.HIGHLIGHT_ENRICHED_GENES);
+      state = (parent.getData(TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS.toString())!=null);
+      GUITools.setEnabled(state, toolBar, TPAction.HIGHLIGHT_ENRICHED_GENES_AND_COMPOUNDS);
     }
     
     // Toggle the removeButton
