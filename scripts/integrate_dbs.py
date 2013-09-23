@@ -47,17 +47,22 @@ def main(argv):
     entries = entries + read_file(os.path.join(inputfolder,f))
   
   print(''.join(['Found total number of ', str(len(entries)),' entries.']))
+
+   
+  inchitable = gen_table('InChIKey',entries)
   
-  tables = {}
-  tables['HMDB'] = gen_table('HMDB',entries)
-  tables['LMID'] = gen_table('LMID',entries)
-  tables['Kegg'] = gen_table('Kegg',entries)
-  tables['CHEBI'] = gen_table('CHEBI',entries)
-  tables['PC_compound'] = gen_table('PC_compound',entries)
-  tables['InChIKey'] = gen_table('InChIKey',entries)
+  integrated_table = integrate_tables(inchitable)
   
-  prim_table = integrate_tables(tables,'InChIKey')
+  o_m = codecs.open(outprefix+".txt",'w', 'utf-8')
+  o_m.write('InChIKey\tName\tHMDB\tLMID\tKegg\tCHEBI\tPC_compound\n')
+
   
+  for m in integrated_table:
+    write_metab(o_m,m)
+    
+  o_m.flush()
+  o_m.close()
+ 
 
 def read_file(f):
   fh = open(f,mode='r')
@@ -77,7 +82,10 @@ def parse_line(line,header):
   i=0
   for s in fields:
     if len(s.strip())>0:
-      entry[header[i]]=s.strip()
+      if '|' in  s:
+        entry[header[i]]=s.strip().split('|')
+      else:
+        entry[header[i]]=s.strip()
     i=i+1
   
   return entry
@@ -94,40 +102,82 @@ def gen_table(ident,entries):
   
   return mappings
 
-def integrate_tables(tables,primary):
-  t_prim = tables[primary]
-  
-  for t_key in tables:
-    if t_key == 'HMDB':
-      table = tables[t_key]
-      for key in table:
-        entryset = process_entry(table[key],tables,set())
-        if len(entryset)>1:
-          print entryset 
-          break;
-      break;
-        
-def process_entry(entry,tables,visited=set()):
-  
-  l = len(visited)
-  
-  for e in entry:
-    fe = frozenset(e.items())
-    if fe not in visited:
-      visited.add(fe)
-  
-  if l == len(visited):
-    return visited
+def integrate_tables(table):
+  metablist =[]
+  for (k,v) in table.items():
+    metab = v[0]
+    if len(v)>1:
+      metab = merge_entries(k,v)
+    metablist.append(metab)
+    
+  return metablist
+
+def merge_entries(inchik,entry):
+  metabolite = {}
   
   for e in entry:
     for (k,v) in e.items():
-      if k in tables:
-        enew = tables[k][v]
-        visited = visited & process_entry(enew,tables,visited)
+      if k not in metabolite:
+        metabolite[k]=v
+      else:
+        if metabolite[k]==v:
+          continue
+        else:
+          metabolite[k] = solve_ambiguity(k,v,metabolite[k])
+          #if isinstance(metabolite[k],list):
+          #  print k,inchik,','.join(metabolite[k])
+    
+  return metabolite
+
+def solve_ambiguity(k, val1, val2):
+  if isinstance(val1, list) or isinstance(val2,list):
+    if not isinstance(val1,list):
+      val1 = [val1]
+    if not isinstance(val2,list):
+      val2 = [val2]
+    res = list(set(val1 + val2))
+    return res
+  else:
+    if val1.upper() == val2.upper():
+      return val1
+    if val1.upper() in val2.upper():
+      return val1
+    if val2.upper() in val1.upper():
+      return val2
+    if k=='Name':
+      if len(val1)<len(val2):
+        return val1
+      else:
+        return val2
+    return [val1,val2]
+
+def write_metab(fh,metabolite):
+  fh.write(metabolite['InChIKey'])
+  fh.write('\t')
+  if 'Name' in metabolite:
+    write_entry(fh,metabolite['Name'])
+  fh.write('\t')
+  if 'HMDB' in metabolite:
+    write_entry(fh,metabolite['HMDB'])
+  fh.write('\t')
+  if 'LMID' in metabolite:
+    write_entry(fh,metabolite['LMID'])
+  fh.write('\t')
+  if 'Kegg' in metabolite:
+    write_entry(fh,metabolite['Kegg'])
+  fh.write('\t')
+  if 'CHEBI' in metabolite:
+    write_entry(fh,metabolite['CHEBI'])
+  fh.write('\t')
+  if 'PC_compound' in metabolite:
+    write_entry(fh,metabolite['PC_compound'])
+  fh.write('\n')
   
-  return visited
-  
-  
-  
+def write_entry(fh,e):
+  if isinstance(e,list):
+    fh.write('||'.join(e))
+  else:
+    fh.write(e)
+
 if __name__ == "__main__":
   main(sys.argv[1:])
