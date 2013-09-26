@@ -83,6 +83,7 @@
       <!--</fileset>-->
             <fileset dir="${classes}">
             	<exclude name="**/package.html"/>
+            	<exclude name="KeggMappingsBinaryGenerator.class" />
             </fileset>
     	      <filelist dir="${base}" files="libquaqua.jnilib,libquaqua64.jnilib"/>
     	     
@@ -141,7 +142,7 @@
 
   <!-- obfuscates y.jar and adjusts application.jar accordingly. -->
   <!-- Generates the jar files yObf.jar and applicationObf.jar.  -->
-  <target name="obfuscate" depends="jar">
+  <target name="obfuscate" depends="init">
     <taskdef name="yguard" classname="com.yworks.yguard.YGuardTask" classpath="${yGuardJar}"/>
     <yguard>
 
@@ -189,6 +190,7 @@
                 <exclude name="de.zbit.kegg.ext.GenericDataMap"/>
               	
               	<exclude name="de.zbit.util.TranslatorTools"/>
+              	<exclude name="de.zbit.integrator.TranslatorToolsExtended.java" />
               	
                 <exclude name="de.zbit.kegg.io.KEGG2yGraph"/>
                 <exclude name="de.zbit.kegg.io.YFilesWriter"/>
@@ -225,7 +227,8 @@
   </target>
 
   <!-- signs the obfuscated application -->
-  <target name="sign" depends="obfuscate">
+	<!-- <target name="sign" depends="obfuscate"> -->
+  <target name="sign" depends="init">
     <!-- Having an "keystore" file is required. Generate it with the "keytool" in the current directory. -->  	
 	  <signjar alias="Integrator" jar="${appJarObf}" keypass="d=dpfIntegrator!" keystore="keystore" signedjar="${appJarObfSgn}" storepass="d=dpfIntegrator!"/>
   </target>
