@@ -185,7 +185,7 @@ public class Integrator extends Launcher {
    */
   @Override
   public short getYearOfProgramRelease() {
-    return 2012;
+    return 2013;
   }
   
   /* (non-Javadoc)
