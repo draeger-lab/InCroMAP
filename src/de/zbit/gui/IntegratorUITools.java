@@ -1005,7 +1005,8 @@ public class IntegratorUITools {
    * @return 
    */
   public static KeggCompound2InChIKeyMapper getKegg2InChIKeyMapping() {
-    String key = KeggCompound2InChIKeyMapper.class.getSimpleName();
+    // ZU speicherlastig, daher kein Caching hierfür.
+  	/*String key = KeggCompound2InChIKeyMapper.class.getSimpleName();
     Object mapper = UIManager.get(key);
     if (mapper==null) {
       try {
@@ -1016,8 +1017,14 @@ public class IntegratorUITools {
       if (mapper!=null) {
         UIManager.put(key, mapper);
       }
+    }*/
+  	KeggCompound2InChIKeyMapper mapper = null;
+  	try {
+      mapper = new KeggCompound2InChIKeyMapper();
+    } catch (IOException e) {
+      GUITools.showErrorMessage(IntegratorUI.getInstance(), e);
     }
-    return (KeggCompound2InChIKeyMapper) mapper;
+    return mapper;
   }
   
   /**
