@@ -109,7 +109,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
    * Can hold any additional data (Mostly strings, such as gene descriptions
    * or additional identifiers).
    */
-  private Map<String, Object> additional_data = null;
+  protected Map<String, Object> additional_data = null;
   
   /**
    * Is linked to {@link #additional_data} and contains true, if this data should
@@ -917,7 +917,7 @@ public abstract class NameAndSignals implements Serializable, Comparable<Object>
     additional_data.remove(key);
   }
 
-  private void initializeAdditionalData() {
+  protected void initializeAdditionalData() {
     additional_data = new HashMap<String, Object>();
   }
   

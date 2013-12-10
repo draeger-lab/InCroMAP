@@ -525,8 +525,8 @@ public class IntegratorUITools {
     
     //Compound ID priorities
     else if (type.equals(IdentifierType.InChIKey)) return 0;
-    else if (type.equals(IdentifierType.HMDB)) return 1;
     else if (type.equals(IdentifierType.LIPIDMAPS)) return 1;
+    else if (type.equals(IdentifierType.HMDB)) return 1;
     else if (type.equals(IdentifierType.KeggCompound)) return 1;
     else if (type.equals(IdentifierType.CHEBI)) return 1;
     else if (type.equals(IdentifierType.PC_compound)) return 1;

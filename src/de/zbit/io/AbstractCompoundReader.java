@@ -489,6 +489,8 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
   protected T createObject(String name, String[] line) throws Exception {
     // Map to GeneID
     String inchikey = null;
+    if(name.isEmpty())
+    	name = null;
     if (idType!=null && !idType.equals(IdentifierType.InChIKey)) {
       Set<String> set = mapper.map(name);
     	if(set!=null)inchikey = set.iterator().next();
@@ -502,11 +504,13 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
       // and to store a better name
       if (secondID!=null) {
         String secondIdentifier = line[secondID.getA()];
-        if (inchikey==null && mapper!=null) {
-        	Set<String> set = mapper.map(secondIdentifier);
-        	if(set!=null)inchikey = set.iterator().next();
+        if(secondIdentifier!=null && !secondIdentifier.isEmpty()){
+	        if (inchikey==null && mapper!=null) {
+	        	Set<String> set = mapper.map(secondIdentifier);
+	        	if(set!=null)inchikey = set.iterator().next();
+	        }
+	        name = secondIdentifier;
         }
-        name = secondIdentifier;
       }
     }
     
