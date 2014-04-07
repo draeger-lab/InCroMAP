@@ -119,6 +119,7 @@ import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.SNPReader;
 import de.zbit.io.SerializableTools;
 import de.zbit.io.mRNAReader;
+import de.zbit.io.mRNATimeSeriesReader;
 import de.zbit.io.miRNAReader;
 import de.zbit.io.filefilter.SBFileFilter;
 import de.zbit.kegg.Translator;
@@ -323,6 +324,9 @@ public class IntegratorUITools {
       } else if (value.equals(DNAmethylationReader.class)) {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("DNA methylation data", value));
         hitwords.add(hitwords.size(), new String[]{"dnam", "methylation"});
+      } else if (value.equals(mRNATimeSeriesReader.class)) {
+        itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("mRNA times series data", value));
+        hitwords.add(hitwords.size(), new String[]{"timeseries"});
       } else if (value.equals(SNPReader.class)) {
         itemsForModel.add(itemsForModel.size(), new LabeledObject<Class<?>>("SNP or GWAS data", value));
         hitwords.add(hitwords.size(), new String[]{"snp", "gwas"});
@@ -1005,7 +1009,7 @@ public class IntegratorUITools {
    * @return 
    */
   public static KeggCompound2InChIKeyMapper getKegg2InChIKeyMapping() {
-    // ZU speicherlastig, daher kein Caching hierfür.
+    // ZU speicherlastig, daher kein Caching hierfï¿½r.
   	/*String key = KeggCompound2InChIKeyMapper.class.getSimpleName();
     Object mapper = UIManager.get(key);
     if (mapper==null) {
