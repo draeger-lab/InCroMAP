@@ -109,11 +109,12 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     this(parent, null);
     
     // Create intermediate loading tab
-    intermediateBar = IntegratorTab.generateLoadingPanel(this, "Reading file " + FileTools.getFilename(inFile));
-    nsreader.setProgressBar(intermediateBar);
+    setIntermediateBar(IntegratorTab.generateLoadingPanel(this, "Reading file " + FileTools.getFilename(inFile)));
+    nsreader.setProgressBar(getIntermediateBar());
     
     // Create worker
     final NameAndSignalsTab thiss = this;
+    // CompositeDataSupport ?
     SwingWorker<Collection<? extends NameAndSignals>, Void> worker = new SwingWorker<Collection<? extends NameAndSignals>, Void>() {
       @Override
       protected Collection<? extends NameAndSignals> doInBackground() throws Exception {
@@ -141,9 +142,9 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
     this(parent, null, species);
     
     // Create intermediate loading tab
-    intermediateBar = IntegratorTab.generateLoadingPanel(this, loadingMessage);
+    setIntermediateBar(IntegratorTab.generateLoadingPanel(this, loadingMessage));
     // Give workers the chance to display a progress.
-    Reflect.invokeIfContains(nsworker, "setProgressBar", AbstractProgressBar.class, intermediateBar);
+    Reflect.invokeIfContains(nsworker, "setProgressBar", AbstractProgressBar.class, getIntermediateBar());
     
     nsworker.addPropertyChangeListener(this);
     nsworker.execute();
@@ -181,7 +182,7 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
   @SuppressWarnings("rawtypes")
   private void swingWorkerDone(SwingWorker worker) {
     Object data=null;
-    if (intermediateBar!=null) intermediateBar.finished();
+    if (getIntermediateBar()!=null) getIntermediateBar().finished();
     parent.getStatusBar().reset();
     try {
       data = worker.get();
@@ -203,7 +204,7 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
   
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  private void setData(Object data) {
+  protected void setData(Object data) {
     if (data==null) return;
     
     // Convert Iterables and arrays to list and store the list as internal data structure.
@@ -281,5 +282,19 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
       }
     }
   }
+
+	/**
+	 * @return the intermediateBar
+	 */
+	public AbstractProgressBar getIntermediateBar() {
+		return intermediateBar;
+	}
+
+	/**
+	 * @param intermediateBar the intermediateBar to set
+	 */
+	public void setIntermediateBar(AbstractProgressBar intermediateBar) {
+		this.intermediateBar = intermediateBar;
+	}
   
 }
