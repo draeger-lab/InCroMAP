@@ -55,6 +55,7 @@ import de.zbit.data.TableResult;
 import de.zbit.data.id.CompoundID;
 import de.zbit.data.id.GeneID;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.data.methylation.DNAmethylation;
 import de.zbit.data.miRNA.miRNA;
 import de.zbit.data.miRNA.miRNAtargets;
@@ -151,7 +152,11 @@ public class NameAndSignalTabActions implements ActionListener {
      * methods mind a filetered table and not all tables are capable
      * to sync this with the underlying data structure!
      */
-    FILTER_TABLE;
+    FILTER_TABLE,
+    /**
+     * Generate a continuous model from discrete time points
+     */
+    MODEL_TIME_SERIES;
     
     /*
      * (non-Javadoc)
@@ -208,6 +213,8 @@ public class NameAndSignalTabActions implements ActionListener {
           return "Correct p-values with the Holm–Bonferroni method and save as q-values.";
         case FDR_CORRECTION_BO:
           return "Correct p-values with the Bonferroni method and save as q-values.";
+        case MODEL_TIME_SERIES:
+        	return "Generate a continuous model, which can be visualized.";
           
         default:
           return null; // Deactivate
@@ -304,6 +311,14 @@ public class NameAndSignalTabActions implements ActionListener {
       bar.add(GUITools.createJButton(this,
           NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_PENCIL_16")));
     
+    } if(tableContent.equals(mRNATimeSeries.class)) {
+    	bar.add(GUITools.createJButton(this,
+          NSAction.MODEL_TIME_SERIES, UIManager.getIcon("ICON_GEAR_16")));
+    	
+    	// Same as for mRNA.class
+    	bar.add(GUITools.createJButton(this,
+          NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_PENCIL_16")));	
+    	
     } if (Region.class.isAssignableFrom(tableContent)) {
       bar.add(GUITools.createJButton(this,
         NSAction.PLOT_REGION, UIManager.getIcon("ICON_PENCIL_16")));
@@ -461,6 +476,11 @@ public class NameAndSignalTabActions implements ActionListener {
       BFH_cor.setSelected(false); BO_cor.setSelected(true); BH_cor.setSelected(false);
       new Bonferroni().setQvalue((List<EnrichmentObject<Object>>) parent.getData());
       parent.getVisualization().repaint();
+      
+    } else if(command.equals(NSAction.MODEL_TIME_SERIES.toString())) {
+    	System.out.println("Button works!");
+    	//IntegratedEnrichmentDialog.defaultSelection = parent;
+      //IntegratorUITools.showIntegratedEnrichmentDialog();
     }
   }
 
