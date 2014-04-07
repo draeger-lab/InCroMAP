@@ -343,7 +343,7 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
    * to the priority of selected identifiers.
    * @param expectedColumn
    */
-  private void setNameAndIdentifierTypes(ExpectedColumn idCol) {
+  protected void setNameAndIdentifierTypes(ExpectedColumn idCol) {
     int selCols = idCol.getAssignedColumns().size();
     
     // Create a list of columns, types and priorities
