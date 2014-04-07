@@ -61,6 +61,7 @@ import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
 
 import de.zbit.AppConf;
 import de.zbit.data.EnrichmentObject;
@@ -83,6 +84,7 @@ import de.zbit.gui.customcomponents.SpeciesHolder;
 import de.zbit.gui.prefs.IntegratorIOOptions;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.gui.tabs.IntegratorTab;
+import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.BioPAXimporterInCroMAP;
@@ -97,6 +99,7 @@ import de.zbit.io.ProteinModificationReader;
 import de.zbit.io.SNPReader;
 import de.zbit.io.mRNAReader;
 import de.zbit.io.miRNAReader;
+import de.zbit.io.mRNATimeSeriesReader;
 import de.zbit.io.filefilter.SBFileFilter;
 import de.zbit.io.proxy.ProxySelection;
 import de.zbit.kegg.KEGGtranslatorOptions;
@@ -213,6 +216,10 @@ public class IntegratorUI extends BaseFrame {
      */
     LOAD_MRNA,
     /**
+     * {@link Action} to load data with the {@link mRNATimeSeriesReader}.
+     */
+    LOAD_MRNA_TIME_SERIES,
+    /**
      * {@link Action} to load data with the {@link miRNAReader}.
      */
     LOAD_MICRO_RNA,
@@ -287,6 +294,8 @@ public class IntegratorUI extends BaseFrame {
         return "Load workspace";
       case LOAD_MRNA:
         return "Load mRNA data";
+      case LOAD_MRNA_TIME_SERIES:
+      	return "Load mRNA time series data";
       case LOAD_MICRO_RNA:
         return "Load microRNA data";
       case LOAD_PROTEIN_MODIFICATION:
@@ -330,6 +339,8 @@ public class IntegratorUI extends BaseFrame {
           return "Load opened tabs from a previous session.";
         case LOAD_MRNA:
           return "Load processed mRNA data from file.";
+        case LOAD_MRNA_TIME_SERIES:
+        	return "Load processed mRNA time series data from file.";
         case LOAD_MICRO_RNA:
           return "Load processed microRNA data from file.";
         case LOAD_PROTEIN_MODIFICATION:
@@ -695,6 +706,9 @@ public class IntegratorUI extends BaseFrame {
     
     JMenuItem ldnaM = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openDNAmethylationFile"),
       Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_DNAM_16"));
+    
+    JMenuItem lmRNATimeSeries = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMRNATimeSeriesFile"),
+        Action.LOAD_MRNA_TIME_SERIES, UIManager.getIcon("ICON_MRNA_16"));
       
     JMenuItem genelist = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "showInputGenelistDialog"),
         Action.INPUT_GENELIST, UIManager.getIcon("ICON_OPEN_16"));
@@ -725,6 +739,7 @@ public class IntegratorUI extends BaseFrame {
     importData.add(lmiRNA);
     importData.add(lprotMod);
     importData.add(ldnaM);
+    importData.add(lmRNATimeSeries);
     importData.add(compoundData);
     importData.addSeparator();
     importData.add(genericGene);
@@ -808,6 +823,9 @@ public class IntegratorUI extends BaseFrame {
       JMenuItem ldnaM = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openDNAmethylationFile"),
         Action.LOAD_DNA_METHYLATION, UIManager.getIcon("ICON_DNAM_16"));
       load.add(ldnaM);
+      JMenuItem lmRNATimeSeries = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openMRNATimeSeriesFile"),
+          Action.LOAD_MRNA_TIME_SERIES, UIManager.getIcon("ICON_MRNA_16"));
+      load.add(lmRNATimeSeries);
       
       JMenuItem lcpd = GUITools.createJMenuItem(EventHandler.create(ActionListener.class, this, "openCompoundFile"),
           Action.LOAD_COMPOUND, UIManager.getIcon("ICON_COMPOUND_16"));
@@ -869,6 +887,10 @@ public class IntegratorUI extends BaseFrame {
   
   public void openMRNAfile() {
     openFile(null, mRNAReader.class);
+  }
+  
+  public void openMRNATimeSeriesFile() {
+  	openFile(null, mRNATimeSeriesReader.class);
   }
 
   public void openProteinModificationExpressionFile() {
@@ -1201,8 +1223,13 @@ public class IntegratorUI extends BaseFrame {
         if (r!=null) {
           NameAndSignalReader<? extends NameAndSignals> nsreader = (NameAndSignalReader<?>) r.newInstance();
           
-          // Show import dialog and read data
-          addTab(new NameAndSignalsTab(this, nsreader, files[i].getPath()), files[i].getName());
+          // Add right Tab, show import dialog and read data 
+          if(nsreader instanceof mRNATimeSeriesReader) {
+          	addTab(new NSTimeSeriesTab(this, nsreader, files[i].getPath()), files[i].getName());
+          } else {
+          	addTab(new NameAndSignalsTab(this, nsreader, files[i].getPath()), files[i].getName());
+          }
+          	
           getStatusBar().showProgress(nsreader.getProgressBar());
         } else {
           files[i]=null; // Dont add to history.
@@ -1321,7 +1348,7 @@ public class IntegratorUI extends BaseFrame {
     // work => include a static list as fallback.
     // Since 2012-09-17 (App.Note Review) include additional readers
     return new Class[]{mRNAReader.class, miRNAReader.class, DNAmethylationReader.class, ProteinModificationReader.class, 
-        SNPReader.class, GenericGeneBasedDataReader.class, GenericGeneReader.class,CompoundReader.class};
+        SNPReader.class, GenericGeneBasedDataReader.class, GenericGeneReader.class,CompoundReader.class,mRNATimeSeriesReader.class};
   }
 
   /**
