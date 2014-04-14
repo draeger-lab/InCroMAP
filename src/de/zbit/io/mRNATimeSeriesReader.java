@@ -1,7 +1,29 @@
+/*
+ * $Id$
+ * $URL$
+ * ---------------------------------------------------------------------
+ * This file is part of Integrator, a program integratively analyze
+ * heterogeneous microarray datasets. This includes enrichment-analysis,
+ * pathway-based visualization as well as creating special tabular
+ * views and many other features. Please visit the project homepage at
+ * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
+ * obtain the latest version of Integrator.
+ *
+ * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ *
+ * Integrator is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU Lesser General Public License
+ * as published by the Free Software Foundation. A copy of the license
+ * agreement is provided in the file named "LICENSE.txt" included with
+ * this software distribution and also available online as
+ * <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
+ * ---------------------------------------------------------------------
+ */
 package de.zbit.io;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.FontMetrics;
 import java.awt.GridLayout;
@@ -9,11 +31,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.CellEditor;
 import javax.swing.DefaultCellEditor;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -24,6 +49,7 @@ import javax.swing.JTextField;
 import javax.swing.JViewport;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.plaf.ListUI;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
@@ -32,10 +58,16 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.treetable.AbstractCellEditor;
 
+import org.apache.commons.collections15.ListUtils;
+
+import com.sun.xml.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
+import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
@@ -44,9 +76,19 @@ import de.zbit.gui.table.JTableRowBased;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.integrator.ReaderCacheElement;
 import de.zbit.io.csv.CSVReader;
+import de.zbit.mapper.MappingUtils;
+import de.zbit.mapper.MappingUtils.IdentifierClass;
+import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.ValueTriplet;
 
+/**
+ * A special reader for the import of {@link Collections} of {@link mRNATimeSeries} and the
+ * corresponding time information for each experiment/treatment.
+ * @author Felix Bartusch
+ * @version $Rev$
+ */
 public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 
 	/**
@@ -55,11 +97,9 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 	private String timeUnit = "";
 	
 	/**
-	 * This Array holds the time information. The first entry belongs to the first SignalColumn
-	 * and so on. There must be as many timePoints as SignalColumns.
-	 * An Array, so that a JTable can use this field storing the user input.
+	 * This list holds the time information.
 	 */
-	private List<Float> timePoints;
+	private List<ValueTriplet<Double, String, SignalType>> timePoints;
 	
 	/**
 	 * This Array holds the experiment names. They are read from the input file
@@ -67,55 +107,80 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 	private String[] colNames;
 	
 	/**
-	 * This Array holds the time points user input. It is later parsed to a {@link List<Float>}.
+	 * This table holds the time points user input. It is later parsed to a
+	 * {@link List<ValueTriplet<String, SignalType, Double>>}.
 	 */
 	private JTable timePointsTable;
 	
+	/**
+	 * Number of signal columns of the file
+	 */
+	private int numSignalColumns;
+	
+	public String getTimeUnit() {
+		return timeUnit;
+	}
+
+	public List<ValueTriplet<Double, String, SignalType>> getTimePoints() {
+		return timePoints;
+	}
 	
 	/* (non-Javadoc)
    * @see de.zbit.io.NameAndSignalReader#importWithGUI(java.awt.Component, java.lang.String, de.zbit.integrator.ReaderCache)
    */
   @Override
   public Collection<mRNA> importWithGUI(Component parent, String file, ReaderCache cache) {
-
-  	// Create new panel, that allows to select timeUnit, timePoints and species
-  	JPanel comp = new JPanel();
-  	comp.setLayout(new GridLayout(3, 1));
-  	
     // Create a new panel that allows selection of species
     JLabeledComponent spec = IntegratorUITools.getOrganismSelector();
-    
-    // Create a JTextField that allows specification of the timeUnit
-    JPanel timeUnit = getTimeUnitTextfield();
-    
-    // Add single components to the main component
-    comp.add(spec);
-    comp.add(timeUnit);
-    
+    JPanel timeUnitTextfield = null;
+
     // Create and show the import dialog
     try {
-      // Definitions of required and optional columns
+    	// Peak into file to detemine maximum number of observations and SignalTypes
+    	String[][] sampleData = getSampledata(file,5);
+    	Integer[] isSignalColumn = inferSignalColumns(sampleData);
+    	boolean isPValue = inferIsPValue(sampleData, isSignalColumn);
+        	
+      // Definitions of required and optional columns. Signal columns are created in the method
+    	// getExpectedSignalColumnsOverridable, which is overridden in this class
       ExpectedColumn[] exCol = getExpectedColumns();
+      
       int originalSize = getExpectedColumns().length;
       CSVReader inputReader = loadConfigurationFromCache(cache, file, exCol, spec);
       if (exCol.length!=originalSize) {
         // Don't load corrupt information
         exCol = getExpectedColumns();
       }
-      // getExpectedSignalColumnsOverridable ueberschreiben?
-      
+
       // Show the CSV Import dialog
       CSVImporterV2 c = null;
       boolean dialogConfirmed = true;
       boolean manuallyCheckedAssignments = false;
       while (dialogConfirmed && !manuallyCheckedAssignments) {
         c = new CSVImporterV2(inputReader, exCol);
-               
-        // Create new panel, that allows specification of time points
-        timePointsTable = createTimePointTable(inputReader);
-        comp.add(createTimePointPanel(timePointsTable));
+        
+        // Presumption: Every column, which contains no identifier, but floats is a signal column
+        // Get the exColSelections. 1 means, the column is an identifier, 0 means that the column isn't yet specified
+        Integer[] types = c.getExColTypeSelections();
 
-        dialogConfirmed = IntegratorUITools.showCSVImportDialog(parent, c, comp);
+        // Change exColSelection and exColTypeSelection of the CSVImporterV2
+        changeExCol(c, isSignalColumn, types, isPValue);
+        
+        
+        
+        
+        
+      	// Create new panel, that allows to select timeUnit, timePoints and species
+      	JPanel comp = new JPanel(new BorderLayout());
+        timeUnitTextfield = getTimeUnitTextfield();
+        timePointsTable = createTimePointTable(inputReader,isSignalColumn);
+        
+        // Add single components to the main component
+        comp.add(spec, BorderLayout.PAGE_START);
+        comp.add(timeUnitTextfield, BorderLayout.CENTER);
+        comp.add(createTimePointPanel(timePointsTable), BorderLayout.PAGE_END);
+
+        dialogConfirmed = IntegratorUITools.showCSVImportDialog(parent, c, comp, 800, 600);
         manuallyCheckedAssignments = dialogConfirmed && additionalColumnAssignmentCheck(c);
       }
       
@@ -125,10 +190,6 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
         this.species = (Species) spec.getSelectedItem();
         if (cache!=null) cache.add(ReaderCacheElement.createInstance(c, species));
         
-        // Store time unit and time points from user input
-        this.timeUnit = ((JTextField) timeUnit.getComponents()[1]).getText();
-        createTimePointsFromUserInput(timePointsTable);
-
         // Read all columns and types
         setNameAndIdentifierTypes(exCol[0]);   
         
@@ -151,10 +212,19 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
           }
         }
         
+        
+        
         try {
+        	// Store time unit and time points from user input
+          this.timeUnit = ((JTextField) timeUnitTextfield.getComponents()[1]).getText();
+          createTimePointsFromUserInput(c, timePointsTable, exCol); // does nothing
           //Utils.saveObject(FileTools.removeFileExtension(c.getApprovedCSVReader().getFilename())+"-reader.dat", this);
           return read(c.getApprovedCSVReader());
+          
         } catch (Exception e) {
+        	if(e.getMessage() != null)
+            GUITools.showErrorMessage(parent, e, e.getMessage());
+
           GUITools.showErrorMessage(parent, e, "Could not read input file.");
         }
       }
@@ -167,29 +237,266 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
     return null;
   }
 
+/**
+  * 
+  * @param sampleData of the input file
+  * @param isSignalColumn contains 1, if corresponding column contains signal
+  * @return true if data represent p-values, false otherwise
+  */
+  private boolean inferIsPValue(String[][] sampleData, Integer[] isSignalColumn) {
+  	
+ 	  for(int col=0; col<sampleData[0].length; col++) {
+ 	  	// Is the column a signal column?
+ 	  	if(isSignalColumn[col] == 1) {
+ 	  		// check all values, if the are in [0 ,1]
+ 	  		for(int row=0; row<sampleData.length; row++) {
+ 	  			Double d = Double.parseDouble(sampleData[row][col]);
+ 		  		if(!(d >= 0 && d <= 1)) {
+ 		  			return false;
+ 		  		}
+ 	  		}
+ 	  	}
+ 	  }
+ 		
+ 		return true;
+	}
+
+
+	/**
+   * Infer the number of signal columns in the input file. Each column with Floats is considered as signal column.
+   * @param sampleData First lines of the input file
+   */
+	private Integer[] inferSignalColumns(String[][] sampleData) {
+		int counter = 0;
+		Integer[] ret = new Integer[sampleData[0].length];
+		
+		// Count the columns with floats
+		for(int col=0; col<sampleData[0].length; col++) {
+			boolean isSignalColumn = true;
+			boolean isIdentifier = true;												// Some gene identifier are ints
+			
+			// Check all values in the current column
+			for(int row=0; row<sampleData.length; row++) {
+				if(sampleData[row][col] != null) {
+					try {
+						Double f = Double.parseDouble(sampleData[row][col]);
+						if(f % 1 != 0) 																// Number has remainder -> no gene identifier
+							isIdentifier = false;
+					} catch (Exception e) {
+						break;
+					}	
+				}
+			}
+			
+			// If current column is a signal column, increase counter and set flag in the array
+			if(isSignalColumn && !isIdentifier) {
+				counter++;
+				ret[col] = 1;
+			} else {
+				ret[col] = 0;
+			}
+		}
+		
+		numSignalColumns = counter;
+		
+		return ret;
+	}
+
+	/**
+   * Return sample content from the file
+   * @param numDataLines number of lines to read from the file
+   * @return a uniform 2D array with sample content
+   * @throws IOException
+   */
+  private String[][] getSampledata(String file, int numDataLines) throws IOException {
+  	CSVReader r = new CSVReader(file);
+    // Auto infer the seperator char
+  	r.setSeparatorChar('\u0000');
+  	// the header isn't interesting, but this calls the private initialize() method
+  	r.getContainsHeaders();
+      
+    // Get Data
+    ArrayList<String[]> firstLines = new ArrayList<String[]>(numDataLines);
+    int maxColCount=0;
+    r.open();
+      
+    String[] line;
+    int i=0;
+      while((line=r.getNextLine())!=null) {
+        firstLines.add(line);
+        maxColCount = Math.max(maxColCount, line.length);
+        if ((++i)==numDataLines) break;
+      }
+    r.close();
+    // ---
+    String[][] data = firstLines.toArray(new String[0][0]);
+      
+    // Bring them all to the same column count
+    for (i=0; i<data.length; i++) {
+      if (data[i]!=null && data[i].length<maxColCount) {
+      	String[] newData = new String[maxColCount];
+      	System.arraycopy(data[i], 0, newData, 0, data[i].length);
+      	data[i] = newData;
+        }
+    }
+		return data;
+  }
+
+	/**
+   * Update exCols, exColSelections and exColTypeSelection of the CSVImporterV2.
+   * @param c The CSVImporterV2
+   * @param signals which columns contain signals
+   * @param oldTypes  
+	 * @param isPValue 
+   * @return 
+   */
+  private void changeExCol(CSVImporterV2 c, Integer[] signals, Integer[] oldTypes, boolean isPValue) { 	 
+  	// Get original exColSelection
+ 		Integer[] exColSelection = c.getExColSelections();
+ 		
+ 		//Get the preview panel and the preview table
+ 	 	JComponent previewPanel = c.getPreviewPanel();
+ 	 	JTableRowBased table = null;
+ 	 	for(Component com : previewPanel.getComponents()) {
+ 	 		if(com instanceof JScrollPane) {
+ 	 			JScrollPane p = (JScrollPane) com;
+ 	 			table = (JTableRowBased) p.getViewport().getView();
+ 	 		}
+ 	 	}
+ 	 	
+ 	 	// Get the tableModel and measures of the preview table
+ 	 	TableModel model = table.getModel();
+ 	 	int numCol = model.getColumnCount();
+ 	 	
+ 	 	// Get the ComboBoxes (first two lines of the preview table)
+ 	 	JComboBox[][] boxes = new JComboBox[2][numCol];
+  
+ 	 	// Set the Observation for ComboBoxes of signal columns
+ 	 	int observation = 0;	// counts the current observations
+ 	 	for(int i=0; i<signals.length; i++) {
+ 	 		// Get column selection combo boxes. 
+ 	 		boxes[0][i] = (JComboBox) model.getValueAt(0, i);
+ 	 		boxes[1][i] = (JComboBox) model.getValueAt(1, i);
+ 	 		int type = boxes[1][i].getSelectedIndex();
+ 	 		
+ 	 		if(exColSelection[i] != 0 && signals[i] != 1) {
+ 	 			// This column could be an identifier
+ 	 			boxes[0][i].setSelectedIndex(exColSelection[i]);
+ 	 			boxes[1][i].setSelectedIndex(type);
+ 	 		}else if(signals[i] == 1) {
+ 	 			// the column is a signal column
+ 	 			boxes[0][i].setSelectedIndex(observation+3);
+ 	 			observation++;
+ 	 		}
+ 	 	}
+ 	 	
+ 	 	//update the exColTypeSelection array of CSVImporterV2
+ 	 	Integer[] newExColTypeSelection = c.getExColTypeSelections();
+ 	 	
+ 	 	// Set exColTypeSelection boxes for the observations
+ 	  for(int col=0; col<signals.length; col++) {
+ 	  	// Is the column an observation?
+ 	  	if(boxes[0][col].getSelectedIndex() > 2) {
+ 	  		boxes[1][col].setSelectedIndex(isPValue ? 1:0);
+ 	  		newExColTypeSelection[col] = isPValue ? 1:0;
+ 	  	}
+ 	  }
+
+ 	  c.setExColTypeSelections(newExColTypeSelection);
+  }
+  
+	
+	/* (non-Javadoc)
+   * @see de.zbit.ioAbstractGeneBasedNSReader.#getExpectedSignalColumnsOverridable(int)
+   */
+  @Override
+  protected Collection<ExpectedColumn> getExpectedSignalColumnsOverridable(int maxNumberOfObservations) {
+    // Application can (as of today) only process pValues and fold changes.
+    SignalType[] types = new SignalType[]{SignalType.FoldChange, SignalType.pValue};
+    
+    Collection<ExpectedColumn> r = new ArrayList<ExpectedColumn>(maxNumberOfObservations); 
+    for (int i=1; i<=numSignalColumns; i++) {
+      ExpectedColumn e = new ExpectedColumn("Observation " + i, types, false, false,false,true);
+      r.add(e);
+    }
+    return r;
+  }
+
   /**
    * User's time points input is stored as two-dimensional array. This is ugly, so create a list from the array.
    * Ignore the empty cells, because user doesn't want to use this columns.
    * @param table 
+   * @param offset 
+   * @param exCol 
+   * @throws Exception 
    * 
    */
-	private void createTimePointsFromUserInput(JTable table) {
-		this.timePoints = new ArrayList<Float>();
+  private void createTimePointsFromUserInput(CSVImporterV2 c, JTable table, ExpectedColumn[] exCol) throws Exception {
+	 	//Get the preview panel and the preview table
+ 	 	JComponent previewPanel = c.getPreviewPanel();
+ 	 	JTableRowBased previewTable = null;
+ 	 	for(Component com : previewPanel.getComponents()) {
+ 	 		if(com instanceof JScrollPane) {
+ 	 			JScrollPane p = (JScrollPane) com;
+ 	 			previewTable = (JTableRowBased) p.getViewport().getView();
+ 	 		}
+ 	 	}
+ 	 	
+ 	 	// Get the tableModel and measures of the preview table
+ 	 	TableModel previewModel = previewTable.getModel();
+ 	 	int numCol = previewModel.getColumnCount();
+ 	 	
+  	// Get the ComboBoxes (first two lines of the preview table)
+ 	 	JComboBox[] boxes = new JComboBox[numCol];
+ 	 	
+ 	 	// Set the Observation for ComboBoxes of signal columns
+ 	 	for(int i=0; i<numCol; i++) {
+ 	 		// Get column selection combo boxes. 
+ 	 		boxes[i] = (JComboBox) previewModel.getValueAt(0, i);
+ 	 	}
+  	
+ 	 	// Read the user input
+  	this.timePoints = new ArrayList<ValueTriplet<Double, String, SignalType>>();
+		TableModel model = table.getModel();
 		
-		TableModel m = table.getModel();
-
-		for(int i=0; i<m.getColumnCount(); i++) {
-			if(m.getValueAt(0, i) != null) 
-				this.timePoints.add((Float) m.getValueAt(0, i));
+		for(int i=0; i<numCol; i++) {
+			String colName = previewModel.getColumnName(i);
+			
+			if(boxes[i].getSelectedIndex() > 2) {					// a signal column
+				JComboBox typeBox = (JComboBox) previewModel.getValueAt(1, i);
+				
+        timePoints.add(
+            new ValueTriplet<Double, String, SignalType>(
+            	(Double) model.getValueAt(0, boxes[i].getSelectedIndex()-3),
+            	boxes[i].getSelectedItem().toString(),
+            	(SignalType) typeBox.getSelectedItem()));	
+			}
+		}
+	
+		// sort the time points
+		Collections.sort(timePoints);
+		// TODO Check, if input is meaningful (no two equal time points, no empty fields)
+		for(int i=0; i<timePoints.size(); i++) {
+			// Check, that for every selected column a time is given
+			if(timePoints.get(i).getA() == null)
+				throw new Exception("Please specify time for each selected observation");
+			// Check, that now two times are the same
+			if(i+1<timePoints.size() && Math.abs((timePoints.get(i).getA() - timePoints.get(i+1).getA())) < 0.000000001)
+				throw new Exception("Time points have to be different");
 		}
 	}
-	
-	public String getTimeUnit() {
-		return timeUnit;
-	}
 
-	public List<Float> getTimePoints() {
-		return timePoints;
+  /**
+   * Is the {@link ExpectedColumn} a signal column?
+   * @param e The ExpectedColumn
+   * @return true, if e is a signal column
+   */
+	private boolean isSignalColumn(ExpectedColumn e) {
+		String name = (String) e.getOriginalName();
+		if(name.contains("Observation"))
+			return true;
+		else			
+			return false;
 	}
 
 	/**
@@ -215,21 +522,38 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
   }
 	
 	/**
-	 * A {@link JTable} with experiment names as column headers. In one single row the user can fill in {@link Floats},
+	 * A {@link JTable} with experiment names as column headers. In one single row the user can fill in {@link Double}s,
 	 * which describe the time points of the experiment.
 	 * @param reader The CSVReader
+	 * @param signals The array contains information about signal columns
 	 * @return
 	 */
-	private JTable createTimePointTable(final CSVReader reader) {
+	private JTable createTimePointTable(final CSVReader reader, Integer[] signals) {
 		
-    final int numCols = reader.getHeader().length;
-    colNames = reader.getHeader();
+		// How many columns the table need?
+		int counter = 0;
+		for(int i=0; i<signals.length; i++) {
+			if(signals[i]==1)
+				counter++;
+		}
+		final int numCols = counter;
+		
+		// Lookup the column names of the signal columns.
+		colNames = new String[numCols];
+		String[] header = reader.getHeader();
+		int pos = 0;
+		for(int i=0; i<signals.length; i++) {
+			if(signals[i]==1) {
+				colNames[pos] = header[i];
+				pos++;
+			}
+		}
 		
 		// create TableModel for the new JTable
 		TableModel m = new AbstractTableModel() {
 			
 			private String[] columnNames = colNames;
-			private Object[][] data = new Float[1][numCols];
+			private Object[][] data = new Double[1][numCols];
 			
 			
 			@Override
@@ -258,11 +582,11 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 				return true;	
 			}
 			
-			// If the input isn't parseable to float, just overwrite the last float in the cell
+			// If the input isn't parseable to double, just overwrite the last double in the cell
 			@Override
 			public void setValueAt(Object val, int row, int column ) {
 				try{
-					data[row][column] = new Float((String) val);
+					data[row][column] = new Double((String) val);
 				} catch(Exception e) {	
 					data[row][column] = null;
 				}
@@ -279,8 +603,10 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
   	DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
   	renderer.setToolTipText("Please fill in the corresponding time for each experiment. Leave the cell empty, if an experiment shouldn't be considered.");
     
+  	// Add the changes to each column (e.g. cell)
 		for(int i=0; i<table.getColumnModel().getColumnCount(); i++) {
 			TableColumn col = table.getColumnModel().getColumn(i);
+			col.setPreferredWidth(150);
 			col.setCellEditor(singleclick);
 			col.setCellRenderer(renderer);
 		}
@@ -302,18 +628,17 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 		
 		return table;
 	}
+
 	
-	private JPanel createTimePointPanel(JTable table) {
-		// Build panel, which contains the table
-		JPanel panel = new JPanel();
-		GUITools.createTitledPanel(panel, "Set time points");
-			
-		// Because the there is no need for a scroll pane, the header must be added manually
-		panel.setLayout(new BorderLayout());
-		panel.add(table.getTableHeader(), BorderLayout.PAGE_START);
-		panel.add(table, BorderLayout.CENTER);
-		
-		return panel;	
+	private JScrollPane createTimePointPanel(JTable table) {
+		// Add a horizontal scrollpane to the table
+		JScrollPane scrollPane = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+    scrollPane.setPreferredSize(new Dimension(200, 95)); //100
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+    scrollPane.getViewport().add(table, BorderLayout.NORTH);
+    
+    GUITools.createTitledPanel(scrollPane, "Set time points");
+    return scrollPane;
 	}
 
 	@Override
@@ -348,48 +673,3 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
     return m;
   }
 }
-
-
-
-/*
-// User changes on the preview table are also made in the timePointsTable
-JComponent previewPanel = c.getPreviewPanel();
-
-// The table in the previewPanel, where we want to add changes like ActionListeners
-JTableRowBased table = null;
-
-// Get the table from the previewPanel
-for(Component com : previewPanel.getComponents()) {
-	if(com instanceof JScrollPane) {
-		JScrollPane p = (JScrollPane) com;
-		table = (JTableRowBased) p.getViewport().getView();
-	}
-}
-
-// Get the tableModel
-TableModel model = table.getModel();
-int numCol = model.getColumnCount();
-
-// Get the boxes
-JComboBox[] boxes = new JComboBox[model.getColumnCount()];
-for(int i=0; i<numCol; i++) {
-	//System.out.println(model.getValueAt(0, i).getClass()); //JComboBoxes
-
-	boxes[i] = (JComboBox) model.getValueAt(0, i);
-		
-	boxes[i].addActionListener(new ActionListener() {
-	  /* (non-Javadoc)
-	  * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-	  */
-/*
-	  public void actionPerformed(ActionEvent e) {
-	  	int index = ((JComboBox)e.getSource()).getSelectedIndex();
-	    Object item = ((JComboBox)e.getSource()).getSelectedItem();
-	    
-	    System.out.println(item.toString());
-	    ExpectedColumn col = (ExpectedColumn) item;
-	    
-	    
-	  }
-	});
-}*/
