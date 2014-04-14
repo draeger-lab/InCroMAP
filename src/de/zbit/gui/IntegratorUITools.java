@@ -230,8 +230,22 @@ public class IntegratorUITools {
    * @throws IOException 
    */
   public static boolean showCSVImportDialog(Component parent, CSVImporterV2 c, JComponent additionalComponent) throws IOException {
+  	
+    return IntegratorUITools.showCSVImportDialog(parent, c, additionalComponent, 800, 400);
+  }
+  
+  
+  /**
+   * Show the {@link CSVImporterV2} dialog.
+   * @param parent parent {@link Frame} or {@link Dialog}
+   * @param c {@link CSVImporterV2}
+   * @param additionalComponent e.g., speciesSelector from {@link #getOrganismSelector()}
+   * @return true if ok has been pressed.
+   * @throws IOException 
+   */
+  public static boolean showCSVImportDialog(Component parent, CSVImporterV2 c, JComponent additionalComponent, int width, int height) throws IOException {
     c.setRenameButtonCaption("Edit observation names");
-    c.setPreferredSize(new java.awt.Dimension(800, 450));
+    c.setPreferredSize(new java.awt.Dimension(width, height));
     
     // Customize the north-dialog.
     if (additionalComponent!=null) {
