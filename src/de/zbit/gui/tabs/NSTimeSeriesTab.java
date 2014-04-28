@@ -23,25 +23,25 @@ package de.zbit.gui.tabs;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.management.openmbean.CompositeData;
 import javax.swing.SwingWorker;
 import javax.swing.SwingWorker.StateValue;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.FileTools;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.mRNATimeSeriesReader;
+import de.zbit.math.CubicSplineInterpolation;
 import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.Species;
 import de.zbit.util.objectwrapper.ValueTriplet;
@@ -75,9 +75,9 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 
 	/**
 	 * For each gene, this collection holds the information to model the gene with the given modelMethod.
-	 * After clicking on 'Model time series' the model Information for the given modelMethod is computed.
+	 * After clicking on 'Model time series' the model information is computed for each gene.
 	 */
-	private Collection<?> modelInformation = null;
+	private Collection<TimeSeriesModel> geneModels = null;
 		
 	// Most of the constructor bodies were copied from NameAndSignalTab.
 	public NSTimeSeriesTab(IntegratorUI parent, Object data) {
@@ -136,29 +136,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
     if (data==null || worker.isCancelled()) {
       parent.closeTab(this);
     } else {
-      setData(data);
-      
-      Collection<mRNATimeSeries> mRNA = (Collection<mRNATimeSeries>) data;
-      
-      // How one can get hands on the data?
-      // Maybe the other toArray method is better?
-      //System.out.println(mRNA.size()); // 45101
-      //Object[] mRNAArray = mRNA.toArray();
-      //System.out.println(mRNAArray.getClass()); // Object
-      //System.out.println("Num Genes: " + mRNAArray.length); // 45101
-      //System.out.println(mRNAArray[1].getClass()); //mRNATimeSeries
-      
-      // mRNATimeSeries
-      //mRNATimeSeries m = (mRNATimeSeries) mRNAArray[0];
-      //System.out.println("ColumnCount: " + m.getColumnCount()); //5
-      //System.out.println("GeneSymbol :" +m.getGeneSymbol()); //Copg (Name in Tab)
-      //System.out.println("Number of Signals: " + m.getNumberOfSignals()); //2
-      //System.out.println(m.getSignalNames(m.getSignals())); // Liste von Signal Names and Types
-      //m.getSig
-      
-      // This would couse to place buttons for this tab on the bar,
-      // even if this tab is not currently visible!
-      //updateButtons(parent.getJMenuBar(), parent.getJToolBar());
+      setData(data);      
       parent.updateButtons(); 
       parent.setIconForTab(this);
     }
@@ -209,6 +187,43 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		this.timePoints = timePoints;
 	}
 
-
-	
+	public void modelTimeSeries(Class<CubicSplineInterpolation> classs) {
+		this.modelMethod = classs;
+		this.geneModels = new ArrayList<TimeSeriesModel>(this.data.size());
+		
+		// Add an additional 'is modeled' column to the data
+		
+		
+		// Model each gene
+		mRNATimeSeries mRNA;
+		for(Object o : this.data) {
+			if(o instanceof mRNATimeSeries) {
+				mRNA = (mRNATimeSeries) o;
+				
+				// if mRNA has no NCBI geneID, geneModel for the mRNA is null. Add also a new additional data column,
+				// with information whether the mRNA was modeled or not
+				if(mRNA.getID() == -1) {
+					geneModels.add(null);
+					mRNA.addData("Modeled?", "No");
+				} else {
+					try {
+						TimeSeriesModel m = classs.newInstance();
+						m.generateModel(mRNA, timePoints);
+						geneModels.add(m);
+						mRNA.addData("Modeled?", "Yes");					
+					} catch (InstantiationException e) {
+						e.printStackTrace();
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}	
+				}
+			}
+		}
+		
+		// Repaint table of the tab to show new 'Modeled?' column
+		this.rebuildTable();
+		
+	}
 }

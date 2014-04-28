@@ -74,10 +74,12 @@ import de.zbit.gui.dialogs.MergedSignalDialog;
 import de.zbit.gui.tabs.IntegratorChartTab;
 import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
+import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.math.BenjaminiHochberg;
 import de.zbit.math.Bonferroni;
 import de.zbit.math.BonferroniHolm;
+import de.zbit.math.CubicSplineInterpolation;
 import de.zbit.sequence.region.Region;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
@@ -479,8 +481,9 @@ public class NameAndSignalTabActions implements ActionListener {
       
     } else if(command.equals(NSAction.MODEL_TIME_SERIES.toString())) {
     	System.out.println("Button works!");
-    	//IntegratedEnrichmentDialog.defaultSelection = parent;
-      //IntegratorUITools.showIntegratedEnrichmentDialog();
+    	if(parent instanceof NSTimeSeriesTab) {
+    		((NSTimeSeriesTab) parent).modelTimeSeries(CubicSplineInterpolation.class);    		
+    	}
     }
   }
 
@@ -605,8 +608,4 @@ public class NameAndSignalTabActions implements ActionListener {
       filter.setSelected(FilterNSTable.isTableFiltered((JTable)parent.getVisualization()));
     }
   }
-
-  
-  
-
 }
