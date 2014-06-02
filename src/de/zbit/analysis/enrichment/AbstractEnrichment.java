@@ -459,7 +459,25 @@ public abstract class AbstractEnrichment<EnrichIDType> {
    * @param idType
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<T> geneList, IdentifierType geneIdType, IdentifierType cpdIdType) {
+  public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<T> geneList,
+  		IdentifierType geneIdType, IdentifierType cpdIdType) {
+  	// For the visualization of mRNA time series data, I needed to speed up p-value computation
+  	// The existing code calls this function. So for the existing code nothing changes
+  	return getEnrichments(geneList, geneIdType, cpdIdType, false);  
+  }
+  
+  
+  /**
+   * Returns enriched classes (e.g., pathways). If you have an array of genes, please use
+   * {@link Arrays#asList(Object...)}
+   * @param <T>
+   * @param geneList
+   * @param idType
+   * @parem alwaysPValueApproximation
+   */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<T> geneList,
+  		 IdentifierType geneIdType, IdentifierType cpdIdType, boolean neverExactPValue) {
     SBPreferences prefs = SBPreferences.getPreferencesFor(EnrichmentOptions.class);
     
     // We have to take the gene lists in EnrichmentObjects, thus
@@ -490,7 +508,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     	pwGeneList = getContainedGeneEnrichments(geneList2, geneIdType);
     }
     // Map enriched objects on compound list
-    Map<EnrichIDType, Set<?>> pwCompoundList = null;
+    Map<EnrichIDType, Set<?>> pwCompoundList = null;   
     if(inchikey2enrich_ID!=null){
     	pwCompoundList = getContainedCompoundEnrichments(geneList2, cpdIdType);
     }
@@ -516,7 +534,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     		pwCompoundList = null;
     	}
     }
-        
+    
     // Init the enriched id 2 readable name mapping (e.g. Kegg Pathway ID 2 Kegg Pathway Name mapping)
     if (enrich_ID2Name==null) {
       enrich_ID2Name = getDefaultEnrichmentID2NameMapping();
@@ -540,7 +558,7 @@ public abstract class AbstractEnrichment<EnrichIDType> {
     	backGroundSize+=inchikey2enrich_ID.getTotalSumOfEntitiesInAllClasses();
     
     
-    EnrichmentPvalue pval = new HypergeometricTest(backGroundSize, geneListSize);
+    EnrichmentPvalue pval = new HypergeometricTest(backGroundSize, geneListSize, neverExactPValue);
     if (prog!=null) {
       prog.reset();
       prog.setNumberOfTotalCalls(pwMergedList.size());
