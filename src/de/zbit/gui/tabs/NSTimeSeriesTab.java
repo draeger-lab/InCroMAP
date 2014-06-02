@@ -77,7 +77,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 	 * For each gene, this collection holds the information to model the gene with the given modelMethod.
 	 * After clicking on 'Model time series' the model information is computed for each gene.
 	 */
-	private Collection<TimeSeriesModel> geneModels = null;
+	private List<TimeSeriesModel> geneModels = null;
 		
 	// Most of the constructor bodies were copied from NameAndSignalTab.
 	public NSTimeSeriesTab(IntegratorUI parent, Object data) {
@@ -157,7 +157,13 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
       }
     }
   }
-  
+
+	 /**
+	  * @return the model method or null, if data isn't modelled yet
+	  */
+	 public Class<? extends TimeSeriesModel> getModelMethod() {
+		 return modelMethod;
+	 }
 
 	/**
 	 * @return the timeUnit
@@ -174,10 +180,25 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 	}
 
 	/**
+	 * @return the gene models
+	 */
+	public Collection<TimeSeriesModel> getGeneModels() {
+		return geneModels;
+	}
+	
+	/**
 	 * @return the timePoints
 	 */
 	public List<ValueTriplet<Double, String, SignalType>> getTimePoints() {
 		return timePoints;
+	}
+	
+	/**
+	 * {@link SignalType} is inferred from the time points. (SignalType.FoldChange or SignalType.pValue)
+	 * @return the signal type of the data
+	 */
+	public SignalType getSignalType() {
+		return timePoints.get(0).getC();
 	}
 
 	/**
@@ -186,14 +207,17 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 	public void setTimePoints(List<ValueTriplet<Double, String, SignalType>> timePoints) {
 		this.timePoints = timePoints;
 	}
+	
+
+	public void setModelMethod(Class<? extends TimeSeriesModel> modelMethod) {
+		this.modelMethod = modelMethod;
+	}
+	
 
 	public void modelTimeSeries(Class<CubicSplineInterpolation> classs) {
 		this.modelMethod = classs;
 		this.geneModels = new ArrayList<TimeSeriesModel>(this.data.size());
-		
-		// Add an additional 'is modeled' column to the data
-		
-		
+
 		// Model each gene
 		mRNATimeSeries mRNA;
 		for(Object o : this.data) {
@@ -207,14 +231,15 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 					mRNA.addData("Modeled?", "No");
 				} else {
 					try {
+						// generate a new model. ! Important: set name and idType manually ! They are needed later.
 						TimeSeriesModel m = classs.newInstance();
+						m.setName(mRNA.getName());
+						m.setGeneID(mRNA.getID());
+						m.setSignalType(getSignalType());
 						m.generateModel(mRNA, timePoints);
+						
 						geneModels.add(m);
 						mRNA.addData("Modeled?", "Yes");					
-					} catch (InstantiationException e) {
-						e.printStackTrace();
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}	
@@ -224,6 +249,6 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		
 		// Repaint table of the tab to show new 'Modeled?' column
 		this.rebuildTable();
-		
+		this.updateButtons(parent.getJMenuBar(), parent.getJToolBar());
 	}
 }
