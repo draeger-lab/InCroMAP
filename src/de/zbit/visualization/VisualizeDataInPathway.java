@@ -844,7 +844,6 @@ public class VisualizeDataInPathway {
    * </li><li>change shape
    * </ol>
    * 
-   * @param <T>
    * @param nsList
    * @param tabName
    * @param experimentName may not be null.
@@ -853,7 +852,30 @@ public class VisualizeDataInPathway {
    * because one node can stand for multiple genes!). Set to null to split nodes.
    * @return number of nodes that changed its color.
    */
-  public <T extends NameAndSignals> int visualizeData(Collection<T> nsList, String tabName, String experimentName, SignalType type) {
+  public <T> int visualizeData(Collection<? extends NameAndSignals> nsList, String tabName, String experimentName, SignalType type) {
+    return visualizeData(nsList, tabName, experimentName, type, null);
+  }
+  
+  /**
+   * Visualize a dataset in the pathway. This includes the following steps:
+   * <ol><li>Remove previous visualizations of the same input data.
+   * </li><li>Annotate nodes and perform required splits
+   * </li><li>color nodes
+   * </li><li>write signals to nodes
+   * </li><li>change shape
+   * </ol>
+   * 
+   * @param <T>
+   * @param nsList
+   * @param tabName
+   * @param experimentName may not be null.
+   * @param type may not be null.
+   * @param mt Only if you want to have just one value per node (!=gene centric,
+   * because one node can stand for multiple genes!). Set to null to split nodes.
+   * @param recolorer to color the nodes
+   * @return number of nodes that changed its color.
+   */
+  public <T extends NameAndSignals> int visualizeData(Collection<T> nsList, String tabName, String experimentName, SignalType type, SignalColor recolorer) {
     SBPreferences prefs = SBPreferences.getPreferencesFor(SignalOptions.class);
     // If explicitly PATHWAY_CENTERED is set or nothing is set
     boolean pwCentered = SignalOptions.PATHWAY_CENTERED.getValue(prefs) ||
@@ -913,7 +935,9 @@ public class VisualizeDataInPathway {
       nsList = nsTools.prepareGraph(nsList, tabName, experimentName, type, pwCentered);
       
       // 2. color nodes
-      SignalColor recolorer = new SignalColor(nsList, experimentName, type);
+      if(recolorer == null) {
+      	recolorer = new SignalColor(nsList, experimentName, type);      	
+      }
       nodesColored = colorNodesAccordingToSignals(recolorer, tabName, experimentName, type);
       
       
