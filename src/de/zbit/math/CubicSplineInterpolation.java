@@ -40,7 +40,7 @@ import de.zbit.util.objectwrapper.ValueTriplet;
  * @author Felix Bartusch
  * @version $Rev$
  */
-public class CubicSplineInterpolation implements TimeSeriesModel {
+public class CubicSplineInterpolation extends TimeSeriesModel {
 	
 	// Following arrays hold the information for every third order polynomial
 	// The third order polynomial q_i between points [x_i, y_i] and [x_(i+1), y_(i+1)] can be written as:
@@ -55,14 +55,7 @@ public class CubicSplineInterpolation implements TimeSeriesModel {
 	 * The b_i coefficients for the third order polynomial.
 	 */
 	double[] b;
-	/**
-	 * The x-values for the given points.
-	 */
-	double[] x;
-	/**
-	 * The y-values for the given points.
-	 */
-	double[] y;
+	
 	/**
 	 * Distance in x-direction between two points.
 	 * dx[0] = x[1] - x[0], 
@@ -74,7 +67,8 @@ public class CubicSplineInterpolation implements TimeSeriesModel {
 	public CubicSplineInterpolation() {
 	}
 	
-	public CubicSplineInterpolation(mRNATimeSeries mRNA, List<ValueTriplet<Double, String, SignalType>> tp) {
+	public CubicSplineInterpolation(mRNATimeSeries mRNA, List<ValueTriplet<Double, String, SignalType>> tp) {	
+		super(mRNA.getName(), mRNA.getID(), tp.get(0).getC()); // mRNA.getName() returns null, better mRNA.getProbeName()
 		generateModel(mRNA, tp);
 	}
 
