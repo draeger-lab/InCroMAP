@@ -133,7 +133,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void actionPerformed(ActionEvent e) {
-    
+ 
     if (e.getActionCommand().equals(VISUALIZE_PATHWAY.toString())) {
       visualizePathway();
       
@@ -704,7 +704,7 @@ public class KEGGPathwayActionListener implements ActionListener, PropertyChange
     };
     
     // Let user chooser
-    GUITools.showOkCancelDialogInNewThread(ret, UIManager.getString("OptionPane.titleText"), okAction, null);
+    GUITools.showOkCancelDialogInNewThread(ret, UIManager.getString("OptionPane.titleText"), okAction, null, null);
     selector.autoActivateOkButton(ret);
     
   }
