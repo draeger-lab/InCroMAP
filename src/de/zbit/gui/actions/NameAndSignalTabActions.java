@@ -76,6 +76,7 @@ import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
+import de.zbit.gui.tabs.TimeSeriesView;
 import de.zbit.math.BenjaminiHochberg;
 import de.zbit.math.Bonferroni;
 import de.zbit.math.BonferroniHolm;
@@ -85,6 +86,7 @@ import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.objectwrapper.ValuePair;
 import de.zbit.utils.FilterNSTable;
+import de.zbit.visualization.VisualizeTimeSeries;
 
 /**
  * Actions for the {@link JToolBar} in {@link IntegratorTabWithTable}
@@ -158,7 +160,11 @@ public class NameAndSignalTabActions implements ActionListener {
     /**
      * Generate a continuous model from discrete time points
      */
-    MODEL_TIME_SERIES;
+    MODEL_TIME_SERIES,
+    /**
+     *  Visualize a modelled time series
+     */
+    VISUALIZE_TIME_SERIES;
     
     /*
      * (non-Javadoc)
@@ -217,6 +223,8 @@ public class NameAndSignalTabActions implements ActionListener {
           return "Correct p-values with the Bonferroni method and save as q-values.";
         case MODEL_TIME_SERIES:
         	return "Generate a continuous model, which can be visualized.";
+        case VISUALIZE_TIME_SERIES:
+        	return "Visualize the modelled time series";
           
         default:
           return null; // Deactivate
@@ -312,10 +320,14 @@ public class NameAndSignalTabActions implements ActionListener {
       //|| tableContent.equals(miRNAandTarget.class) || tableContent.equals(miRNA.class)) {
       bar.add(GUITools.createJButton(this,
           NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_PENCIL_16")));
+      
     
     } if(tableContent.equals(mRNATimeSeries.class)) {
+    	// is the mRNA already modeled?
     	bar.add(GUITools.createJButton(this,
-          NSAction.MODEL_TIME_SERIES, UIManager.getIcon("ICON_GEAR_16")));
+    			NSAction.VISUALIZE_TIME_SERIES, UIManager.getIcon("ICON_PATHWAY_16")));
+    	bar.add(GUITools.createJButton(this,
+    			NSAction.MODEL_TIME_SERIES, UIManager.getIcon("ICON_GEAR_16")));
     	
     	// Same as for mRNA.class
     	bar.add(GUITools.createJButton(this,
@@ -480,9 +492,15 @@ public class NameAndSignalTabActions implements ActionListener {
       parent.getVisualization().repaint();
       
     } else if(command.equals(NSAction.MODEL_TIME_SERIES.toString())) {
-    	System.out.println("Button works!");
     	if(parent instanceof NSTimeSeriesTab) {
-    		((NSTimeSeriesTab) parent).modelTimeSeries(CubicSplineInterpolation.class);    		
+    		((NSTimeSeriesTab) parent).modelTimeSeries(CubicSplineInterpolation.class);
+    	}
+    } else if(command.equals(NSAction.VISUALIZE_TIME_SERIES.toString())) {
+    	if (parent instanceof NSTimeSeriesTab) {
+    		System.out.println("Visualize button works!");
+    		// Initializes the visualization. Adds a instance of TimeSeriesView to the tabbed Pane
+    		// VisualizeTimeSeries acts as controller and model for TimeSeriesView
+    		new VisualizeTimeSeries((NSTimeSeriesTab)parent);
     	}
     }
   }
@@ -606,6 +624,15 @@ public class NameAndSignalTabActions implements ActionListener {
     if (filter!=null && parent.getVisualization()!=null && 
         JTable.class.isAssignableFrom(parent.getVisualization().getClass())) {
       filter.setSelected(FilterNSTable.isTableFiltered((JTable)parent.getVisualization()));
+    }
+    
+    // Enable 'Visualize time series' button if data is already modelled
+    if(parent instanceof NSTimeSeriesTab) {
+    	if(((NSTimeSeriesTab) parent).getModelMethod() == null) {
+        GUITools.setEnabled(false, toolBar, NSAction.VISUALIZE_TIME_SERIES);
+    	} else {
+        GUITools.setEnabled(true, toolBar, NSAction.VISUALIZE_TIME_SERIES);
+    	}
     }
   }
 }
