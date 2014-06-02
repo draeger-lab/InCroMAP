@@ -56,13 +56,28 @@ public class HypergeometricTest implements Serializable, EnrichmentPvalue {
   private final ExactHypergeometricTest exact;
   
   /**
+   * If true, the p-value is never computed by {@link ExactHypergeometricTest).
+   */
+  private boolean neverExactPValue = false;
+  
+  /**
+   * @param genomeSize
+   * @param geneListSize
+   */
+  public HypergeometricTest (int genomeSize, int geneListSize) {
+    this(genomeSize, geneListSize, false);
+  }
+  
+
+  /**
    * Initialize the hypergeometric test with static parameters.
    * 
    * @param genomeSize Total number of genes in the genome (or number or marbles in the urn).
    * @param geneListSize Total number of genes in the genelist (or number of marbles to draw from the urn).
+   * @param neverExactPValue If true, p-value is never computed exactly.
    */
-  public HypergeometricTest (int genomeSize, int geneListSize) {
-    super();
+  public HypergeometricTest(int genomeSize, int geneListSize, boolean neverExactPValue) {
+  	super();
     if (genomeSize <= 0)
       throw new IllegalArgumentException ("geneListSize must be greater than or equal to 0");
     if (geneListSize <= 0 || geneListSize > genomeSize) {
@@ -75,12 +90,13 @@ public class HypergeometricTest implements Serializable, EnrichmentPvalue {
     
     this.genomeSize = genomeSize;
     this.geneListSize = geneListSize;
+    this.neverExactPValue = neverExactPValue;
     
     // For small r values, an exact implementation is required.
     exact = new ExactHypergeometricTest(genomeSize, geneListSize);
-  }
-  
-  /**
+	}
+
+	/**
    * binomialCoefficient that uses approximation for large numbers.
    * @param n
    * @param k
@@ -168,7 +184,7 @@ public class HypergeometricTest implements Serializable, EnrichmentPvalue {
     /*
      * Values of r lower than this threshold are not correct approximated.
      */
-    if (r<=(t/(genomeSize/geneListSize)) +1) {
+    if (r<=(t/(genomeSize/geneListSize)) +1 && !neverExactPValue) {
       if (exact!=null) {
         return exact.getPvalue(t, r);
       } else {
