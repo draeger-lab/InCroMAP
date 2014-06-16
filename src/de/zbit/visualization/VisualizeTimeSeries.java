@@ -21,7 +21,10 @@
  */
 package de.zbit.visualization;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -44,11 +47,21 @@ import y.io.ViewPortConfigurator;
 import y.view.Graph2D;
 import y.view.Graph2DView;
 
-import com.xuggle.mediatool.IMediaReader;
 import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.ToolFactory;
+import com.xuggle.xuggler.Global;
 import com.xuggle.xuggler.ICodec;
 import com.xuggle.xuggler.IContainer;
+import com.xuggle.xuggler.IError;
+import com.xuggle.xuggler.IPacket;
+import com.xuggle.xuggler.IPixelFormat;
+import com.xuggle.xuggler.IRational;
+import com.xuggle.xuggler.IStream;
+import com.xuggle.xuggler.IStreamCoder;
+import com.xuggle.xuggler.IVideoPicture;
+import com.xuggle.xuggler.IVideoResampler;
+import com.xuggle.xuggler.video.ConverterFactory;
+import com.xuggle.xuggler.video.IConverter;
 
 import de.zbit.analysis.enrichment.KEGGPathwayEnrichment;
 import de.zbit.data.EnrichmentObject;
@@ -109,13 +122,12 @@ public class VisualizeTimeSeries {
 	private Graph2D pathway;
 	private String timeUnit = "";
 	private int frameRate;
-	private int duration;
+	private int duration; // this one is the user input! Don't confuse with filmDuration
+	private int numFrames;
 	// Dimension of the resulting film.
 	private static Dimension dimension;
-	// Filename of the generated film.
-	private final String outputFilename = "./testFilm.mp4";
-	// Plays the film. Is visualized in TimeSeriesView
-	private IMediaWriter writer = null;
+	// temporary film file
+	private File tempFilmFile = new File("./longTestFilm.mp4"); // for testing porpuse.
 	
 	// Holds 'visualization' of the colored graph. This panel is never shown to the user.
 	// A buffered image is generated from the colored graph. The image is then encoded into the film.
@@ -125,6 +137,12 @@ public class VisualizeTimeSeries {
 	 * This container holds the finished film.
 	 */
 	private IContainer film;
+
+	private int videoStreamIndex;
+	private double timeBase;
+	// This one is the duration of the video stream (respective to the video streams time base)!
+	private long filmDuration;
+	
 	
 	
 	public VisualizeTimeSeries(NSTimeSeriesTab parent) {
@@ -149,6 +167,7 @@ public class VisualizeTimeSeries {
 			this.pathwayID = settingsDialog.getSelectedPathwayID();
 			this.duration = settingsDialog.getDuration();
 			this.frameRate = settingsDialog.getFrameRate();
+			this.numFrames = frameRate * duration;
 			this.cutoff = settingsDialog.getCutoff();
 			this.models = filterNullGeneModels(parent.getGeneModels(), settingsDialog.getCutoff());
 			
@@ -162,6 +181,9 @@ public class VisualizeTimeSeries {
 			// Build and show the view
 			parent.getIntegratorUI().addTab(view, "Film of " + parent.getName());
 		  keggImporter.execute();
+			
+			// show one frame for testing
+			//controller.actionPerformed(new ActionEvent(this, 0, VTSAction.START_GENERATE_FILM.toString()));	
 		}
 	}
 	
@@ -171,12 +193,14 @@ public class VisualizeTimeSeries {
 	void generateFilm()  {
 		createInvisibleTranslatorPanel();		
 		
-		// At which timePoints should the pathway be modeled?
+		// How many frames have we to generate and what time point corresponds to them?
 		final int numFrames = duration * frameRate;
 		final double[] timePoints = computeTimePoints(numFrames);
 		
 		// This worker generates the film.
 		NotifyingWorker<IMediaWriter, Void> filmGenerator = new NotifyingWorker<IMediaWriter, Void>() {
+			
+			private IMediaWriter writer;
 
 			@Override
 			protected IMediaWriter doInBackground() throws Exception {				
@@ -190,41 +214,75 @@ public class VisualizeTimeSeries {
 					e.printStackTrace();
 				}
 								
-				// Initialize IMediaWriter to encode the film.
-				writer = initializeWriter();
-				film = writer.getContainer();
+				// Compute the dimension of the film and initialize IMediaWriter which encodes the images
+				dimension = initializeDimension();
+				writer = initializeWriter(dimension);
 
-				// Generate all single images and encode them
-				for(int i = 0; i < numFrames; i++) {
+				// Generate frame for frame and encode them. The last frame has to be handled manually. Why?
+				// Read the comment a few lines below.
+				for(int i = 0; i < numFrames-1; i++) {
 					BufferedImage image = generatePathwayImage(timePoints[i]);
 					writer.encodeVideo(0, image, (long) (i * 1000)/frameRate, TimeUnit.MILLISECONDS);
 					fireActionEvent(new ActionEvent(transPanel.getDocument(), i, VTSAction.IMAGE_GENERATED.toString()));					
 				}
 				
-				// for testing generate ONE image
-				//generatePathwayImage(timePoints[0]);
-				// for testing, write movie to file
+				// Because the damn decoder fails to decode the last two frames, encode the last image
+				// three times, so we can decode it later one time -.-
+				// See also: https://groups.google.com/forum/#!topic/xuggler-users/FXgmW4dViF8
+				int numLastFrame = numFrames-1;
+				BufferedImage lastFrame = generatePathwayImage(timePoints[numLastFrame]);
+				for(int j = 0; j < 3; j++) {					
+					writer.encodeVideo(0, lastFrame, (long) (numLastFrame * 1000 + j)/frameRate, TimeUnit.MILLISECONDS); // Maybe + j?
+					
+					// Set the progress bar when the last of the last frames was encoded.
+					if(j == 2)
+						fireActionEvent(new ActionEvent(transPanel.getDocument(), numLastFrame, VTSAction.IMAGE_GENERATED.toString()));
+				}
+						
+				// Close the writer. Film is now saved in the temporary film file.
 				writer.close();
 				
-				// return the film to the Controller
 				return null;
 			}
 			
-			@Override
-			protected void done() {
-				// Tell the listener, that film was created
-				fireActionEvent(new ActionEvent(writer.getContainer(), 0, VTSAction.END_GENERATE_FILM.toString()));
-			}
-
-			// Initialize writer with the width and height of the graph
-			private IMediaWriter initializeWriter() {
-				final IMediaWriter writer = ToolFactory.makeWriter(outputFilename);
-				// Get a example image, width and height
+			/**
+			 * Create one test image and return its dimension.
+			 * @return The dimension of the test image (and thus of the film)
+			 */
+			private Dimension initializeDimension() {
 				BufferedImage example = generatePathwayImage(timePoints[0]);
 				int width = example.getWidth();
 				int height = example.getHeight();
-			
+				
+				return new Dimension(width, height);
+			}
+
+			@Override
+			protected void done() {
+				// Tell the listener, that film was created
+				fireActionEvent(new ActionEvent(this, 0, VTSAction.END_GENERATE_FILM.toString()));
+			}
+
+			// Initialize writer with the width and height of the graph
+			private IMediaWriter initializeWriter(Dimension dimension) {			
+				// Create the temporary film file
+				try {
+					tempFilmFile = File.createTempFile("tempFilmFile", ".mp4");
+				} catch (IOException e) {
+					// If the file can't be created, stop creating film
+					controller.actionPerformed(new ActionEvent(e, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
+				}
+				
+				// Create the writer, which encodes the single images. Also get an example image to obtain width and height
+				// and add the video stream to the writer. The resulting film is in .mp4 format.
+				final IMediaWriter writer = ToolFactory.makeWriter(tempFilmFile.getAbsolutePath());
+				int width = new Double(dimension.getWidth()).intValue();
+				int height = new Double(dimension.getHeight()).intValue();
+				
 				writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, width, height);
+				// The advantage of following line is: timestamps of packets will be ascending integers (1,2,3, ..)
+				// writer.getContainer().getStream(0).getStreamCoder().setTimeBase(IRational.make(1,frameRate));
+				
 				return writer;
 			}		
 		};
@@ -234,7 +292,8 @@ public class VisualizeTimeSeries {
 		try{
 			filmGenerator.execute();			
 		} catch(Exception e) {
-			e.printStackTrace();
+			// If there is an error, inform the user about that
+			controller.actionPerformed(new ActionEvent(e, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
 		}
 	}
 
@@ -256,7 +315,7 @@ public class VisualizeTimeSeries {
 		try {
 			// first option to speed up enrichment computing: never compute the exact p-value.
 			System.out.println("Compute Enrichment on " + modelValues.size() + " genes."); // for testing
-      l = enrich.getEnrichments(modelValues, null, null, false);
+      l = enrich.getEnrichments(modelValues, null, null, true);
     } catch (Throwable e) {
       GUITools.showErrorMessage(null, e);
     }
@@ -304,18 +363,17 @@ public class VisualizeTimeSeries {
 	  	ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 	  	ioh.write(graph, outputStream);
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-	  	image = ImageIO.read(inputStream);			
+	  	image = ImageIO.read(inputStream);
+	  	
+	  	// Add some time information to the image
+	  	Graphics g = image.getGraphics();
+	  	g.setColor(Color.BLACK);
+			g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, image.getHeight() / 40));
+			g.drawString(String.format("%.2f", timePoint) + " " + timeUnit, 10, image.getHeight()/40);
 		} catch (IOException e) {
-			e.printStackTrace();
+			controller.actionPerformed(new ActionEvent(e, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
 		}
-	  
-	  // for testing. Save image to file
-	  try {
-			ioh.write(graph, "TestImageAt_" + timePoint);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-	 		
+		
 		return image;
 	}
 
@@ -385,7 +443,6 @@ public class VisualizeTimeSeries {
 		}
 		
 		// Default signal colore
-		// TODO Find a better recolorer?
 		SignalColor recolorer = new SignalColor(null, null, SignalType.pValue);
 
 		// color the graph
@@ -459,6 +516,12 @@ public class VisualizeTimeSeries {
 		};
 	}
 	
+	
+	
+	
+	
+	
+	
 	/**
 	 * 
 	 * @return the species of the model.
@@ -486,14 +549,12 @@ public class VisualizeTimeSeries {
 	public int getDuration() {
 		return duration;
 	}
-
-
-	public String getOutputfilename() {
-		return outputFilename;
+	
+	public int getNumFrames() {
+		return numFrames;
 	}
 
-
-	public static Dimension getDimension() {
+	public Dimension getDimension() {
 		return dimension;
 	}
 
@@ -504,7 +565,6 @@ public class VisualizeTimeSeries {
 	public void setPathway(Graph2D pathway) {
 		this.pathway = pathway;
 	}
-
 
 	public KEGGImporter getKeggImporter() {
 		return keggImporter;
@@ -527,4 +587,326 @@ public class VisualizeTimeSeries {
 		return film;
 	}
 
+	/**
+	 * Get the i-th frame of the film. 
+	 * @param i the frame number
+	 * @return the i-th frame of the film
+	 */
+	public BufferedImage getFrame(int i) {
+
+		// try to reopen film (workaround, because using original opened film container failed)
+		// close container and open it again
+		// TODO: Perhaps you don't have to reopen the container. Just get a new decoder.
+		// Or save one container, which is not used.
+		film.close();
+		if (film.open(tempFilmFile.getAbsolutePath(), IContainer.Type.READ, null) < 0)
+			controller.actionPerformed(new ActionEvent(this, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
+		
+		// for testing: print information about the streams in the container.
+		//testIContainer(film);
+		System.out.println("*******************");
+		System.out.println("Show frame number " + i);
+		
+		// Compute (approximated) timestamp of the wanted frame
+		// Seek to the frame before the wanted frame, so
+		// that we don't miss the wanted frame in the seeking (because seeking finds frame i or i+1)
+		long approxedTimestamp = getTimestampOfFrame(i-1); // TODO Maybe just i ?
+		
+		// for testing
+		System.out.println("Approximated timestamp: " + approxedTimestamp);
+		
+		// Seek to the computed timestamp
+		// Convert the approximated timestamp to a timestamp based on the time base
+		// of the video stream
+  	long seekTo = (long) (approxedTimestamp/1000.0/timeBase);
+
+  	IStream stream = film.getStream(videoStreamIndex);
+  	IStreamCoder coder = stream.getStreamCoder();		            
+  	System.out.println("Seek to: " + seekTo);
+  	//film.seekKeyFrame(videoStreamIndex, seekTo, IContainer.SEEK_FLAG_BACKWARDS); // TODO: Maybe another flag?
+  	
+  	// Try to open the coder
+  	System.out.println("Try to open coder"); // for testing
+		if (coder.open(null, null) < 0)
+			throw new RuntimeException("could not open video decoder for container: "
+					+controller.getFilePath());
+		System.out.println("Opened Coder"); // for testing
+		
+		// Get some information about the stream
+		System.out.println("Number of frames in the stream: " + stream.getNumFrames());
+		System.out.println("Start time of the stream: " + stream.getStartTime());
+		System.out.println("Duration of the stream: " + stream.getDuration());
+		stream.acquire();
+		System.out.println(stream.toString());
+		
+		// The resampler for the video
+		System.out.println("Try to build resampler"); // for testing
+		IVideoResampler resampler = null;
+		if (coder.getPixelType() != IPixelFormat.Type.BGR24) {
+			// if this stream is not in BGR24, we're going to need to
+			// convert it. The VideoResampler does that for us.
+			resampler = IVideoResampler.make(coder.getWidth(),
+					coder.getHeight(), IPixelFormat.Type.BGR24,
+					coder.getWidth(), coder.getHeight(), coder.getPixelType());
+			if (resampler == null)
+				throw new RuntimeException("could not create color space " +
+						"resampler for: " + controller.getFilePath());
+		}
+		System.out.println("Build resampler completed"); // for testing
+				
+		// walk through the container and build the IVideoPicture
+		IPacket packet = IPacket.make();
+		
+		// Flag if we completely decoded the i-th frame as an IVideoPicture object
+		boolean targetFrameComplete = false;
+		
+		// IVideoPicture timestamps are always in microseconds. An IVideoPicture with a
+		// timestamp of 500000 will be displayed after a half second. There is some inacurracy
+		// in the timestamps of IVideoPictures. A IVideoPicture which should be shown after
+		// a half second (frame rate = 2) has a timestamp of 499992 (0,499992 s).
+		// So we have to consider a certain inacurracy.
+		long expectedPictureTimeStamp =  (i * 1000000) / frameRate; // in MICROseconds
+		System.out.println("Expected IVideoPicture timestamp: " + expectedPictureTimeStamp);
+		
+		int count = 0;
+		
+		// Look at each packet		
+		//while(e >= 0 && !targetFrameComplete) {
+		while(!targetFrameComplete) {
+
+			int e = film.readNextPacket(packet);
+			
+			// Get some information about the packet: for testing
+			System.out.println("Read packet number " + (count++)); // for testing
+			System.out.println(packet.toString());
+			
+			
+			// As I said in a previous newsgroup post when a seek operation is requested via Container.seekKeyFrame AFTER Container.readNextPacket returns some negative number, it starts reading again. 
+			// https://groups.google.com/forum/#!topic/xuggler-users/X0Z9YEmjZFw
+			// TODO: Try: If once failed, reopen the container and try again?
+			if(e < 0)  {
+				System.out.println("Packet error occured: " + IError.make(e).getType());
+				break;
+			}
+						
+			if (packet.getStreamIndex() == videoStreamIndex) {
+				// Build new picture
+				System.out.println("Try to build IVideoPicture"); // for testing
+				IVideoPicture picture = IVideoPicture.make(coder.getPixelType(),
+						coder.getWidth(), coder.getHeight());
+				System.out.println("Build IVideoPicture"); // for testing
+				
+				int offset = 0;
+				
+				while(offset < packet.getSize()) {
+					// Decode the video.
+					System.out.println("\tTry to decode packet");
+					int bytesDecoded = coder.decodeVideo(picture, packet, offset); // <- FAILES HERE !!!
+					System.out.println("\t Decoded " + bytesDecoded + " bytes"); // for testing
+					if (bytesDecoded < 0)
+						throw new RuntimeException("got error decoding video in: "
+								+ controller.getFilePath());
+					offset += bytesDecoded;
+
+					/*
+					 * Some decoders will consume data in a packet, but will not be able to construct
+					 * a full video picture yet. Therefore you should always check if you
+					 * got a complete picture from the decoder
+					 */
+					System.out.println("\t Picture complete? " + picture.isComplete());
+					System.out.println("\t Picture timestamp: " + picture.getTimeStamp());
+										
+					// We don't have to check picture.isComplete(), because picture.getTimeStamp() returns Global.NO_PTS
+					if((Math.abs(picture.getTimeStamp() - expectedPictureTimeStamp) < 100)
+							&& picture.isComplete()) {
+						targetFrameComplete = true;
+						System.out.println("Target frame complete");
+					} else {
+						System.out.println("Target frame isn't complete");
+					}
+					
+					//if (picture.isComplete() && picture.getTimeStamp() == accurateTimestamp) {
+					if (targetFrameComplete) {
+						IVideoPicture newPic = picture;
+						/*
+						 * If the resampler is not null, that means we didn't get the
+						 * video in BGR24 format and
+						 * need to convert it into BGR24 format.
+						 */
+						if (resampler != null) {
+							// we must resample
+							newPic = IVideoPicture.make(resampler.getOutputPixelFormat(),
+									picture.getWidth(), picture.getHeight());
+							if (resampler.resample(newPic, picture) < 0)
+								throw new RuntimeException("could not resample video from: "
+										+ controller.getFilePath());
+						}
+						if (newPic.getPixelType() != IPixelFormat.Type.BGR24)
+							throw new RuntimeException("could not decode video" +
+									" as BGR 24 bit data in: " + controller.getFilePath());
+
+						// And finally, convert the BGR24 to an Java buffered image
+						BufferedImage frame = new BufferedImage(coder.getWidth(), coder.getHeight(), BufferedImage.TYPE_3BYTE_BGR); 
+				    IConverter converter = ConverterFactory.createConverter(frame, IPixelFormat.Type.BGR24);
+						
+						frame = converter.toImage(newPic);
+						//BufferedImage javaImage = Utils.videoPictureToImage(newPic);
+
+						System.out.println("Return the " + i + "-th frame.");
+						return frame;
+					}
+				}
+			} else {
+				System.out.println("Packet doesn't belong to stream or timestamp"); // for testing
+			}
+		}
+		
+		return null;
+	}
+
+	/**
+	 * Compute the approximated timestamp of the i-th frame in milliseconds.
+	 * Returns always non-negativa values.
+	 * @param i the sought after i-th frame
+	 * @return timestamp in milliseconds when the i-th frame is shown in the film.
+	 */
+	private long getTimestampOfFrame(int i) {
+		// Compute timestamp in MILLIsecons, when the i-th frame should appear
+		long timestamp = (i * 1000) / frameRate;
+
+		// Don't return a negative time stamp
+		if(timestamp > 0)
+			return timestamp;
+		else // negative time stamp
+			return 0;
+	}
+
+	/**
+	 * Load the film from the temporary film file.
+	 */
+	public void loadFilmFromTempFile() {
+		film = IContainer.make();
+		// we make an attempt to open up the container
+		if (film.open(tempFilmFile.getAbsolutePath(), IContainer.Type.READ, null) < 0)
+		//if (film.open("./longTestFilm.mp4", IContainer.Type.READ, null) < 0)
+			controller.actionPerformed(new ActionEvent(this, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
+		
+		// for testing: print information about the streams in the container.
+		testIContainer(film);
+	}
+	
+	/**
+	 * Print all available information of an IContainer object and its streams
+	 * to the console.
+	 * Taken from: http://www.javacodegeeks.com/2011/02/introduction-xuggler-video-manipulation.html
+	 */
+	private void testIContainer(IContainer container) {
+
+		// query how many streams the call to open found
+		int numStreams = container.getNumStreams();
+
+		// query for the total duration
+		long duration = container.getDuration();
+
+		// query for the file size
+		long fileSize = container.getFileSize();
+
+		// query for the bit rate
+		long bitRate = container.getBitRate();
+
+		System.out.println("Number of streams: " + numStreams);
+		System.out.println("Duration (ms): " + duration);
+		System.out.println("File Size (bytes): " + fileSize);
+		System.out.println("Bit Rate: " + bitRate);
+
+		// iterate through the streams to print their meta data
+		for (int i=0; i<numStreams; i++) {
+
+			// find the stream object
+			IStream stream = container.getStream(i);
+
+			// get the pre-configured decoder that can decode this stream;
+			IStreamCoder coder = stream.getStreamCoder();
+
+			System.out.println("*** Start of Stream Info ***");
+
+			System.out.printf("stream %d: ", i);
+			System.out.printf("type: %s; ", coder.getCodecType());
+			System.out.printf("codec: %s; ", coder.getCodecID());
+			System.out.printf("duration: %s; ", stream.getDuration());
+			System.out.printf("start time: %s; ", container.getStartTime());
+			System.out.printf("timebase: %d/%d; ",
+					stream.getTimeBase().getNumerator(),
+					stream.getTimeBase().getDenominator());
+			System.out.printf("coder tb: %d/%d; ",
+					coder.getTimeBase().getNumerator(),
+					coder.getTimeBase().getDenominator());
+			System.out.println();
+
+			if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_AUDIO) {
+				System.out.printf("sample rate: %d; ", coder.getSampleRate());
+				System.out.printf("channels: %d; ", coder.getChannels());
+				System.out.printf("format: %s", coder.getSampleFormat());
+			} 
+			else if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_VIDEO) {
+				System.out.printf("width: %d; ", coder.getWidth());
+				System.out.printf("height: %d; ", coder.getHeight());
+				System.out.printf("format: %s; ", coder.getPixelType());
+				System.out.printf("frame-rate: %5.2f; ", coder.getFrameRate().getDouble());
+			}
+
+			System.out.println();
+			System.out.println("*** End of Stream Info ***");
+		}
+	}
+
+	/**
+	 * Delete the temporary film file, because we don't need that any more.
+	 */
+	public void deleteTempFilmFile() {
+		// If that is not succesful, the film will be deleted in the future, because
+		// its a temporary file (... I hope so)
+		tempFilmFile.delete();
+	}
+
+	/**
+	 * Get some important information of the film like</br>
+	 * - index of the video stream in the container</br>
+	 * - duration and time base of the video stream
+	 */
+	public void lookupStreamInformation() {
+		// Get the number of streams in the IContainer
+		// (usually there is just one stream, but strange things happen)
+		int numStreams = film.getNumStreams();
+		
+		// Search for the first video stream and remember its index
+		int videoStreamId = -1;
+		IStreamCoder videoCoder = null;
+		for(int i = 0; i < numStreams; i++) {
+			// Find the stream object
+			IStream stream = film.getStream(i);
+			// Get the pre-configured decoder that can decode this stream;
+			IStreamCoder coder = stream.getStreamCoder();
+
+			if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_VIDEO)
+			{
+				videoStreamId = i;
+				videoCoder = coder;
+				break;
+			}
+		}
+		
+		// If theres no video stream, we have nothing to show :(
+		if (videoStreamId == -1)
+			controller.actionPerformed(new ActionEvent(this, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
+		else
+			videoStreamIndex = videoStreamId;
+		
+		// Now get the duration of the video stream
+		IStream stream = film.getStream(videoStreamIndex);
+		filmDuration = stream.getDuration();		
+		
+		// At last the time base of the video stream (how many 'ticks' in a second)
+		timeBase = stream.getTimeBase().getDouble();
+	}
 }
