@@ -430,7 +430,8 @@ public class IntegratorUI extends BaseFrame {
     String iconPaths[] = {"IntegratorIcon_16.png","IntegratorIcon_32.png","IntegratorIcon_48.png","IntegratorIcon_128.png","IntegratorIcon_256.png"
         ,"ICON_PATHWAY_16.png", "ICON_MATH_16.png", "IntegratorIcon_16_straight.png"
         ,"ICON_MSIGDB_16.png", "ICON_GO_16.png", "ICON_KEGG_16.png"
-        ,"ICON_MRNA_16.png", "ICON_MIRNA_16.png", "ICON_DNAM_16.png", "ICON_PROTEIN_16.png","ICON_COMPOUND_16.png"};
+        ,"ICON_MRNA_16.png", "ICON_MIRNA_16.png", "ICON_DNAM_16.png", "ICON_PROTEIN_16.png","ICON_COMPOUND_16.png"
+        ,"ICON_PLAY_32.png", "ICON_PAUSE_32.png", "ICON_BACKW_32.png", "ICON_FORW_32.png", "ICON_KNOB_32.png", "ICON_VIDEO_32.png"};
     for (String path : iconPaths) {
       URL url = IntegratorUI.class.getResource("img/" + path);
       if (url!=null) {
