@@ -23,22 +23,27 @@
 package de.zbit.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
+
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.GUITools;
 import de.zbit.kegg.Translator;
@@ -62,16 +67,17 @@ public class FilmSettingsDialog extends JPanel {
 	
 	private VisualizeTimeSeries model;
 	private JPanel buttons;
-	private JLabel timeUnitInSecondsTextArea;
+	private JLabel frameInTimeUnitLabel;
 	private PathwaySelector pwSel = null;
 	private JFormattedTextField cutoffTextField;
 
-	private int frameRate;
-	private int duration = 30;
+	private int numFrames = 10;
 	private double cutoff;
 	private double start;
 	private double end;
 	private String timeUnit;
+	protected JPanel timePointPanel;
+	private boolean justVisualizeData = false;
 
 	public FilmSettingsDialog(Species species, VisualizeTimeSeriesListener controller, VisualizeTimeSeries model) {
 		this.model = model;
@@ -152,104 +158,165 @@ public class FilmSettingsDialog extends JPanel {
 	 * @return the panel
 	 */
 	private JComponent filmSettingsPanel() {
-		// a time unit corresponds to how many seconds?
-		timeUnitInSecondsTextArea = new JLabel("Test");
+		// Let the user choose what time points will be visualized
+		JRadioButton equidistantButton = new JRadioButton("Equidistant frames");
+		equidistantButton.setToolTipText("The visualized time points have the same difference in time. You can choose the number of frames.");
 		
-		// build duration field
-		JLabel durationLabel = new JLabel("Duration in seconds");
-		//DecimalFormat format = new DecimalFormat("###");
-		//durationTextField = new JFormattedTextField(format);
-		//durationTextField.setText(String.valueOf(duration));
-		//durationTextField.setToolTipText("The duration of the resulting film.");
+		JRadioButton eachTimePointOneFrameButton = new JRadioButton("Visualize data time points");
+		eachTimePointOneFrameButton.setToolTipText("Each time point of the data is visualized in one frame.\nNumber of observations is the number of frames.");
 		
+		ButtonGroup bg = new ButtonGroup();
+		bg.add(equidistantButton);
+		bg.add(eachTimePointOneFrameButton);
+		
+		// initialize the panel
+		bg.setSelected(equidistantButton.getModel(), true);
+		
+		JPanel buttonPanel = new JPanel(new BorderLayout());
+		buttonPanel.add(equidistantButton, BorderLayout.NORTH);
+		buttonPanel.add(eachTimePointOneFrameButton, BorderLayout.CENTER);
+	
+		// 
 		// build frame selector
-		JLabel rateTextLabel = new JLabel("Frames per second");
-		String[] frameRates = {"1","2","3","4","5","10","15","20"};
-		JComboBox<String> rateComboBox = new JComboBox<String>(frameRates);
-		rateComboBox.addActionListener(new ActionListener() {	
+//		JLabel rateTextLabel = new JLabel("Frames per second");
+//		String[] frameRates = {"1","2","3","4","5","10","15","20"};
+//		JComboBox<String> rateComboBox = new JComboBox<String>(frameRates);
+//		rateComboBox.addActionListener(new ActionListener() {	
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				JComboBox<Integer> source = (JComboBox<Integer>) e.getSource();
+//				frameRate = Integer.parseInt((String) source.getSelectedItem());
+//				updateTimeUnitInSeconds();
+//			}
+//		});	
+//		rateComboBox.setSelectedIndex(5);
+//		rateComboBox.setEnabled(true);
+//		// Place text area left of the combo box
+//		JPanel panel1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+//		panel1.add(rateTextLabel);
+//		panel1.add(rateComboBox);
+			
+		// Build the panel to select the number of frames
+		// (which determines the time points to visualize)
+		timePointPanel = new JPanel(new CardLayout());
+		timePointPanel.add(buildNumFramePanel()); // The user can choose the number of frames with this panel
+		timePointPanel.add(new JPanel()); // The empty panel for the data visualization without interpolation
+		
+		// build the resulting film settings panel
+		JPanel res = new JPanel(new BorderLayout());
+		res.add(buttonPanel, BorderLayout.CENTER);
+		res.add(timePointPanel, BorderLayout.SOUTH);
+		
+		// Put some action in the button's life
+		equidistantButton.addActionListener(new ActionListener() {		
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JComboBox<Integer> source = (JComboBox<Integer>) e.getSource();
-				frameRate = Integer.parseInt((String) source.getSelectedItem());
-				updateTimeUnitInSeconds();
+				// Show a text field for the number of frames
+				JRadioButton source = (JRadioButton) e.getSource();
+
+				// Just change panel, if the button is selected
+				if(source.getModel().isSelected()) {
+					CardLayout cl = (CardLayout) timePointPanel.getLayout();
+
+					// Show the timePointPanel
+					cl.first(timePointPanel); // because the panel was added first in the constructor
+					justVisualizeData = false;
+				}
 			}
-		});	
-		rateComboBox.setSelectedIndex(5);
-		rateComboBox.setEnabled(true);
-		// Place text area left of the combo box
-		JPanel panel1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		panel1.add(rateTextLabel);
-		panel1.add(rateComboBox);
-			
-		JTextField durationTextField = new JTextField(String.valueOf(duration));
-		durationTextField.getDocument().addDocumentListener(new DocumentListener() {     
+		});
+
+		eachTimePointOneFrameButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// Remove the equidistant panel (set an empty panel)
+				JRadioButton source = (JRadioButton) e.getSource();
+
+				// Just change panel, if the button is selected
+				if(source.getModel().isSelected()) {
+					CardLayout cl = (CardLayout) timePointPanel.getLayout();
+
+					// Show the empty timePointPanel
+					cl.last(timePointPanel); // because the panel was added at last in the constructor
+					justVisualizeData = true;
+				}
+			}
+		});
+
+		return GUITools.createTitledPanel(res, "Film settings");
+	}
+
+	protected JPanel buildNumFramePanel() {
+		// Show a panel with a text field. The user can choose the number of frames
+		// with the text field
+		// a time unit corresponds to how many seconds?
+		frameInTimeUnitLabel = new JLabel("Test");
+		
+		// initialize timeUnitInsSecondsTextArea
+		updateFrameInTimeUnits();
+
+		// build numFrame field
+		JLabel numFrameLabel = new JLabel("Number of frames");
+
+		JTextField numFrameTextField = new JTextField(String.valueOf(numFrames));
+		numFrameTextField.getDocument().addDocumentListener(new DocumentListener() {     
 			@Override
 			public void removeUpdate(DocumentEvent e) {
 				Document source = e.getDocument();
-				updateDuration(source);
-				updateTimeUnitInSeconds();   
+				updateNumFrame(source);
+				updateFrameInTimeUnits();   
 			}
 			// get value of the textfield. Set Value to -1 if the text isn't castable to int.
-			private void updateDuration(Document source) {
-				 try {
+			private void updateNumFrame(Document source) {
+				try {
 					String s = source.getText(0, source.getLength());
-					duration = Integer.parseInt(s);
+					numFrames = Integer.parseInt(s);
 				} catch (Exception e) {
-					duration = -1;
+					numFrames = -1;
 				}		 
 			}
 			@Override
 			public void insertUpdate(DocumentEvent e) {
 				Document source = e.getDocument();
-				updateDuration(source);
-				updateTimeUnitInSeconds();              
+				updateNumFrame(source);
+				updateFrameInTimeUnits();              
 			}
 			@Override
 			public void changedUpdate(DocumentEvent e) {
 				Document source = e.getDocument();
-				updateDuration(source);
-				updateTimeUnitInSeconds();          
+				updateNumFrame(source);
+				updateFrameInTimeUnits();          
 			}
 		});
-				
+
 		// Place text area left of duration text field
-		JPanel panel2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		panel2.add(durationLabel);
-		panel2.add(durationTextField);
+		JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		p.add(numFrameLabel);
+		p.add(numFrameTextField);
 		
-		// build the resulting film settings panel
 		JPanel res = new JPanel(new BorderLayout());
-		res.add(panel1, BorderLayout.NORTH);
-		res.add(panel2, BorderLayout.CENTER);
-				
-		// initialize timeUnitInsSecondsTextArea
-		updateTimeUnitInSeconds();
-		res.add(timeUnitInSecondsTextArea, BorderLayout.SOUTH);
+		res.add(p, BorderLayout.CENTER);
+		res.add(frameInTimeUnitLabel, BorderLayout.SOUTH);
 		
-		return GUITools.createTitledPanel(res, "Film settings");
+		return res;
 	}
 
 	/**
-	 * Update the timeUnitInSecondsTextArea text area.
-	 * Shows the user how many seconds correspond to one time unit.
+	 * Update the FrameInTimeUnit label.
+	 * Shows the user how many time units correspond to one frame.
 	 */
-	protected void updateTimeUnitInSeconds() {
+	protected void updateFrameInTimeUnits() {
 		String message = "";
-		
-		// illegal text in duration text field
-//		if(duration == -1)
-//			message = "Just decimal numbers are accepted in the duration text field";
 		
 		// compute displayed text
 		double diff = end - start; 
-		duration = getDuration();
-		double oneTimeUnit = duration / diff; // 1 [time unit] corresponds to ...
-		String s = String.format("%.1f", oneTimeUnit); // x.x, just one place after comma
+		numFrames = getNumFrames();
+		double oneFrame = diff / (numFrames -1); // 1 Frame corresponds to xxx [time unit]
+		String s = String.format("%.1f", oneFrame); // x.x, just one place after comma
 		
 		// display computed text
-		message = "1 " + timeUnit + " \u2259 " + s + " seconds.";
-		timeUnitInSecondsTextArea.setText(message);
-		timeUnitInSecondsTextArea.repaint();
+		message = " 1 Frame" + " \u2259 " + s + timeUnit;
+		frameInTimeUnitLabel.setText(message);
+		frameInTimeUnitLabel.repaint();
 	}
 
 	/**
@@ -277,15 +344,15 @@ public class FilmSettingsDialog extends JPanel {
 	 * @return the selected frame rate
 	 */
 	public int getFrameRate() {
-		return frameRate;
+		// Don't need frameRate any more
+		return 1;
 	}
 
 	/**
-	 * @return the selected duration
+	 * @return the number of frames
 	 */
-	public int getDuration() {
-		//return Integer.parseInt(durationTextField.getText());
-		return duration;
+	public int getNumFrames() {
+		return numFrames;
 	}
 	
 	/**
@@ -293,5 +360,12 @@ public class FilmSettingsDialog extends JPanel {
 	 */
 	public double getCutoff() {
 		return Math.abs(Double.parseDouble(cutoffTextField.getText()));
+	}
+	
+	/**
+	 * @return the selected radio button
+	 */
+	public boolean getJustVisualizeDate() {
+		return justVisualizeData;
 	}
 }

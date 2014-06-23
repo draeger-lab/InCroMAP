@@ -213,6 +213,14 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		this.modelMethod = modelMethod;
 	}
 	
+	/**
+	 * @return the number of observations
+	 */
+	public int getNumObservations() {
+		// Assumption: Every observation is dedicated to a time point
+		return timePoints.size();
+	}
+	
 
 	public void modelTimeSeries(Class<CubicSplineInterpolation> classs) {
 		this.modelMethod = classs;

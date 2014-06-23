@@ -77,6 +77,7 @@ import de.zbit.gui.tabs.TimeSeriesView;
 import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.NotifyingWorker;
 import de.zbit.util.Species;
+import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.utils.SignalColor;
 import de.zbit.visualization.VisualizeTimeSeriesListener.VTSAction;
 import de.zbit.kegg.io.KEGGImporter;
@@ -108,6 +109,7 @@ public class VisualizeTimeSeries {
 	// Data to model genes and compute enrichments
 	private NSTimeSeriesTab source;
 	private List<TimeSeriesModel> models;
+	private double[] timePoints;
 	private String pathwayID;
 	private KEGGImporter keggImporter;
 	private Species species;
@@ -137,6 +139,9 @@ public class VisualizeTimeSeries {
 	 * This container holds the finished film.
 	 */
 	private IContainer film;
+	private IStreamCoder coder;
+	private IConverter converter = null;
+	private IVideoResampler resampler = null;
 
 	private int videoStreamIndex;
 	private double timeBase;
@@ -158,20 +163,29 @@ public class VisualizeTimeSeries {
 		FilmSettingsDialog settingsDialog = new FilmSettingsDialog(species, controller, this);
 		//int dialogConfirmed = 
 		GUITools.showAsDialog(source, settingsDialog, "Choose film settings", false);
-		System.out.println("Cutoff: " + settingsDialog.getCutoff()); // for testing
-		System.out.println("duration: " + settingsDialog.getDuration()); // for testing
 		
 		// download pathway and generate film, if ok button was pressed. Otherwise, do nothing
 		if(settingsDialog.okPressed()) {
 			// Get the user input and filter genes
 			this.pathwayID = settingsDialog.getSelectedPathwayID();
-			this.duration = settingsDialog.getDuration();
+			this.duration = settingsDialog.getNumFrames();
 			this.frameRate = settingsDialog.getFrameRate();
-			this.numFrames = frameRate * duration;
 			this.cutoff = settingsDialog.getCutoff();
 			this.models = filterNullGeneModels(parent.getGeneModels(), settingsDialog.getCutoff());
 			
-			// Initialize the view and the controller
+			// How many frames should be created? And what are their time points?
+			if(settingsDialog.getJustVisualizeDate()) {
+				// Number of frames = number of observations
+				numFrames = parent.getNumObservations();
+				timePoints = computeTimePoints(numFrames, true);
+			} else {
+				// Take the number of observations from the dialog
+				numFrames = settingsDialog.getNumFrames();
+				timePoints = computeTimePoints(numFrames, false);
+			}
+			
+			
+						// Initialize the view and the controller
 			this.view = new TimeSeriesView(pathwayID, this, controller, parent.getIntegratorUI(), species);
 			controller.setView(view);
 			
@@ -181,9 +195,6 @@ public class VisualizeTimeSeries {
 			// Build and show the view
 			parent.getIntegratorUI().addTab(view, "Film of " + parent.getName());
 		  keggImporter.execute();
-			
-			// show one frame for testing
-			//controller.actionPerformed(new ActionEvent(this, 0, VTSAction.START_GENERATE_FILM.toString()));	
 		}
 	}
 	
@@ -194,8 +205,8 @@ public class VisualizeTimeSeries {
 		createInvisibleTranslatorPanel();		
 		
 		// How many frames have we to generate and what time point corresponds to them?
-		final int numFrames = duration * frameRate;
-		final double[] timePoints = computeTimePoints(numFrames);
+		//final int numFrames = duration * frameRate;
+		//final double[] timePoints = computeTimePoints(numFrames);
 		
 		// This worker generates the film.
 		NotifyingWorker<IMediaWriter, Void> filmGenerator = new NotifyingWorker<IMediaWriter, Void>() {
@@ -214,15 +225,19 @@ public class VisualizeTimeSeries {
 					e.printStackTrace();
 				}
 								
-				// Compute the dimension of the film and initialize IMediaWriter which encodes the images
+				// Compute the dimension of the film and initialize IMediaWriter which encodes the images.
 				dimension = initializeDimension();
 				writer = initializeWriter(dimension);
-
+				
 				// Generate frame for frame and encode them. The last frame has to be handled manually. Why?
 				// Read the comment a few lines below.
 				for(int i = 0; i < numFrames-1; i++) {
+					long timestamp = (i * 1000)/frameRate;  // Timestamp, when image should be displayed in MILLIseconds
+					System.out.println("Generate image: " + i + " timestamp: " + timestamp);
+					
 					BufferedImage image = generatePathwayImage(timePoints[i]);
-					writer.encodeVideo(0, image, (long) (i * 1000)/frameRate, TimeUnit.MILLISECONDS);
+					
+					writer.encodeVideo(0, image, timestamp, TimeUnit.MILLISECONDS);
 					fireActionEvent(new ActionEvent(transPanel.getDocument(), i, VTSAction.IMAGE_GENERATED.toString()));					
 				}
 				
@@ -231,8 +246,11 @@ public class VisualizeTimeSeries {
 				// See also: https://groups.google.com/forum/#!topic/xuggler-users/FXgmW4dViF8
 				int numLastFrame = numFrames-1;
 				BufferedImage lastFrame = generatePathwayImage(timePoints[numLastFrame]);
-				for(int j = 0; j < 3; j++) {					
-					writer.encodeVideo(0, lastFrame, (long) (numLastFrame * 1000 + j)/frameRate, TimeUnit.MILLISECONDS); // Maybe + j?
+				for(int j = 0; j < 3; j++) {
+					long timestamp = ((numFrames-1) * 1000)/frameRate + j;  // Timestamp, when image should be displayed in MILLIseconds
+					
+					writer.encodeVideo(0, lastFrame, timestamp, TimeUnit.MILLISECONDS);
+					System.out.println("Encoded image");
 					
 					// Set the progress bar when the last of the last frames was encoded.
 					if(j == 2)
@@ -244,7 +262,7 @@ public class VisualizeTimeSeries {
 				
 				return null;
 			}
-			
+
 			/**
 			 * Create one test image and return its dimension.
 			 * @return The dimension of the test image (and thus of the film)
@@ -280,8 +298,6 @@ public class VisualizeTimeSeries {
 				int height = new Double(dimension.getHeight()).intValue();
 				
 				writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, width, height);
-				// The advantage of following line is: timestamps of packets will be ascending integers (1,2,3, ..)
-				// writer.getContainer().getStream(0).getStreamCoder().setTimeBase(IRational.make(1,frameRate));
 				
 				return writer;
 			}		
@@ -293,6 +309,8 @@ public class VisualizeTimeSeries {
 			filmGenerator.execute();			
 		} catch(Exception e) {
 			// If there is an error, inform the user about that
+			System.out.println("There was an exception");
+			e.printStackTrace();
 			controller.actionPerformed(new ActionEvent(e, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
 		}
 	}
@@ -451,21 +469,36 @@ public class VisualizeTimeSeries {
 
 
 	/**
-	 * @param numFrames 
-	 * @return the equidistance time points for which the pathway should be modeled. 
+	 * @param numFrames the number of frames
+	 * @param justObservations if true, the time points are the same as the time points of the observations.
+	 * @return the time points for which the pathway should be modeled. 
 	 */
-	private double[] computeTimePoints(int numFrames) {
-		double[] timePoints = new double[numFrames];
-		// get a sample TimeSeriesModel, first and last time point to model
-		TimeSeriesModel m = models.toArray(new TimeSeriesModel[1])[0];
-		double begin = m.getFirstTimePoint();
-		double end = m.getLastTimePoint();
-		double step = (end - begin) / (numFrames-1); // numFrames-1: first and last frame show first and last data column
+	private double[] computeTimePoints(int numFrames, boolean justObservations) {
+		timePoints = new double[numFrames];
 		
-		for(int i = 0; i < timePoints.length; i++) {
-			timePoints[i] = begin + (i * step);
-			System.out.println("timePoint " + i + ": "+ timePoints[i]);
+		// If just the observations gets visualized, the result is an array of the
+		// observation time points
+		if(justObservations) {
+			// The list of time points of the observations
+			List<ValueTriplet<Double, String, SignalType>> vp = source.getTimePoints();
+			
+			// For each observation, get the time point
+			for(int i=0; i < vp.size(); i++)
+			 timePoints[i] = vp.get(i).getA();
+			
+		} else { // compute equidistant time points
+
+			// get a sample TimeSeriesModel, first and last time point to model
+			TimeSeriesModel m = models.toArray(new TimeSeriesModel[1])[0];
+			double begin = m.getFirstTimePoint();
+			double end = m.getLastTimePoint();
+			double step = (end - begin) / (numFrames-1); // numFrames-1: first and last frame show first and last data column
+
+			for(int i = 0; i < timePoints.length; i++) {
+				timePoints[i] = begin + (i * step);
+			}
 		}
+		
 		return timePoints;
 	}
 
@@ -477,18 +510,14 @@ public class VisualizeTimeSeries {
 	 */
 	private List<TimeSeriesModel> filterNullGeneModels(Collection<TimeSeriesModel> geneModels, double cutoff) {
 		ArrayList<TimeSeriesModel> filteredModels = new ArrayList<TimeSeriesModel>();
-		
-		System.out.println("Filter: Genes before: " + geneModels.size()); // for testing
-		
+				
 		// filter the models
 		for(TimeSeriesModel model : geneModels) {
 			// filter out null models
 			if(model != null)
 				filteredModels.add(model);
 		}	
-					
-		System.out.println("Filter: Genes after: " + filteredModels.size()); // for testing
-		
+							
 		return filteredModels;
 	}
 
@@ -592,68 +621,68 @@ public class VisualizeTimeSeries {
 	 * @param i the frame number
 	 * @return the i-th frame of the film
 	 */
-	public BufferedImage getFrame(int i) {
+	public BufferedImage getFrame(int curFrame) {
+		return getFrame(curFrame, true);
+	}
+	
+	/**
+	 * Get the i-th frame of the film. 
+	 * @param i the frame number
+	 * @param useNewContainer, if true use a new container (i.e. a previous frame should be returned)
+	 * @return the i-th frame of the film
+	 */
+	public BufferedImage getFrame(int i, boolean useNewContainer) {
 
+		if(useNewContainer) {
 		// try to reopen film (workaround, because using original opened film container failed)
-		// close container and open it again
-		// TODO: Perhaps you don't have to reopen the container. Just get a new decoder.
-		// Or save one container, which is not used.
-		film.close();
-		if (film.open(tempFilmFile.getAbsolutePath(), IContainer.Type.READ, null) < 0)
-			controller.actionPerformed(new ActionEvent(this, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
-		
-		// for testing: print information about the streams in the container.
-		//testIContainer(film);
-		System.out.println("*******************");
-		System.out.println("Show frame number " + i);
-		
+			// close container and open it again
+			// Or save one container, which is not used.
+			film.close();
+			if (film.open(tempFilmFile.getAbsolutePath(), IContainer.Type.READ, null) < 0)
+				controller.actionPerformed(new ActionEvent(this, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
+			
 		// Compute (approximated) timestamp of the wanted frame
-		// Seek to the frame before the wanted frame, so
-		// that we don't miss the wanted frame in the seeking (because seeking finds frame i or i+1)
-		long approxedTimestamp = getTimestampOfFrame(i-1); // TODO Maybe just i ?
-		
-		// for testing
-		System.out.println("Approximated timestamp: " + approxedTimestamp);
-		
-		// Seek to the computed timestamp
-		// Convert the approximated timestamp to a timestamp based on the time base
-		// of the video stream
-  	long seekTo = (long) (approxedTimestamp/1000.0/timeBase);
-
-  	IStream stream = film.getStream(videoStreamIndex);
-  	IStreamCoder coder = stream.getStreamCoder();		            
-  	System.out.println("Seek to: " + seekTo);
-  	//film.seekKeyFrame(videoStreamIndex, seekTo, IContainer.SEEK_FLAG_BACKWARDS); // TODO: Maybe another flag?
-  	
-  	// Try to open the coder
-  	System.out.println("Try to open coder"); // for testing
-		if (coder.open(null, null) < 0)
-			throw new RuntimeException("could not open video decoder for container: "
-					+controller.getFilePath());
-		System.out.println("Opened Coder"); // for testing
-		
-		// Get some information about the stream
-		System.out.println("Number of frames in the stream: " + stream.getNumFrames());
-		System.out.println("Start time of the stream: " + stream.getStartTime());
-		System.out.println("Duration of the stream: " + stream.getDuration());
-		stream.acquire();
-		System.out.println(stream.toString());
-		
-		// The resampler for the video
-		System.out.println("Try to build resampler"); // for testing
-		IVideoResampler resampler = null;
-		if (coder.getPixelType() != IPixelFormat.Type.BGR24) {
-			// if this stream is not in BGR24, we're going to need to
-			// convert it. The VideoResampler does that for us.
-			resampler = IVideoResampler.make(coder.getWidth(),
-					coder.getHeight(), IPixelFormat.Type.BGR24,
-					coder.getWidth(), coder.getHeight(), coder.getPixelType());
-			if (resampler == null)
-				throw new RuntimeException("could not create color space " +
-						"resampler for: " + controller.getFilePath());
+			// Seek to the frame before the wanted frame, so
+			// that we don't miss the wanted frame in the seeking (because seeking finds frame i or i+1)
+			//long approxedTimestamp = getTimestampOfFrame(i-1); // TODO Maybe just i ?
+			
+			// for testing
+			//System.out.println("Approximated timestamp: " + approxedTimestamp);
+			
+			// Seek to the computed timestamp
+			// Convert the approximated timestamp to a timestamp based on the time base
+			// of the video stream
+	  	//long seekTo = (long) (approxedTimestamp/1000.0/timeBase);
+	            
+	  	//System.out.println("Seek to: " + seekTo);
+	  	//film.seekKeyFrame(videoStreamIndex, seekTo, IContainer.SEEK_FLAG_BACKWARDS); // TODO: Maybe another flag?
+	  	IStream stream = film.getStream(videoStreamIndex);
+	  	coder = stream.getStreamCoder();		 
+	  	
+	  	// Try to open the coder
+	  	System.out.println("Try to open coder"); // for testing
+	  	if (coder.open(null, null) < 0)
+	  		throw new RuntimeException("could not open video decoder for container: "
+	  				+controller.getFilePath());
+	  	System.out.println("Opened Coder"); // for testing
+			
+		} else {// use the old container (i.e. show the next frame)
 		}
-		System.out.println("Build resampler completed"); // for testing
-				
+
+		// The resampler for the video
+		if(resampler == null) {
+			if (coder.getPixelType() != IPixelFormat.Type.BGR24) {
+				// if this stream is not in BGR24, we're going to need to
+				// convert it. The VideoResampler does that for us.
+				resampler = IVideoResampler.make(coder.getWidth(),
+						coder.getHeight(), IPixelFormat.Type.BGR24,
+						coder.getWidth(), coder.getHeight(), coder.getPixelType());
+				if (resampler == null)
+					throw new RuntimeException("could not create color space " +
+							"resampler for: " + controller.getFilePath());
+			}			
+		}
+	
 		// walk through the container and build the IVideoPicture
 		IPacket packet = IPacket.make();
 		
@@ -665,7 +694,7 @@ public class VisualizeTimeSeries {
 		// in the timestamps of IVideoPictures. A IVideoPicture which should be shown after
 		// a half second (frame rate = 2) has a timestamp of 499992 (0,499992 s).
 		// So we have to consider a certain inacurracy.
-		long expectedPictureTimeStamp =  (i * 1000000) / frameRate; // in MICROseconds
+		long expectedPictureTimeStamp =  ((i-1) * 1000000) / frameRate; // in MICROseconds
 		System.out.println("Expected IVideoPicture timestamp: " + expectedPictureTimeStamp);
 		
 		int count = 0;
@@ -679,8 +708,7 @@ public class VisualizeTimeSeries {
 			// Get some information about the packet: for testing
 			System.out.println("Read packet number " + (count++)); // for testing
 			System.out.println(packet.toString());
-			
-			
+					
 			// As I said in a previous newsgroup post when a seek operation is requested via Container.seekKeyFrame AFTER Container.readNextPacket returns some negative number, it starts reading again. 
 			// https://groups.google.com/forum/#!topic/xuggler-users/X0Z9YEmjZFw
 			// TODO: Try: If once failed, reopen the container and try again?
@@ -734,24 +762,33 @@ public class VisualizeTimeSeries {
 						 * need to convert it into BGR24 format.
 						 */
 						if (resampler != null) {
+							// Test how much time it takes to resample the IVideoPicture
+							long begin = System.currentTimeMillis();
 							// we must resample
 							newPic = IVideoPicture.make(resampler.getOutputPixelFormat(),
 									picture.getWidth(), picture.getHeight());
 							if (resampler.resample(newPic, picture) < 0)
 								throw new RuntimeException("could not resample video from: "
 										+ controller.getFilePath());
+							long end = System.currentTimeMillis();
+							System.out.println("\tTime to resample IVideoPicture: " + (end-begin) + " ms");
 						}
 						if (newPic.getPixelType() != IPixelFormat.Type.BGR24)
 							throw new RuntimeException("could not decode video" +
 									" as BGR 24 bit data in: " + controller.getFilePath());
+						
 
 						// And finally, convert the BGR24 to an Java buffered image
-						BufferedImage frame = new BufferedImage(coder.getWidth(), coder.getHeight(), BufferedImage.TYPE_3BYTE_BGR); 
-				    IConverter converter = ConverterFactory.createConverter(frame, IPixelFormat.Type.BGR24);
+						BufferedImage frame = new BufferedImage(coder.getWidth(), coder.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+						long begin = System.currentTimeMillis();
+						
+						if(converter == null)
+							converter = ConverterFactory.createConverter(frame, IPixelFormat.Type.BGR24);
 						
 						frame = converter.toImage(newPic);
-						//BufferedImage javaImage = Utils.videoPictureToImage(newPic);
-
+						long end = System.currentTimeMillis();
+						System.out.println("\tTime to convert image: " + (end-begin) + " ms)");
+						
 						System.out.println("Return the " + i + "-th frame.");
 						return frame;
 					}
@@ -761,25 +798,26 @@ public class VisualizeTimeSeries {
 			}
 		}
 		
+		
 		return null;
 	}
 
-	/**
-	 * Compute the approximated timestamp of the i-th frame in milliseconds.
-	 * Returns always non-negativa values.
-	 * @param i the sought after i-th frame
-	 * @return timestamp in milliseconds when the i-th frame is shown in the film.
-	 */
-	private long getTimestampOfFrame(int i) {
-		// Compute timestamp in MILLIsecons, when the i-th frame should appear
-		long timestamp = (i * 1000) / frameRate;
-
-		// Don't return a negative time stamp
-		if(timestamp > 0)
-			return timestamp;
-		else // negative time stamp
-			return 0;
-	}
+//	/**
+//	 * Compute the approximated timestamp of the i-th frame in milliseconds.
+//	 * Returns always non-negativa values.
+//	 * @param i the sought after i-th frame
+//	 * @return timestamp in milliseconds when the i-th frame is shown in the film.
+//	 */
+//	private long getTimestampOfFrame(int i) {
+//		// Compute timestamp in MILLIsecons, when the i-th frame should appear
+//		long timestamp = (i * 1000) / frameRate;
+//
+//		// Don't return a negative time stamp
+//		if(timestamp > 0)
+//			return timestamp;
+//		else // negative time stamp
+//			return 0;
+//	}
 
 	/**
 	 * Load the film from the temporary film file.
@@ -909,4 +947,44 @@ public class VisualizeTimeSeries {
 		// At last the time base of the video stream (how many 'ticks' in a second)
 		timeBase = stream.getTimeBase().getDouble();
 	}
+
+	/**
+	 * Map second to the corresponging time point.
+	 * (e.g mapSecondToTimePoint(0) will return the same value as getFirstTimePoint() )
+	 * @param second, for which the corresponding time point is sought
+	 * @return the corresponding time point according to the time unit
+	 */
+	public double mapSecondToTimePoint(double second) {
+		// Do the map
+		Double frame = new Double(second * frameRate);
+		return timePoints[frame.intValue()];
+	}
+	
+	/**
+	 * Map a frame number to the corresponging time point.
+	 * (e.g mapFrameToTimePoint(0) will return the same value as getFirstTimePoint() )
+	 * @param frame, for which the corresponding time point is sought
+	 * @return the corresponding time point according to the frame number
+	 */
+	public double mapFrameToTimePoint(int frame) {
+		// Do the map. Frames are numbered from 1 to numFrames. But the timePoints
+		// array is 0-indexed
+		return timePoints[frame-1];
+	}
+
+	/**
+	 * Map a frame number to the corresponging second in the film.
+	 * (e.g mapFrameToTimePoint(0) will return 0 )
+	 * @param frame, for which the corresponding second is sought
+	 * @return the corresponding second according to the frame number
+	 */
+	public double mapFrameToSecond(int frame) {
+		double frame2 = frame;
+		double frameRate2 = frameRate; // with ints there are rounding errors
+		System.out.println("Map Frame to Second: " + frame2 / frameRate2);
+		System.out.println("Framerate to compute: " + frameRate2);
+		return frame2 / frameRate2;
+	}
+
+
 }

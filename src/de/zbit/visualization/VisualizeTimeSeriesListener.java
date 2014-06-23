@@ -24,6 +24,7 @@ package de.zbit.visualization;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import y.view.Graph2D;
@@ -54,7 +55,13 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 	VisualizeTimeSeries model;
 	
 	/** The number of the current frame shown in the view. */
-	int curFrame = 0; //always begin with the first frame, which has the number 0 ;)
+	int curFrame = 1; //always begin with the first frame, which has the number 1 ;)
+	
+	/** The current film second, which is visualized in the view */
+	double curSecond = 0;
+	
+	/** The frame rate */
+	int frameRate;
 	
 	/**
 	 * The current progress bar shown by the view (e.g. while film is generated)
@@ -62,6 +69,9 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 	AbstractProgressBar progBar;
 	
 	private boolean isFilmGenerated = false;
+
+	/** Is the play button activated? That means, runs the film?*/
+	private boolean isPlayButtonActive = false;
 	
 	/**
 	 * All other constructors call this constructor.
@@ -78,9 +88,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
    * @author Felix Bartusch
    */
   public static enum VTSAction implements ActionCommand {
-  	/**
-  	 * Is fired, when {@link VisualizeTimeSeries} starts the generation of the film.
-  	 */
+  	/** Is fired, when {@link VisualizeTimeSeries} starts the generation of the film. */
 		START_GENERATE_FILM,
 		
 		/**
@@ -249,6 +257,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   		} else if(command.equals(VTSAction.END_GENERATE_FILM.toString())) {
   			// Set flag, that film is succesfully generated
   			isFilmGenerated = true;
+  			frameRate = model.getFramerate();
   			
   			// Read the temporary film file
   			model.loadFilmFromTempFile();
@@ -257,36 +266,45 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			//model.deleteTempFilmFile();
   			
   			// Get some important information of the film like
-  			// - index of the video stream in the container
-  			// - duration and time base of the video stream
   			model.lookupStreamInformation();
   			
-  			// Initialize the view and show the film
+  			// Get the first frame
+  			curFrame = 1;
+  			BufferedImage firstFrame = model.getFrame(curFrame);
+  			
+  			// Initialize the view and show the first frame
   			try {
-  				view.initializeAndShowFilm(model.getDimension());
+  				view.initialize(model.getDimension());
+  				
+  				// Show the first frame and resize it
+  				view.showNextFrame(firstFrame, curFrame, true);
   			} catch (Exception ex){
   				ex.printStackTrace();
   			}
   			
   		} else if(command.equals(VTSAction.PLAY_FILM.toString())) {
-  			// TODO
-  			System.out.println("Play button works!");
+  			playButtonActivated(true);
+  			
+  			// Play the film. Start at the current frame.
+  			playFilm(curFrame);
+  			
   		} else if(command.equals(VTSAction.PAUSE_FILM.toString())) {
-  			// TODO
-  			System.out.println("Pause button works!"); 		
+  			playButtonActivated(false); 		
   			
   		} else if(command.equals(VTSAction.SHOW_NEXT_FRAME.toString())) {
-  			// Remember: first frame has index 0, last frame has index numFrames -1
-  			if(curFrame != model.getNumFrames() - 1) {
+  			// If film is running, stop the film
+  			playButtonActivated(false);
+  			
+  			// Remember: first frame has index 1, last frame has index numFrames
+  			if(curFrame != model.getNumFrames()) {
   				// Increment the frame counter. Do nothing, if curFrame is the last frame.
-  				curFrame++;
+  				incrementCurFrame();
 
   				// Read packages until the next frame is complete
   				BufferedImage nextFrame = model.getFrame(curFrame);
 
   				// Show the next frame
-  				view.showNextFrame(nextFrame);
-  				
+  				view.showNextFrame(nextFrame, curFrame);
   				// Because view shows a next frame, we can also deliver a previous frame no
   				view.enablePrevFrameFunctionality(true);
   			} else {
@@ -294,20 +312,23 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			}
   			
   			// Disable the next frame functionality, if the view shows the last frame now
-  			if(curFrame == model.getNumFrames()-1)
+  			if(curFrame == model.getNumFrames())
   				view.enableNextFrameFunctionality(false);
   			
   		} else if(command.equals(	VTSAction.SHOW_PREV_FRAME.toString())) {
+  			// If film is running, stop the film
+  			playButtonActivated(false);
+  			
   			// Remember: first frame has index 0, last frame has index numFrames -1
   			if(curFrame != 0) {
   				// Decrement the frame counter
-  				curFrame--;
+  				decrementCurFrame();
   				
   				// Read packages until the next frame is complete
   				BufferedImage nextFrame = model.getFrame(curFrame);
   				
   				// Show the next frame
-  				view.showNextFrame(nextFrame);
+  				view.showNextFrame(nextFrame, curFrame);
   				
   				// Because view shows a previous frame, we can also deliver a next frame now
   				view.enableNextFrameFunctionality(true);
@@ -320,12 +341,42 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   				view.enablePrevFrameFunctionality(false);
   			
   		} else if(command.equals(VTSAction.GO_TO_POSITION.toString())) {
-  			// TODO
-  			System.out.println("Go to action works!");
+  			// In this case, the ID of the ActionEvent is the slider's value.
+  			// That means, the frame to jump to
+  			int goToFrameNum = e.getID();
+  			
+  			// If the wanted frame is already visualized, do nothing
+  			if(goToFrameNum == curFrame) {
+  				System.out.println("Slider: Frame is already visualized");
+  			} else { 	// go to the wanted frame
+  				System.out.println("Go to action works!");
+  				
+  				// Use a new container, if the wanted frame lies before the current frame,
+  				// because we can't seek backwards
+  				boolean isBackwards = goToFrameNum < curFrame ? true : false;
+  				
+  				// Get the new frame
+  				curFrame = goToFrameNum;				
+  				BufferedImage nextFrame = model.getFrame(curFrame, isBackwards);
+  				
+  				// Show the new frame
+  				view.showNextFrame(nextFrame, curFrame);
+  				
+  				// Update the next- / previous-functionality
+  				if(curFrame == model.getNumFrames()) { // last frame is visualized
+  					view.enableNextFrameFunctionality(false);
+  					view.enablePrevFrameFunctionality(true);
+  				} else if (curFrame == 1) { // first frame is visualized
+  					view.enablePrevFrameFunctionality(false);
+  					view.enableNextFrameFunctionality(true);
+  				} else { // model can deliver a next/previous frame
+  					view.enableNextFrameFunctionality(true);
+  					view.enablePrevFrameFunctionality(true);
+  				}
+  			}
   			 			
   		} else if(command.equals(VTSAction.SHOW_VIDEO_FAILED.toString())) {
   			// TODO stop computing film, if film is generated, close visualization tab
-  			System.out.println("Go to action works!");
   			
   			// TODO more specific error message
   			GUITools.showErrorMessage(view.getParent(), "Something went wrong while generating/showing the film.");
@@ -334,6 +385,94 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   }
 
   /**
+   * Call this method to make changes if the play button was activated / deactivated.
+   * @param activated, true if the play button was activated
+   */
+  private void playButtonActivated(boolean activated) {
+  	isPlayButtonActive = activated;
+  	
+  	// If the play-button was activated, disable the play functionality (e.g. the play-button)
+  	// in the view.
+		view.enablePlayFunctionality(!activated);	
+	}
+
+	/**
+   * Play the film from the given time in millisecond in a new thread.
+   * @param i
+   */
+	private void playFilm(final int startFrame) {
+		final VisualizeTimeSeriesListener controller = this;
+		
+		// This runnable will be executed in a new thread. It tests the time since the start
+		// and displays new images when needed.
+		// If the user uses the pause-, previous- or next-button the film pauses.
+		Runnable r = new Runnable() {
+		
+			@Override
+			public void run() {
+				// The time between two frames in milliseconds
+				int timeBetweenTwoFrames = 1000;
+				BufferedImage nextFrame = null;
+				
+				// Run film, as long as the no one stops the film.
+				while(isPlayButtonActive && curFrame != model.getNumFrames()) {
+					
+					// load the next frame
+					long begin = System.currentTimeMillis();
+					incrementCurFrame();
+					long begin2 = System.currentTimeMillis();
+					nextFrame = model.getFrame(curFrame, false);
+					long end2 = System.currentTimeMillis();
+					System.out.println("Time to get frame: " + (end2-begin2) + " ms");
+				
+					// Sleep, until the next frame should be displayed.
+					try {
+						long sleepTime = timeBetweenTwoFrames - (end2-begin2);
+						System.out.println("Sleep time: " + sleepTime);
+						if(sleepTime > 0)
+							TimeUnit.MILLISECONDS.sleep(timeBetweenTwoFrames);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					
+					// Test, if the play-button is still activated. display the next frame.
+					// But at first increment the curFrame counter.
+					if(isPlayButtonActive) {						
+
+						// Show the next frame
+						begin2 = System.currentTimeMillis();
+						view.showNextFrame(nextFrame, curFrame);
+						end2 = System.currentTimeMillis();
+						System.out.println("Time to show frame: " + (end2-begin2) + " ms");
+
+						// Because view shows a next frame, we can also deliver a previous frame no
+						view.enablePrevFrameFunctionality(true);	
+						
+						long end = System.currentTimeMillis();
+						System.out.println("Overall time: " + (end-begin) + "ms");
+	
+					} else { // pause-button was activated, stop the film
+						// We read one image too much. So decrement the curFrame counter
+						decrementCurFrame();
+						break;
+					}
+				}
+				
+				// If the thread quits the while-loop, the film has stopped.
+				playButtonActivated(false);
+				
+				// If the last frame was reached, disable the next-button
+				if(curFrame == model.getNumFrames())
+					view.enableNextFrameFunctionality(false);
+			}
+		};
+		
+		// Start the film thread.
+		Thread filmThread = new Thread(r, "filmThread");
+		filmThread.start();
+	}
+
+	/**
    * Set the view, which is controlled by this class.
    * @param view which is controlled.
    */
@@ -364,4 +503,29 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 			return model.getDuration();
 		}
 	}
+
+	/**
+	 * Increment the frame counter. Also change the curSecond field.
+	 */
+	private void incrementCurFrame() {
+		curFrame++;
+		curSecond = model.mapFrameToSecond(curFrame);
+	}
+
+	/**
+	 * Decrement the frame counter. Also change the curSecond field.
+	 */
+	private void decrementCurFrame() {
+		curFrame--;
+		curSecond = model.mapFrameToSecond(curFrame);
+	}
+
+	/**
+	 * @return the number of frames
+	 */
+	public int getNumFrames() {
+		return model.getNumFrames();
+	}
+
+	
 }

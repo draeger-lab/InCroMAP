@@ -77,7 +77,6 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 		curFrame = new JLabel();
 		this.add(curFrame);
 		this.origDimension = origDimension;
-		System.out.println("Orig Dimension in film Panel: " + origDimension);
 		validate();
 	}
 
@@ -90,8 +89,6 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 		this.origImage = nextFrame;
 			
 		// Width and height of the resized image
-//		System.out.println("Zoom factor != 1 ? " + (zoomFactor != 1));
-//		System.out.println("dimension null? " + (origDimension == null));
 		int newWidth = (new Double(origDimension.getWidth() * zoomFactor)).intValue();
 		int newHeight = (new Double(origDimension.getHeight() * zoomFactor)).intValue();
 		
@@ -103,14 +100,14 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 
 		// Resize image
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-				RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				RenderingHints.VALUE_INTERPOLATION_BILINEAR); // Nearest_Neighbor is faster
 		g.drawImage(nextFrame, 0, 0, newWidth, newHeight, null);
 		
 		// Show the next frame
 		curImage = nextFrameResized;
 		ImageIcon imageIcon = new ImageIcon(curImage);
 		curFrame.setIcon(imageIcon);
-		validate(); // just call validate() in the scrollPane?
+		validate();
 	}
 	
 	/**
