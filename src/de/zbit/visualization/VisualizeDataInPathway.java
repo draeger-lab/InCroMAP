@@ -971,7 +971,6 @@ public class VisualizeDataInPathway {
       if(!miRNA.class.isAssignableFrom(inputType)) { // miRNA has its own warning.
         String noNodesMatchString = "Could not find any graph nodes that match to the input data.";
         log.warning(noNodesMatchString);
-        System.out.println(isInteractive);
         if (isInteractive) {
           GUITools.showErrorMessage(null, noNodesMatchString);
         }

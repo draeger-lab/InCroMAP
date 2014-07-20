@@ -68,7 +68,6 @@ import de.zbit.data.mRNA.mRNA;
 import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.GUIOptions;
 import de.zbit.gui.GUITools;
-import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.dialogs.FilmSettingsDialog;
 import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.gui.tabs.TimeSeriesView;
@@ -230,10 +229,8 @@ public class VisualizeTimeSeries {
 					// Model mRNA data
 					ArrayList<mRNA> modelValues = computeModelValues(timePoints[i]);
 					mRNA.add(i, modelValues);
-					System.out.println("modelled mRNA: " + i);
 
 					// Compute the enrichment
-
 					List<EnrichmentObject<String>> e = computeEnrichment(mRNA.get(i), mapFrameToTimePoint(i+1)); // because frame is 1 indexed
 					enrichments.add(i, e);
 
@@ -250,7 +247,6 @@ public class VisualizeTimeSeries {
 				Double height = new Double(rect.getHeight());
 
 				dimension = new Dimension(width.intValue(), height.intValue());
-				System.out.println("The model dimension: " + dimension.toString());
 
 				return null;
 			}
@@ -270,7 +266,6 @@ public class VisualizeTimeSeries {
 			filmGenerator.execute();			
 		} catch(Exception e) {
 			// If there is an error, inform the user about that
-			System.out.println("There was an exception");
 			e.printStackTrace();
 			controller.actionPerformed(new ActionEvent(e, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
 		}
@@ -290,8 +285,6 @@ public class VisualizeTimeSeries {
 		// compute the pathway enrichment for the given time point
 		List<EnrichmentObject<String>> l=null;
 		try {
-			// first option to speed up enrichment computing: never compute the exact p-value.
-			System.out.println("Compute Enrichment on " + modelValues.size() + " genes."); // for testing
 			if(modelValues.size() != 0) {
 				l = enrich.getEnrichments(modelValues, null, null, false);
 			} else {
@@ -301,7 +294,6 @@ public class VisualizeTimeSeries {
 		} catch (Throwable e) {
 			GUITools.showErrorMessage(null, e);
 		}
-		System.out.println("is computed enrichment null? " + (l == null));
 		return l;
 	}
 
@@ -454,11 +446,7 @@ public class VisualizeTimeSeries {
 		// remove visualization and color the pathway for the other data type. Otherwise,
 		// the data isn't correct visualized when playing the film.
 		if(visData.isDataTypeVisualized(enrichDataType)) {
-			boolean wasRemoved = visData.removeVisualization(enrichDataType); // int is for testing
-			if(wasRemoved)
-				System.out.println("Removed enrichment visualization");
-			else
-				System.out.println("Removed no enrichment visualization");
+			visData.removeVisualization(enrichDataType); // int is for testing
 		}
 
 		// Use the default signal colorer. Use the p-Value of the enrichment,
@@ -476,11 +464,7 @@ public class VisualizeTimeSeries {
 
 		// Now deal with the modelled mRNA data! Remove the old visualization.
 		if(visData.isDataTypeVisualized(mRNADataType)) {
-			boolean wasRemoved = visData.removeVisualization(mRNADataType); // int is for testing
-			if(wasRemoved)
-				System.out.println("Removed mRNA visualization");
-			else
-				System.out.println("Removed no mRNA visualization");
+			visData.removeVisualization(mRNADataType);
 		}
 
 		// And now color the graph according to the new data.
@@ -650,9 +634,6 @@ public class VisualizeTimeSeries {
 	 */
 	public Graph2D getFrame(int i, boolean useNewContainer) {
 		// Color the graph according to the enrichment
-		System.out.println("enrich size: " + enrichments.size());
-		System.out.println("mRNA size: " + mRNA.size());
-		System.out.println("timePoints size: " + timePoints.length); // for testing
 		colorPathway(enrichments.get(i-1), mRNA.get(i-1), mapFrameToTimePoint(i));
 
 		return transPanel.getDocument();
@@ -691,8 +672,7 @@ public class VisualizeTimeSeries {
 	public double mapFrameToSecond(int frame) {
 		double frame2 = frame;
 		double frameRate2 = frameRate; // with ints there are rounding errors
-		System.out.println("Map Frame to Second: " + frame2 / frameRate2);
-		System.out.println("Framerate to compute: " + frameRate2);
+
 		return frame2 / frameRate2;
 	}
 
@@ -793,7 +773,6 @@ public class VisualizeTimeSeries {
 					int start = s.indexOf("(", 0) + 1;
 					int end = s.indexOf(")", start);
 					format = s.substring(start, end);
-					System.out.println(format); // for testing
 				} else {
 					fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
 					return null; // user didn't choose a file format
@@ -814,14 +793,10 @@ public class VisualizeTimeSeries {
 
 				// Check file
 				File f = fc.getSelectedFile();
-				System.out.println("You chose to save to this file: " +
-		        fc.getSelectedFile().getName());
 				
 				// Attach (correct) file extension.
 				String path = FileTools.trimExtension(f.getPath()) + format;
 				f = new File(path);
-				System.out.println("Path: " + path); // for testing
-
 				
 				// Check if file exists and is writable
 		    boolean showOverride = f.exists();
@@ -841,7 +816,6 @@ public class VisualizeTimeSeries {
 				// Overwrite existing file?
 				if(showOverride && !GUITools.overwriteExistingFile(view, f)) {
 						fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
-						System.out.println("dont overwrite");
 			      return null;
 				}
 				

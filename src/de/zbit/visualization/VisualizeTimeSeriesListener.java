@@ -34,7 +34,6 @@ import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.tabs.TimeSeriesView;
 import de.zbit.util.StringUtil;
 import de.zbit.util.progressbar.AbstractProgressBar;
-import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * This class is the controller for VisualizeTimeSeries and TimeSeriesView.
@@ -197,7 +196,6 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			try {
   				// Get the resulting document and check and handle eventual errors.
   				model.setPathway((Graph2D) e.getSource());
-  				System.out.println("Start generating film");
   				model.generateFilm();
   				
   			} catch (Throwable e2) {
@@ -235,7 +233,6 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			// Increment the counter of the progress bar
   			progBar.DisplayBar();
   			view.getViewport().repaint();
-  			System.out.println("Progbar called");
   			
   		} else if(command.equals(VTSAction.END_GENERATE_FILM.toString())) {  			
   			// From now on, one can play the film
@@ -327,9 +324,8 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			
   			// If the wanted frame is already visualized, do nothing
   			if(goToFrameNum == curFrame) {
-  				System.out.println("Slider: Frame is already visualized");
+  				// do nothing
   			} else { 	// go to the wanted frame
-  				System.out.println("Go to action works!");
   				
   				// Use a new container, if the wanted frame lies before the current frame,
   				// because we can't seek backwards
@@ -356,12 +352,6 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			}
 				
 			} else if(command.equals(VTSAction.EXPORT_FILM.toString())) {
-				System.out.println("Export film button works!");
-				
-//				// Show the progBar. The progBar is upddated with the actionsCommand VTSAction.IMAGE_GENERATED
-//				AbstractProgressBar bar = view.showTemporaryLoadingPanel("Exporting the film");
-//				bar.setNumberOfTotalCalls(model.getNumFrames()); // number of images to generate
-//				setProgBar(bar);
 				
 				// Start exporting the film
 				if(isFilmGenerated())
@@ -414,17 +404,14 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 				while(isPlayButtonActive && curFrame != model.getNumFrames()) {
 					
 					// load the next frame
-					long begin = System.currentTimeMillis();
 					incrementCurFrame();
 					long begin2 = System.currentTimeMillis();
 					nextFrame = model.getFrame(curFrame, false);
 					long end2 = System.currentTimeMillis();
-					System.out.println("Time to get frame: " + (end2-begin2) + " ms");
 				
 					// Sleep, until the next frame should be displayed.
 					try {
 						long sleepTime = timeBetweenTwoFrames - (end2-begin2);
-						System.out.println("Sleep time: " + sleepTime);
 						if(sleepTime > 0)
 							TimeUnit.MILLISECONDS.sleep(timeBetweenTwoFrames);
 					} catch (InterruptedException e) {
@@ -439,13 +426,10 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 						begin2 = System.currentTimeMillis();
 						view.showGraph(nextFrame, curFrame);
 						end2 = System.currentTimeMillis();
-						System.out.println("Time to show frame: " + (end2-begin2) + " ms");
 
 						// Because view shows a next frame, we can also deliver a previous frame
 						view.enablePrevFrameFunctionality(true);	
 						
-						long end = System.currentTimeMillis();
-						System.out.println("Overall time: " + (end-begin) + "ms");
 	
 					} else { // pause-button was activated, stop the film
 						// We read one image too much. So decrement the curFrame counter
