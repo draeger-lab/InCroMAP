@@ -22,38 +22,33 @@
 
 package de.zbit.gui.tabs;
 
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
+
+import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
-import javax.swing.JViewport;
+import javax.swing.UIManager;
+
+import y.base.Node;
+import y.base.NodeCursor;
 import y.view.Graph2D;
 import y.view.Graph2DView;
 import y.view.Graph2DViewMouseWheelZoomListener;
-
-import com.xuggle.xuggler.IContainer;
-import com.xuggle.xuggler.IStream;
-import com.xuggle.xuggler.IStreamCoder;
-import com.xuggle.xuggler.ICodec;
+import y.view.HitInfo;
 import de.zbit.graph.RestrictedEditMode;
+import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.customcomponents.FilmControlPanel;
-import de.zbit.gui.customcomponents.FilmPanel;
 import de.zbit.io.FileDownload;
+import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.util.Species;
 import de.zbit.util.progressbar.AbstractProgressBar;
 import de.zbit.visualization.VisualizeTimeSeries;
 import de.zbit.visualization.VisualizeTimeSeriesListener;
+import de.zbit.visualization.VisualizeTimeSeriesListener.VTSAction;
 
 /**
  * The Panel that is used to display and manipulate a film of a pathway.
@@ -64,7 +59,7 @@ import de.zbit.visualization.VisualizeTimeSeriesListener;
  * @version $Rev$
  */
 
-public class TimeSeriesView extends IntegratorTab<IContainer> {
+public class TimeSeriesView extends IntegratorTab<Graph2D> {
 	private static final long serialVersionUID = -5829484604586665170L;
 
 	/**
@@ -79,48 +74,61 @@ public class TimeSeriesView extends IntegratorTab<IContainer> {
 	 */
 	VisualizeTimeSeriesListener controller;
 
+	/** The graphView of the visualized graph */
 	Graph2DView graphView;
-
-	private FilmPanel filmPanel;
-	private FilmControlPanel controlPanel;
 	
-	private Point prevMousePosition = null;
+	/**  */
+	IntegratorPathwayPanel pathwayPanel = null;
 
+	/** Panel to control the film and select arbitrary frames */
+	private FilmControlPanel controlPanel;
+
+	
+	/**
+	 * 
+	 * @param keggPathway
+	 * @param model
+	 * @param controller
+	 * @param integratorUI
+	 * @param species
+	 */
 	public TimeSeriesView(String keggPathway, VisualizeTimeSeries model,
 			VisualizeTimeSeriesListener controller, IntegratorUI integratorUI, Species species) {
 		super(integratorUI, null, species); // There's no film at this point, so data is null
 		this.controller = controller;
 		this.model = model;
 		
-		// Always display scrollbars. So the control panel is always visible.
-		setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		
-		// Add some mouse functionality to the viewport: drag navigation
-		addMouseListener();	
+		//Never display scrollbars. The graphView has its own scrollbars.
+		setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+		setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 	}
-
 
 	@Override
 	public JComponent getVisualization() {
-		// If the film isn't generated yet, return an empty panel.
-		if(data == null) {
+		// If the film isn't generated yet, there is nothing to visualize.
+		// So return an empty panel
+		if(controller == null || !controller.isFilmGenerated()) {
 			JPanel panel = new JPanel();
 			return panel;	
 		}
-
-		// Otherwise, set up the view. For that, build a JPanel which shows the film images
-		filmPanel = new FilmPanel(model.getDimension());
-
+		
+		// The viewport visualizes the IntegratorPathwayPanel, which has a Graph2DView
+		// to show the pathway and a detail panel to show detailed information about nodes.
+		this.viewport.setView(pathwayPanel);
+		
 		// Build the control panel. We are showing the first frame, so set the secondsToTimeUnit
-		// label and disable the previous button
+		// label and disable the previous frame button
 		controlPanel = new FilmControlPanel(controller);
 		controlPanel.setFrameToTimeUnit(1, model.mapFrameToTimePoint(1), model.getTimeUnit());
 		controlPanel.enablePrevButton(false);
+		
 		// The control panel is shown as the column header of this scroll pane
 		setColumnHeaderView(controlPanel);
 		
-		return filmPanel;
+		// update the toolbar
+		//this.createJToolBarItems(this.getIntegratorUI().getJToolBar());
+		
+		return viewport;
 	}
 
 	@Override
@@ -131,12 +139,24 @@ public class TimeSeriesView extends IntegratorTab<IContainer> {
 
 	@Override
 	public void updateButtons(JMenuBar menuBar, JToolBar... toolbar) {
-		// TODO Auto-generated method stub
+		// Just update the toolbar
+		createJToolBarItems(toolbar[0]);
 	}
 
 	@Override
-	public void createJToolBarItems(JToolBar bar) {
-		// TODO Auto-generated method stub	
+	public void createJToolBarItems(JToolBar bar) {		
+    String uniqueName = parent.getClass().getSimpleName() + parent.hashCode();
+    //if (bar.getName().equals(uniqueName)) return;
+    bar.removeAll();
+    bar.setName(uniqueName);
+    
+    // Export button
+    JButton export = GUITools.createJButton(controller,
+        VTSAction.EXPORT_FILM, UIManager.getIcon("ICON_SAVE_16"));
+    
+    bar.add(export);
+    
+    GUITools.setOpaqueForAllElements(bar, false); 
 	}
 
 	@Override
@@ -159,196 +179,77 @@ public class TimeSeriesView extends IntegratorTab<IContainer> {
 		// Show progress-bar
 		final AbstractProgressBar pb = generateLoadingPanel(this, message);
 		FileDownload.ProgressBar = pb;
-		getViewport().repaint();
+		//getViewport().repaint();
 
 		return pb;
 	}
 
+	public void showGraph(Graph2D graph, int curFrame) {
+		showGraph(graph, curFrame, false);
+	}
+	
 	/**
 	 * Testing the visualization of a graph. So I can see the result of manipulating the graph
 	 * in the class VisualizeTimeSeries
 	 * @param graph
 	 */
-	public void showGraph(Graph2D graph) {
-		// set the graph
-		graphView = new Graph2DView(graph);
-
-		// show the graph in the view of the ScrollPanel
-
-		// Show Navigation and Overview
-		RestrictedEditMode.addOverviewAndNavigation(graphView);
-
-		graphView.setSize(getSize());
-		//ViewMode mode = new NavigationMode();
-		//pane.addViewMode(mode);
-		//ActionListener listener = getUIActionListener();
-
-		//EditMode editMode = new RestrictedEditMode(listener, this);
-		//editMode.showNodeTips(true);
-		//graphView.addViewMode(editMode);
-
-		graphView.getCanvasComponent().addMouseWheelListener(new Graph2DViewMouseWheelZoomListener());
-		try {
-			graphView.fitContent(true);
-		} catch (Throwable t) {} // Not really a problem
-		graphView.setFitContentOnResize(true);
-
-		this.viewport.setView(graphView);
-		repaint();
-	}
-
-	/**
-	 * 
-	 * @param film
-	 */
-	public void initialize(final Dimension filmDimension) {
+	public void showGraph(Graph2D graph, int curFrame, boolean resizeGraph) {
 		
-		// TODO: Show the film (work with the IContainer)
-		// we attempt to open up the container
-//		if (container.open(controller.getFilePath(), IContainer.Type.READ, null) < 0)
-//			throw new RuntimeException("Failed to open media file");
-		
-		this.data = model.getFilm();
-
-		// print information about the streams in the container. for testing
-		testIContainer(data);
-
-		// What is the dimension of the film?
-		getVisualization();
-		
-		
-		// set the FilmPanel
-		setViewportView(filmPanel);
-		validate();
-		// The filmPanel also reacts on MouseWheelEvents (zooms in/out)
-		addMouseWheelListener(filmPanel);		
-	}
-
-	/**
-	 * Print all available information of an IContainer object and its streams
-	 * to the console.
-	 * Taken from: http://www.javacodegeeks.com/2011/02/introduction-xuggler-video-manipulation.html
-	 */
-	private void testIContainer(IContainer container) {
-
-		// query how many streams the call to open found
-		int numStreams = container.getNumStreams();
-
-		// query for the total duration
-		long duration = container.getDuration();
-
-		// query for the file size
-		long fileSize = container.getFileSize();
-
-		// query for the bit rate
-		long bitRate = container.getBitRate();
-
-		System.out.println("Number of streams: " + numStreams);
-		System.out.println("Duration (ms): " + duration);
-		System.out.println("File Size (bytes): " + fileSize);
-		System.out.println("Bit Rate: " + bitRate);
-
-		// iterate through the streams to print their meta data
-		for (int i=0; i<numStreams; i++) {
-
-			// find the stream object
-			IStream stream = container.getStream(i);
-
-			// get the pre-configured decoder that can decode this stream;
-			IStreamCoder coder = stream.getStreamCoder();
-
-			System.out.println("*** Start of Stream Info ***");
-
-			System.out.printf("stream %d: ", i);
-			System.out.printf("type: %s; ", coder.getCodecType());
-			System.out.printf("codec: %s; ", coder.getCodecID());
-			System.out.printf("duration: %s; ", stream.getDuration());
-			System.out.printf("start time: %s; ", container.getStartTime());
-			System.out.printf("timebase: %d/%d; ",
-					stream.getTimeBase().getNumerator(),
-					stream.getTimeBase().getDenominator());
-			System.out.printf("coder tb: %d/%d; ",
-					coder.getTimeBase().getNumerator(),
-					coder.getTimeBase().getDenominator());
-			System.out.println();
-
-			if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_AUDIO) {
-				System.out.printf("sample rate: %d; ", coder.getSampleRate());
-				System.out.printf("channels: %d; ", coder.getChannels());
-				System.out.printf("format: %s", coder.getSampleFormat());
-			} 
-			else if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_VIDEO) {
-				System.out.printf("width: %d; ", coder.getWidth());
-				System.out.printf("height: %d; ", coder.getHeight());
-				System.out.printf("format: %s; ", coder.getPixelType());
-				System.out.printf("frame-rate: %5.2f; ", coder.getFrameRate().getDouble());
-			}
-
-			System.out.println();
-			System.out.println("*** End of Stream Info ***");
+		// Look for a selected node. If there is one, the detail panel has to be updated
+		// to show the new information (e.g. enrichment p-value) of the selected node
+		Node selectedNode = null;
+		for (NodeCursor nc = graph.nodes(); nc.ok(); nc.next())  {  
+		  if (graph.isSelected(nc.node()))
+		  	selectedNode = nc.node();	  	
 		}
-
-	}
 	
-	/**
-	 * Show the next frame.
-	 * @param nextFrame to show
-	 * @param curSecond the current second in the film
-	 */
-	public void showNextFrame(BufferedImage nextFrame, int curFrame) {
-		showNextFrame(nextFrame, curFrame, false);
-	}
-	
-	/**
-	 * Show the next Frame.
-	 * @param nextFrame to show
-	 * @param curSecond the current second in the film
-	 * @param resizeFrame true, if nextFrame should be resized that it fits into the Viewport
-	 */
-	public void showNextFrame(BufferedImage nextFrame, int curFrame, boolean resizeFrame) {
-		if(resizeFrame)	 {
-			// Resize the frame, so that the whole frame is visible in the view
-			// Get the visible area of the JViewport
-			Dimension visibleArea = getViewport().getExtentSize();
+		// Set the new graph
+		pathwayPanel.getGraph2DView().setGraph2D(graph);
+		
+		// Update the detailPanel of the pathwayPanel if a node was selected.
+		// For that, simulate that there is an click on the previous selected node
+		if(selectedNode != null) {
+			// Get the position of the selected node and create a fake HitInfo
+			double x = graph.getCenterX(selectedNode);
+			double y = graph.getCenterY(selectedNode);
+			HitInfo hi = new HitInfo(graph, x, y, HitInfo.NODE, false);
 			
-			// The ratio between the viewport size and the frame size.
-			double widthRatio = (visibleArea.getWidth() - 20) / model.getDimension().getWidth();
-			double heightRatio = (visibleArea.getHeight() - 20) / model.getDimension().getHeight();
-			
-			// Zoom factor is 1, if the original frame can be displayed in the viewport, < 1 otherwise
-			double zoomFactor = Math.min(1, Math.min(widthRatio, heightRatio));
-			
-			// Show the next frame with the computed zoomFactor
-			filmPanel.showNextFrame(nextFrame, zoomFactor);
-	
-		} else {
-			filmPanel.showNextFrame(nextFrame);
+			// The selected node was 'clicked' again, so update the detail panel
+			pathwayPanel.updateDetailPanel(hi);
 		}
 		
+		if(resizeGraph) {		
+			try {
+				graphView.fitContent(true);
+			} catch (Throwable t) {} // Not really a problem
+		}
+	
 		// Update the control panel
 		controlPanel.setFrameToTimeUnit(curFrame,
 				model.mapFrameToTimePoint(curFrame), model.getTimeUnit());
 		controlPanel.setSliderValue(curFrame);
+		
+		repaint();
 	}
-	
-//	/**
-//	 * Shows the first frame.
-//	 * @param firstFrame
-//	 */
-//	public void showFirstFrame(BufferedImage firstFrame) {
-//		// Show the first frame
-//		filmPanel.showNextFrame(firstFrame);
-//		
-//		// Disable the previous button
-//		controlPanel.enablePrevButton(false);
-//	}
-	
-//	public void setImage(Image image) {
-//    //SwingUtilities.invokeLater(new ImageRunnable(image));
-//		ImageIcon imageIcon = new ImageIcon(image);
-//		curFrame = new JLabel(imageIcon);
-//		setViewportView(curFrame);
-//  }
+
+	/**
+	 * Create the {@link Graph2DView} which displays the colored pathway (graph)
+	 * and define the {@link Graph2DView}'s behaviour.
+	 */
+	public void initializeGraphView() {
+		// Create the graph view
+		graphView = new Graph2DView();
+		
+		// User can zoom in / out the viewport
+		graphView.getCanvasComponent().addMouseWheelListener(new Graph2DViewMouseWheelZoomListener());
+		
+		// Because there is a also resizable panel with additional information
+		// don't let the graph resize.
+		graphView.setFitContentOnResize(false);
+		
+		// Show Navigation and Overview on the left side of the graph
+		RestrictedEditMode.addOverviewAndNavigation(graphView);	
+	}
 
 	/**
 	 * Enables / Disables the functionality to show the next frame.
@@ -381,82 +282,16 @@ public class TimeSeriesView extends IntegratorTab<IContainer> {
 		controlPanel.enablePlayButton(b);
 		validate();
 	}
-	
+
 	/**
-	 * Add a MouseMotionListener and a MouseListener to the Viewport to
-	 * support drag navigation.
+	 * Set the pathway panel.
+	 * @param pathwayPanel to set
 	 */
-	private void addMouseListener() {
-		
-		// Add the MouseMotionListener. Computes differences between two points and
-		// changes the values of the scrollbars according to the difference.
-		getViewport().addMouseMotionListener(new MouseMotionListener() {
+	public void setPathwayPanel(IntegratorPathwayPanel pathwayPanel) {
+		this.pathwayPanel = pathwayPanel;		
+	}
 
-			@Override
-			public void mouseMoved(MouseEvent e) {
-				// intentially left blank
-			}
-
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				// Where is the mouse?
-				Point mousePosition = e.getPoint();
-
-				// Is the mouse in the JViewport?
-				Component mouseComponent = getComponentAt(mousePosition);
-				if(mouseComponent == null || mouseComponent.getClass() != JViewport.class) {
-					// Mouse is not in the JViewport. Do nothing.
-					System.out.println("Mouse is not in the Viewport"); // for testing
-					return;
-				} else {
-					System.out.println("Mouse is in the Viewport"); // for testing
-					// If there was no previous point, set this point as reference
-					if(prevMousePosition == null)
-						prevMousePosition = e.getPoint();
-
-					// Compute difference of mouse current and previous mouse position
-					// Change the position of the visible area according to the difference
-					double diffX = prevMousePosition.getX() - e.getX();
-					double diffY = prevMousePosition.getY() - e.getY();
-
-					double curScrollX = getHorizontalScrollBar().getValue();
-					double curScrollY = getVerticalScrollBar().getValue();
-
-					Double newScrollX = new Double(curScrollX - diffX / 3);
-					Double newScrollY = new Double(curScrollY - diffY / 3);
-
-					getHorizontalScrollBar().setValue(newScrollX.intValue());
-					getVerticalScrollBar().setValue(newScrollY.intValue());
-				}
-			}
-		});
-		
-		// Add the MouseListener
-		getViewport().addMouseListener(new MouseListener() {
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				// Set the previous mouse position to null.
-				// So the user can start a new drag navigation at a new point
-				prevMousePosition = null;
-			}
-			
-			@Override
-			public void mousePressed(MouseEvent e) {		
-				// Intentially left blank
-			}	
-			@Override
-			public void mouseExited(MouseEvent e) {
-			// Intentially left blank		
-			}
-			@Override
-			public void mouseEntered(MouseEvent e) {
-			// Intentially left blank	
-				}		
-			@Override
-			public void mouseClicked(MouseEvent e) {
-			// Intentially left blank	
-			}
-		});
+	public IntegratorPathwayPanel getPathwayPanel() {
+		return pathwayPanel;
 	}
 }

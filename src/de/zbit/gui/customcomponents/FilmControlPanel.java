@@ -56,7 +56,7 @@ public class FilmControlPanel extends JPanel {
 	private JSlider slider;
 	private JLabel frameToTimeUnit;
 	private JPanel playPausePanel;
-	
+
 	/**
 	 * Build a standard FilmControlPanel with buttons, slider and some information labels.
 	 * @param controller which reacts on user input
@@ -72,7 +72,7 @@ public class FilmControlPanel extends JPanel {
 		// The play button
 		playButton = GUITools.createButton(UIManager.getIcon("ICON_PLAY_32"), controller,
 				VTSAction.PLAY_FILM, VTSAction.PLAY_FILM.getToolTip());
-		
+
 		// The pause button
 		pauseButton = GUITools.createButton(UIManager.getIcon("ICON_PAUSE_32"), controller,
 				VTSAction.PAUSE_FILM, VTSAction.PAUSE_FILM.getToolTip());
@@ -80,56 +80,52 @@ public class FilmControlPanel extends JPanel {
 		// The forward button
 		nextButton = GUITools.createButton(UIManager.getIcon("ICON_FORW_32"), controller,
 				VTSAction.SHOW_NEXT_FRAME, VTSAction.SHOW_NEXT_FRAME.getToolTip());
-		
+
 		// The panel containing the play / pause button
 		JPanel playPanel = new JPanel();
 		playPanel.add(playButton);
-		
+
 		JPanel pausePanel = new JPanel();
 		pausePanel.add(pauseButton);
-		
+
 		playPausePanel = new JPanel(new CardLayout());
 		playPausePanel.add(playPanel);
 		playPausePanel.add(pausePanel);
 
 		// The slider. Get the duration of the film.		
 		slider = new JSlider(1, controller.getNumFrames());
-		
+
 		// Add a ChangeListener to the slider. The listener should show then the
 		// frame occuring at the chosen position
 		slider.addChangeListener(new ChangeListener() {		
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider)e.getSource();
-        if (!source.getValueIsAdjusting()) {
-            int val = (int)source.getValue();
-            listener.actionPerformed(new ActionEvent(this, val, VTSAction.GO_TO_POSITION.toString()));
-        }    
+				if (!source.getValueIsAdjusting()) {
+					int val = (int)source.getValue();
+					listener.actionPerformed(new ActionEvent(this, val, VTSAction.GO_TO_POSITION.toString()));
+				}    
 			}
 		});
-		
+
 		// Label on the top of the slider
-    JLabel sliderLabelSecond = new JLabel("Jump to frame", JLabel.CENTER);
-    sliderLabelSecond.setAlignmentX(Component.CENTER_ALIGNMENT);
-    
-    // Change sliders ticks
-    slider.setMajorTickSpacing(10);
-    slider.setMinorTickSpacing(1);
-    slider.setPaintTicks(true);
-    slider.setPaintLabels(true);
-     
-    // Place the two things in a new panel
-    JPanel sliderPanel = new JPanel(new BorderLayout());
-    sliderPanel.add(sliderLabelSecond, BorderLayout.NORTH);
-    sliderPanel.add(slider, BorderLayout.CENTER);
-    
-    // Add a label, which tells the user what value of the time unit corresponds to the current
-    // visualized second
-   frameToTimeUnit = new JLabel();
-    
- 		// [00:00 = x.xx timeUnit]
- 		// e.g. [00:03 = 2.5 day] that means: the frame at second 3 shows the data of day 2.5
-		
+		JLabel sliderLabelSecond = new JLabel("Jump to frame", JLabel.CENTER);
+		sliderLabelSecond.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+		// Change sliders ticks
+		slider.setMajorTickSpacing(10);
+		slider.setMinorTickSpacing(2);
+		slider.setPaintTicks(true);
+
+		// Place the two things in a new panel
+		JPanel sliderPanel = new JPanel(new BorderLayout());
+		sliderPanel.add(sliderLabelSecond, BorderLayout.NORTH);
+		sliderPanel.add(slider, BorderLayout.CENTER);
+
+		// Add a label, which tells the user what value of the time unit corresponds to the current
+		// visualized second
+		frameToTimeUnit = new JLabel();
+
 		// Add buttons and slider to this panel
 		setLayout(new FlowLayout(FlowLayout.LEFT));
 		add(prevButton);
@@ -155,15 +151,15 @@ public class FilmControlPanel extends JPanel {
 	public void enablePrevButton(boolean b) {
 		prevButton.setEnabled(b);		
 	}
-	
+
 	/**
 	 * Set the text of the frameToTimeUnit label.
 	 * @param frame, the current visualized frame
 	 * @param timePoint, the current visualized time point
 	 * @param timeUnitString, the string which describes the time unit (e.g. "s" for seconds)
 	 */
-	public void setFrameToTimeUnit(double frame, double timePoint, String timeUnitString) {
-		String text = "Frame " + String.format("%.2f", frame) + " \u2259 " + String.format("%.2f", timePoint) + timeUnitString;
+	public void setFrameToTimeUnit(int frame, double timePoint, String timeUnitString) {
+		String text = "Frame " + frame + " \u2259 " + String.format("%.2f", timePoint) + timeUnitString;
 		frameToTimeUnit.setText(text);		
 	}
 
@@ -172,11 +168,11 @@ public class FilmControlPanel extends JPanel {
 	 * @param b if true, show the play button. Otherwise show the pause button.
 	 */
 	public void enablePlayButton(boolean enablePlay) {
-		
+
 		// With a card layout it is very easy to change the buttons
 		// http://docs.oracle.com/javase/tutorial/uiswing/layout/card.html
 		CardLayout cl = (CardLayout) playPausePanel.getLayout();
-		
+
 		// Show the play button if enablePlay is true.
 		if(enablePlay) {
 			cl.first(playPausePanel); // because the play panel was added first in the constructor
@@ -184,7 +180,7 @@ public class FilmControlPanel extends JPanel {
 			cl.last(playPausePanel); // because the pause panel was added at last in the constructor
 		}
 	}
-	
+
 	/**
 	 * Change the actual value of the slider.
 	 * @param curFrame
@@ -193,7 +189,7 @@ public class FilmControlPanel extends JPanel {
 		// Is the new value in the range of possible values?
 		if(curFrame >= slider.getMinimum() && curFrame <= slider.getMaximum())
 			slider.setValue(curFrame);
-		
+
 		// Otherwise, do nothing
 	}
 }

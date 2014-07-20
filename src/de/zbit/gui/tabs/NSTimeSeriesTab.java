@@ -36,6 +36,7 @@ import javax.swing.SwingWorker.StateValue;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNATimeSeries;
+import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.FileTools;
@@ -91,7 +92,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 	public NSTimeSeriesTab(final IntegratorUI parent, final NameAndSignalReader<? extends NameAndSignals> nsreader, final String inFile) {
 			this(parent, null);
     
-	    // Create intermediate loading tab
+	    // Create a loading tab
 	    setIntermediateBar(IntegratorTab.generateLoadingPanel(this, "Reading file " + FileTools.getFilename(inFile)));
 	    nsreader.setProgressBar(getIntermediateBar());
 	    
@@ -105,11 +106,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 	        thiss.species = nsreader.getSpecies();
 	        thiss.timeUnit = ((mRNATimeSeriesReader) nsreader).getTimeUnit();
 	        thiss.timePoints = ((mRNATimeSeriesReader) nsreader).getTimePoints();
-	        System.out.println(species);
-	        System.out.println(timeUnit);
-	        for(int i=0; i<timePoints.size(); i++) {
-	        	System.out.println(timePoints.get(i));
-	        }
+
 	        return col; // col==null if cancel button pressed
 	      }
 	    };
@@ -222,7 +219,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 	}
 	
 
-	public void modelTimeSeries(Class<CubicSplineInterpolation> classs) {
+	public void modelTimeSeries(Class<? extends TimeSeriesModel> classs) {
 		this.modelMethod = classs;
 		this.geneModels = new ArrayList<TimeSeriesModel>(this.data.size());
 
@@ -235,7 +232,6 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 				// if mRNA has no NCBI geneID, geneModel for the mRNA is null. Add also a new additional data column,
 				// with information whether the mRNA was modeled or not
 				if(mRNA.getID() == -1) {
-					geneModels.add(null);
 					mRNA.addData("Modeled?", "No");
 				} else {
 					try {
@@ -249,7 +245,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 						geneModels.add(m);
 						mRNA.addData("Modeled?", "Yes");					
 					} catch (Exception e) {
-						e.printStackTrace();
+						GUITools.showErrorMessage(parent, "Exception while model gene " + mRNA.getName());
 					}	
 				}
 			}

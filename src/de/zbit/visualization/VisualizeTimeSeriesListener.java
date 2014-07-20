@@ -23,20 +23,22 @@ package de.zbit.visualization;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import y.view.Graph2D;
 import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.actioncommand.ActionCommand;
 import de.zbit.gui.tabs.TimeSeriesView;
 import de.zbit.util.StringUtil;
 import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * This class is the controller for VisualizeTimeSeries and TimeSeriesView.
+ * 
  * @author Felix Bartusch
  * @version $Rev$
  */
@@ -44,93 +46,63 @@ import de.zbit.util.progressbar.AbstractProgressBar;
 public class VisualizeTimeSeriesListener implements ActionListener {
 	public static final transient Logger log = Logger.getLogger(TranslatorPanel.class.getName());
 	
-	/**
-	 * The view which is controlled by this class.
-	 */
+	/** The view which is controlled by this class. */
 	TimeSeriesView view;
 	
-	/**
-	 * The modell which is visualized by the view
-	 */
+	/** The modell which is visualized by the view */
 	VisualizeTimeSeries model;
 	
 	/** The number of the current frame shown in the view. */
 	int curFrame = 1; //always begin with the first frame, which has the number 1 ;)
 	
-	/** The current film second, which is visualized in the view */
-	double curSecond = 0;
-	
-	/** The frame rate */
-	int frameRate;
-	
-	/**
-	 * The current progress bar shown by the view (e.g. while film is generated)
-	 */
+	/** The current progress bar shown by the view (e.g. while film is generated) */
 	AbstractProgressBar progBar;
-	
-	private boolean isFilmGenerated = false;
 
 	/** Is the play button activated? That means, runs the film?*/
 	private boolean isPlayButtonActive = false;
+
+	/** Is the film generated yet? */
+	private boolean filmGenerated = false;
 	
 	/**
-	 * All other constructors call this constructor.
-	 * @param view
-	 * @param model
-	 */
-	VisualizeTimeSeriesListener(TimeSeriesView view, VisualizeTimeSeries model) {
-		this.view = view;
-		this.model = model;
-	}
-	
-	/**
-   * All actions for {@link VisualizeTimeSeries} are defined here.
+   * All actions and events for {@link VisualizeTimeSeries} are defined here.
+   * This are events fired by the KEGGImporter and actions to control the current visualized
+   * frame. 
    * @author Felix Bartusch
    */
   public static enum VTSAction implements ActionCommand {
   	/** Is fired, when {@link VisualizeTimeSeries} starts the generation of the film. */
 		START_GENERATE_FILM,
 		
-		/**
-		 * Is fired, when {@link VisualizeTimeSeries} generated an image of the film.
-		 */
+		/** Is fired, when {@link VisualizeTimeSeries} generated an image of the film. */
 		IMAGE_GENERATED,
 		
-		/**
-		 * Is fired, when {@link VisualizeTimeSeries} ends the generation of the the film.
-		 */
+		/** Is fired, when {@link VisualizeTimeSeries} ends the generation of the the film. */
 		END_GENERATE_FILM,
 		
-		/**
-		 * Play the film frame by frame
-		 */
+		/** Play the film frame by frame */
 		PLAY_FILM,
 		
-		/**
-		 * Stop film and show the previous frame
-		 */
+		/** Stop film and show the previous frame */
 		SHOW_PREV_FRAME,
 		
-		/**
-		 * Stop the film and show the next frame
-		 */
+		/** Stop the film and show the next frame */
 		SHOW_NEXT_FRAME,
 		
-		/**
-		 * Pause the film.
-		 */
+		/** Pause the film. */
 		PAUSE_FILM,
 		
-		/**
-		 * Something went wrong while showing the film
-		 */
+		/** Something went wrong while showing the film */
 		SHOW_VIDEO_FAILED,
 		
-		/**
-		 * Go to a specific position in the film
-		 */
-		GO_TO_POSITION
-		;
+		/** Go to a specific position in the film */
+		GO_TO_POSITION,
+		
+		/** Export the generated film to a file */
+		EXPORT_FILM,
+		
+		/** Film was succesfully exported */
+		END_EXPORT_FILM;
 		
 		@Override
 		public String getName() {
@@ -153,11 +125,20 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   }
 
 	/**
-	 * 
 	 * @param model
 	 */
   public VisualizeTimeSeriesListener(VisualizeTimeSeries model) {
 		this(null, model);
+	}
+  
+	/**
+	 * All other constructors call this constructor.
+	 * @param view
+	 * @param model
+	 */
+	public VisualizeTimeSeriesListener(TimeSeriesView view, VisualizeTimeSeries model) {
+		this.view = view;
+		this.model = model;
 	}
 
 	/* (non-Javadoc)
@@ -215,8 +196,8 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			log.info("Pathway translation complete.");
   			try {
   				// Get the resulting document and check and handle eventual errors.
-  				model.setPathway((Graph2D) e.getSource());		
-  								
+  				model.setPathway((Graph2D) e.getSource());
+  				System.out.println("Start generating film");
   				model.generateFilm();
   				
   			} catch (Throwable e2) {
@@ -239,45 +220,44 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			log.warning("Unkown Action Command: " + e);
   		}	
   	}
-  	// otherwise, the action came from an instance of VisualizeTimeSeries
+  	
+  	// Otherwise, the action came from an instance of VisualizeTimeSeries.
   	else {
   		String command = e.getActionCommand();
   		
   		if (command.equals(VTSAction.START_GENERATE_FILM.toString())) {
-  			// set the progress bar in the view
+  			// Set the progress bar in the view
   			AbstractProgressBar bar = view.showTemporaryLoadingPanel("Generating film of pathway " + model.getPathwayID());
 				bar.setNumberOfTotalCalls(e.getID()); // number of images to generate
 				setProgBar(bar);
-							
+				
   		} else if(command.equals(VTSAction.IMAGE_GENERATED.toString())) {
-  			// increment the counter of the progress bar
-  			// view.showGraph((Graph2D) e.getSource()); for testing
+  			// Increment the counter of the progress bar
   			progBar.DisplayBar();
+  			view.getViewport().repaint();
+  			System.out.println("Progbar called");
   			
-  		} else if(command.equals(VTSAction.END_GENERATE_FILM.toString())) {
-  			// Set flag, that film is succesfully generated
-  			isFilmGenerated = true;
-  			frameRate = model.getFramerate();
+  		} else if(command.equals(VTSAction.END_GENERATE_FILM.toString())) {  			
+  			// From now on, one can play the film
+  			filmGenerated = true;
   			
-  			// Read the temporary film file
-  			model.loadFilmFromTempFile();
+  			// Get the pathwayPanel from the model and hand it to the view
+  			view.setPathwayPanel(model.getPathwayPanel());
   			
-  			// Delete the temporary film file
-  			//model.deleteTempFilmFile();
+  			// Update the toolbar
+  			view.createJToolBarItems(IntegratorUI.getInstance().getJToolBar());
   			
-  			// Get some important information of the film like
-  			model.lookupStreamInformation();
-  			
-  			// Get the first frame
+  			// Get the first frame from the model
   			curFrame = 1;
-  			BufferedImage firstFrame = model.getFrame(curFrame);
+  			Graph2D firstFrame = model.getFrame(curFrame);
   			
   			// Initialize the view and show the first frame
   			try {
-  				view.initialize(model.getDimension());
+  				// Initialze the view
+  				view.getVisualization();
   				
   				// Show the first frame and resize it
-  				view.showNextFrame(firstFrame, curFrame, true);
+  				view.showGraph(firstFrame, curFrame, true);
   			} catch (Exception ex){
   				ex.printStackTrace();
   			}
@@ -301,10 +281,10 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   				incrementCurFrame();
 
   				// Read packages until the next frame is complete
-  				BufferedImage nextFrame = model.getFrame(curFrame);
+  				Graph2D nextFrame = model.getFrame(curFrame);
 
   				// Show the next frame
-  				view.showNextFrame(nextFrame, curFrame);
+  				view.showGraph(nextFrame, curFrame);
   				// Because view shows a next frame, we can also deliver a previous frame no
   				view.enablePrevFrameFunctionality(true);
   			} else {
@@ -319,25 +299,25 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			// If film is running, stop the film
   			playButtonActivated(false);
   			
-  			// Remember: first frame has index 0, last frame has index numFrames -1
-  			if(curFrame != 0) {
+  			// Remember: first frame has index 1, last frame has index numFrames
+  			if(curFrame != 1) {
   				// Decrement the frame counter
   				decrementCurFrame();
   				
   				// Read packages until the next frame is complete
-  				BufferedImage nextFrame = model.getFrame(curFrame);
+  				Graph2D nextFrame = model.getFrame(curFrame);
   				
   				// Show the next frame
-  				view.showNextFrame(nextFrame, curFrame);
+  				view.showGraph(nextFrame, curFrame);
   				
   				// Because view shows a previous frame, we can also deliver a next frame now
-  				view.enableNextFrameFunctionality(true);
+  				view.enableNextFrameFunctionality(true);			
   			} else {
   				// View shows already the first frame, do nothing
   			}
   			
   			// Disable the previous frame functionality, if the view shows the first frame
-  			if(curFrame == 0)
+  			if(curFrame == 1)
   				view.enablePrevFrameFunctionality(false);
   			
   		} else if(command.equals(VTSAction.GO_TO_POSITION.toString())) {
@@ -357,10 +337,10 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   				
   				// Get the new frame
   				curFrame = goToFrameNum;				
-  				BufferedImage nextFrame = model.getFrame(curFrame, isBackwards);
+  				Graph2D nextFrame = model.getFrame(curFrame, isBackwards);
   				
   				// Show the new frame
-  				view.showNextFrame(nextFrame, curFrame);
+  				view.showGraph(nextFrame, curFrame);
   				
   				// Update the next- / previous-functionality
   				if(curFrame == model.getNumFrames()) { // last frame is visualized
@@ -374,7 +354,24 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   					view.enablePrevFrameFunctionality(true);
   				}
   			}
-  			 			
+				
+			} else if(command.equals(VTSAction.EXPORT_FILM.toString())) {
+				System.out.println("Export film button works!");
+				
+//				// Show the progBar. The progBar is upddated with the actionsCommand VTSAction.IMAGE_GENERATED
+//				AbstractProgressBar bar = view.showTemporaryLoadingPanel("Exporting the film");
+//				bar.setNumberOfTotalCalls(model.getNumFrames()); // number of images to generate
+//				setProgBar(bar);
+				
+				// Start exporting the film
+				if(isFilmGenerated())
+					model.exportFilm();
+				
+			} else if(command.equals(VTSAction.END_EXPORT_FILM.toString())) {
+				// Show the last visualized frame
+				view.showGraph(model.getFrame(curFrame), curFrame);
+				view.setViewportView(view.getPathwayPanel());
+				
   		} else if(command.equals(VTSAction.SHOW_VIDEO_FAILED.toString())) {
   			// TODO stop computing film, if film is generated, close visualization tab
   			
@@ -397,11 +394,10 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 	}
 
 	/**
-   * Play the film from the given time in millisecond in a new thread.
+   * Play the film from the given start frame in a new thread.
    * @param i
    */
 	private void playFilm(final int startFrame) {
-		final VisualizeTimeSeriesListener controller = this;
 		
 		// This runnable will be executed in a new thread. It tests the time since the start
 		// and displays new images when needed.
@@ -411,8 +407,8 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 			@Override
 			public void run() {
 				// The time between two frames in milliseconds
-				int timeBetweenTwoFrames = 1000;
-				BufferedImage nextFrame = null;
+				int timeBetweenTwoFrames = 1000; 
+				Graph2D nextFrame = null;
 				
 				// Run film, as long as the no one stops the film.
 				while(isPlayButtonActive && curFrame != model.getNumFrames()) {
@@ -435,17 +431,17 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 						e.printStackTrace();
 					}
 					
-					// Test, if the play-button is still activated. display the next frame.
-					// But at first increment the curFrame counter.
+					// Test, if the play-button is still activated. If that is the fact,
+					// show the next frame. Otherwise decrement the frame counter.
 					if(isPlayButtonActive) {						
 
 						// Show the next frame
 						begin2 = System.currentTimeMillis();
-						view.showNextFrame(nextFrame, curFrame);
+						view.showGraph(nextFrame, curFrame);
 						end2 = System.currentTimeMillis();
 						System.out.println("Time to show frame: " + (end2-begin2) + " ms");
 
-						// Because view shows a next frame, we can also deliver a previous frame no
+						// Because view shows a next frame, we can also deliver a previous frame
 						view.enablePrevFrameFunctionality(true);	
 						
 						long end = System.currentTimeMillis();
@@ -484,10 +480,6 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 		this.progBar = progBar;
 	}
 	
-	public boolean isFilmGenerated() {
-		return isFilmGenerated ;
-	}
-	
 	public String getFilePath() {
 		return "./longTestFilm.mp4";
 	}
@@ -497,27 +489,21 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 	 * generated yet.
 	 */
 	public int getDuration() {
-		if(!isFilmGenerated())
-			return -1;
-		else {
-			return model.getDuration();
-		}
+		return model.getDuration();
 	}
 
 	/**
-	 * Increment the frame counter. Also change the curSecond field.
+	 * Increment the frame counter.
 	 */
 	private void incrementCurFrame() {
 		curFrame++;
-		curSecond = model.mapFrameToSecond(curFrame);
 	}
 
 	/**
-	 * Decrement the frame counter. Also change the curSecond field.
+	 * Decrement the frame counter.
 	 */
 	private void decrementCurFrame() {
 		curFrame--;
-		curSecond = model.mapFrameToSecond(curFrame);
 	}
 
 	/**
@@ -527,5 +513,19 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 		return model.getNumFrames();
 	}
 
-	
+	/**
+	 * Is the film generated yet?
+	 * @return
+	 */
+	public boolean isFilmGenerated() {
+		return filmGenerated;
+	}
+
+	/**
+	 * Return the number of the current visualized frame
+	 * @return
+	 */
+	public int getCurFrame() {
+		return curFrame;
+	}
 }

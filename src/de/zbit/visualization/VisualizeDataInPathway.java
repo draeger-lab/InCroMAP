@@ -169,7 +169,18 @@ public class VisualizeDataInPathway {
    * @param tp any {@link TranslatorPanel}
    */
   public VisualizeDataInPathway(TranslatorPanel<Graph2D> tp){
-    this(tp.getDocument());
+    this(tp, true);
+  }
+  
+  /**
+   * Create a new instance of this class to visualize/ perform various
+   * {@link Signal} related visualization and annotation operations
+   * on the {@link Graph2D} of the given {@link TranslatorPanel}.
+   * @param tp any {@link TranslatorPanel}
+   * @param isInteractive if false, no SWING Dialog messages will be issued
+   */
+  public VisualizeDataInPathway(TranslatorPanel<Graph2D> tp, boolean isInteractive){
+    this(tp.getDocument(), isInteractive);
     panelContainingGraph = tp;
   }
   
@@ -960,6 +971,7 @@ public class VisualizeDataInPathway {
       if(!miRNA.class.isAssignableFrom(inputType)) { // miRNA has its own warning.
         String noNodesMatchString = "Could not find any graph nodes that match to the input data.";
         log.warning(noNodesMatchString);
+        System.out.println(isInteractive);
         if (isInteractive) {
           GUITools.showErrorMessage(null, noNodesMatchString);
         }

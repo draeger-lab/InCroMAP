@@ -44,7 +44,7 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 	
 	// Following arrays hold the information for every third order polynomial
 	// The third order polynomial q_i between points [x_i, y_i] and [x_(i+1), y_(i+1)] can be written as:
-	// q_ = (1-t)*y_i + t*y_(i+1) + t*(1-t) * (a_i*(1-t) + b_i * t) ,where
+	// q_i = (1-t)*y_i + t*y_(i+1) + t*(1-t) * (a_i*(1-t) + b_i * t) ,where
 	// t = (x-x_i) / (x_(i+1)-x_i)
 	
 	/**

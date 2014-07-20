@@ -26,19 +26,13 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.FontMetrics;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.CellEditor;
 import javax.swing.DefaultCellEditor;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -46,28 +40,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.JViewport;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.plaf.ListUI;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
-import javax.swing.treetable.AbstractCellEditor;
-
-import org.apache.commons.collections15.ListUtils;
-
-import com.sun.xml.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-
-import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.GUITools;
-import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JLabeledComponent;
 import de.zbit.gui.csv.CSVImporterV2;
@@ -76,9 +56,6 @@ import de.zbit.gui.table.JTableRowBased;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.integrator.ReaderCacheElement;
 import de.zbit.io.csv.CSVReader;
-import de.zbit.mapper.MappingUtils;
-import de.zbit.mapper.MappingUtils.IdentifierClass;
-import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Species;
 import de.zbit.util.objectwrapper.ValueTriplet;
@@ -89,7 +66,8 @@ import de.zbit.util.objectwrapper.ValueTriplet;
  * @author Felix Bartusch
  * @version $Rev$
  */
-public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
+public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeries> {
+	private static final long serialVersionUID = -8467426139583946335L;
 
 	/**
 	 *  String describing the timeUnit, e.g. "sec", "day", "hour", "mol", etc.
@@ -129,7 +107,7 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
    * @see de.zbit.io.NameAndSignalReader#importWithGUI(java.awt.Component, java.lang.String, de.zbit.integrator.ReaderCache)
    */
   @Override
-  public Collection<mRNA> importWithGUI(Component parent, String file, ReaderCache cache) {
+  public Collection<mRNATimeSeries> importWithGUI(Component parent, String file, ReaderCache cache) {
     // Create a new panel that allows selection of species
     JLabeledComponent spec = IntegratorUITools.getOrganismSelector();
     JPanel timeUnitTextfield = null;
@@ -137,7 +115,7 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
     // Create and show the import dialog
     try {
     	// Peak into file to detemine maximum number of observations and SignalTypes
-    	String[][] sampleData = getSampledata(file,5);
+    	String[][] sampleData = getSampleData(file,5);
     	Integer[] isSignalColumn = inferSignalColumns(sampleData);
     	boolean isPValue = inferIsPValue(sampleData, isSignalColumn);
         	
@@ -165,11 +143,7 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 
         // Change exColSelection and exColTypeSelection of the CSVImporterV2
         changeExCol(c, isSignalColumn, types, isPValue);
-        
-        
-        
-        
-        
+
       	// Create new panel, that allows to select timeUnit, timePoints and species
       	JPanel comp = new JPanel(new BorderLayout());
         timeUnitTextfield = getTimeUnitTextfield();
@@ -211,9 +185,7 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
             }
           }
         }
-        
-        
-        
+
         try {
         	// Store time unit and time points from user input
           this.timeUnit = ((JTextField) timeUnitTextfield.getComponents()[1]).getText();
@@ -223,9 +195,9 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
           
         } catch (Exception e) {
         	if(e.getMessage() != null)
-            GUITools.showErrorMessage(parent, e, e.getMessage());
+        		GUITools.showErrorMessage(parent, e, e.getMessage());
 
-          GUITools.showErrorMessage(parent, e, "Could not read input file.");
+        	GUITools.showErrorMessage(parent, e, "Could not read input file.");
         }
       }
       
@@ -308,7 +280,7 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
    * @return a uniform 2D array with sample content
    * @throws IOException
    */
-  private String[][] getSampledata(String file, int numDataLines) throws IOException {
+  private String[][] getSampleData(String file, int numDataLines) throws IOException {
   	CSVReader r = new CSVReader(file);
     // Auto infer the seperator char
   	r.setSeparatorChar('\u0000');
@@ -369,14 +341,14 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
  	 	int numCol = model.getColumnCount();
  	 	
  	 	// Get the ComboBoxes (first two lines of the preview table)
- 	 	JComboBox[][] boxes = new JComboBox[2][numCol];
+ 	 	JComboBox<?>[][] boxes = new JComboBox[2][numCol];
   
  	 	// Set the Observation for ComboBoxes of signal columns
  	 	int observation = 0;	// counts the current observations
  	 	for(int i=0; i<signals.length; i++) {
  	 		// Get column selection combo boxes. 
- 	 		boxes[0][i] = (JComboBox) model.getValueAt(0, i);
- 	 		boxes[1][i] = (JComboBox) model.getValueAt(1, i);
+ 	 		boxes[0][i] = (JComboBox<?>) model.getValueAt(0, i);
+ 	 		boxes[1][i] = (JComboBox<?>) model.getValueAt(1, i);
  	 		int type = boxes[1][i].getSelectedIndex();
  	 		
  	 		if(exColSelection[i] != 0 && signals[i] != 1) {
@@ -447,23 +419,21 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
  	 	int numCol = previewModel.getColumnCount();
  	 	
   	// Get the ComboBoxes (first two lines of the preview table)
- 	 	JComboBox[] boxes = new JComboBox[numCol];
+ 	 	JComboBox<?>[] boxes = new JComboBox[numCol];
  	 	
  	 	// Set the Observation for ComboBoxes of signal columns
  	 	for(int i=0; i<numCol; i++) {
  	 		// Get column selection combo boxes. 
- 	 		boxes[i] = (JComboBox) previewModel.getValueAt(0, i);
+ 	 		boxes[i] = (JComboBox<?>) previewModel.getValueAt(0, i);
  	 	}
   	
  	 	// Read the user input
   	this.timePoints = new ArrayList<ValueTriplet<Double, String, SignalType>>();
 		TableModel model = table.getModel();
 		
-		for(int i=0; i<numCol; i++) {
-			String colName = previewModel.getColumnName(i);
-			
+		for(int i=0; i<numCol; i++) {			
 			if(boxes[i].getSelectedIndex() > 2) {					// a signal column
-				JComboBox typeBox = (JComboBox) previewModel.getValueAt(1, i);
+				JComboBox<?> typeBox = (JComboBox<?>) previewModel.getValueAt(1, i);
 				
         timePoints.add(
             new ValueTriplet<Double, String, SignalType>(
@@ -475,7 +445,6 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 	
 		// sort the time points
 		Collections.sort(timePoints);
-		// TODO Check, if input is meaningful (no two equal time points, no empty fields)
 		for(int i=0; i<timePoints.size(); i++) {
 			// Check, that for every selected column a time is given
 			if(timePoints.get(i).getA() == null)
@@ -484,19 +453,6 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 			if(i+1<timePoints.size() && Math.abs((timePoints.get(i).getA() - timePoints.get(i+1).getA())) < 0.000000001)
 				throw new Exception("Time points have to be different");
 		}
-	}
-
-  /**
-   * Is the {@link ExpectedColumn} a signal column?
-   * @param e The ExpectedColumn
-   * @return true, if e is a signal column
-   */
-	private boolean isSignalColumn(ExpectedColumn e) {
-		String name = (String) e.getOriginalName();
-		if(name.contains("Observation"))
-			return true;
-		else			
-			return false;
 	}
 
 	/**
@@ -551,7 +507,7 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 		
 		// create TableModel for the new JTable
 		TableModel m = new AbstractTableModel() {
-			
+			private static final long serialVersionUID = -5029024007512394484L;
 			private String[] columnNames = colNames;
 			private Object[][] data = new Double[1][numCols];
 			
@@ -643,15 +599,12 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNA> {
 
 	@Override
 	protected List<ExpectedColumn> getAdditionalExpectedColumns() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected void processAdditionalExpectedColumns(
-			List<ExpectedColumn> additional) {
-		// TODO Auto-generated method stub
-		
+			List<ExpectedColumn> additional) {		
 	}
 
   /* (non-Javadoc)

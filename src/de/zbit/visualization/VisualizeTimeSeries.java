@@ -25,68 +25,70 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import com.xuggle.mediatool.IMediaWriter;
+import com.xuggle.mediatool.ToolFactory;
+import com.xuggle.xuggler.ICodec;
 
 import y.io.IOHandler;
 import y.io.JPGIOHandler;
 import y.io.ViewPortConfigurator;
 import y.view.Graph2D;
 import y.view.Graph2DView;
-
-import com.xuggle.mediatool.IMediaWriter;
-import com.xuggle.mediatool.ToolFactory;
-import com.xuggle.xuggler.Global;
-import com.xuggle.xuggler.ICodec;
-import com.xuggle.xuggler.IContainer;
-import com.xuggle.xuggler.IError;
-import com.xuggle.xuggler.IPacket;
-import com.xuggle.xuggler.IPixelFormat;
-import com.xuggle.xuggler.IRational;
-import com.xuggle.xuggler.IStream;
-import com.xuggle.xuggler.IStreamCoder;
-import com.xuggle.xuggler.IVideoPicture;
-import com.xuggle.xuggler.IVideoResampler;
-import com.xuggle.xuggler.video.ConverterFactory;
-import com.xuggle.xuggler.video.IConverter;
-
 import de.zbit.analysis.enrichment.KEGGPathwayEnrichment;
 import de.zbit.data.EnrichmentObject;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.data.mRNA.mRNATimeSeries;
+import de.zbit.data.mRNA.mRNA;
 import de.zbit.graph.gui.TranslatorPanel;
+import de.zbit.gui.GUIOptions;
 import de.zbit.gui.GUITools;
+import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.dialogs.FilmSettingsDialog;
 import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.gui.tabs.TimeSeriesView;
+import de.zbit.io.FileTools;
 import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.NotifyingWorker;
 import de.zbit.util.Species;
 import de.zbit.util.objectwrapper.ValueTriplet;
+import de.zbit.util.prefs.SBPreferences;
 import de.zbit.utils.SignalColor;
 import de.zbit.visualization.VisualizeTimeSeriesListener.VTSAction;
+import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.kegg.io.KEGGImporter;
 import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
 
 /**
  * Creates a film of a pathway. The film is displayed in {@link TimeSeriesView}.
- * This class acts as model and controller in the MVC-Pattern,
+ * This class acts as model in the MVC-Pattern,
  * TimeSeriesView acts as View.
+ * VisualizeTimeSeriesListener acts as controller.
  * 
  * @author Felix Bartusch
  * @version $Rev$
@@ -99,80 +101,72 @@ public class VisualizeTimeSeries {
 	 * Acts as view in the MVC-Pattern.
 	 */
 	private TimeSeriesView view;
-	
+
 	/**
 	 * Respond to all events while downloading the pathway.
 	 * Acts as controller in the MVC-Pattern.
 	 */
 	VisualizeTimeSeriesListener controller;
-	
-	// Data to model genes and compute enrichments
+
+	/** The parent tab */
 	private NSTimeSeriesTab source;
+	/** The models to interpolate mRNA data at arbitrary time points */
 	private List<TimeSeriesModel> models;
+	/** The time points which shall be visualized */
 	private double[] timePoints;
+	/** The pathway enrichments for all time points */
+	private List<List<EnrichmentObject<String>>> enrichments;
+	/** The modelled mRNA data for each time point */
+	private List<List<mRNA>> mRNA;
+	/** The KEGG pathwayID of the visualized pathway */
 	private String pathwayID;
+	/** The importer for the KEGG pathway, downloads pathway information from KEGG*/
 	private KEGGImporter keggImporter;
+	/** The treated species from which data was obtained */
 	private Species species;
+	/** The cutoff value which is used to filter the interpolated mRNA data */
 	private double cutoff;
+	/** This object computes pathway enrichments from given mRNA data */
 	private KEGGPathwayEnrichment enrich = null;
-	/**
-	 * The signal type of the modelled data.
-	 */
+	/** The signal type of the modelled data */
 	private SignalType signalType;
-	
-	// Information for the film
+
 	private Graph2D pathway;
+	/** The time unit of the visualized data (e.g. 'day') */
 	private String timeUnit = "";
 	private int frameRate;
 	private int duration; // this one is the user input! Don't confuse with filmDuration
 	private int numFrames;
 	// Dimension of the resulting film.
 	private static Dimension dimension;
-	// temporary film file
-	private File tempFilmFile = new File("./longTestFilm.mp4"); // for testing porpuse.
-	
+
 	// Holds 'visualization' of the colored graph. This panel is never shown to the user.
 	// A buffered image is generated from the colored graph. The image is then encoded into the film.
 	private TranslatorPanel<Graph2D> transPanel;
-	
-	/**
-	 * This container holds the finished film.
-	 */
-	private IContainer film;
-	private IStreamCoder coder;
-	private IConverter converter = null;
-	private IVideoResampler resampler = null;
+	private VisualizeDataInPathway visData; 
 
-	private int videoStreamIndex;
-	private double timeBase;
-	// This one is the duration of the video stream (respective to the video streams time base)!
-	private long filmDuration;
-	
-	
-	
+	private IntegratorPathwayPanel pathwayPanel;
+
+
 	public VisualizeTimeSeries(NSTimeSeriesTab parent) {
 		// Get the required information from the parent tab
 		this.source = parent;
 		this.timeUnit = parent.getTimeUnit();
 		this.species = parent.getSpecies();
-		this.models = (List<TimeSeriesModel>) parent.getGeneModels();
+		this.models = filterNullGeneModels(parent.getGeneModels());
 		this.controller = new VisualizeTimeSeriesListener(this);
 		this.signalType = parent.getSignalType();
-		
-		// Ask user for film settings
-		FilmSettingsDialog settingsDialog = new FilmSettingsDialog(species, controller, this);
-		//int dialogConfirmed = 
-		GUITools.showAsDialog(source, settingsDialog, "Choose film settings", false);
-		
+
+		// Ask user for settings
+		FilmSettingsDialog settingsDialog = new FilmSettingsDialog(species, this);
+		GUITools.showAsDialog(source, settingsDialog, "Please choose visualization settings", false);
+
 		// download pathway and generate film, if ok button was pressed. Otherwise, do nothing
 		if(settingsDialog.okPressed()) {
 			// Get the user input and filter genes
 			this.pathwayID = settingsDialog.getSelectedPathwayID();
-			this.duration = settingsDialog.getNumFrames();
-			this.frameRate = settingsDialog.getFrameRate();
 			this.cutoff = settingsDialog.getCutoff();
-			this.models = filterNullGeneModels(parent.getGeneModels(), settingsDialog.getCutoff());
-			
+
 			// How many frames should be created? And what are their time points?
 			if(settingsDialog.getJustVisualizeDate()) {
 				// Number of frames = number of observations
@@ -183,124 +177,91 @@ public class VisualizeTimeSeries {
 				numFrames = settingsDialog.getNumFrames();
 				timePoints = computeTimePoints(numFrames, false);
 			}
-			
-			
-						// Initialize the view and the controller
+
+			// Initialize the view and the controller
 			this.view = new TimeSeriesView(pathwayID, this, controller, parent.getIntegratorUI(), species);
 			controller.setView(view);
-			
+
 			// Download pathway
 			this.keggImporter = new KEGGImporter(pathwayID, Format.JPG);
 			keggImporter.addActionListener(controller);		
 			// Build and show the view
 			parent.getIntegratorUI().addTab(view, "Film of " + parent.getName());
-		  keggImporter.execute();
+			
+			//for the results of the thesis
+			//exportModelledValues();
+			
+
+			// Create the pathwayPanel in which the colored pathway (graph) is visualized
+			// Later, the pathwayPanel is given to the view to display it in the viewPort
+			// The constructor of IntegratorPathwayPanel will run the keggImporter.
+			pathwayPanel = new IntegratorPathwayPanel(keggImporter, controller);
 		}
 	}
-	
+
 	/**
 	 * Generate the film. Generate single colored images of the pathway and encode them.
 	 */
 	void generateFilm()  {
-		createInvisibleTranslatorPanel();		
-		
-		// How many frames have we to generate and what time point corresponds to them?
-		//final int numFrames = duration * frameRate;
-		//final double[] timePoints = computeTimePoints(numFrames);
-		
+
+		// This classes are used for coloring the pathway according to an arbitrary enrichment
+		createInvisibleTranslatorPanel(pathway); // With that TranslatorPanel and we can use existing coloring methods
+		visData = new VisualizeDataInPathway(transPanel, false);	 // VisualizeDataInPathway objects we can use already existing coloring methods
+
 		// This worker generates the film.
-		NotifyingWorker<IMediaWriter, Void> filmGenerator = new NotifyingWorker<IMediaWriter, Void>() {
-			
-			private IMediaWriter writer;
+		NotifyingWorker<List<List<EnrichmentObject<String>>>, Void> filmGenerator = new NotifyingWorker<List<List<EnrichmentObject<String>>>, Void>() {
 
 			@Override
-			protected IMediaWriter doInBackground() throws Exception {				
+			protected List<List<EnrichmentObject<String>>> doInBackground() throws Exception {				
 				// Call controller to set progress bar
 				fireActionEvent(new ActionEvent(this, numFrames, VTSAction.START_GENERATE_FILM.toString()));
-								
+
 				// Create an KEGGPathway enrichment
 				try {
 					enrich = new KEGGPathwayEnrichment(species, true, false, null);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-								
-				// Compute the dimension of the film and initialize IMediaWriter which encodes the images.
-				dimension = initializeDimension();
-				writer = initializeWriter(dimension);
-				
-				// Generate frame for frame and encode them. The last frame has to be handled manually. Why?
-				// Read the comment a few lines below.
-				for(int i = 0; i < numFrames-1; i++) {
-					long timestamp = (i * 1000)/frameRate;  // Timestamp, when image should be displayed in MILLIseconds
-					System.out.println("Generate image: " + i + " timestamp: " + timestamp);
-					
-					BufferedImage image = generatePathwayImage(timePoints[i]);
-					
-					writer.encodeVideo(0, image, timestamp, TimeUnit.MILLISECONDS);
+
+				// Compute modelled mRNA values and their enrichment for each time point
+				mRNA = new ArrayList<List<mRNA>>(numFrames);
+				enrichments = new ArrayList<List<EnrichmentObject<String>>>(numFrames);
+				for(int i = 0; i < numFrames; i++) {
+					// Model mRNA data
+					ArrayList<mRNA> modelValues = computeModelValues(timePoints[i]);
+					mRNA.add(i, modelValues);
+					System.out.println("modelled mRNA: " + i);
+
+					// Compute the enrichment
+
+					List<EnrichmentObject<String>> e = computeEnrichment(mRNA.get(i), mapFrameToTimePoint(i+1)); // because frame is 1 indexed
+					enrichments.add(i, e);
+
+					// Update the progress bar
 					fireActionEvent(new ActionEvent(transPanel.getDocument(), i, VTSAction.IMAGE_GENERATED.toString()));					
 				}
-				
-				// Because the damn decoder fails to decode the last two frames, encode the last image
-				// three times, so we can decode it later one time -.-
-				// See also: https://groups.google.com/forum/#!topic/xuggler-users/FXgmW4dViF8
-				int numLastFrame = numFrames-1;
-				BufferedImage lastFrame = generatePathwayImage(timePoints[numLastFrame]);
-				for(int j = 0; j < 3; j++) {
-					long timestamp = ((numFrames-1) * 1000)/frameRate + j;  // Timestamp, when image should be displayed in MILLIseconds
-					
-					writer.encodeVideo(0, lastFrame, timestamp, TimeUnit.MILLISECONDS);
-					System.out.println("Encoded image");
-					
-					// Set the progress bar when the last of the last frames was encoded.
-					if(j == 2)
-						fireActionEvent(new ActionEvent(transPanel.getDocument(), numLastFrame, VTSAction.IMAGE_GENERATED.toString()));
-				}
-						
-				// Close the writer. Film is now saved in the temporary film file.
-				writer.close();
-				
+
+				// initialize the dimension
+				colorPathway(enrichments.get(0), mRNA.get(0), mapFrameToTimePoint(1));
+				Graph2D test = transPanel.getDocument();
+
+				Rectangle rect = test.getBoundingBox();
+				Double width = new Double(rect.getWidth());
+				Double height = new Double(rect.getHeight());
+
+				dimension = new Dimension(width.intValue(), height.intValue());
+				System.out.println("The model dimension: " + dimension.toString());
+
 				return null;
 			}
 
-			/**
-			 * Create one test image and return its dimension.
-			 * @return The dimension of the test image (and thus of the film)
-			 */
-			private Dimension initializeDimension() {
-				BufferedImage example = generatePathwayImage(timePoints[0]);
-				int width = example.getWidth();
-				int height = example.getHeight();
-				
-				return new Dimension(width, height);
-			}
+
 
 			@Override
 			protected void done() {
 				// Tell the listener, that film was created
 				fireActionEvent(new ActionEvent(this, 0, VTSAction.END_GENERATE_FILM.toString()));
-			}
-
-			// Initialize writer with the width and height of the graph
-			private IMediaWriter initializeWriter(Dimension dimension) {			
-				// Create the temporary film file
-				try {
-					tempFilmFile = File.createTempFile("tempFilmFile", ".mp4");
-				} catch (IOException e) {
-					// If the file can't be created, stop creating film
-					controller.actionPerformed(new ActionEvent(e, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
-				}
-				
-				// Create the writer, which encodes the single images. Also get an example image to obtain width and height
-				// and add the video stream to the writer. The resulting film is in .mp4 format.
-				final IMediaWriter writer = ToolFactory.makeWriter(tempFilmFile.getAbsolutePath());
-				int width = new Double(dimension.getWidth()).intValue();
-				int height = new Double(dimension.getHeight()).intValue();
-				
-				writer.addVideoStream(0, 0, ICodec.ID.CODEC_ID_MPEG4, width, height);
-				
-				return writer;
-			}		
+			}	
 		};
 
 		// Generate film
@@ -316,32 +277,45 @@ public class VisualizeTimeSeries {
 	}
 
 	/**
-	 * Generate an image of the pathway at a certain time point. The nodes are colored due to
-	 * a KEGG pathway enrichment, which is also computed in this function.
-	 * @param timePoint for that a pathway image is computed
-	 * @return a pathway image
+	 * Compute a pathway enrichment at a certain time point.
+	 * @param timePoint for which a pathway enrichment is computed
+	 * @return the pathway enrichment
 	 */
-	private BufferedImage generatePathwayImage(double timePoint) {
-		// compute model values at the given time point
-		ArrayList<mRNATimeSeries> modelValues = computeModelValues(timePoint);
+	private List<EnrichmentObject<String>> computeEnrichment(List<mRNA> modelValues, double timePoint) {
+
 		// sort model values by their signal
-		Collections.sort(modelValues, Signal.getComparator("val", signalType));
-		modelValues = filterGenes(modelValues, cutoff, signalType);
-				
+		Collections.sort(modelValues, Signal.getComparator(generateExperimentName(timePoint), signalType));
+		modelValues = filterGenes(modelValues, generateExperimentName(timePoint),  cutoff, signalType);
+
 		// compute the pathway enrichment for the given time point
 		List<EnrichmentObject<String>> l=null;
 		try {
 			// first option to speed up enrichment computing: never compute the exact p-value.
 			System.out.println("Compute Enrichment on " + modelValues.size() + " genes."); // for testing
-      l = enrich.getEnrichments(modelValues, null, null, true);
-    } catch (Throwable e) {
-      GUITools.showErrorMessage(null, e);
-    }
-		
-		// Color the graph according to the enrichment
-		colorPathway(l);
+			if(modelValues.size() != 0) {
+				l = enrich.getEnrichments(modelValues, null, null, false);
+			} else {
+				GUITools.showErrorMessage(view, "There is no differential expressed gene for timepoint "
+						+ String.format("%.2f", timePoint) + timeUnit + ". Maybe the cutoff value is too high.");
+			}		
+		} catch (Throwable e) {
+			GUITools.showErrorMessage(null, e);
+		}
+		System.out.println("is computed enrichment null? " + (l == null));
+		return l;
+	}
 
-		// TODO: Maybe you can create just one Graph2DView, and change the graph every time
+	/**
+	 * Generate an image of the pathway at a certain time point. The nodes are colored due to
+	 * a KEGG pathway enrichment, which is also computed in this function.
+	 * @param timePoint for that a pathway image is computed
+	 * @return a pathway image
+	 */
+	private BufferedImage generatePathwayImage(int frame) {
+
+		// Color the graph according to the current frame
+		colorPathway(enrichments.get(frame-1), mRNA.get(frame-1), mapFrameToTimePoint(frame));
+
 		// Take image of the colored graph (taken from yFiles Developers Guide)
 		// Setting up the graphs view. So that an image of the whole graph is made
 		Graph2D graph = transPanel.getDocument();
@@ -365,33 +339,33 @@ public class VisualizeTimeSeries {
 		// Configure the export view using mainly default values, i.e., zoom level   
 		// 100%, and 15 pixel margin around the graph's bounding box.   
 		vpc.configure((Graph2DView) graph.getCurrentView());  
- 
-	  IOHandler ioh = new JPGIOHandler();  
-	  // Set the image quality to 90%. This yields a good compromise between small   
-	  // file size and high quality.   
-	  ((JPGIOHandler)ioh).setQuality(0.9f);
-	  	 	  	  
-	  BufferedImage image = null;
-	  
-	  try {
-	  	// TODO: Maybe two pipedStreams in two Threads are faster than ByteArrays
-	  	//PipedOutputStream outputStream = new PipedOutputStream();
-	  	//PipedInputStream inputStream = new PipedInputStream(outputStream);
-	  	// Graph -> ByteArrayOutputStream -> ByteArray -> ByteArrayInputStream -> BufferedImage
-	  	ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	  	ioh.write(graph, outputStream);
+
+		IOHandler ioh = new JPGIOHandler();  
+		// Set the image quality to 90%. This yields a good compromise between small   
+		// file size and high quality.   
+		((JPGIOHandler)ioh).setQuality(0.9f);
+
+		BufferedImage image = null;
+
+		try {
+			// TODO: Maybe two pipedStreams in two Threads are faster than ByteArrays
+			//PipedOutputStream outputStream = new PipedOutputStream();
+			//PipedInputStream inputStream = new PipedInputStream(outputStream);
+			// Graph -> ByteArrayOutputStream -> ByteArray -> ByteArrayInputStream -> BufferedImage
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			ioh.write(graph, outputStream);
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-	  	image = ImageIO.read(inputStream);
-	  	
-	  	// Add some time information to the image
-	  	Graphics g = image.getGraphics();
-	  	g.setColor(Color.BLACK);
+			image = ImageIO.read(inputStream);
+
+			// Add some time information to the image
+			Graphics g = image.getGraphics();
+			g.setColor(Color.BLACK);
 			g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, image.getHeight() / 40));
-			g.drawString(String.format("%.2f", timePoint) + " " + timeUnit, 10, image.getHeight()/40);
+			g.drawString(String.format("%.2f", mapFrameToTimePoint(frame)) + " " + timeUnit, 10, image.getHeight()/40);
 		} catch (IOException e) {
 			controller.actionPerformed(new ActionEvent(e, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
 		}
-		
+
 		return image;
 	}
 
@@ -403,20 +377,20 @@ public class VisualizeTimeSeries {
 	 * @param signalType
 	 * @return filtered genes
 	 */
-	private ArrayList<mRNATimeSeries> filterGenes(ArrayList<mRNATimeSeries> genes,
+	private ArrayList<mRNA> filterGenes(List<mRNA> modelValues, String experimentName,
 			double cutoff, SignalType signalType) {
 		// list containing the filtered genes
-		ArrayList<mRNATimeSeries> filteredGenes = new ArrayList<mRNATimeSeries>();
-		
+		ArrayList<mRNA> filteredGenes = new ArrayList<mRNA>();
+
 		// filter the genes
 		if(signalType == SignalType.pValue) {
-			for(mRNATimeSeries m : genes) {
-				if(m.getSignal(SignalType.pValue, "val").getSignal().doubleValue() < cutoff)
+			for(mRNA m : modelValues) {
+				if(m.getSignal(SignalType.pValue, experimentName).getSignal().doubleValue() < cutoff)
 					filteredGenes.add(m);
 			}
 		} else if(signalType == SignalType.FoldChange) {
-			for(mRNATimeSeries m : genes) {
-				if(Math.abs(m.getSignal(SignalType.FoldChange, "val").getSignal().doubleValue()) > cutoff)
+			for(mRNA m : modelValues) {
+				if(Math.abs(m.getSignal(SignalType.FoldChange, experimentName).getSignal().doubleValue()) > cutoff)
 					filteredGenes.add(m);
 			}
 		}
@@ -429,43 +403,89 @@ public class VisualizeTimeSeries {
 	 * @param timePoint for which values are computed
 	 * @return a List of mRNATimeSeries objects with one data column
 	 */
-	private ArrayList<mRNATimeSeries> computeModelValues(double timePoint) {		
-		ArrayList<mRNATimeSeries> values = new ArrayList<>(models.size());
-		
+	private ArrayList<mRNA> computeModelValues(double timePoint) {		
+		ArrayList<mRNA> values = new ArrayList<>(models.size());
+
+		// Generate the experiment name for the mRNA for the given time point
+		String experimentName = generateExperimentName(timePoint);
+
 		// for each model, compute the value at the time point and build a mRNATimeSeries object
 		for(TimeSeriesModel m : models) {
 			double val = m.computeValueAtTimePoint(timePoint);
-			mRNATimeSeries mRNA = new mRNATimeSeries(m.getName(), m.getGeneID());
-			mRNA.addSignal(val, "val" , m.getSignalType()); // name of SignalColumn is arbitrary
-			
-			values.add(mRNA);
+			mRNA mrna = new mRNA(m.getName(), m.getGeneID());
+			mrna.addSignal(val, experimentName , m.getSignalType()); // name of SignalColumn is arbitrary
+
+			values.add(mrna);
 		}
-		
+
 		return values;
 	}
 
+	/**
+	 * Generate an experiment name. Can also be used to get the experiment name of an given
+	 * timePoint to access a signal of a {@mRNA} object.
+	 * @param timePoint
+	 * @return
+	 */
+	private String generateExperimentName(double timePoint) {
+		return "Modelled value at " + String.format("%.3f", timePoint);
+	}
 
 	/**
-	 * Color pathway according to p-values or q-values of the given enrichment.
-	 * @param l 
+	 * Color pathway according to p-values or q-values of the given enrichment and the
+	 * modelled expression p-values or foldChanges.
+	 * @param e The enrichment data to visualize
+	 * @param mRNA The mRNA data to visualize
+	 * @param timePoint of the data
 	 */
-	private void colorPathway(List<EnrichmentObject<String>> l) {
-		// analoge to KEGGPathwayActionListener
-		createInvisibleTranslatorPanel(); // reset transPanel to an uncolored graph
-		VisualizeDataInPathway visData = new VisualizeDataInPathway(transPanel);
-		Class<? extends NameAndSignals> dataType = NameAndSignals.getType(l);
-		
-		// remove existing visualization
-		if(visData.isDataTypeVisualized(dataType)) {
-			visData.removeVisualization(dataType);
+	private void colorPathway(List<EnrichmentObject<String>> e, List<mRNA> mRNA, double timePoint) {
+
+		// Of which type is the data we want to visualize in the pathway?
+		Class<? extends NameAndSignals> enrichDataType = NameAndSignals.getType(e);
+		Class<? extends NameAndSignals> mRNADataType = null;
+		if(mRNA != null) {
+			mRNADataType = NameAndSignals.getType(mRNA);
 		}
-		
-		// Default signal colore
+
+		// If the data type we want to visualize is already visualized in the graph,
+		// we have to remove it. Otherwise there are incorrect additional information
+		// while the mouse is over a node.
+		// Also remove visualization  and color the pathway for one data type, after that
+		// remove visualization and color the pathway for the other data type. Otherwise,
+		// the data isn't correct visualized when playing the film.
+		if(visData.isDataTypeVisualized(enrichDataType)) {
+			boolean wasRemoved = visData.removeVisualization(enrichDataType); // int is for testing
+			if(wasRemoved)
+				System.out.println("Removed enrichment visualization");
+			else
+				System.out.println("Removed no enrichment visualization");
+		}
+
+		// Use the default signal colorer. Use the p-Value of the enrichment,
+		// because it has more nuances
 		SignalColor recolorer = new SignalColor(null, null, SignalType.pValue);
 
-		// color the graph
-		visData.visualizeData(l, "", "Enrichment", SignalType.pValue, recolorer);
+		// A describing string, which is shown if the mouse is over a colored node:
+		// [Name of source file] at [time point] [time unit] (e.g. PB_single.csv at 24h)
+		String description = source.getTabName() + " at " + mapFrameToTimePoint(controller.getCurFrame()) + timeUnit;
+
+		// Color the graph!
+		if(e != null) {
+			visData.visualizeData(e, description, "Enrichment", SignalType.pValue, recolorer);
 		}
+
+		// Now deal with the modelled mRNA data! Remove the old visualization.
+		if(visData.isDataTypeVisualized(mRNADataType)) {
+			boolean wasRemoved = visData.removeVisualization(mRNADataType); // int is for testing
+			if(wasRemoved)
+				System.out.println("Removed mRNA visualization");
+			else
+				System.out.println("Removed no mRNA visualization");
+		}
+
+		// And now color the graph according to the new data.
+		visData.visualizeData(mRNA, source.getTabName(), generateExperimentName(timePoint), getSignalType());
+	}
 
 
 	/**
@@ -475,17 +495,17 @@ public class VisualizeTimeSeries {
 	 */
 	private double[] computeTimePoints(int numFrames, boolean justObservations) {
 		timePoints = new double[numFrames];
-		
+
 		// If just the observations gets visualized, the result is an array of the
 		// observation time points
 		if(justObservations) {
 			// The list of time points of the observations
 			List<ValueTriplet<Double, String, SignalType>> vp = source.getTimePoints();
-			
+
 			// For each observation, get the time point
 			for(int i=0; i < vp.size(); i++)
-			 timePoints[i] = vp.get(i).getA();
-			
+				timePoints[i] = vp.get(i).getA();
+
 		} else { // compute equidistant time points
 
 			// get a sample TimeSeriesModel, first and last time point to model
@@ -498,34 +518,35 @@ public class VisualizeTimeSeries {
 				timePoints[i] = begin + (i * step);
 			}
 		}
-		
+
 		return timePoints;
 	}
 
 
 	/**
-	 * Filter out null gene models. E.g models which has no GeneID.
+	 * Filter out null gene models. E.g models without valid GeneID.
 	 * @param geneModels to be filtered
 	 * @return filtered gene models
 	 */
-	private List<TimeSeriesModel> filterNullGeneModels(Collection<TimeSeriesModel> geneModels, double cutoff) {
+	private List<TimeSeriesModel> filterNullGeneModels(Collection<TimeSeriesModel> geneModels) {
 		ArrayList<TimeSeriesModel> filteredModels = new ArrayList<TimeSeriesModel>();
-				
+
 		// filter the models
 		for(TimeSeriesModel model : geneModels) {
 			// filter out null models
 			if(model != null)
 				filteredModels.add(model);
 		}	
-							
+
 		return filteredModels;
 	}
 
 	/**
 	 * The method generates a {@link TranslatorPanel}. The panel is never shown to the user.
 	 * The panel is just used to manipulate easily the graph of the pathway with existing functions.
+	 * @param pathway to visualize
 	 */
-	private void createInvisibleTranslatorPanel() {
+	private void createInvisibleTranslatorPanel(Graph2D pathway) {
 		transPanel = new TranslatorPanel<Graph2D>(null, null, null, pathway) {
 			private static final long serialVersionUID = -1372432690962944528L;
 
@@ -544,13 +565,13 @@ public class VisualizeTimeSeries {
 			}
 		};
 	}
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
 	/**
 	 * 
 	 * @return the species of the model.
@@ -578,7 +599,7 @@ public class VisualizeTimeSeries {
 	public int getDuration() {
 		return duration;
 	}
-	
+
 	public int getNumFrames() {
 		return numFrames;
 	}
@@ -598,12 +619,12 @@ public class VisualizeTimeSeries {
 	public KEGGImporter getKeggImporter() {
 		return keggImporter;
 	}
-	
+
 	public double getFirstTimePoint() {
 		return models.get(0).getFirstTimePoint();
 	}
-	
-	
+
+
 	public double getLastTimePoint() {
 		return models.get(0).getLastTimePoint()	;
 	}
@@ -612,340 +633,29 @@ public class VisualizeTimeSeries {
 		return signalType;
 	}
 
-	public IContainer getFilm() {
-		return film;
-	}
-
 	/**
 	 * Get the i-th frame of the film. 
 	 * @param i the frame number
 	 * @return the i-th frame of the film
 	 */
-	public BufferedImage getFrame(int curFrame) {
+	public Graph2D getFrame(int curFrame) {
 		return getFrame(curFrame, true);
 	}
-	
+
 	/**
 	 * Get the i-th frame of the film. 
 	 * @param i the frame number
 	 * @param useNewContainer, if true use a new container (i.e. a previous frame should be returned)
 	 * @return the i-th frame of the film
 	 */
-	public BufferedImage getFrame(int i, boolean useNewContainer) {
+	public Graph2D getFrame(int i, boolean useNewContainer) {
+		// Color the graph according to the enrichment
+		System.out.println("enrich size: " + enrichments.size());
+		System.out.println("mRNA size: " + mRNA.size());
+		System.out.println("timePoints size: " + timePoints.length); // for testing
+		colorPathway(enrichments.get(i-1), mRNA.get(i-1), mapFrameToTimePoint(i));
 
-		if(useNewContainer) {
-		// try to reopen film (workaround, because using original opened film container failed)
-			// close container and open it again
-			// Or save one container, which is not used.
-			film.close();
-			if (film.open(tempFilmFile.getAbsolutePath(), IContainer.Type.READ, null) < 0)
-				controller.actionPerformed(new ActionEvent(this, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
-			
-		// Compute (approximated) timestamp of the wanted frame
-			// Seek to the frame before the wanted frame, so
-			// that we don't miss the wanted frame in the seeking (because seeking finds frame i or i+1)
-			//long approxedTimestamp = getTimestampOfFrame(i-1); // TODO Maybe just i ?
-			
-			// for testing
-			//System.out.println("Approximated timestamp: " + approxedTimestamp);
-			
-			// Seek to the computed timestamp
-			// Convert the approximated timestamp to a timestamp based on the time base
-			// of the video stream
-	  	//long seekTo = (long) (approxedTimestamp/1000.0/timeBase);
-	            
-	  	//System.out.println("Seek to: " + seekTo);
-	  	//film.seekKeyFrame(videoStreamIndex, seekTo, IContainer.SEEK_FLAG_BACKWARDS); // TODO: Maybe another flag?
-	  	IStream stream = film.getStream(videoStreamIndex);
-	  	coder = stream.getStreamCoder();		 
-	  	
-	  	// Try to open the coder
-	  	System.out.println("Try to open coder"); // for testing
-	  	if (coder.open(null, null) < 0)
-	  		throw new RuntimeException("could not open video decoder for container: "
-	  				+controller.getFilePath());
-	  	System.out.println("Opened Coder"); // for testing
-			
-		} else {// use the old container (i.e. show the next frame)
-		}
-
-		// The resampler for the video
-		if(resampler == null) {
-			if (coder.getPixelType() != IPixelFormat.Type.BGR24) {
-				// if this stream is not in BGR24, we're going to need to
-				// convert it. The VideoResampler does that for us.
-				resampler = IVideoResampler.make(coder.getWidth(),
-						coder.getHeight(), IPixelFormat.Type.BGR24,
-						coder.getWidth(), coder.getHeight(), coder.getPixelType());
-				if (resampler == null)
-					throw new RuntimeException("could not create color space " +
-							"resampler for: " + controller.getFilePath());
-			}			
-		}
-	
-		// walk through the container and build the IVideoPicture
-		IPacket packet = IPacket.make();
-		
-		// Flag if we completely decoded the i-th frame as an IVideoPicture object
-		boolean targetFrameComplete = false;
-		
-		// IVideoPicture timestamps are always in microseconds. An IVideoPicture with a
-		// timestamp of 500000 will be displayed after a half second. There is some inacurracy
-		// in the timestamps of IVideoPictures. A IVideoPicture which should be shown after
-		// a half second (frame rate = 2) has a timestamp of 499992 (0,499992 s).
-		// So we have to consider a certain inacurracy.
-		long expectedPictureTimeStamp =  ((i-1) * 1000000) / frameRate; // in MICROseconds
-		System.out.println("Expected IVideoPicture timestamp: " + expectedPictureTimeStamp);
-		
-		int count = 0;
-		
-		// Look at each packet		
-		//while(e >= 0 && !targetFrameComplete) {
-		while(!targetFrameComplete) {
-
-			int e = film.readNextPacket(packet);
-			
-			// Get some information about the packet: for testing
-			System.out.println("Read packet number " + (count++)); // for testing
-			System.out.println(packet.toString());
-					
-			// As I said in a previous newsgroup post when a seek operation is requested via Container.seekKeyFrame AFTER Container.readNextPacket returns some negative number, it starts reading again. 
-			// https://groups.google.com/forum/#!topic/xuggler-users/X0Z9YEmjZFw
-			// TODO: Try: If once failed, reopen the container and try again?
-			if(e < 0)  {
-				System.out.println("Packet error occured: " + IError.make(e).getType());
-				break;
-			}
-						
-			if (packet.getStreamIndex() == videoStreamIndex) {
-				// Build new picture
-				System.out.println("Try to build IVideoPicture"); // for testing
-				IVideoPicture picture = IVideoPicture.make(coder.getPixelType(),
-						coder.getWidth(), coder.getHeight());
-				System.out.println("Build IVideoPicture"); // for testing
-				
-				int offset = 0;
-				
-				while(offset < packet.getSize()) {
-					// Decode the video.
-					System.out.println("\tTry to decode packet");
-					int bytesDecoded = coder.decodeVideo(picture, packet, offset); // <- FAILES HERE !!!
-					System.out.println("\t Decoded " + bytesDecoded + " bytes"); // for testing
-					if (bytesDecoded < 0)
-						throw new RuntimeException("got error decoding video in: "
-								+ controller.getFilePath());
-					offset += bytesDecoded;
-
-					/*
-					 * Some decoders will consume data in a packet, but will not be able to construct
-					 * a full video picture yet. Therefore you should always check if you
-					 * got a complete picture from the decoder
-					 */
-					System.out.println("\t Picture complete? " + picture.isComplete());
-					System.out.println("\t Picture timestamp: " + picture.getTimeStamp());
-										
-					// We don't have to check picture.isComplete(), because picture.getTimeStamp() returns Global.NO_PTS
-					if((Math.abs(picture.getTimeStamp() - expectedPictureTimeStamp) < 100)
-							&& picture.isComplete()) {
-						targetFrameComplete = true;
-						System.out.println("Target frame complete");
-					} else {
-						System.out.println("Target frame isn't complete");
-					}
-					
-					//if (picture.isComplete() && picture.getTimeStamp() == accurateTimestamp) {
-					if (targetFrameComplete) {
-						IVideoPicture newPic = picture;
-						/*
-						 * If the resampler is not null, that means we didn't get the
-						 * video in BGR24 format and
-						 * need to convert it into BGR24 format.
-						 */
-						if (resampler != null) {
-							// Test how much time it takes to resample the IVideoPicture
-							long begin = System.currentTimeMillis();
-							// we must resample
-							newPic = IVideoPicture.make(resampler.getOutputPixelFormat(),
-									picture.getWidth(), picture.getHeight());
-							if (resampler.resample(newPic, picture) < 0)
-								throw new RuntimeException("could not resample video from: "
-										+ controller.getFilePath());
-							long end = System.currentTimeMillis();
-							System.out.println("\tTime to resample IVideoPicture: " + (end-begin) + " ms");
-						}
-						if (newPic.getPixelType() != IPixelFormat.Type.BGR24)
-							throw new RuntimeException("could not decode video" +
-									" as BGR 24 bit data in: " + controller.getFilePath());
-						
-
-						// And finally, convert the BGR24 to an Java buffered image
-						BufferedImage frame = new BufferedImage(coder.getWidth(), coder.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
-						long begin = System.currentTimeMillis();
-						
-						if(converter == null)
-							converter = ConverterFactory.createConverter(frame, IPixelFormat.Type.BGR24);
-						
-						frame = converter.toImage(newPic);
-						long end = System.currentTimeMillis();
-						System.out.println("\tTime to convert image: " + (end-begin) + " ms)");
-						
-						System.out.println("Return the " + i + "-th frame.");
-						return frame;
-					}
-				}
-			} else {
-				System.out.println("Packet doesn't belong to stream or timestamp"); // for testing
-			}
-		}
-		
-		
-		return null;
-	}
-
-//	/**
-//	 * Compute the approximated timestamp of the i-th frame in milliseconds.
-//	 * Returns always non-negativa values.
-//	 * @param i the sought after i-th frame
-//	 * @return timestamp in milliseconds when the i-th frame is shown in the film.
-//	 */
-//	private long getTimestampOfFrame(int i) {
-//		// Compute timestamp in MILLIsecons, when the i-th frame should appear
-//		long timestamp = (i * 1000) / frameRate;
-//
-//		// Don't return a negative time stamp
-//		if(timestamp > 0)
-//			return timestamp;
-//		else // negative time stamp
-//			return 0;
-//	}
-
-	/**
-	 * Load the film from the temporary film file.
-	 */
-	public void loadFilmFromTempFile() {
-		film = IContainer.make();
-		// we make an attempt to open up the container
-		if (film.open(tempFilmFile.getAbsolutePath(), IContainer.Type.READ, null) < 0)
-		//if (film.open("./longTestFilm.mp4", IContainer.Type.READ, null) < 0)
-			controller.actionPerformed(new ActionEvent(this, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
-		
-		// for testing: print information about the streams in the container.
-		testIContainer(film);
-	}
-	
-	/**
-	 * Print all available information of an IContainer object and its streams
-	 * to the console.
-	 * Taken from: http://www.javacodegeeks.com/2011/02/introduction-xuggler-video-manipulation.html
-	 */
-	private void testIContainer(IContainer container) {
-
-		// query how many streams the call to open found
-		int numStreams = container.getNumStreams();
-
-		// query for the total duration
-		long duration = container.getDuration();
-
-		// query for the file size
-		long fileSize = container.getFileSize();
-
-		// query for the bit rate
-		long bitRate = container.getBitRate();
-
-		System.out.println("Number of streams: " + numStreams);
-		System.out.println("Duration (ms): " + duration);
-		System.out.println("File Size (bytes): " + fileSize);
-		System.out.println("Bit Rate: " + bitRate);
-
-		// iterate through the streams to print their meta data
-		for (int i=0; i<numStreams; i++) {
-
-			// find the stream object
-			IStream stream = container.getStream(i);
-
-			// get the pre-configured decoder that can decode this stream;
-			IStreamCoder coder = stream.getStreamCoder();
-
-			System.out.println("*** Start of Stream Info ***");
-
-			System.out.printf("stream %d: ", i);
-			System.out.printf("type: %s; ", coder.getCodecType());
-			System.out.printf("codec: %s; ", coder.getCodecID());
-			System.out.printf("duration: %s; ", stream.getDuration());
-			System.out.printf("start time: %s; ", container.getStartTime());
-			System.out.printf("timebase: %d/%d; ",
-					stream.getTimeBase().getNumerator(),
-					stream.getTimeBase().getDenominator());
-			System.out.printf("coder tb: %d/%d; ",
-					coder.getTimeBase().getNumerator(),
-					coder.getTimeBase().getDenominator());
-			System.out.println();
-
-			if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_AUDIO) {
-				System.out.printf("sample rate: %d; ", coder.getSampleRate());
-				System.out.printf("channels: %d; ", coder.getChannels());
-				System.out.printf("format: %s", coder.getSampleFormat());
-			} 
-			else if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_VIDEO) {
-				System.out.printf("width: %d; ", coder.getWidth());
-				System.out.printf("height: %d; ", coder.getHeight());
-				System.out.printf("format: %s; ", coder.getPixelType());
-				System.out.printf("frame-rate: %5.2f; ", coder.getFrameRate().getDouble());
-			}
-
-			System.out.println();
-			System.out.println("*** End of Stream Info ***");
-		}
-	}
-
-	/**
-	 * Delete the temporary film file, because we don't need that any more.
-	 */
-	public void deleteTempFilmFile() {
-		// If that is not succesful, the film will be deleted in the future, because
-		// its a temporary file (... I hope so)
-		tempFilmFile.delete();
-	}
-
-	/**
-	 * Get some important information of the film like</br>
-	 * - index of the video stream in the container</br>
-	 * - duration and time base of the video stream
-	 */
-	public void lookupStreamInformation() {
-		// Get the number of streams in the IContainer
-		// (usually there is just one stream, but strange things happen)
-		int numStreams = film.getNumStreams();
-		
-		// Search for the first video stream and remember its index
-		int videoStreamId = -1;
-		IStreamCoder videoCoder = null;
-		for(int i = 0; i < numStreams; i++) {
-			// Find the stream object
-			IStream stream = film.getStream(i);
-			// Get the pre-configured decoder that can decode this stream;
-			IStreamCoder coder = stream.getStreamCoder();
-
-			if (coder.getCodecType() == ICodec.Type.CODEC_TYPE_VIDEO)
-			{
-				videoStreamId = i;
-				videoCoder = coder;
-				break;
-			}
-		}
-		
-		// If theres no video stream, we have nothing to show :(
-		if (videoStreamId == -1)
-			controller.actionPerformed(new ActionEvent(this, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
-		else
-			videoStreamIndex = videoStreamId;
-		
-		// Now get the duration of the video stream
-		IStream stream = film.getStream(videoStreamIndex);
-		filmDuration = stream.getDuration();		
-		
-		// At last the time base of the video stream (how many 'ticks' in a second)
-		timeBase = stream.getTimeBase().getDouble();
+		return transPanel.getDocument();
 	}
 
 	/**
@@ -959,10 +669,10 @@ public class VisualizeTimeSeries {
 		Double frame = new Double(second * frameRate);
 		return timePoints[frame.intValue()];
 	}
-	
+
 	/**
 	 * Map a frame number to the corresponging time point.
-	 * (e.g mapFrameToTimePoint(0) will return the same value as getFirstTimePoint() )
+	 * (e.g mapFrameToTimePoint(1) will return the same value as getFirstTimePoint() )
 	 * @param frame, for which the corresponding time point is sought
 	 * @return the corresponding time point according to the frame number
 	 */
@@ -986,5 +696,197 @@ public class VisualizeTimeSeries {
 		return frame2 / frameRate2;
 	}
 
+	/**
+	 * Return the pathway panel
+	 */
+	public IntegratorPathwayPanel getPathwayPanel() {
+		return pathwayPanel;
+	}
+	
+	/**
+	 * Produce a tab separated output so one can take a look on the
+	 * interpolated values
+	 */
+	public void exportModelledValues() {
+		
+		File f = new File("./output.txt");
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter(f);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		// The header
+		String s = "";
+		s = s + "NCBIGeneID";
+		for(int i = 1; i <= numFrames; i++) {
+			s += "\t" + String.format("%.2f", mapFrameToTimePoint(i)) + timeUnit;
+		}
+		s += "\n";
+		try {
+			fw.write(s);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		// For every model, print the name, geneID and the modeled values
+		for(TimeSeriesModel m : models) {
+			if(m != null) {
+				s = m.getName();
+				s += "\t" + String.valueOf(m.getGeneID());
+				for(int i = 1; i <= numFrames; i++){
+					s += "\t" + m.computeValueAtTimePoint(mapFrameToTimePoint(i));
+				}
+				s += "\n";
+				try {
+					fw.write(s);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}		
+		}
+		
+		try {
+			fw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
+	/**
+	 * Export the generated film to file.
+	 */
+	public void exportFilm() {
+		// You can add all codecs, which are supported by xuggler.
+		// http://stackoverflow.com/questions/9727590/what-codecs-does-xuggler-support
+		// The extension has to be in round brackets (the extension is parsed from that)
+		final String[] possibleFileTypes = {"MPEG-4 (.mp4)", "Flash Video (.flv)", "Ogg (.ogg)"};
+		final Map<String, ICodec.ID> fileExtensionToCodec = new HashMap<>();
+		fileExtensionToCodec.put(".mp4", ICodec.ID.CODEC_ID_MPEG4);
+		fileExtensionToCodec.put(".flv", ICodec.ID.CODEC_ID_FLV1);
+		fileExtensionToCodec.put(".ogg", ICodec.ID.CODEC_ID_THEORA);
+		
+		
+		NotifyingWorker<Void, Void> exporter = new NotifyingWorker<Void, Void>() {
+
+			@Override
+			protected Void doInBackground() throws Exception {
+			fireActionEvent(new ActionEvent(this, numFrames, VTSAction.START_GENERATE_FILM.toString()));
+				
+			// Show a dialog, where the user can choose the output file and
+				// the output file type
+				JPanel fileTypeDialog = new JPanel();
+				String tooltip = "To which video format should the visualization be exported?";
+				@SuppressWarnings("unchecked")
+				JComboBox<String> fileTypeComboBox = GUITools.createJComboBox(possibleFileTypes,
+						null, true, "File type chooser", tooltip, 0, null);
+
+				fileTypeDialog.add(fileTypeComboBox);
+				int confirmed = GUITools.showAsDialog(view, fileTypeDialog, "Please choose the output format", true);
+
+				// Get the chosen format
+				final String format;
+				if(confirmed == JOptionPane.OK_OPTION) {
+					String s = (String) fileTypeComboBox.getSelectedItem();
+					int start = s.indexOf("(", 0) + 1;
+					int end = s.indexOf(")", start);
+					format = s.substring(start, end);
+					System.out.println(format); // for testing
+				} else {
+					fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+					return null; // user didn't choose a file format
+				}
+				
+				FileNameExtensionFilter filter = new FileNameExtensionFilter(
+		        format + " files", format.substring(1)); // substring: because first character is '.'
+
+				// Let the user choose the output destination
+				File saveDir = GUIOptions.SAVE_DIR.getValue(SBPreferences.getPreferencesFor(GUIOptions.class));
+				JFileChooser fc = GUITools.createJFileChooser(saveDir.toString(),
+						false, false, JFileChooser.FILES_ONLY, filter);
+
+				if (fc.showSaveDialog(view) != JFileChooser.APPROVE_OPTION) {
+					fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+					return null;
+				}
+
+				// Check file
+				File f = fc.getSelectedFile();
+				System.out.println("You chose to save to this file: " +
+		        fc.getSelectedFile().getName());
+				
+				// Attach (correct) file extension.
+				String path = FileTools.trimExtension(f.getPath()) + format;
+				f = new File(path);
+				System.out.println("Path: " + path); // for testing
+
+				
+				// Check if file exists and is writable
+		    boolean showOverride = f.exists();
+		    if (!f.exists()) try {
+		      f.createNewFile();
+		    } catch (IOException e) {
+		      GUITools.showErrorMessage(view, e);
+		      fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+		      return null;
+		    }
+				if (!f.canWrite() || f.isDirectory()) { 
+					GUITools.showNowWritingAccessWarning(view, f);
+					fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+					return null;
+				}
+				
+				// Overwrite existing file?
+				if(showOverride && !GUITools.overwriteExistingFile(view, f)) {
+						fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+						System.out.println("dont overwrite");
+			      return null;
+				}
+				
+				// File exists, we can now write to it!	
+				IMediaWriter writer = ToolFactory.makeWriter(f.getPath());
+				int width = new Double(dimension.getWidth()).intValue();
+				int height = new Double(dimension.getHeight()).intValue();
+							
+				writer.addVideoStream(0, 0, fileExtensionToCodec.get(format), width, height);
+				
+				// Generate frame for frame and encode them. The last frame has to be handled manually. Why?
+				// Read the comment a few lines below.
+				BufferedImage pathwayImage;
+				for(int i=1; i < numFrames; i++) {
+					long timestamp = ((i-1) * 1000);  // Timestamp, when image should be displayed, in MILLIseconds
+					pathwayImage = generatePathwayImage(i); // first frame has the number 1
+					
+					writer.encodeVideo(0, pathwayImage, timestamp, TimeUnit.MILLISECONDS);
+					fireActionEvent(new ActionEvent(this, i, VTSAction.IMAGE_GENERATED.toString()));
+				}
+					
+				// Because the damn decoder fails to decode the last two frames, encode the last image
+				// three times, so we can decode it later one time -.-
+				// See also: https://groups.google.com/forum/#!topic/xuggler-users/FXgmW4dViF8
+				BufferedImage lastFrame = generatePathwayImage(numFrames);
+				for(int j = 0; j < 3; j++) {
+					long timestamp = ((numFrames-1) * 1000)+j;  // Timestamp, when image should be displayed in MILLIseconds
+					
+					writer.encodeVideo(0, lastFrame, timestamp, TimeUnit.MILLISECONDS);
+					
+					// Set the progress bar when the last of the last frames was encoded.
+					if(j == 2)
+						fireActionEvent(new ActionEvent(transPanel.getDocument(), numFrames, VTSAction.IMAGE_GENERATED.toString()));
+				}
+						
+				// Close the writer. Film is now succesfully exported.
+				writer.close();
+				
+				fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+
+				
+				return null;
+			}		
+		};
+		exporter.addActionListener(controller);
+		exporter.execute();
+	}
 }

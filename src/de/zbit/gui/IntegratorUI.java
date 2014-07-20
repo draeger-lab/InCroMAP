@@ -1036,8 +1036,7 @@ public class IntegratorUI extends BaseFrame {
     Species currentSpecies = null;
     String panelDataContent = null; // E.g., "mRNA"
     if (o != null) {
-      if (o instanceof TranslatorPanel) {
-        
+      if (o instanceof TranslatorPanel) {        
         // Try to get species from graph panel
 //        String specKegg = TranslatorTools.getOrganismKeggAbbrFromGraph((Graph2D) ((TranslatorPanel) o).getDocument());
 //        if (specKegg!=null) {
@@ -1192,6 +1191,7 @@ public class IntegratorUI extends BaseFrame {
   protected File[] openFile(File[] files, Class<?>... reader) {
     return openFile(files, true, reader);
   }
+  
   protected File[] openFile(File[] files, boolean addToHistory, Class<?>... reader) {
 
     // Ask input file

@@ -33,7 +33,6 @@ import java.text.DecimalFormatSymbols;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
@@ -50,7 +49,6 @@ import de.zbit.kegg.Translator;
 import de.zbit.kegg.gui.PathwaySelector;
 import de.zbit.util.Species;
 import de.zbit.visualization.VisualizeTimeSeries;
-import de.zbit.visualization.VisualizeTimeSeriesListener;
 
 /**
  * This dialog is shown before a film for mRNA time series visualization
@@ -79,7 +77,7 @@ public class FilmSettingsDialog extends JPanel {
 	protected JPanel timePointPanel;
 	private boolean justVisualizeData = false;
 
-	public FilmSettingsDialog(Species species, VisualizeTimeSeriesListener controller, VisualizeTimeSeries model) {
+	public FilmSettingsDialog(Species species, VisualizeTimeSeries model) {
 		this.model = model;
 		this.start = model.getFirstTimePoint();
 		this.end = model.getLastTimePoint();

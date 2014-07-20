@@ -33,6 +33,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import y.view.Graph2D;
+import y.view.Graph2DView;
+
 /**
  * This panel displays the {@link Graphics2D} images of a film.
  * @author Felix Bartusch
@@ -49,12 +52,12 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 	/**
 	 * The original image
 	 */
-	private BufferedImage origImage;
+	private Graph2D origImage;
 	
 	/**
 	 * The resized image based on the original image and the zoomFactor
 	 */
-	private BufferedImage curImage;
+	private Graph2D curImage;
 	
 	/**
 	 * The original dimension of the input stream
@@ -68,6 +71,8 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 	 */
 	private double zoomFactor = 1;
 	
+	private Graph2DView graphView;
+	
 	/**
 	 * Create a new film panel which displays images with a certain dimension.
 	 * @param dimension
@@ -77,6 +82,7 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 		curFrame = new JLabel();
 		this.add(curFrame);
 		this.origDimension = origDimension;
+		this.graphView = new Graph2DView();
 		validate();
 	}
 
@@ -84,7 +90,7 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 	 * Show the next Frame.
 	 * @param nextFrame
 	 */
-	public void showNextFrame(BufferedImage nextFrame) {
+	public void showNextFrame(Graph2D nextFrame) {
 		// Set the original image
 		this.origImage = nextFrame;
 			
@@ -93,20 +99,22 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 		int newHeight = (new Double(origDimension.getHeight() * zoomFactor)).intValue();
 		
 		// This should be the resized image
-		BufferedImage nextFrameResized = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+		//BufferedImage nextFrameResized = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
 
 		// g is used to draw the resized image
-		Graphics2D g = nextFrameResized.createGraphics();
+		//Graphics2D g = nextFrameResized.createGraphics();
 
 		// Resize image
-		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-				RenderingHints.VALUE_INTERPOLATION_BILINEAR); // Nearest_Neighbor is faster
-		g.drawImage(nextFrame, 0, 0, newWidth, newHeight, null);
+		//g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+		//		RenderingHints.VALUE_INTERPOLATION_BILINEAR); // Nearest_Neighbor is faster
+		//g.drawImage(nextFrame, 0, 0, newWidth, newHeight, null);
 		
 		// Show the next frame
-		curImage = nextFrameResized;
-		ImageIcon imageIcon = new ImageIcon(curImage);
-		curFrame.setIcon(imageIcon);
+		curImage = nextFrame;
+		graphView.setGraph2D(curImage);
+		
+		//ImageIcon imageIcon = new ImageIcon(curImage);
+		//curFrame.setIcon(imageIcon);
 		validate();
 	}
 	
@@ -115,7 +123,7 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 	 * @param nextFrame The next frame to visualize
 	 * @param zoomFactor The new zoom factor
 	 */
-	public void showNextFrame(BufferedImage nextFrame, double zoomFactor) {
+	public void showNextFrame(Graph2D nextFrame, double zoomFactor) {
 		// Set the new zoom factor
 		this.zoomFactor = zoomFactor;
 		
@@ -135,8 +143,9 @@ public class FilmPanel extends JPanel implements MouseWheelListener{
 	 * Print the dimension of the current Image
 	 */
 	public void printImageDimension() {
-		System.out.println("Image width: " + curImage.getWidth());
-		System.out.println("Image height: " + curImage.getHeight());
+//		System.out.println("Image width: " + curImage.getWidth());
+//		System.out.println("Image height: " + curImage.getHeight());
+		return;
 	}
 	
 	// Zoom the image in/out. For that, change the zoomFactor and generate a new image.

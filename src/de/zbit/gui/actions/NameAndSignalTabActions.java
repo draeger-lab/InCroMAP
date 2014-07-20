@@ -497,9 +497,7 @@ public class NameAndSignalTabActions implements ActionListener {
     	}
     } else if(command.equals(NSAction.VISUALIZE_TIME_SERIES.toString())) {
     	if (parent instanceof NSTimeSeriesTab) {
-    		System.out.println("Visualize button works!");
     		// Initializes the visualization. Adds a instance of TimeSeriesView to the tabbed Pane
-    		// VisualizeTimeSeries acts as controller and model for TimeSeriesView
     		new VisualizeTimeSeries((NSTimeSeriesTab)parent);
     	}
     }

@@ -28,8 +28,9 @@ import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
- * Generic interface for time series models, i.e.,
- * methods that are used to interpolate discrete datapoints for a later visualization.
+ * Abstract class for time series models.
+ * i.e. methods that are used to interpolate discrete datapoints for a later visualization
+ * and to model the course of gene expression
  * @author Felix Bartusch
  * @version $Rev$
  */

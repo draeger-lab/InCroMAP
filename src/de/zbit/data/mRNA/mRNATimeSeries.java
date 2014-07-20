@@ -32,6 +32,7 @@ import de.zbit.data.id.GeneID;
  * @version $Rev$
  */
 public class mRNATimeSeries extends mRNA {
+	private static final long serialVersionUID = -1225343797045535396L;
 
 	public mRNATimeSeries(String name) {
 		super(name);
