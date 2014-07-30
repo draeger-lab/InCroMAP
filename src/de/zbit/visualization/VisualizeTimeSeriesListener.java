@@ -83,7 +83,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 		PLAY_FILM,
 		
 		/** Stop film and show the previous frame */
-		SHOW_PREV_FRAME,
+		SHOW_PREVIOUS_FRAME,
 		
 		/** Stop the film and show the next frame */
 		SHOW_NEXT_FRAME,
@@ -98,7 +98,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 		GO_TO_POSITION,
 		
 		/** Export the generated film to a file */
-		EXPORT_FILM,
+		EXPORT_AS_VIDEO,
 		
 		/** Film was succesfully exported */
 		END_EXPORT_FILM;
@@ -292,7 +292,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			if(curFrame == model.getNumFrames())
   				view.enableNextFrameFunctionality(false);
   			
-  		} else if(command.equals(	VTSAction.SHOW_PREV_FRAME.toString())) {
+  		} else if(command.equals(	VTSAction.SHOW_PREVIOUS_FRAME.toString())) {
   			// If film is running, stop the film
   			playButtonActivated(false);
   			
@@ -351,7 +351,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   				}
   			}
 				
-			} else if(command.equals(VTSAction.EXPORT_FILM.toString())) {
+			} else if(command.equals(VTSAction.EXPORT_AS_VIDEO.toString())) {
 				
 				// Start exporting the film
 				if(isFilmGenerated())

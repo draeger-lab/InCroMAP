@@ -144,41 +144,7 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
   public boolean isDetailPanelAvailable() {
     return true;
   }
-  
- 
-//  /**
-//   * Update the {@link detailPanel} to show information about the current clickedObjects.
-//   * @param detailPanel which shall be updated
-//   * @param clickedObjects 
-//   * @param scrollToOldPosition if true, scroll the same position as before the update
-//   */
-//  public void updateDetailPanel(IntegratorPathwayPanel pathwayPanel, HitInfo clickedObjects, boolean scrollToOldPosition) {
-//  	
-//  	if(scrollToOldPosition) {
-//  		// Save the position of the vertical scroll bar.
-//  		JScrollBar bar = detailPanel.getVerticalScrollBar();
-//  		int pos = -1;
-//  		if(bar != null) {
-//  			pos = bar.getValue();
-//  			System.out.println("The vertical bar: " + bar.toString());
-//  			System.out.println("The bar's position: " + pos);
-//  		}
-//  		
-//  		updateDetailPanel(clickedObjects);
-//  		
-//  		// Set the scroll bar value to the old value. If the old value is less than 0,
-//  		// There was no scrollbar before the update of the detail panel
-//  		bar = detailPanel.getVerticalScrollBar();
-//  		if(pos > 0 && bar != null) {
-//  			System.out.println("Set new value of the bar.");
-//  			bar.setValueIsAdjusting(true);
-//  			bar.setValue(pos);  	
-//  			bar.setValueIsAdjusting(false);
-//  		}  	
-//  	} else {
-//  		updateDetailPanel(clickedObjects);
-//  	}
-//  }
+
   
   /* (non-Javadoc)
    * @see de.zbit.kegg.gui.TranslatorGraphLayerPanel#updateDetailPanel(javax.swing.JScrollPane, y.view.HitInfo)
@@ -221,32 +187,6 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
       }
     }
   }
-  
-  /**
-   * Just update the parts of the detailPanel which refers to enrichmentValues.
-   * The other parts of the detailPanel (describing text, images, ...) aren't changed.
-   * This method is called by {@link TimeSeriesView}, when another frame is visualized,
-   * because it would be time consuming to build a new detailPanel.
-   */
- public void updateDetailPanelEnrichmentValues(HitInfo clickedObjects) {
-	 Set<Object> hits = TranslatorTools.getHitEdgesAndNodes(clickedObjects, true);
-	 
-	 System.out.println("Number of clicked objects: " + hits.size());
-	 
-//	 String labelText = String.format("<html><body><b><h3>%s:</h3></b><font size=\"-1\">%s</font></body></html>",
-//			 vd.toNiceString(), (signals.size()==1?signals.get(0).toNiceString():MathUtils.summary(signalNumbers, 2)) ));
-//	 label.setText(labelText);
-//	 label = new JLabel(String.format("<html><body><b><h3>%s:</h3></b><font size=\"-1\">%s</font></body></html>",
-//       vd.toNiceString(), (signals.size()==1?signals.get(0).toNiceString():MathUtils.summary(signalNumbers, 2)) ));
-	 
-//	 if (ns instanceof List) {
-//     table = TableResultTableModel.buildJTable(new TableResultTableModel((List) ns, false));
-//   } else {
-//     table = TableResultTableModel.buildJTable(new TableResultTableModel(new ArrayList(ns), false));
-//   }
-	 
- }
-
 
   /**
    * @param nodeOrEdge
@@ -334,7 +274,6 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
           
           // Integrator-novel options
         } else if (mapDescription.equals(GraphMLmapsExtended.NODE_VISUALIZED_RAW_NS)) {
-        	System.out.println("Here we are!"); // for testing
           //DataMap rawNsMap = (DataMap) c;
           Map<VisualizedData, Collection<?>> data = (Map<VisualizedData, Collection<?>>) c;//((DataMap)c).get(nodeOrEdge);
           if (data!=null) {
@@ -342,7 +281,6 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
               Collection<?> ns = e.getValue();
               VisualizedData vd = e.getKey();
               if (ns!=null && ns.size()>0) {
-                System.out.println(ns.toString()); // for testing
                 // Get Signals, if 1 show, else summary.
                 List<Signal> signals = NameAndSignals.getSignals(
                   (Collection<? extends NameAndSignals>)ns, vd.getExperimentName(), vd.getSigType());
@@ -362,7 +300,6 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
                   label.setHorizontalAlignment(SwingConstants.LEFT);
                   lh.addSpacer();
                   lh.add(label);
-                  System.out.println("Text of label: " + label.getText()); // for testing
                   
                   // show probe-based table
                   // If something in the table is changed, also change that in updateDetailPanelEnrichmentValues

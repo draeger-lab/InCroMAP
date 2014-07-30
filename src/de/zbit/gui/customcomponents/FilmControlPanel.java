@@ -67,7 +67,7 @@ public class FilmControlPanel extends JPanel {
 
 		//The backward button
 		prevButton = GUITools.createButton(UIManager.getIcon("ICON_BACKW_32"), controller,
-				VTSAction.SHOW_PREV_FRAME, VTSAction.SHOW_PREV_FRAME.getToolTip());
+				VTSAction.SHOW_PREVIOUS_FRAME, VTSAction.SHOW_PREVIOUS_FRAME.getToolTip());
 
 		// The play button
 		playButton = GUITools.createButton(UIManager.getIcon("ICON_PLAY_32"), controller,

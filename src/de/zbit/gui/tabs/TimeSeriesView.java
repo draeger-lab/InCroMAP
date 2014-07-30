@@ -44,6 +44,7 @@ import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.customcomponents.FilmControlPanel;
 import de.zbit.io.FileDownload;
 import de.zbit.kegg.gui.IntegratorPathwayPanel;
+import de.zbit.kegg.gui.TranslatorPanelTools;
 import de.zbit.util.Species;
 import de.zbit.util.progressbar.AbstractProgressBar;
 import de.zbit.visualization.VisualizeTimeSeries;
@@ -112,6 +113,9 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 			return panel;	
 		}
 		
+		// Set the background image
+		TranslatorPanelTools.setupBackgroundImage(pathwayPanel);
+		
 		// The viewport visualizes the IntegratorPathwayPanel, which has a Graph2DView
 		// to show the pathway and a detail panel to show detailed information about nodes.
 		this.viewport.setView(pathwayPanel);
@@ -124,10 +128,7 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 		
 		// The control panel is shown as the column header of this scroll pane
 		setColumnHeaderView(controlPanel);
-		
-		// update the toolbar
-		//this.createJToolBarItems(this.getIntegratorUI().getJToolBar());
-		
+				
 		return viewport;
 	}
 
@@ -152,7 +153,7 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
     
     // Export button
     JButton export = GUITools.createJButton(controller,
-        VTSAction.EXPORT_FILM, UIManager.getIcon("ICON_SAVE_16"));
+        VTSAction.EXPORT_AS_VIDEO, UIManager.getIcon("ICON_SAVE_16"));
     
     bar.add(export);
     
