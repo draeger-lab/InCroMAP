@@ -43,6 +43,7 @@ import de.zbit.io.FileTools;
 import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.mRNATimeSeriesReader;
 import de.zbit.math.CubicSplineInterpolation;
+import de.zbit.math.TimeFit;
 import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.Species;
 import de.zbit.util.objectwrapper.ValueTriplet;
@@ -218,10 +219,26 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		return timePoints.size();
 	}
 	
-
+	@SuppressWarnings("unchecked")
 	public void modelTimeSeries(Class<? extends TimeSeriesModel> classs) {
+		
 		this.modelMethod = classs;
 		this.geneModels = new ArrayList<TimeSeriesModel>(this.data.size());
+		
+		// Generate a new instance of the model method
+		TimeSeriesModel model = null;
+		try {
+			model = classs.newInstance();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		// The data should be represented as a list of mRNATimeSeries.
+		try {
+			model.init((List<mRNATimeSeries>) data, timePoints);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		// Model each gene
 		mRNATimeSeries mRNA;

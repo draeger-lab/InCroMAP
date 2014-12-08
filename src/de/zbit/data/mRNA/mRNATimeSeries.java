@@ -21,6 +21,8 @@
  */
 package de.zbit.data.mRNA;
 
+import java.util.List;
+
 import de.zbit.data.Signal;
 import de.zbit.data.id.GeneID;
 
@@ -44,5 +46,21 @@ public class mRNATimeSeries extends mRNA {
 
 	public mRNATimeSeries(String name, int geneID) {
 		super(name, geneID);
+	}
+	
+	/**
+	 * Get the signals of this mRNA time series as an array of double values.
+	 * @return A double[], containing the signals as double values.
+	 */
+	public double[] SignalsAsArray() {
+		// Get the signals.
+		List<Signal> signals = this.getSignals();
+		
+		double[] res = new double[signals.size()];
+		for(int i=0; i<signals.size(); i++) {
+			res[i] = signals.get(i).getSignal().doubleValue();
+		}
+		
+		return res;
 	}
 }

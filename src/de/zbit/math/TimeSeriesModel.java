@@ -21,16 +21,19 @@
  */
 package de.zbit.math;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
  * Abstract class for time series models.
- * i.e. methods that are used to interpolate discrete datapoints for a later visualization
- * and to model the course of gene expression
+ * i.e. model methods that are used to interpolate discrete datapoints for a later visualization
+ * and to model the course of gene expression.
  * @author Felix Bartusch
  * @version $Rev$
  */
@@ -56,8 +59,18 @@ public abstract class TimeSeriesModel {
 	 * The y-values for the given points.
 	 */
 	double[] y;
+	/**
+	 * Number of measured data points.
+	 */
+	int numDataPoints;
 	
-	
+	/**
+	 * Is the model method initialized?
+	 * After {@link #init(Collection))} has been called successfully,
+	 * the flag should be set.
+	 */
+	private boolean initialized = false;
+
 	public TimeSeriesModel() {
 		this.name = null;
 		this.geneID = -1;
@@ -75,6 +88,7 @@ public abstract class TimeSeriesModel {
 	
 	/**
 	 * Generate the model for one gene.
+	 * @return 
 	 */
 	public abstract void generateModel(mRNATimeSeries dataPoints, List<ValueTriplet<Double, String, SignalType>> timePoints);
 	
@@ -82,6 +96,22 @@ public abstract class TimeSeriesModel {
 	 * Compute the interpolated value for certain coefficients at a certain time point.
 	 */
 	public abstract double computeValueAtTimePoint(double timePoint);	
+	
+	/**
+	 * This is a initialization for the model method.
+	 * The {@link #generateModel(mRNATimeSeries, List) generateModel}
+	 * method models just one mRNA time series. However, some model methods use the whole
+	 * set of mRNA time series to infer their model parameters etc.
+	 * The method {@link #init(Collection) init} stores its result, so that it has to be
+	 * computed once.
+	 * @param data The data to be modeled.
+	 * @throws Exception 
+	 */
+	public void init(List<mRNATimeSeries> data,
+			List<ValueTriplet<Double, String, SignalType>> timePoints) throws Exception {
+		// Intentially left blank for model methods, that need no initialization.
+		setInitialized(true);
+	}
 	
 	/**
 	 * @return the first timePoint that can be modelled by this model.
@@ -132,6 +162,14 @@ public abstract class TimeSeriesModel {
 	
 	public double[] getY() {
 		return y;
+	}
+	
+	public boolean isInitialized() {
+		return initialized;
+	}
+
+	protected void setInitialized(boolean initialized) {
+		this.initialized = initialized;
 	}
 }
 

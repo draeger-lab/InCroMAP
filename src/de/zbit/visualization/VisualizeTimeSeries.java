@@ -123,6 +123,8 @@ public class VisualizeTimeSeries {
 	private List<List<mRNA>> mRNA;
 	/** The KEGG pathwayID of the visualized pathway */
 	private String pathwayID;
+	/** What enrichment result shall be visualized? The enrichment p-value or q-value*/
+	private boolean visualizePValue = true;
 	/** The importer for the KEGG pathway, downloads pathway information from KEGG*/
 	private KEGGImporter keggImporter;
 	/** The treated species from which data was obtained */
@@ -187,6 +189,7 @@ public class VisualizeTimeSeries {
 
 			// Download pathway
 			this.keggImporter = new KEGGImporter(pathwayID, Format.JPG);
+			System.out.println("pathwayID: " + pathwayID);
 			keggImporter.addActionListener(controller);		
 			// Build and show the view
 			parent.getIntegratorUI().addTab(view, "Film of " + parent.getName());
@@ -453,17 +456,23 @@ public class VisualizeTimeSeries {
 			visData.removeVisualization(enrichDataType); // int is for testing
 		}
 
-		// Use the default signal colorer. Use the p-Value of the enrichment,
-		// because it has more nuances
-		SignalColor recolorer = new SignalColor(null, null, SignalType.pValue);
-
+		// Use the default signal colorer for p-value or q-value
+		SignalColor recolorer;
+		if(visualizePValue)
+			recolorer = new SignalColor(null, null, SignalType.pValue);
+		else
+			recolorer = new SignalColor(null, null, SignalType.qValue);
+		
 		// A describing string, which is shown if the mouse is over a colored node:
 		// [Name of source file] at [time point] [time unit] (e.g. PB_single.csv at 24h)
 		String description = source.getTabName() + " at " + mapFrameToTimePoint(controller.getCurFrame()) + timeUnit;
 
-		// Color the graph!
+		// Color the graph. If there is no enriched pathway, color nothing.
 		if(e != null) {
-			visData.visualizeData(e, description, "Enrichment", SignalType.pValue, recolorer);
+			if(visualizePValue)
+				visData.visualizeData(e, description, "Enrichment", SignalType.pValue, recolorer);
+			else
+				visData.visualizeData(e, description, "Enrichment", SignalType.qValue, recolorer);
 		}
 
 		// Now deal with the modelled mRNA data! Remove the old visualization.
@@ -554,14 +563,11 @@ public class VisualizeTimeSeries {
 		};
 	}
 
-
-
-
-
-
+	public void setVisualizePValue(boolean b) {
+		visualizePValue = b;
+	}
 
 	/**
-	 * 
 	 * @return the species of the model.
 	 */
 	public Species getSpecies() {

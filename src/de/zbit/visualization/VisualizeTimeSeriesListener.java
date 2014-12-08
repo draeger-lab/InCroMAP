@@ -101,24 +101,49 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 		EXPORT_AS_VIDEO,
 		
 		/** Film was succesfully exported */
-		END_EXPORT_FILM;
+		END_EXPORT_FILM,
+		
+		/** Visualization options*/
+		// Switch between p-value and q-value
+		VISUALIZE_ENRICHMENT_PVAL, VISUALIZE_ENRICHMENT_QVAL,
+		
+		/** The three FDR correction methods*/
+		FDR_CORRECTION_BH, FDR_CORRECTION_BFH, FDR_CORRECTION_BO;
 		
 		@Override
 		public String getName() {
 			switch (this) {
-        
-      default:
-        return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
+			case VISUALIZE_ENRICHMENT_PVAL:
+				return "Visualize enrichment p-value";
+			case VISUALIZE_ENRICHMENT_QVAL:
+				return "Visualize enrichment q-value";
+			case FDR_CORRECTION_BH:
+        return "Benjamini Hochberg";
+      case FDR_CORRECTION_BFH:
+        return "Bonferroni Holm";
+      case FDR_CORRECTION_BO:
+        return "Bonferroni";
+			default:
+				return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
       }
 		}
 
 		@Override
 		public String getToolTip() {
 			switch (this) {
-        
-      default:
-      	return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
-      }
+			case VISUALIZE_ENRICHMENT_PVAL:
+				return "Visualize the enrichment p-value.";
+			case VISUALIZE_ENRICHMENT_QVAL:
+				return "Visualize the enrichment q-value.";
+			case FDR_CORRECTION_BH:
+				return "Correct p-values with the Benjamini and Hochberg method.";
+			case FDR_CORRECTION_BFH:
+				return "Correct p-values with the Holm–Bonferroni method.";
+			case FDR_CORRECTION_BO:
+				return "Correct p-values with the Bonferroni method.";
+			default:
+				return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
+			}
 		}
   	
   }
@@ -145,6 +170,10 @@ public class VisualizeTimeSeriesListener implements ActionListener {
    */
   public synchronized void actionPerformed(ActionEvent e) {
   	// if ActionCommand is null, the action came from the KEGGImporter
+  	// for testing
+  	System.out.println("VisualizeTimeSeriesListener: " + e.toString());
+  	System.out.println("ActionEvent ID: " + e.getID());
+
   	if(e.getActionCommand() == null) {
   		switch(e.getID()) {
   		// the cases 1 - 5 were copied from KEGGPathwayActionListener
@@ -277,7 +306,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   				// Increment the frame counter. Do nothing, if curFrame is the last frame.
   				incrementCurFrame();
 
-  				// Read packages until the next frame is complete
+  				// Get the next frame from the model
   				Graph2D nextFrame = model.getFrame(curFrame);
 
   				// Show the next frame
@@ -367,7 +396,35 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			
   			// TODO more specific error message
   			GUITools.showErrorMessage(view.getParent(), "Something went wrong while generating/showing the film.");
-  		}
+  		
+  		} else if(command.equals(VTSAction.VISUALIZE_ENRICHMENT_PVAL.toString())) {
+  			// Change the option button selection
+  			view.selectPValueButton(true);
+  			
+  			// Change the visualization
+  			model.setVisualizePValue(true);
+  			Graph2D nextFrame = model.getFrame(curFrame);
+  			view.showGraph(nextFrame, curFrame);
+  			
+  		} else if(command.equals(VTSAction.VISUALIZE_ENRICHMENT_QVAL.toString())) {
+  			// Change the option button selection
+  			view.selectPValueButton(false);
+  			
+  			// Change the visualization
+  			model.setVisualizePValue(false);
+  			Graph2D nextFrame = model.getFrame(curFrame);
+  			view.showGraph(nextFrame, curFrame);
+  		
+  		} else if(command.equals(VTSAction.FDR_CORRECTION_BH.toString())) {
+  			// Change the option button selection
+  			view.selectFDR(VTSAction.FDR_CORRECTION_BH.toString());
+  		} else if(command.equals(VTSAction.FDR_CORRECTION_BFH.toString())) {
+  			// Change the option button selection
+  			view.selectFDR(VTSAction.FDR_CORRECTION_BFH.toString());
+    	} else if(command.equals(VTSAction.FDR_CORRECTION_BO.toString())) {
+    		// Change the option button selection
+    		view.selectFDR(VTSAction.FDR_CORRECTION_BO.toString());
+    	}
   	}
   }
 

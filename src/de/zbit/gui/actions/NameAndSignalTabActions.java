@@ -81,12 +81,14 @@ import de.zbit.math.BenjaminiHochberg;
 import de.zbit.math.Bonferroni;
 import de.zbit.math.BonferroniHolm;
 import de.zbit.math.CubicSplineInterpolation;
+import de.zbit.math.TimeFit;
 import de.zbit.sequence.region.Region;
 import de.zbit.util.Species;
 import de.zbit.util.StringUtil;
 import de.zbit.util.objectwrapper.ValuePair;
 import de.zbit.utils.FilterNSTable;
 import de.zbit.visualization.VisualizeTimeSeries;
+import de.zbit.visualization.VisualizeTimeSeriesListener.VTSAction;
 
 /**
  * Actions for the {@link JToolBar} in {@link IntegratorTabWithTable}
@@ -160,7 +162,8 @@ public class NameAndSignalTabActions implements ActionListener {
     /**
      * Generate a continuous model from discrete time points
      */
-    MODEL_TIME_SERIES,
+    MODEL_TIME_SERIES_SPLINE,
+    MODEL_TIME_SERIES_TIMEFIT,
     /**
      *  Visualize a modelled time series
      */
@@ -190,6 +193,11 @@ public class NameAndSignalTabActions implements ActionListener {
         return "Bonferroni Holm";
       case FDR_CORRECTION_BO:
         return "Bonferroni";
+      
+      case MODEL_TIME_SERIES_SPLINE:
+      	return "Cubic-spline interpolation";
+      case MODEL_TIME_SERIES_TIMEFIT:
+      	return "B-Spline (TimeFit)";
         
       default:
         return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
@@ -221,8 +229,12 @@ public class NameAndSignalTabActions implements ActionListener {
           return "Correct p-values with the Holm–Bonferroni method and save as q-values.";
         case FDR_CORRECTION_BO:
           return "Correct p-values with the Bonferroni method and save as q-values.";
-        case MODEL_TIME_SERIES:
-        	return "Generate a continuous model, which can be visualized.";
+          
+        case MODEL_TIME_SERIES_SPLINE:
+        	return "Generate a continuous model with cubic-spline interpolation.";
+        case MODEL_TIME_SERIES_TIMEFIT:
+        	return "Generate a continuous model witch B-Spline (TimeFit algorithm)";
+        	
         case VISUALIZE_TIME_SERIES:
         	return "Visualize the modelled time series";
           
@@ -324,10 +336,25 @@ public class NameAndSignalTabActions implements ActionListener {
     
     } if(tableContent.equals(mRNATimeSeries.class)) {
     	// is the mRNA already modeled?
+    	
+
+      // Visualization option: Visualize pValue or qValue of the KEGG Pathway Enrichment?
+      JPopupMenu modelMethodMenu = new JPopupMenu("Model time series");
+      JMenuItem spline = GUITools.createJMenuItem(this, NSAction.MODEL_TIME_SERIES_SPLINE,
+      		UIManager.getIcon("ICON_GEAR_16"),null,null,JMenuItem.class,true);
+      JMenuItem timeFit = GUITools.createJMenuItem(this, NSAction.MODEL_TIME_SERIES_TIMEFIT,
+      		UIManager.getIcon("ICON_GEAR_16"),null,null,JMenuItem.class,true);
+      modelMethodMenu.add(spline);
+      modelMethodMenu.add(timeFit);
+      JDropDownButton modelMethodButton= new JDropDownButton("Model time series",
+      		UIManager.getIcon("ICON_GEAR_16"), modelMethodMenu);
+      modelMethodButton.setToolTipText("Generate a continuous model, which can be visualized.");
+      bar.add(modelMethodButton);
+          	
+//    	bar.add(GUITools.createJButton(this,
+//    			NSAction.MODEL_TIME_SERIES, UIManager.getIcon("ICON_GEAR_16")));
     	bar.add(GUITools.createJButton(this,
     			NSAction.VISUALIZE_TIME_SERIES, UIManager.getIcon("ICON_PATHWAY_16")));
-    	bar.add(GUITools.createJButton(this,
-    			NSAction.MODEL_TIME_SERIES, UIManager.getIcon("ICON_GEAR_16")));
     	
     	// Same as for mRNA.class
     	bar.add(GUITools.createJButton(this,
@@ -491,9 +518,14 @@ public class NameAndSignalTabActions implements ActionListener {
       new Bonferroni().setQvalue((List<EnrichmentObject<Object>>) parent.getData());
       parent.getVisualization().repaint();
       
-    } else if(command.equals(NSAction.MODEL_TIME_SERIES.toString())) {
+    } else if(command.equals(NSAction.MODEL_TIME_SERIES_SPLINE.toString())) {
     	if(parent instanceof NSTimeSeriesTab) {
     		((NSTimeSeriesTab) parent).modelTimeSeries(CubicSplineInterpolation.class);
+    	}
+    	
+    } else if(command.equals(NSAction.MODEL_TIME_SERIES_TIMEFIT.toString())) {
+    	if(parent instanceof NSTimeSeriesTab) {
+    		((NSTimeSeriesTab) parent).modelTimeSeries(TimeFit.class);
     	}
     } else if(command.equals(NSAction.VISUALIZE_TIME_SERIES.toString())) {
     	if (parent instanceof NSTimeSeriesTab) {

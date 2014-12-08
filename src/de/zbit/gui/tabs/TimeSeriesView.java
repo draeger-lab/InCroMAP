@@ -25,9 +25,13 @@ package de.zbit.gui.tabs;
 import java.io.File;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
@@ -41,6 +45,8 @@ import y.view.HitInfo;
 import de.zbit.graph.RestrictedEditMode;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.JDropDownButton;
+import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.customcomponents.FilmControlPanel;
 import de.zbit.io.FileDownload;
 import de.zbit.kegg.gui.IntegratorPathwayPanel;
@@ -83,6 +89,10 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 
 	/** Panel to control the film and select arbitrary frames */
 	private FilmControlPanel controlPanel;
+	
+	/** ToolBar buttons to change the visualized enrichment data */
+	private JMenuItem pValueButton;
+	private JMenuItem qValueButton;
 
 	
 	/**
@@ -147,14 +157,42 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 	@Override
 	public void createJToolBarItems(JToolBar bar) {		
     String uniqueName = parent.getClass().getSimpleName() + parent.hashCode();
-    //if (bar.getName().equals(uniqueName)) return;
     bar.removeAll();
     bar.setName(uniqueName);
     
-    // Export button
-    JButton export = GUITools.createJButton(controller,
-        VTSAction.EXPORT_AS_VIDEO, UIManager.getIcon("ICON_SAVE_16"));
+    // Visualization option: Visualize pValue or qValue of the KEGG Pathway Enrichment?
+    JPopupMenu visualizationOptions = new JPopupMenu("Visualization options");
+    pValueButton = GUITools.createJMenuItem(controller, VTSAction.VISUALIZE_ENRICHMENT_PVAL,
+    		UIManager.getIcon("ICON_PREFS_16"),null,null,JCheckBoxMenuItem.class,true);
+    qValueButton = GUITools.createJMenuItem(controller, VTSAction.VISUALIZE_ENRICHMENT_QVAL,
+    		UIManager.getIcon("ICON_PREFS_16"),null,null,JCheckBoxMenuItem.class,true);
+    visualizationOptions.add(pValueButton);
+    visualizationOptions.add(qValueButton);
+    JDropDownButton visualizationOptionsButton = new JDropDownButton("Visualization options",
+    		UIManager.getIcon("ICON_PREFS_16"), visualizationOptions);
+    bar.add(visualizationOptionsButton);
+    pValueButton.setSelected(true);
     
+    // FDR correction method option
+    JPopupMenu fdr = new JPopupMenu("FDR correction");
+    JMenuItem BH_cor = GUITools.createJMenuItem(controller,
+        VTSAction.FDR_CORRECTION_BH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class,true);
+    fdr.add(BH_cor);
+    JMenuItem BFH_cor = GUITools.createJMenuItem(controller,
+        VTSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class,true);
+    fdr.add(BFH_cor);
+    JMenuItem BO_cor = GUITools.createJMenuItem(controller,
+        VTSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class,true);
+    fdr.add(BO_cor);
+    JDropDownButton fdrButton = new JDropDownButton("FDR correction", 
+        UIManager.getIcon("ICON_MATH_16"), fdr);
+    fdrButton.setToolTipText("Change the false-discovery-rate correction method.");
+    bar.add(fdrButton);
+    BH_cor.setSelected(true);
+    
+    // Export as video button
+    JButton export = GUITools.createJButton(controller,
+    		VTSAction.EXPORT_AS_VIDEO, UIManager.getIcon("ICON_SAVE_16"));
     bar.add(export);
     
     GUITools.setOpaqueForAllElements(bar, false); 
@@ -277,11 +315,31 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 	/**
 	 * Enables / Disables the functionality of the play button.
 	 * Is called, when the user pushes the play/pause-button.
-	 * @param b should the play button be enabled?
+	 * @param b, if the play button should be enabled?
 	 */
 	public void enablePlayFunctionality(boolean b) {
 		controlPanel.enablePlayButton(b);
 		validate();
+	}
+	
+	/**
+	 * Selects/deselects the menu items for visualization of p-values and q-values in the
+	 * options menu of the toolbar.
+	 * @param b		if true, the p-value button is selected and the q-value button is deselected.</br>
+	 *            if false, the p-value button is deselected and the q-value button is selected.
+	 */
+	public void selectPValueButton(boolean b) {
+		pValueButton.setSelected(b);
+		qValueButton.setSelected(!b);
+	}
+	
+	/**
+	 * 
+	 * @param string
+	 */
+	public void selectFDR(String string) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	/**

@@ -125,6 +125,10 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
       
       int originalSize = getExpectedColumns().length;
       CSVReader inputReader = loadConfigurationFromCache(cache, file, exCol, spec);
+      // for testing
+      System.out.println("Call getExpectedColumns?");
+      System.out.println(exCol.length!=originalSize);
+      System.out.println("----------------");
       if (exCol.length!=originalSize) {
         // Don't load corrupt information
         exCol = getExpectedColumns();
@@ -147,7 +151,14 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
       	// Create new panel, that allows to select timeUnit, timePoints and species
       	JPanel comp = new JPanel(new BorderLayout());
         timeUnitTextfield = getTimeUnitTextfield();
-        timePointsTable = createTimePointTable(inputReader,isSignalColumn);
+        // for testing
+        System.out.println("The isSignalColumn array:");
+        System.out.println("length: " + isSignalColumn.length);
+        for(int i=0; i<isSignalColumn.length; i++) {
+        	System.out.println(isSignalColumn[i]);
+        }
+        System.out.println("---------------");
+        timePointsTable = createTimePointTable(inputReader, isSignalColumn);
         
         // Add single components to the main component
         comp.add(spec, BorderLayout.PAGE_START);
@@ -497,8 +508,18 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 		// Lookup the column names of the signal columns.
 		colNames = new String[numCols];
 		String[] header = reader.getHeader();
+		// for testing
+		System.out.println("Is the header null?");
+		System.out.println(header == null);	
+		System.out.println("The header delivered by CSVReader:");
+		for(int i=0; i<header.length; i++)
+			System.out.println(header[i] == null);
+			//System.out.println(header[i]);
+		System.out.println("colNames length: " + colNames.length);
+		System.out.println("header length: " + header.length);
 		int pos = 0;
 		for(int i=0; i<signals.length; i++) {
+			System.out.println("i: " + i + "; pos:" + pos);
 			if(signals[i]==1) {
 				colNames[pos] = header[i];
 				pos++;

@@ -20,18 +20,21 @@
  * ---------------------------------------------------------------------
  */
 package de.zbit.math;
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.ArrayRealVector;
-import org.apache.commons.math.linear.DecompositionSolver;
-import org.apache.commons.math.linear.LUDecompositionImpl;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apache.commons.math.linear.RealVector;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.DecompositionSolver;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.util.objectwrapper.ValueTriplet;
 
@@ -113,7 +116,7 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 		
 		// Create the matrices and solve the equation system
 		RealMatrix coefficients = new Array2DRowRealMatrix(m);
-		DecompositionSolver solver = new LUDecompositionImpl(coefficients).getSolver();
+		DecompositionSolver solver = new LUDecomposition(coefficients).getSolver();
 		
 		RealVector constants = new ArrayRealVector(b, false);
 		RealVector solution = solver.solve(constants);
@@ -152,6 +155,7 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 		return (1-t)*y[range-1] + t*y[range] + t*(1-t) * (a[range-1]*(1-t)+b[range-1]*t);
 	}
 	
+	
 	// This main method is just for testing the implementation
 	public static void main(String args[]) {
 		// generateModel(mRNATimeSeries dataPoints, List<ValueTriplet<Double, String, SignalType>> timePoints)
@@ -173,6 +177,4 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 			System.out.println(c.computeValueAtTimePoint(i));
 		}
 	}
-	
-	
 }
