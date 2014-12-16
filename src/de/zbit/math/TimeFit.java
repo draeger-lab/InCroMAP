@@ -23,7 +23,10 @@
 package de.zbit.math;
 
 import java.awt.geom.Point2D;
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -32,12 +35,12 @@ import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.apache.commons.math3.stat.correlation.Covariance;
 
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNATimeSeries;
-import de.zbit.sbml.layout.y.YMacromolecule;
 import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
@@ -161,6 +164,16 @@ public class TimeFit extends TimeSeriesModel {
 	 * The log likelihood of the data given the model.
 	 */
 	double logLikelihood;
+	
+	/**
+	 * The number of gene classes.
+	 */
+	int numClasses;
+	
+	/**
+	 * The number of genes.
+	 */
+	int numGenes;
 
 	/* (non-Javadoc)
 	 * @see de.zbit.math.TimeSeriesModel#generateModel(de.zbit.data.mRNA.mRNATimeSeries, java.util.List)
@@ -285,11 +298,19 @@ public class TimeFit extends TimeSeriesModel {
 			mRNATimeSeries m = data.get(i);
 			List<Signal> signals = m.getSignals();
 			for(int j=0; j<numExperiments; j++) {
-				res[i][j] = (Double) signals.get(j).getSignal();
+				res[i][j] = signals.get(j).getSignal().doubleValue();
 			}
 		}
 		
 		return res;
+	}
+	
+	
+	/**
+	 * Initialize all fields.
+	 */
+	private void initialize() {
+		
 	}
 	
 	/**
@@ -349,19 +370,18 @@ public class TimeFit extends TimeSeriesModel {
 	/**
 	 * 
 	 */
-	private Array2DRowRealMatrix computeS() {
-		// TODO Write JavaDoc
-		double[][] s = new double[numDataPoints][q];
+	private void computeS() {
+		double[][] s_matrix = new double[numDataPoints][q];
 		
 		for(int i=0; i<numDataPoints; i++) {
 			for(int j=0; j<q; j++) {
-				s[i][j] = normalizedBSplineBasis(j,4,i);
+				s_matrix[i][j] = normalizedBSplineBasis(j,4,i);
 			}
 		}
+		s = new Array2DRowRealMatrix(s_matrix);
 		
-		Array2DRowRealMatrix res = new Array2DRowRealMatrix(s);
-		
-		return res;
+		// S_transposed * S
+		sts = s.transpose().multiply(s);
 	}
 	
 	
@@ -384,27 +404,520 @@ public class TimeFit extends TimeSeriesModel {
 		for(int i=-2; i<numberOfKnots-2; i++)
 			knots[i+2] = getFirstTimePoint() + stepsize * i;
 	}
-	
+
 
 	/**
-	 * @param args
+	 * Initialize the class centers with a random chosen gene.
 	 */
-	public static void main(String[] args) {
-		// Test for a time series with x experiments from timepoint 0 to x
-		int numExperiments = 24;
-		TimeFit tf = new TimeFit();
-		tf.x = new double[numExperiments];
-		for(int i=0; i<numExperiments; i++) {
-			tf.x[i] = i+1; // start with time point 1
+	private void initializeClassCenter() {
+		this.mu = new Array2DRowRealMatrix(numClasses, q);
+		// The already chosen class centers. Don't allow a two same class centers.
+		ArrayList<Integer> chosenGenes = new ArrayList<Integer>(numClasses);
+		// Initialize the class centers 
+		int gene;
+		for(int i=0; i<numClasses; i++) {
+			// Choose a new random gene.
+			gene = (int) (Math.random() * numGenes);
+			while (chosenGenes.contains(gene)) {
+				gene = (int) (Math.random() * numGenes);
+			}
+			// Compute the class center
+			RealMatrix m = s.transpose().multiply(s); // An intermediary result
+			// Invert m
+			m = new SingularValueDecomposition(m).getSolver().getInverse();
+			// Compute the final initial class center, a q by 1 vector
+			m = m.multiply(s.transpose()).multiply(yMatrix.getRowMatrix(gene).transpose());
+			// Add the class center to the list of class centers
+			mu.setRowMatrix(i, m.transpose()); // the i-th center is in the i-th row
 		}
-		tf.numDataPoints = 24;
+	}
+	
+	
+	/**
+	 * Select a class for each gene at random at create mappings from genes2class and the
+	 * other way round.
+	 */
+	private void initializeGenes2ClassMapping() {
+		class2genes = new ArrayList<>(numClasses);
+		for(int i=0; i<numClasses; i++) {
+			class2genes.add(new ArrayList<Integer>());
+		}
+		// Initialize the mapping from a gene to its class
+		gene2class = new int[numGenes];
 		
-		// Generate the test data of 30000 genes. There are 5 classes with a given mean for
-		// every time point and a random standard deviation for every time point.
-		int numClasses = 5;
-		int numGenes = 30000;
+		// For each gene, select a class j uniformly at random.
+		int j;
+		for(int i=0; i<numGenes; i++) {
+			j = (int) (Math.random() * numClasses); // Select a random class j for gene i
+			gene2class[i] = j;
+			// Add the gene to the class2gene mapping
+			class2genes.get(j).add(i);
+		}
+	}
+	
+	
+	/**
+	 * Initialize the covariance matrix for each class.
+	 */
+	private void initializeCovMatrices() {
+		// This array is used to index the rows of the expression values for the submatrix
+		int[] rowsPrimitive;
+		
+		covMatrices = new ArrayList<RealMatrix>(numClasses);
+		RealMatrix subMatrix;
+		System.out.println("Rows: " + yMatrix.getRowDimension() + "Columns: " + yMatrix.getColumnDimension());
+		for(int j=0; j<numClasses; j++) {
+			// Get a submatrix with the expression values of genes of class j
+			Integer[] rows = new Integer[class2genes.get(j).size()];
+			rowsPrimitive = ArrayUtils.toPrimitive(class2genes.get(j).toArray(rows));
+			subMatrix = yMatrix.getSubMatrix(rowsPrimitive, controlPointsColumn);
+					
+			// Compute and set the covariance matrix for class j
+			Covariance cov = new Covariance(subMatrix);
+			covMatrices.add(cov.getCovarianceMatrix());
+		}
+	}
+	
+	
+	/**
+	 * Compute the inverse covariance matrices of @link{de.zbit.math.TimeFit.covMatrices}.
+	 */
+	private void computeInverseCovMatrices() {
+		inverseCovMatrices = new ArrayList<RealMatrix>(numClasses);
+		for(int j=0; j<numClasses; j++) {
+			inverseCovMatrices.add(new SingularValueDecomposition(covMatrices.get(j)).getSolver().getInverse());
+		}	
+	}
+	
+	
+	/**
+	 * 
+	 */
+	private void computeGamma() {
+		gamma = new ArrayList<RealMatrix>(numClasses);
+		MultivariateNormalDistribution dist;
+		// Iterate over the classes and sample matrix of the variation coefficients
+		for(int j=0; j<numClasses; j++) {
+			// The distribution of the variation coefficients for class j
+			dist = new MultivariateNormalDistribution(new double[q], covMatrices.get(j).getData());
+			// The matrix for the variation coefficients of class j
+			RealMatrix m = new Array2DRowRealMatrix(numGenes, q);
+			// Fill the matrix with sample values
+			for(int i=0; i<numGenes; i++) {
+				m.setRow(i, dist.sample());				
+			}
+			gamma.add(m);
+		}		
+	}
+	
+	
+	/**
+	 * 
+	 */
+	private void computeGeneVariances() {
+		geneVariances = new double[numGenes];
+		for(int i=0; i<numGenes; i++) {
+			geneVariances[i] = MathUtils.variance(yMatrix.getRowMatrix(i).getSubMatrix(new int[1], controlPointsColumn).getRow(0)); 
+		}
+		System.out.println("Variance: \t" + geneVariances[1]);	
+	}
+	
+	
+	/**
+	 * 
+	 */
+	private void sampleNoiseVectors() {
+		noiseVectors = new Array2DRowRealMatrix(numGenes, q);
+		Random rand = new Random();
+		for(int i=0; i<numGenes; i++) {
+			for(int j=0; j<q; j++) {
+				noiseVectors.setEntry(i, j, rand.nextGaussian() * geneVariances[i]);
+			}
+		}
+		System.out.println("Noise vector: \t" + noiseVectors.getRowMatrix(1).toString()); // Testing output
+	}
+	
+	
+	/**
+	 * TODO Maybe the user provides known class probs.
+	 */
+	private void computeClassProbs() {
+		// At the beginning, each class has the same probability
+		double p = 1.0 / numClasses;
+		classProbs = new double[numClasses];
+		for(int i=0; i<numClasses; i++) {
+			classProbs[i] = p;
+		}
+	}
+	
+	
+	/**
+	 * Compute the power of a BigDecimal to an double value.
+	 */
+	private BigDecimal bigDecimalPow(BigDecimal n1, BigDecimal n2) {
+		// Perform X^(A+B)=X^A*X^B (B = remainder)
+		// see: http://stackoverflow.com/questions/3579779/how-to-do-a-fractional-power-on-bigdecimal-in-java
+		int signOf2 = n2.signum();
+        double dn1 = n1.doubleValue();
+        // Compare the same row of digits according to context
+        n2 = n2.multiply(new BigDecimal(signOf2)); // n2 is now positive
+        BigDecimal remainderOf2 = n2.remainder(BigDecimal.ONE);
+        BigDecimal n2IntPart = n2.subtract(remainderOf2);
+        // Calculate big part of the power using context -
+        BigDecimal intPow = n1.pow(n2IntPart.intValueExact());
+        BigDecimal doublePow = new BigDecimal(Math.pow(dn1, remainderOf2.doubleValue()));
+        BigDecimal result = intPow.multiply(doublePow);
+
+		return result;
+	}
+	
+	
+	/**
+	 * 
+	 * @param bigE
+	 * @param e1
+	 * @param e2
+	 * @return
+	 */
+	private BigDecimal computeFactorAsBigDecimal(BigDecimal bigE, double e1,
+			double e2, double classProb) {
+		BigDecimal bigF1 = bigDecimalPow(bigE, new BigDecimal(e1));
+		BigDecimal bigF2 = bigDecimalPow(bigE, new BigDecimal(e2));
+		return new BigDecimal(classProb).multiply(bigF1).multiply(bigF2);
+	}
+	
+
+//	/**
+//	 * Hard coded probs for infinite factors ... fails ...
+//	 */
+//	private void computeProbabilities() {
+//		// For all genes i and classes j, compute P(j|i). This is the probability, that gene i
+//		// belongs to class j.
+//		probs = new double[numGenes][numClasses];
+//		double[] factors = new double[numClasses];
+//		double sumFactors = 0;
+//		double e1;
+//		double e2;
+//		boolean isFactorInfinite = false;
+//		int infiniteFactor = 0;
+//		// If one factor is infinite, hard code the probs
+//		double probForInfiniteFactor = 0.999;
+//		double probForOtherFactors = (1 - probForInfiniteFactor) / (numClasses - 1);
+//		for(int i=0; i<numGenes; i++) {
+//			//System.out.println("Compute prob for gene: " + i);
+//			// Compute the factors uses for this gene once
+//			for(int j = 0; j<numClasses; j++) {
+//				// The factors
+//				RealMatrix m1 = yMatrix.getRowMatrix(i).transpose().subtract(s.multiply((mu.getRowMatrix(j).add(gamma.get(j).getRowMatrix(i)).transpose())));
+//				e1 = m1.transpose().multiply(m1).getEntry(0, 0) / variance;
+//				e2 = -0.5 * (gamma.get(j).getRowMatrix(i).multiply(inverseCovMatrices.get(j).multiply(gamma.get(j).getRowMatrix(i).transpose())).getEntry(0, 0));
+//				factors[j] = classProbs[j] * Math.exp(e1) * Math.exp(e2);
+//				// Check whether the new factor is infinite
+//				if(Double.isInfinite(factors[j])) {
+//					isFactorInfinite = true;
+//					infiniteFactor = j;
+//				}
+//			}
+//
+//			// Compute the sum of the factors
+//			sumFactors = de.zbit.util.ArrayUtils.sum(factors);
+//			if(Double.isInfinite(sumFactors)) {
+//				isFactorInfinite = true;
+//				infiniteFactor = 0;
+//				// Find the biggest factor, declare that factor as the infinite factor
+//				for(int j=0; j<numClasses; j++) {
+//					if(factors[j] > factors[infiniteFactor]) 
+//						infiniteFactor = j;
+//				}
+//			}
+//			
+//			// Use the computed factors to compute P(j|i)
+//			for (int j = 0; j<numClasses; j++) {
+//				if(isFactorInfinite && j == infiniteFactor) {
+//					probs[i][j] = probForInfiniteFactor;
+//				} else if(isFactorInfinite) {
+//					probs[i][j] = probForOtherFactors;
+//				} else {
+//					probs[i][j] = factors[j] / sumFactors;	
+//				}
+//				if(Double.isInfinite(probs[i][j]) || Double.isNaN(probs[i][j])) {
+//					System.out.println("Invalid probability");
+//				}
+//			}
+//			isFactorInfinite = false;
+//		}
+//	}	
+	
+/**
+ * The BigDecimal solution ... toooooo slow and throws Exception :(
+ */
+	/**
+	 * 
+	 */
+	private void computeProbabilities() {
+		// For all genes i and classes j, compute P(j|i). This is the probability, that gene i
+		// belongs to class j.
+		probs = new double[numGenes][numClasses];
+		double[] factors = new double[numClasses];
+		double sumFactors = 0;
+		double e1;
+		double e2;
+		boolean isFactorInfinite = false;
+		BigDecimal[] bigFactors = new BigDecimal[numClasses];
+		BigDecimal bigE = new BigDecimal(Math.exp(1));  // euler constant
+		BigDecimal bigSumFactors = new BigDecimal(1);
+		for(int i=0; i<numGenes; i++) {
+			//System.out.println("Compute prob for gene: " + i);
+			// Compute the factors uses for this gene once
+			for(int j = 0; j<numClasses; j++) {
+				// The factors
+				RealMatrix m1 = yMatrix.getRowMatrix(i).transpose().subtract(s.multiply((mu.getRowMatrix(j).add(gamma.get(j).getRowMatrix(i)).transpose())));
+				e1 = -(m1.transpose().multiply(m1).getEntry(0, 0) / variance);
+				e2 = -0.5 * (gamma.get(j).getRowMatrix(i).multiply(inverseCovMatrices.get(j).multiply(gamma.get(j).getRowMatrix(i).transpose())).getEntry(0, 0));
+				factors[j] = classProbs[j] * Math.exp(e1) * Math.exp(e2);
+				// Check if we need BigDecimals
+				if(Double.isInfinite(factors[j])) {
+					isFactorInfinite = true;
+					// Copy the already computed factors
+					for(int k=0; k<j; k++) {
+						bigFactors[k] = new BigDecimal(factors[k]);
+					}
+					// Compute the big factor with BigDecimals
+					bigFactors[j] = computeFactorAsBigDecimal(bigE, e1, e2, classProbs[j]);
+					
+				} else if(isFactorInfinite) {
+					// There was an infinite factor, so compute the following factors as BigDecimal
+					bigFactors[j] = computeFactorAsBigDecimal(bigE, e1, e2, classProbs[j]);
+				}
+			}
+
+			// Compute the sum of the factors
+			if(isFactorInfinite) {
+				bigSumFactors = de.zbit.util.ArrayUtils.sum(bigFactors);				
+			} else {
+				sumFactors = de.zbit.util.ArrayUtils.sum(factors);
+			}
+			
+			// Check whether the sum of the factors is infinite
+			if(Double.isInfinite(sumFactors)) {
+				isFactorInfinite = true;
+				// Save the factors as BigDecimals
+				for(int j=0; j<numClasses; j++) {
+					bigFactors[j] = new BigDecimal(factors[j]); 
+				}
+				// Compute the sum of the bigFactors
+				bigSumFactors = de.zbit.util.ArrayUtils.sum(bigFactors);
+			}
+			
+			// Use the computed factors to compute P(j|i)
+			for (int j = 0; j<numClasses; j++) {
+				if(isFactorInfinite) {
+					probs[i][j] = (bigFactors[j].divide(bigSumFactors, 5)).doubleValue();					
+				} else {
+					probs[i][j] = factors[j] / sumFactors;	
+				}
+				
+				if(Double.isInfinite(probs[i][j]) || Double.isNaN(probs[i][j])) {
+					System.out.println("Invalid probability");
+				}
+			}
+			isFactorInfinite = false;
+		}
+	}
+		
+
+	/**
+	 * 
+	 */
+	private void findMAPEstimate() {
+		RealMatrix m1;		// a factor for the MAP estimate, computed once for each class
+		for(int j=0; j<numClasses; j++) {
+			m1 = inverseCovMatrices.get(j).scalarMultiply(variance).add((s.transpose().multiply(s)));
+			m1 = new SingularValueDecomposition(m1).getSolver().getInverse();
+			// The gamma matrix of class j
+			RealMatrix new_gamma = gamma.get(j);
+			// Compute the MAP estimate of gamma_ij for each gene
+			for(int i=0; i<numGenes; i++) {
+				RealMatrix m2 = s.transpose().multiply((yMatrix.getRowMatrix(i).transpose().subtract(s.multiply(mu.getRowMatrix(j).transpose()))));
+				new_gamma.setRowMatrix(i, m1.multiply(m2).transpose());
+			}
+			// Set the new gamma matrix for class j
+			gamma.set(j, new_gamma);
+		}
+	}
+	
+	
+	/**
+	 * 
+	 */
+	private void maximizeVariance() {
+		// Assume that n_i in the paper is the number of experiments (measured points) for gene i
+		// Because here all genes have the same number of experiments
+		int n = numGenes * numDataPoints;
+		// The traces of some specific matrices are needed. The j-th value represents the trace computed
+		// with the use of j-th inverted covariance matrix
+		double[] traces = new double[numClasses];
+		for(int j=0; j<numClasses; j++) {
+			traces[j] = (new SingularValueDecomposition(inverseCovMatrices.get(j).add(sts)).getSolver()).getInverse().add(sts).getTrace();
+		}
+		
+		// For the variance, we have to compute a sum over genes and classes
+		double sum = 0;
+		// Two factors used for better coed
+		RealMatrix f1;
+		RealMatrix f2;
+		for(int i=0; i<numGenes; i++) {
+			for(int j=0; j<numClasses; j++) {
+				f1 = yMatrix.getRowMatrix(i).transpose().subtract(s.multiply(mu.getRowMatrix(j).transpose().add(gamma.get(j).getRowMatrix(i).transpose()))).transpose();
+				f2 = yMatrix.getRowMatrix(i).transpose().subtract(s.multiply((mu.getRowMatrix(j).transpose().add(gamma.get(j).getRowMatrix(i).transpose().scalarAdd(traces[j])))));
+				sum += probs[i][j] * (f1.multiply(f2).getEntry(0, 0));
+			}
+		}
+		variance = sum / n;
+	}
+	
+	
+	/**
+	 * 
+	 */
+	private void maximizeMu() {
+		RealMatrix m1 = new Array2DRowRealMatrix(q, q);
+		RealMatrix m2 = new Array2DRowRealMatrix(q, 1);
+		for(int j=0; j<numClasses; j++) {
+			// Each gene plays a role for the new class center.
+			for(int i=0; i<numGenes; i++) {
+				m1 = m1.add(sts.scalarMultiply(probs[i][j]));
+				m2 = m2.add(s.transpose().scalarMultiply(probs[i][j]).multiply(yMatrix.getRowMatrix(i).transpose().subtract(s.multiply(gamma.get(j).getRowMatrix(i).transpose()))));
+			}
+			// m1 has to be inverted
+			try{
+				m1 = new SingularValueDecomposition(m1).getSolver().getInverse();
+			} catch(Exception e) {
+				System.out.println("mu is singular.");
+				System.out.println(mu);
+				System.exit(-1);
+			}
+			mu.setRowMatrix(j, m1.multiply(m2).transpose());
+		}
+	}
+	
+	
+	/**
+	 * 
+	 */
+	private void maximizeCovMatrices() {
+		// Compute at first summands that are used very often in the following part.
+		RealMatrix m1;
+		ArrayList<RealMatrix> summands = new ArrayList<RealMatrix>(numClasses);
+		for(int j=0; j<numClasses; j++) {
+			m1 = inverseCovMatrices.get(j).add(sts.scalarMultiply(1/variance));
+			summands.add(new SingularValueDecomposition(m1).getSolver().getInverse());
+		}		
+		// Now compute the new covariance matrices
+		RealMatrix numerator = new Array2DRowRealMatrix(q, q);
+		double denominator = 0;
+		RealMatrix m; // a factor
+		for(int j=0; j<numClasses; j++) {
+			// Build sum over the genes
+			for(int i=0; i<numGenes; i++) {
+				m = gamma.get(j).getRowMatrix(i).transpose().multiply(gamma.get(j).getRowMatrix(i));
+				numerator = numerator.add(m.add(summands.get(j)).scalarMultiply(probs[i][j]));
+				denominator += probs[i][j];
+			}
+			// The final result
+			m = numerator.scalarMultiply(1/denominator);
+			covMatrices.set(j, m);
+			// Compute also the new inverse of the covMatrix
+			inverseCovMatrices.set(j, new LUDecomposition(m).getSolver().getInverse());
+		}
+	}
+	
+	
+	/**
+	 * 
+	 */
+	private void updateClassProbs() {
+		double sum = 0;
+		for(int j=0; j<numClasses; j++) {
+			sum = 0;
+			for(int i=0; i<numGenes; i++) {
+				sum += probs[i][j];
+			}
+			classProbs[j] = sum / numGenes;
+		}
+	}
+	
+	
+	/**
+	 * 
+	 */
+	private void computeLogLikelihood() {
+		double newLogLikelihood = 0;
+		double exp1 = 0; // The first exponent
+		double exp2 = 0; // The second exponent
+		// Square root of the covMatrix determinants are often needed
+		double[] SquareRootDets = new double[numClasses];
+		for(int j=0; j<numClasses; j++) {
+			SquareRootDets[j] = Math.sqrt(new LUDecomposition(covMatrices.get(j)).getDeterminant());
+		}
+		// Now compute the log likelihood
+		for(int i=0; i<numGenes; i++) {
+			double sum = 0;
+			// This indicator variable (dummy variable) assignes each gene to exactly one class.
+			// So this is the class j for gene i with the highest probability.
+			int j = findClassOfGene(probs[i]);
+			//for(int j=0; j<numClasses; j++) {
+				RealMatrix m = yMatrix.getRowMatrix(i).transpose().subtract(s.multiply(mu.getRowMatrix(j).transpose().add(gamma.get(j).getRowMatrix(i).transpose())));
+				exp1 = - (m.transpose().multiply(m).scalarMultiply(1/(2*variance)).getEntry(0, 0));
+				exp2 = -0.5 * (gamma.get(j).getRowMatrix(i).multiply(inverseCovMatrices.get(j)).multiply(gamma.get(j).getRowMatrix(i).transpose()).getEntry(0, 0));
+				if(Double.isNaN(exp1) || Double.isNaN(exp2) || Double.isInfinite(exp1) || Double.isInfinite(exp2)){
+					System.out.println("--------");
+					if (Double.isNaN(exp1))
+						System.out.println("exp1 is NaN");
+					if (Double.isNaN(exp2))
+						System.out.println("exp2 is NaN");
+					if (Double.isInfinite(exp1))
+						System.out.println("exp1: " + exp1);
+					if(Double.isInfinite(exp2))
+						System.out.println("exp2: " + exp2);
+					System.out.println("--------");
+				}
+				//sum += probs[i][j] * (1/Math.pow(variance, numDataPoints)) * Math.exp(exp1) * Math.exp(exp2);
+				sum += (1/Math.pow(variance, numDataPoints)) * Math.exp(exp1) * Math.exp(exp2);
+			//}
+			newLogLikelihood += Math.log(sum);
+		}
+		logLikelihood = newLogLikelihood;
+		System.out.println("-------------");
+		System.out.println(logLikelihood);
+		System.out.println("-------------");
+	}
+	
+	
+	/**
+	 * Find the class of the gene. That means the class with the maximum
+	 * probability.
+	 * @param probs
+	 * @return
+	 */
+	private int findClassOfGene(double[] probs) {
+		double max = Double.MIN_VALUE;
+		int pos = 0;
+		for(int i=0; i<probs.length; i++) {
+			if(probs[i] > max) {
+				max = probs[i];
+				pos = i;
+			}
+		}
+		return pos;
+	}
+
+	/**
+	 * Get some data to test the TimeFit algorithm.
+	 */
+	private static RealMatrix sampleTestData(int numGenes, int numExperiments, int numClasses) {
 		double[][] testData = new double[numGenes][numExperiments];
-		double[][]	means = new double[numClasses][numExperiments];
+		double[][] means = new double[numClasses][numExperiments];
 		double[][] sds = new double[numClasses][numExperiments];
 		
 		// Generate random means and standard deviations. The means are between the
@@ -430,297 +943,118 @@ public class TimeFit extends TimeSeriesModel {
 			}
 		}
 		
-		tf.yMatrix = new Array2DRowRealMatrix(testData); // genes as rows
+		return new Array2DRowRealMatrix(testData);
+	}
+
+	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// Compute test data
+		int numClasses = 5;
+		int numGenes = 30000;
+		int numDataPoints = 24;
+		RealMatrix testData = sampleTestData(numGenes, numDataPoints, numClasses);
 		
-		// Testing output of the first gene.
-		System.out.println("The means of the first gene:");
-		for(int i=0; i<numExperiments; i++) {
-			System.out.print(means[0][i] + "\t");
+		// Test for a time series with x experiments from timepoint 0 to 24
+		// TODO Generator with TimeSeriesData and/or Matrix, Array
+		TimeFit tf = new TimeFit();
+		// Generate the test data of 30000 genes, 24 experiments and 5 classes (different sd and means).
+		tf.numClasses = 5;
+		tf.numGenes = 30000;
+		tf.numDataPoints = 24;
+		tf.yMatrix = sampleTestData(tf.numGenes, tf.numDataPoints, tf.numClasses); // genes as rows
+		
+		// Set the time points of the test
+		tf.x = new double[tf.numDataPoints];
+		for(int i=0; i<tf.numDataPoints; i++) {
+			tf.x[i] = i+1; // start with time point 1
 		}
-		System.out.println("\nThe SDs of the first gene:");
-		for(int i=0; i<numExperiments; i++) {
-			System.out.print(sds[0][i] + "\t");
-		}
-		System.out.println("\nThe sampled test data of the first gene:");
-		for(int i=0; i<numExperiments; i++) {
-			System.out.print(testData[0][i] + "\t");
-		}
-		System.out.println("");
 		
 		// Test the placing of the control points
 		tf.chooseControlPoints(tf.x);
 		
 		// Test the placing of the knots
 		tf.placeKnots();
+		// testing
 		for(int i=0; i<tf.knots.length; i++) {
 			System.out.println("Knot " + i + ": " + tf.knots[i]);
 		}
 		
-		
 		// Compute the values of the basis B-splines. The result is a matrix
 		// S, where S_[ij] = b_{j,4}(t_i)
-		tf.s = tf.computeS();
-		// Testing output
-		// System.out.println(tf.s.toString());
-		
+		tf.computeS();
 		
 		// 1. Initialize the class center for each class as described in the paper.
-		// The center of a class is the mean value of the spline coefficients of genes in
-		// the class.
-		// The class centers
-		tf.mu = new Array2DRowRealMatrix(numClasses, tf.q);
-		// The already chosen genes. Don't allow a two same class centers.
-		ArrayList<Integer> chosenGenes = new ArrayList<Integer>(numClasses);
-		// Initialize the class centers 
-		int gene;
-		for(int i=0; i<numClasses; i++) {
-			// Choose a new random gene.
-			gene = (int) (Math.random() * numGenes);
-			while (chosenGenes.contains(gene)) {
-				gene = (int) (Math.random() * numGenes);
-			}
-			// Compute the class center
-			RealMatrix m = tf.s.transpose().multiply(tf.s); // An intermediary result
-			// Invert m
-			m = new LUDecomposition(m).getSolver().getInverse();
-			// Compute the final initial class center, a q by 1 vector
-			m = m.multiply(tf.s.transpose()).multiply(tf.yMatrix.getRowMatrix(gene).transpose());
-			// Add the class center to the list of class centers
-			tf.mu.setRowMatrix(i, m.transpose()); // the i-th center is in the i-th row
-		}
+		// The center of a class is the mean value of the spline coefficients of genes in the class.
+		tf.initializeClassCenter();
+		// testing
 		System.out.println("Initial class centers: " + tf.mu);
 		
-		
 		// Initialize mapping from a class to the set of genes in the class.
-		tf.class2genes = new ArrayList<>(numClasses);
-		for(int i=0; i<numClasses; i++) {
-			tf.class2genes.add(new ArrayList<Integer>());
-		}
-		// Initialize the mapping from a gene to its class
-		tf.gene2class = new int[numGenes];
-		
-		// For each gene, select a class j uniformly at random.
-		int j;
-		for(int i=0; i<numGenes; i++) {
-			j = (int) (Math.random() * numClasses); // Select a random class j for gene i
-			// Assign gene i to class j
-			tf.gene2class[i] = j;
-			// Add the gene to the class2gene mapping
-			tf.class2genes.get(j).add(i);
-		}
+		tf.initializeGenes2ClassMapping();
 		
 		// Compute the covariance matrix for each class
-		// This array is used to index the rows of the expression values for the submatrix
-		int[] rowsPrimitive;
-		
-		tf.covMatrices = new ArrayList<RealMatrix>(numClasses);
-		RealMatrix subMatrix;
-		System.out.println("Rows: " + tf.yMatrix.getRowDimension() + "Columns: " + tf.yMatrix.getColumnDimension());
-		for(j=0; j<numClasses; j++) {
-			// Get a submatrix with the expression values of genes of class j
-			Integer[] rows = new Integer[tf.class2genes.get(j).size()];
-			rowsPrimitive = ArrayUtils.toPrimitive(tf.class2genes.get(j).toArray(rows));
-			subMatrix = tf.yMatrix.getSubMatrix(rowsPrimitive, tf.controlPointsColumn);
-					
-			// Compute and set the covariance matrix for class j
-			Covariance cov = new Covariance(subMatrix);
-			tf.covMatrices.add(cov.getCovarianceMatrix());
-		}
-		
+		tf.initializeCovMatrices();
+
 		// Initialize the inverse covariance matrices.
-		tf.inverseCovMatrices = new ArrayList<RealMatrix>(numClasses);
-		for(j=0; j<numClasses; j++) {
-			tf.inverseCovMatrices.add(new LUDecomposition(tf.covMatrices.get(j)).getSolver().getInverse());
-		}
-		
+		tf.computeInverseCovMatrices();	
 		
 		// Sample the gene specific variation coefficients. Each gene has q (number of control points)
 		// variation coefficients, which are sampled with the class covariance matrix.
-		tf.gamma = new ArrayList<RealMatrix>(numClasses);
-		MultivariateNormalDistribution dist;
-		// Iterate over the classes and sample matrix of the variation coefficients
-		for(j=0; j<numClasses; j++) {
-			// The distribution of the variation coefficients for class j
-			dist = new MultivariateNormalDistribution(new double[tf.q], tf.covMatrices.get(j).getData());
-			// The matrix for the variation coefficients of class j
-			RealMatrix m = new Array2DRowRealMatrix(numGenes, tf.q);
-			// Fill the matrix with sample values
-			for(int i=0; i<numGenes; i++) {
-				m.setRow(i, dist.sample());				
-			}
-			tf.gamma.add(m);
-		}
-		System.out.println("Gamma : \t" + tf.gamma.get(0).getRowMatrix(1).toString()); // Testing output
-
+		tf.computeGamma();
 		
 		// Initialize the gene variances and sample the noise vector for each gene.
-		tf.geneVariances = new double[numGenes];
-		for(int i=0; i<numGenes; i++) {
-			tf.geneVariances[i] = MathUtils.variance(tf.yMatrix.getRowMatrix(i).getSubMatrix(new int[1], tf.controlPointsColumn).getRow(0)); 
-		}
-		System.out.println("Variance: \t" + tf.geneVariances[1]);
+		tf.computeGeneVariances();
+		
 		// Sample the noise vector for each gene
-		tf.noiseVectors = new Array2DRowRealMatrix(numGenes, tf.q);
-		Random rand = new Random();
-		for(int i=0; i<numGenes; i++) {
-			for(j=0; j<tf.q; j++) {
-				tf.noiseVectors.setEntry(i, j, rand.nextGaussian() * tf.geneVariances[i]);
-			}
-		}
-		System.out.println("Noise vector: \t" + tf.noiseVectors.getRowMatrix(1).toString()); // Testing output
-
+		tf.sampleNoiseVectors();
 		
 		// Now find the best parameters and class assignment with an EM-algorithm
-		// At the beginning, each class has the same probability
-		double p = 1 / numClasses;
-		tf.classProbs = new double[numClasses];
-		for(int i=0; i<numClasses; i++) {
-			tf.classProbs[i] = p;
-		}
-		
+		tf.computeClassProbs();
 		
 		// TODO Repeat until the log likelihood converges
 		// TODO Check if all math things are correct
+		double threshold = 0.1;
+		tf.logLikelihood = Double.MAX_VALUE;
+		double oldLogLikelihood = 0;
+		
+		
+		System.out.println("Diff: " + Math.abs(tf.logLikelihood - oldLogLikelihood));
+		while(Math.abs(tf.logLikelihood - oldLogLikelihood) > threshold) {
+			System.out.println("Diff: " + Math.abs(tf.logLikelihood - oldLogLikelihood));
+			oldLogLikelihood = tf.logLikelihood;
+			/*
+			 * E-Step:
+			 * 
+			 * For all genes i and classes j, compute P(j|i). This is the probability, that gene i
+			 * belongs to class j.
+			 */ 
+			tf.computeProbabilities();
+			
+			/*
+			 * M-Step
+			 * 
+			 * For all genes i and classes j, find the MAP estimate of gamma_ij
+			 */
+			tf.findMAPEstimate();
+			
+			// Maximize the covariance matrices Γ, the variance and the class centers mu
+			tf.maximizeVariance();
 
-		/*
-		 * E-Step:
-		 */
-		// For all genes i and classes j, compute P(j|i). This is the probability, that gene i
-		// belongs to class j.
-		tf.probs = new double[numGenes][numClasses];
-		// Factors, which are used numClasses+1 times, so compute them just once.
-		double[] factors = new double[numClasses];
-		for(int i=0; i<numGenes; i++) {
-			// Compute the factors uses for this gene once
-			for(j = 0; j<numClasses; j++) {
-				// The factors
-				RealMatrix m1 = tf.yMatrix.getRowMatrix(i).transpose().subtract(tf.s.multiply((tf.mu.getRowMatrix(j).add(tf.gamma.get(j).getRowMatrix(i)).transpose())));
-				double e1 = m1.transpose().multiply(m1).getEntry(0, 0) / tf.variance;
-				double e2 = -0.5 * (tf.gamma.get(j).getRowMatrix(i).multiply(tf.inverseCovMatrices.get(j).multiply(tf.gamma.get(j).getRowMatrix(i).transpose())).getEntry(0, 0));
-				factors[j] = tf.classProbs[j] * Math.exp(e1) * Math.exp(e2);
-			}
-			double sumFactors = de.zbit.util.ArrayUtils.sum(factors);
-			// Use the computed factors to compute P(j|i)
-			for(j = 0; j<numClasses; j++) {
-				tf.probs[i][j] = factors[j] / sumFactors;
-			}	
+			// Compute the new class centers mu. To do this, we have to compute two matrices and
+			// multiplicate them
+			tf.maximizeMu();
+			
+			// Compute the new class covariance matrices.
+			tf.maximizeCovMatrices();
+			
+			// Update the class probabilities
+			tf.updateClassProbs();
+				
+			// Compute the new log likelihood.
+			tf.computeLogLikelihood();
 		}
-		
-		
-		/*
-		 * M-Step
-		 * For all genes i and classes j, find the MAP estimate of gamma_ij
-		 */
-		RealMatrix m1;		// a factor for the MAP estimate, computed once for each class
-		for(j=0; j<numClasses; j++) {
-			m1 = tf.inverseCovMatrices.get(j).scalarMultiply(tf.variance).add((tf.s.transpose().multiply(tf.s)));
-			m1 = new LUDecomposition(m1).getSolver().getInverse();
-			// The gamma matrix of class j
-			RealMatrix gamma = tf.gamma.get(j);
-			// Compute the MAP estimate of gamma_ij for each gene
-			for(int i=0; i<numGenes; i++) {
-				RealMatrix m2 = tf.s.transpose().multiply((tf.yMatrix.getRowMatrix(i).transpose().subtract(tf.s.multiply(tf.mu.getRowMatrix(j).transpose()))));
-				gamma.setRowMatrix(i, m1.multiply(m2).transpose());
-			}
-		}
-		
-		// Maximize the covariance matrices Γ, the variance and the class centers mu
-		// Assume that n_i in the paper is the number of experiments (measured points) for gene i
-		// Because here all genes have the same numbe of experiments
-		int n = numGenes * numExperiments;
-		tf.sts = tf.s.transpose().multiply(tf.s);
-		// The traces of some specific matrices are needed. The j-th value represents the trace computed
-		// with the use of j-th inverted covariance matrix
-		double[] traces = new double[numClasses];
-		for(j=0; j<numClasses; j++) {
-			traces[j] = new LUDecomposition(tf.inverseCovMatrices.get(j).add(tf.sts)).getSolver().getInverse().add(tf.sts).getTrace();
-		}
-		
-		// For the variance, we have to compute a sum over genes and classes
-		double sum = 0;
-		// Two factors used for better coed
-		RealMatrix f1;
-		RealMatrix f2;
-		for(int i=0; i<numGenes; i++) {
-			for(j=0; j<numClasses; j++) {
-				f1 = tf.yMatrix.getRowMatrix(i).transpose().subtract(tf.s.multiply(tf.mu.getRowMatrix(j).transpose().add(tf.gamma.get(j).getRowMatrix(i).transpose()))).transpose();
-				f2 = tf.yMatrix.getRowMatrix(i).transpose().subtract(tf.s.multiply((tf.mu.getRowMatrix(j).transpose().add(tf.gamma.get(j).getRowMatrix(i).transpose().scalarAdd(traces[j])))));
-				sum += tf.probs[i][j] * (f1.multiply(f2).getEntry(0, 0));
-			}
-		}
-		tf.variance = sum / n;
-		
-		// Compute the new class centers mu. To do this, we have to compute two matrices and
-		// multiplicate them
-		m1 = new Array2DRowRealMatrix(tf.q, tf.q);
-		RealMatrix m2 = new Array2DRowRealMatrix(tf.q, 1);
-		for(j=0; j<numClasses; j++) {
-			// Each gene plays a role for the new class center.
-			for(int i=0; i<numGenes; i++) {
-				m1 = m1.add(tf.sts.scalarMultiply(tf.probs[i][j]));
-				m2 = m2.add(tf.s.transpose().scalarMultiply(tf.probs[i][j]).multiply(tf.yMatrix.getRowMatrix(i).transpose().subtract(tf.s.multiply(tf.gamma.get(j).getRowMatrix(i).transpose()))));
-			}
-			// m1 has to be inverted
-			m1 = new LUDecomposition(m1).getSolver().getInverse();
-			tf.mu.setRowMatrix(j, m1.multiply(m2).transpose());
-		}
-		
-		// Compute the new class variance matrices.
-		// Compute at first summands that are used very often in the following part.
-		ArrayList<RealMatrix> summands = new ArrayList<RealMatrix>(numClasses);
-		for(j=0; j<numClasses; j++) {
-			m1 = tf.inverseCovMatrices.get(j).add(tf.sts.scalarMultiply(1/tf.variance));
-			summands.add(new LUDecomposition(m1).getSolver().getInverse());
-		}		
-		// Now compute the new covariance matrices
-		RealMatrix numerator = new Array2DRowRealMatrix(tf.q, tf.q);
-		double denominator = 0;
-		RealMatrix m; // a factor
-		for(j=0; j<numClasses; j++) {
-			// Build sum over the genes
-			for(int i=0; i<numGenes; i++) {
-				m = tf.gamma.get(j).getRowMatrix(i).transpose().multiply(tf.gamma.get(j).getRowMatrix(i));
-				numerator = numerator.add(m.add(summands.get(j)).scalarMultiply(tf.probs[i][j]));
-				denominator += tf.probs[i][j];
-			}
-			// The final result
-			m = numerator.scalarMultiply(1/denominator);
-			tf.covMatrices.set(j, m);
-			// Compute also the new inverse of the covMatrix
-			tf.inverseCovMatrices.set(j, new LUDecomposition(m).getSolver().getInverse());
-		}
-		
-		
-		// Update the class probabilities
-		sum = 0;
-		for(j=0; j<numClasses; j++) {
-			sum = 0;
-			for(int i=0; i<numGenes; i++) {
-				sum += tf.probs[i][j];
-			}
-			tf.classProbs[j] = sum / numGenes;
-		}
-		
-		// Compute the new log likelihood.
-		double newLogLikelihood = 0;
-		double exp1 = 0; // The first exponent
-		double exp2 = 0; // The second exponent
-		// Square root of the covMatrix determinants are often needed
-		double[] SquareRootDets = new double[numClasses];
-		for(j=0; j<numClasses; j++) {
-			SquareRootDets[j] = Math.sqrt(new LUDecomposition(tf.covMatrices.get(j)).getDeterminant());
-		}
-		// Now compute the log likelihood
-		for(int i=0; i<numGenes; i++) {
-			sum = 0;
-			for(j=0; j<numClasses; j++) {
-				m = tf.yMatrix.getRowMatrix(i).transpose().subtract(tf.s.multiply(tf.mu.getRowMatrix(j).transpose().add(tf.gamma.get(j).getRowMatrix(i).transpose())));
-				exp1 = - (m.transpose().multiply(m).scalarMultiply(1/(2*tf.variance)).getEntry(0, 0));
-				exp2 = -0.5 * (tf.gamma.get(j).getRowMatrix(i).multiply(tf.inverseCovMatrices.get(j)).multiply(tf.gamma.get(j).getRowMatrix(i).transpose()).getEntry(0, 0));
-				sum += tf.probs[i][j] * (1/Math.pow(tf.variance, numExperiments)) * Math.exp(exp1) * Math.exp(exp2);
-			}
-			newLogLikelihood += Math.log(sum);
-		}
-
 	}
 }
