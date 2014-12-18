@@ -108,7 +108,7 @@ public abstract class TimeSeriesModel {
 	 * @throws Exception 
 	 */
 	public void init(List<mRNATimeSeries> data,
-			List<ValueTriplet<Double, String, SignalType>> timePoints) throws Exception {
+			List<ValueTriplet<Double, String, SignalType>> timePoints) {
 		// Intentially left blank for model methods, that need no initialization.
 		setInitialized(true);
 	}

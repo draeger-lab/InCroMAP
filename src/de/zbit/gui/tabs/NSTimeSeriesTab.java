@@ -44,6 +44,7 @@ import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.mRNATimeSeriesReader;
 import de.zbit.math.CubicSplineInterpolation;
 import de.zbit.math.TimeFit;
+import de.zbit.math.TimeFitModel;
 import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.Species;
 import de.zbit.util.objectwrapper.ValueTriplet;
@@ -232,20 +233,62 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		// The data should be represented as a list of mRNATimeSeries.
-		try {
-			model.init((List<mRNATimeSeries>) data, timePoints);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		// Model each gene
 		mRNATimeSeries mRNA;
-		for(Object o : this.data) {
-			if(o instanceof mRNATimeSeries) {
-				mRNA = (mRNATimeSeries) o;
-				
+		
+		// The modelling step is different for the two methods.
+		if(classs == CubicSplineInterpolation.class) {
+			for(Object o : this.data) {
+				if(o instanceof mRNATimeSeries) {
+					mRNA = (mRNATimeSeries) o;
+
+					// if mRNA has no NCBI geneID, geneModel for the mRNA is null. Add also a new additional data column,
+					// with information whether the mRNA was modeled or not
+					if(mRNA.getID() == -1) {
+						mRNA.addData("Modeled?", "No");
+					} else {
+						// Testing
+						System.out.println("Recognized CubicSplineInterpolation model method");
+						try {
+							// generate a new model. ! Important: set name and idType manually ! They are needed later.
+							TimeSeriesModel m = classs.newInstance();
+							m.setName(mRNA.getName());
+							m.setGeneID(mRNA.getID());
+							m.setSignalType(getSignalType());
+							m.generateModel(mRNA, timePoints);
+
+							geneModels.add(m);
+							mRNA.addData("Modeled?", "Yes");					
+						} catch (Exception e) {
+							GUITools.showErrorMessage(parent, "Exception while generating CubicSplineInterpolation model for " + mRNA.getName());
+						}
+					}
+				}
+			}
+		} else if(classs == TimeFit.class) {
+			// testing
+			System.out.println("Recognized TimeFit model method");
+			TimeFit tf = new TimeFit();
+			
+			// Cast the data, so that a model can be build from it
+			ArrayList<mRNATimeSeries> castedData = null;
+			try{				
+				castedData = (ArrayList<mRNATimeSeries>) data;
+			} catch (Exception e) {
+				GUITools.showErrorMessage(parent, "Exception while casting data for TimeFit model");
+			}
+			
+			// Compute the parameters for the single gene models
+			try {
+				tf.generateModel(castedData, timePoints);
+			} catch(Exception e) {
+				GUITools.showErrorMessage(parent, "Exception computing the TimeFit model parameters");
+			}
+
+			// Now generate the model for each single gene
+			for(int i=0; i<castedData.size(); i++) {
+				mRNA = castedData.get(i);
 				// if mRNA has no NCBI geneID, geneModel for the mRNA is null. Add also a new additional data column,
 				// with information whether the mRNA was modeled or not
 				if(mRNA.getID() == -1) {
@@ -253,17 +296,17 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 				} else {
 					try {
 						// generate a new model. ! Important: set name and idType manually ! They are needed later.
-						TimeSeriesModel m = classs.newInstance();
+						TimeSeriesModel m = tf.getGeneModel(mRNA, timePoints, i);
 						m.setName(mRNA.getName());
 						m.setGeneID(mRNA.getID());
 						m.setSignalType(getSignalType());
 						m.generateModel(mRNA, timePoints);
-						
+
 						geneModels.add(m);
 						mRNA.addData("Modeled?", "Yes");					
 					} catch (Exception e) {
-						GUITools.showErrorMessage(parent, "Exception while model gene " + mRNA.getName());
-					}	
+						GUITools.showErrorMessage(parent, "Exception assigning TimeFitModel to gene to " + mRNA.getName());
+					}
 				}
 			}
 		}
