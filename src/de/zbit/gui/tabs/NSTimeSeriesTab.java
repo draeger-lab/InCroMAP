@@ -225,20 +225,14 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		
 		this.modelMethod = classs;
 		this.geneModels = new ArrayList<TimeSeriesModel>(this.data.size());
-		
-		// Generate a new instance of the model method
-		TimeSeriesModel model = null;
-		try {
-			model = classs.newInstance();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		// Model each gene
 		mRNATimeSeries mRNA;
 		
 		// The modelling step is different for the two methods.
 		if(classs == CubicSplineInterpolation.class) {
+			// Testing
+			System.out.println("Recognized CubicSplineInterpolation model method");
 			for(Object o : this.data) {
 				if(o instanceof mRNATimeSeries) {
 					mRNA = (mRNATimeSeries) o;
@@ -248,8 +242,6 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 					if(mRNA.getID() == -1) {
 						mRNA.addData("Modeled?", "No");
 					} else {
-						// Testing
-						System.out.println("Recognized CubicSplineInterpolation model method");
 						try {
 							// generate a new model. ! Important: set name and idType manually ! They are needed later.
 							TimeSeriesModel m = classs.newInstance();
@@ -261,6 +253,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 							geneModels.add(m);
 							mRNA.addData("Modeled?", "Yes");					
 						} catch (Exception e) {
+							e.printStackTrace();
 							GUITools.showErrorMessage(parent, "Exception while generating CubicSplineInterpolation model for " + mRNA.getName());
 						}
 					}
@@ -276,6 +269,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 			try{				
 				castedData = (ArrayList<mRNATimeSeries>) data;
 			} catch (Exception e) {
+				e.printStackTrace();
 				GUITools.showErrorMessage(parent, "Exception while casting data for TimeFit model");
 			}
 			
@@ -283,6 +277,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 			try {
 				tf.generateModel(castedData, timePoints);
 			} catch(Exception e) {
+				e.printStackTrace();
 				GUITools.showErrorMessage(parent, "Exception computing the TimeFit model parameters");
 			}
 
@@ -305,6 +300,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 						geneModels.add(m);
 						mRNA.addData("Modeled?", "Yes");					
 					} catch (Exception e) {
+						e.printStackTrace();
 						GUITools.showErrorMessage(parent, "Exception assigning TimeFitModel to gene to " + mRNA.getName());
 					}
 				}

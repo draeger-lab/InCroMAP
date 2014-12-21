@@ -559,6 +559,7 @@ public class NameAndSignalTabActions implements ActionListener {
     try {
       NSwithProbes.convertNamesToGeneSymbols((Iterable<? extends NameAndSignals>) parent.getData(), parent.getSpecies());
     } catch (Exception e1) {
+    	
       GUITools.showErrorMessage(parent, e1);
     }
     

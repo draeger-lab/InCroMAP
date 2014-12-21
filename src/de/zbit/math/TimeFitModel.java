@@ -94,6 +94,8 @@ public class TimeFitModel extends TimeSeriesModel {
 		RealMatrix s = computeSplineBasisFunctions(timePoint);
 		
 		// Return the modeled value as described in the paper.
+		// testing
+		System.out.println(this.name + " returned " + (s.multiply(mu.add(gamma)).getEntry(0, 0)));
 		return s.multiply(mu.add(gamma)).getEntry(0, 0);
 	}
 	

@@ -30,6 +30,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import javax.swing.JPanel;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
@@ -41,6 +43,7 @@ import org.apache.commons.math3.stat.correlation.Covariance;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNATimeSeries;
+import de.zbit.io.mRNATimeSeriesReader;
 import de.zbit.util.objectwrapper.ValueTriplet;
 
 /**
@@ -184,7 +187,7 @@ public class TimeFit extends TimeSeriesModel {
 	/**
 	 * The number of gene classes.
 	 */
-	int numClasses;
+	int numClasses = 5;
 
 	/**
 	 * The number of genes.
@@ -308,18 +311,24 @@ public class TimeFit extends TimeSeriesModel {
 		// Generate a matrix from the mRNATimeSeries data
 		yMatrix = timeSeries2Matrix(data);
 		// testing
+		System.out.println("yMatrix[0]:");
+		System.out.println(yMatrix.getColumnMatrix(0));
 		System.out.println("yMatrix Rows: " + yMatrix.getRowDimension() + "\tCols: " + yMatrix.getColumnDimension());
-
+		System.out.println("\n------------------\n");
 
 		// How many time points and genes do we have?
 		numGenes = yMatrix.getColumnDimension();
 		numDataPoints = yMatrix.getRowDimension();
 
 		// Set the time points of the experiments
+		System.out.println("\n---------------------");
 		x = new double[numDataPoints];
 		for(int i=0; i<numDataPoints; i++) {
 			x[i] = timePoints.get(i).getA();
+			// testing
+			System.out.println("Set x[" + i + "]: " + timePoints.get(i).getA());
 		}
+		System.out.println("---------------------\n");
 
 		// Place the control points
 		chooseControlPoints(x);
@@ -327,21 +336,31 @@ public class TimeFit extends TimeSeriesModel {
 		// Place the knots
 		placeKnots();
 		// testing
+		System.out.println("\n---------------------");
 		for(int i=0; i<knots.length; i++) {
 			System.out.println("Knot " + i + ": " + knots[i]);
 		}
+		System.out.println("---------------------\n");
 
 		// Compute the values of the basis B-splines
 		// S, where S_[ij] = b_{j,4}(t_i)
 		computeS();
+		// testing
+		System.out.println("\n---------------------");
+		System.out.println("S:");
+		System.out.println(s);
+		System.out.println("---------------------\n");
 
 		// 1. Initialize the class center for each class as described in the paper.
 		// The center of a class is the mean value of the spline coefficients of genes in the class.
 		initializeClassCenter();
 		// testing
+		System.out.println("\n---------------------");
 		System.out.println("Initial class centers: " + mu);
+		System.out.println("---------------------\n");
 
-		// Initialize mapping from a class to the set of genes in the class.
+		// Initialize the assignment of genes to their classes.
+		// The classes are initialized 
 		initializeGenes2ClassMapping();
 
 		// Compute the covariance matrix for each class
@@ -361,7 +380,7 @@ public class TimeFit extends TimeSeriesModel {
 		sampleNoiseVectors();
 
 		// Now find the best parameters and class assignment with an EM-algorithm
-		computeClassProbs();
+		initializeClassProbs();
 
 		setInitialized(true);
 	}
@@ -423,14 +442,14 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	private void chooseControlPoints(double[] timePoints) {
 		// A simple estimation for the number of control points.
-		this.q = (timePoints.length / 4)+1;
+		this.q = (timePoints.length / 3)+2;
 
 		// This is the best case we try to achieve: equidistant control points
 		double[] equidistantPoints = new double[q]; // Best x-values of the control points
 		double distance = getLastTimePoint() - getFirstTimePoint();
 		equidistantPoints[0] = getFirstTimePoint();
-		for(int i=1; i<q-1; i++	) {
-			equidistantPoints[i] = i * (getFirstTimePoint() + distance / (q));
+		for(int i=1; i<q-1; i++) {
+			equidistantPoints[i] = getFirstTimePoint() + (i * (distance / (q-1)));
 		}
 		equidistantPoints[q-1] = getLastTimePoint();
 
@@ -478,7 +497,7 @@ public class TimeFit extends TimeSeriesModel {
 
 		for(int i=0; i<numDataPoints; i++) {
 			for(int j=0; j<q; j++) {
-				s_matrix[i][j] = normalizedBSplineBasis(j,4,i);
+				s_matrix[i][j] = normalizedBSplineBasis(j,4,x[i]);
 			}
 		}
 		s = new Array2DRowRealMatrix(s_matrix);
@@ -495,9 +514,9 @@ public class TimeFit extends TimeSeriesModel {
 	private void placeKnots() {
 		// How many knots have to be placed?
 		int numberOfKnots = q + order;
-		System.out.println(q);
 		knots = new double[numberOfKnots];
 
+		// TODO update the comment
 		// Place the knots. Two knots before the first time point and two knots after the
 		// last time point are needed to describe the resulting model in the interval
 		// [firstTimePoint, lastTimePoint]
@@ -531,7 +550,7 @@ public class TimeFit extends TimeSeriesModel {
 			// Compute the final initial class center, a q by 1 vector
 			m = m.multiply(s.transpose()).multiply(yMatrix.getColumnMatrix(i));
 			// Add the class center to the list of class centers
-			mu.setColumnMatrix(j, m); // the i-th center is in the i-th column of mu
+			mu.setColumnMatrix(j, m); // the j-th center is in the j-th column of mu
 		}
 	}
 
@@ -580,6 +599,19 @@ public class TimeFit extends TimeSeriesModel {
 			covMatrices.add(cov.getCovarianceMatrix());
 		}
 	}
+	
+	
+	/**
+	 * Initialize the class probabilities. That is the initial probability that a gene i belongs to class j.
+	 */
+	private void initializeClassProbs() {
+		// At the beginning, each class has the same probability
+		double p = 1.0 / numClasses;
+		classProbs = new double[numClasses];
+		for(int j=0; j<numClasses; j++) {
+			classProbs[j] = p;
+		}
+	}
 
 
 	/**
@@ -622,6 +654,7 @@ public class TimeFit extends TimeSeriesModel {
 		for(int i=0; i<numGenes; i++) {
 			geneVariances[i] = MathUtils.variance(yMatrix.getColumnMatrix(i).getSubMatrix(controlPointsColumn, new int[1]).getColumn(0)); 
 		}
+		variance = de.zbit.util.ArrayUtils.sum(geneVariances) / numGenes;
 		System.out.println("Variance: \t" + geneVariances[1]);	
 	}
 
@@ -642,19 +675,6 @@ public class TimeFit extends TimeSeriesModel {
 
 
 	/**
-	 * Compute the class probabilities. That is the initial probability that a gene i belongs to class j.
-	 */
-	private void computeClassProbs() {
-		// At the beginning, each class has the same probability
-		double p = 1.0 / numClasses;
-		classProbs = new double[numClasses];
-		for(int j=0; j<numClasses; j++) {
-			classProbs[j] = p;
-		}
-	}
-
-
-	/**
 	 * Compute the power of a BigDecimal to an double value.
 	 */
 	private BigDecimal bigDecimalPow(BigDecimal n1, BigDecimal n2) {
@@ -667,7 +687,14 @@ public class TimeFit extends TimeSeriesModel {
 		BigDecimal remainderOf2 = n2.remainder(BigDecimal.ONE);
 		BigDecimal n2IntPart = n2.subtract(remainderOf2);
 		// Calculate big part of the power using context -
-		BigDecimal intPow = n1.pow(n2IntPart.intValueExact());
+		// TODO n2IntPart.intValueExact() -> java.lang.ArithmeticException: Overflow
+		BigDecimal intPow = new BigDecimal(1);
+		try{
+			intPow = n1.pow(n2IntPart.intValueExact());
+		} catch(Exception e) {
+			System.out.println("n2IntPart: " + n2IntPart);
+			e.printStackTrace();
+		}
 		BigDecimal doublePow = new BigDecimal(Math.pow(dn1, remainderOf2.doubleValue()));
 		BigDecimal result = intPow.multiply(doublePow);
 
@@ -684,6 +711,11 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	private BigDecimal computeFactorAsBigDecimal(BigDecimal bigE, double e1,
 			double e2, double classProb) {
+		
+		// Compute logarithm of factor
+//		BigDecimal tmp = new BigDecimal(Math.log(classProb) + e1 + e2);
+//		System.out.println("Exponent big: " + tmp);
+//		return bigDecimalPow(bigE, tmp);
 		BigDecimal bigF1 = bigDecimalPow(bigE, new BigDecimal(e1));
 		BigDecimal bigF2 = bigDecimalPow(bigE, new BigDecimal(e2));
 		return new BigDecimal(classProb).multiply(bigF1).multiply(bigF2);
@@ -705,28 +737,77 @@ public class TimeFit extends TimeSeriesModel {
 		BigDecimal[] bigFactors = new BigDecimal[numClasses];
 		BigDecimal bigE = new BigDecimal(Math.exp(1));  // euler constant
 		BigDecimal bigSumFactors = new BigDecimal(1);
+		// testing
+		System.out.println("variance: " + variance);
 		for(int i=0; i<numGenes; i++) {
+			factors = new double[numClasses];
+			bigFactors = new BigDecimal[numClasses];
 			//System.out.println("Compute prob for gene: " + i);
 			// Compute the factors uses for this gene once
 			for(int j = 0; j<numClasses; j++) {
 				// The factors
 				RealMatrix m1 = yMatrix.getColumnMatrix(i).subtract(s.multiply((mu.getColumnMatrix(j).add(gamma.get(j).getColumnMatrix(i)))));
-				e1 = -(m1.transpose().multiply(m1).getEntry(0, 0) / variance);
+				e1 = -(m1.transpose().multiply((m1.scalarMultiply(1 / variance))).getEntry(0, 0));
 				e2 = -0.5 * (gamma.get(j).getColumnMatrix(i).transpose().multiply(inverseCovMatrices.get(j)).multiply(gamma.get(j).getColumnMatrix(i)).getEntry(0, 0));
-				factors[j] = classProbs[j] * Math.exp(e1) * Math.exp(e2);
-				// Check if we need BigDecimals
-				if(Double.isInfinite(factors[j])) {
-					isFactorInfinite = true;
-					// Copy the already computed factors
-					for(int k=0; k<j; k++) {
-						bigFactors[k] = new BigDecimal(factors[k]);
+				if(!isFactorInfinite) {
+					factors[j] = classProbs[j] * Math.exp(e1) * Math.exp(e2);
+					//factors[j] = Math.log(classProbs[j]) + e1 + e2;
+					// Check if we need BigDecimals
+					if(Double.isInfinite(factors[j])) {
+						isFactorInfinite = true;
+						System.out.println("e1: " + e1 + " e2: " + e2);
+						// Copy the already computed factors
+						for(int k=0; k<j; k++) {
+							// TODO java.lang.NumberFormatException: Infinite or NaN
+							// factors[k] is infinite or NaN
+							try {
+								bigFactors[k] = new BigDecimal(factors[k]);							
+							} catch (Exception e) {
+								System.out.println("Factor " + k + " infinite or NaN: " + factors[k]);
+								for(int l=0; l<numClasses; l++)
+									System.out.println("Faktor" + l + ": " + factors[l]);
+								e.printStackTrace();
+							}
+						}
+						// Compute the big factor with BigDecimals
+						bigFactors[j] = computeFactorAsBigDecimal(bigE, e1, e2, classProbs[j]);
 					}
-					// Compute the big factor with BigDecimals
-					bigFactors[j] = computeFactorAsBigDecimal(bigE, e1, e2, classProbs[j]);
-
-				} else if(isFactorInfinite) {
+				} else {
 					// There was an infinite factor, so compute the following factors as BigDecimal
+					System.out.println("Compute factor " + j + " as with BigDecimal.");
 					bigFactors[j] = computeFactorAsBigDecimal(bigE, e1, e2, classProbs[j]);
+				}
+			}
+			
+			// testing
+			if(i == 1) {
+				for(int k=0; k<numClasses; k++) {
+					System.out.println("factor" + k + ": " + factors[k]);
+				}
+			}
+			
+			// Catch the case, when all factors are 0 (because of the limited double precision)
+			boolean allFactorsZero = true;
+			for(int k=0; k<numClasses; k++) {
+				if(factors[k] != 0) {
+					allFactorsZero = false;
+					break;
+				}
+			}
+			if(allFactorsZero) {
+				// Recompute the factors using BigDecimal
+//				isFactorInfinite = true;
+//				bigFactors = new BigDecimal[numClasses];
+//				for(int j=0; j<numClasses; j++) {
+//					RealMatrix m1 = yMatrix.getColumnMatrix(i).subtract(s.multiply((mu.getColumnMatrix(j).add(gamma.get(j).getColumnMatrix(i)))));
+//					e1 = -(m1.transpose().multiply((m1.scalarMultiply(1 / variance))).getEntry(0, 0));
+//					e2 = -0.5 * (gamma.get(j).getColumnMatrix(i).transpose().multiply(inverseCovMatrices.get(j)).multiply(gamma.get(j).getColumnMatrix(i)).getEntry(0, 0));
+//					System.out.println("Compute factor " + j + " with BigDecimal.");
+//					bigFactors[j] = computeFactorAsBigDecimal(bigE, e1, e2, classProbs[j]);
+//				}
+				// All factors are the same. Maybe in the next round there are better factors
+				for(int k=0; k<numClasses; k++) {
+					factors[k] = 1;
 				}
 			}
 
@@ -747,8 +828,13 @@ public class TimeFit extends TimeSeriesModel {
 				// Compute the sum of the bigFactors
 				bigSumFactors = de.zbit.util.ArrayUtils.sum(bigFactors);
 			}
+			
+			if(sumFactors == 0) {
+				System.out.println("SumFactors is 0");
+			}
 
 			// Use the computed factors to compute P(j|i)
+			// TODO Negative probs can occure? :(
 			for (int j = 0; j<numClasses; j++) {
 				if(isFactorInfinite) {
 					probs[i][j] = (bigFactors[j].divide(bigSumFactors, 5)).doubleValue();					
@@ -756,8 +842,14 @@ public class TimeFit extends TimeSeriesModel {
 					probs[i][j] = factors[j] / sumFactors;	
 				}
 
-				if(Double.isInfinite(probs[i][j]) || Double.isNaN(probs[i][j])) {
-					System.out.println("Invalid probability");
+				if(Double.isInfinite(probs[i][j]))
+					System.out.println("prob" + i + j + " is infinite.");
+				else if(Double.isNaN(probs[i][j])) {
+					System.out.println("prob" + i + j + " is NaN");
+				}
+				else if(probs[i][j] < 0) {
+					// testing
+					System.out.println("prob" + i + j + " is less than 0!");
 				}
 			}
 			isFactorInfinite = false;
@@ -771,7 +863,7 @@ public class TimeFit extends TimeSeriesModel {
 	private void findMAPEstimate() {
 		RealMatrix m1;		// a factor for the MAP estimate, computed once for each class
 		for(int j=0; j<numClasses; j++) {
-			m1 = inverseCovMatrices.get(j).scalarMultiply(variance).add((s.transpose().multiply(s)));
+			m1 = inverseCovMatrices.get(j).scalarMultiply(variance).add(sts);
 			m1 = new SingularValueDecomposition(m1).getSolver().getInverse();
 			// The gamma matrix of class j
 			RealMatrix new_gamma = gamma.get(j);
@@ -803,16 +895,18 @@ public class TimeFit extends TimeSeriesModel {
 		// For the variance, we have to compute a sum over genes and classes
 		double sum = 0;
 		// Two factors used for better coed
-		RealMatrix f1;
-		RealMatrix f2;
+		RealMatrix m;
 		for(int i=0; i<numGenes; i++) {
 			for(int j=0; j<numClasses; j++) {
-				f1 = yMatrix.getColumnMatrix(i).subtract(s.multiply(mu.getColumnMatrix(j).add(gamma.get(j).getColumnMatrix(i)))).transpose();
-				f2 = yMatrix.getColumnMatrix(i).subtract(s.multiply((mu.getColumnMatrix(j).add(gamma.get(j).getColumnMatrix(i).scalarAdd(traces[j])))));
-				sum += probs[i][j] * (f1.multiply(f2).getEntry(0, 0));
+				m = yMatrix.getColumnMatrix(i).subtract(s.multiply(mu.getColumnMatrix(j).add(gamma.get(j).getColumnMatrix(i))));
+				sum += m.multiply(m.transpose()).scalarMultiply(probs[i][j]).getEntry(0, 0) + traces[j];
 			}
 		}
+		// TODO sometimes variance is smaller than 0
 		variance = sum / n;
+		// testing
+		if(Double.isInfinite(variance) || Double.isNaN(variance) || variance <= 0)
+			System.out.println("Maximize variance: variance NaN or infinite");
 	}
 
 
@@ -882,7 +976,12 @@ public class TimeFit extends TimeSeriesModel {
 			for(int i=0; i<numGenes; i++) {
 				sum += probs[i][j];
 			}
+			// TODO sometimes a class prob is negative
 			classProbs[j] = sum / numGenes;
+			if(classProbs[j] < 0) {
+				// testing
+				System.out.println("ClassProb less than 0!");
+			}
 		}
 	}
 
@@ -922,9 +1021,15 @@ public class TimeFit extends TimeSeriesModel {
 				System.out.println("--------");
 			}
 			//sum += probs[i][j] * (1/Math.pow(variance, numDataPoints)) * Math.exp(exp1) * Math.exp(exp2);
-			sum += (1/Math.pow(variance, numDataPoints)) * Math.exp(exp1) * 1/squareRootDets[j] * Math.exp(exp2);
+			// TODO classPrpb?
+			sum += (1/Math.pow(Math.sqrt(variance), numDataPoints)) * Math.exp(exp1) * 1/squareRootDets[j] * Math.exp(exp2);
 			//}
 			newLogLikelihood += Math.log(sum);
+			
+			// testing
+			if(Double.isInfinite(newLogLikelihood)) {
+				int a = 1+1;
+			}
 		}
 		logLikelihood = newLogLikelihood;
 		System.out.println("-------------");
@@ -972,10 +1077,10 @@ public class TimeFit extends TimeSeriesModel {
 		// Generate random means and standard deviations. The means are between the
 		// given min and max
 		Random r = new Random();
-		double minMean = -4;
-		double maxMean = 4;
-		double minSD = .5;
-		double maxSD = 1.5;
+		double minMean = -0.5;
+		double maxMean = 0.5;
+		double minSD = .005;
+		double maxSD = .01;
 		for(int i=0; i<numClasses; i++) {
 			for(int j=0; j<numExperiments; j++) {
 				means[i][j] = minMean + r.nextDouble() * (maxMean-minMean);
@@ -994,114 +1099,41 @@ public class TimeFit extends TimeSeriesModel {
 
 		return new Array2DRowRealMatrix(testData);
 	}
+	
+	
+	/**
+	 * Load a .csv with mRNA time series data. This is just for test porpuses.
+	 * @param path Path to the csv file to load.
+	 */
+	private static ArrayList<mRNATimeSeries> loadmRNATimeSeriesData(String path) {
+		mRNATimeSeriesReader r = new mRNATimeSeriesReader();
+		// testing
+		System.out.println("Start loading time series data from " + path);
+		ArrayList<mRNATimeSeries> data = (ArrayList<mRNATimeSeries>) r.importWithGUI(new JPanel(), path);
+		
+		System.out.println("End loaded time series data");
+		return data;
+	}
 
 
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {				
-		// Test for a time series with x experiments from timepoint 0 to 24
-		TimeFit tf = new TimeFit();
-		// Generate the test data of 30000 genes, 24 experiments and 5 classes (different sd and means).
-		tf.numClasses = 5;
-		tf.numGenes = 30000;
-		tf.numDataPoints = 24;
-		tf.yMatrix = sampleTestData(tf.numGenes, tf.numDataPoints, tf.numClasses); // genes as rows
-		System.out.println("yMatrix Rows: " + tf.yMatrix.getRowDimension() + "\tCols: " + tf.yMatrix.getColumnDimension());
-		//System.exit(0);
-		// Set the time points of the test
-		tf.x = new double[tf.numDataPoints];
-		for(int i=0; i<tf.numDataPoints; i++) {
-			tf.x[i] = i+1; // start with time point 1
-		}
-
-		// Test the placing of the control points
-		tf.chooseControlPoints(tf.x);
-
-		// Test the placing of the knots
-		tf.placeKnots();
+	public static void main(String[] args) {	
+		// Load the test data
+		//ArrayList<mRNATimeSeries> data = loadmRNATimeSeriesData("/home/fex/Dropbox/Paper/MCF-7.txt");
+		String path = "/home/fex/Dropbox/Paper/MCF-7.txt";
+		mRNATimeSeriesReader r = new mRNATimeSeriesReader();
 		// testing
-		for(int i=0; i<tf.knots.length; i++) {
-			System.out.println("Knot " + i + ": " + tf.knots[i]);
-		}
-
-		// Compute the values of the basis B-splines. The result is a matrix
-		// S, where S_[ij] = b_{j,4}(t_i)
-		tf.computeS();
-
-		// 1. Initialize the class center for each class as described in the paper.
-		// The center of a class is the mean value of the spline coefficients of genes in the class.
-		tf.initializeClassCenter();
-		// testing
-		System.out.println("Initial class centers: " + tf.mu);
-
-		// Initialize mapping from a class to the set of genes in the class.
-		tf.initializeGenes2ClassMapping();
-
-		// Compute the covariance matrix for each class
-		tf.initializeCovMatrices();
-
-		// Initialize the inverse covariance matrices.
-		tf.computeInverseCovMatrices();	
-
-		// Sample the gene specific variation coefficients. Each gene has q (number of control points)
-		// variation coefficients, which are sampled with the class covariance matrix.
-		tf.computeGamma();
-
-		// Initialize the gene variances and sample the noise vector for each gene.
-		tf.computeGeneVariances();
-
-		// Sample the noise vector for each gene
-		tf.sampleNoiseVectors();
-
-		// Now find the best parameters and class assignment with an EM-algorithm
-		tf.computeClassProbs();
-
+		System.out.println("Start loading time series data from " + path);
+		ArrayList<mRNATimeSeries> data = (ArrayList<mRNATimeSeries>) r.importWithGUI(new JPanel(), path);
 		
-		double threshold = 0.005;
-		tf.logLikelihood = 2;
-		double oldLogLikelihood = 1;
-
-
-		//while(Math.abs(tf.logLikelihood - oldLogLikelihood) > threshold) {
-		int count = 0;
-		while(tf.logLikelihood / oldLogLikelihood < 1 - threshold || count < 5) {
-			// increase counter
-			count++;
-			//System.out.println("Diff: " + Math.abs(tf.logLikelihood - oldLogLikelihood));
-			oldLogLikelihood = tf.logLikelihood;
-			/*
-			 * E-Step:
-			 * 
-			 * For all genes i and classes j, compute P(j|i). This is the probability, that gene i
-			 * belongs to class j.
-			 */ 
-			tf.computeProbabilities();
-
-			/*
-			 * M-Step
-			 * 
-			 * For all genes i and classes j, find the MAP estimate of gamma_ij
-			 */
-			tf.findMAPEstimate();
-
-			// Maximize the covariance matrices Γ, the variance and the class centers mu
-			tf.maximizeVariance();
-
-			// Compute the new class centers mu. To do this, we have to compute two matrices and
-			// multiplicate them
-			tf.maximizeMu();
-
-			// Compute the new class covariance matrices.
-			tf.maximizeCovMatrices();
-
-			// Update the class probabilities
-			tf.updateClassProbs();
-
-			// Compute the new log likelihood.
-			tf.computeLogLikelihood();
-
-			System.out.println("Fraction: " + (tf.logLikelihood / oldLogLikelihood) + " Threshold: " + (1 - threshold));
-		}
+		System.out.println("End loaded time series data");
+		// testing
+		System.out.println("Loaded data for " + data.size() + " genes.");
+		
+		// Generate model
+		TimeFit tf = new TimeFit();
+		tf.generateModel(data, r.getTimePoints());
 	}
 }
