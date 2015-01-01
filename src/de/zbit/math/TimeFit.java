@@ -187,7 +187,7 @@ public class TimeFit extends TimeSeriesModel {
 	/**
 	 * The number of gene classes.
 	 */
-	int numClasses = 5;
+	int numClasses = 20;
 
 	/**
 	 * The number of genes.
@@ -1135,5 +1135,31 @@ public class TimeFit extends TimeSeriesModel {
 		// Generate model
 		TimeFit tf = new TimeFit();
 		tf.generateModel(data, r.getTimePoints());
+		
+		// Generate the single gene model for the first gene
+		TimeFitModel m = new TimeFitModel();
+		int gene = 8802;
+		int c = tf.findClassOfGene(tf.probs[gene]);
+		m.generateModel(data.get(gene), tf.mu.getColumnMatrix(c), tf.gamma.get(c).getColumnMatrix(gene), tf.controlPoints, tf.knots, r.getTimePoints());
+	
+//		// Return n modelled values for later visualization
+//		int n = 100;
+//		double diff = m.getLastTimePoint() - m.getFirstTimePoint();
+//		double[] ts = new double[100];
+//		double[] values = new double[n];
+//		for(int i=0; i<n; i++	) {
+//			ts[i] = m.getFirstTimePoint() + (i * (diff / (n-1)));
+//			values[i] = m.computeValueAtTimePoint(ts[i]);
+//		}
+//		// Print to console
+//		for(int i=0; i<n; i++) {
+//			System.out.print(ts[i] + "\t");
+//		}
+//		System.out.println();
+//		for(int i=0; i<n; i++) {
+//			System.out.print(values[i] + "\t");
+//		}
+		
+		System.out.println("Value at 30h: " + m.computeValueAtTimePoint(30));
 	}
 }
