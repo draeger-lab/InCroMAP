@@ -53,10 +53,12 @@ public class TimeFitModel extends TimeSeriesModel {
 	double[] knots;
 	RealMatrix mu;
 	RealMatrix gamma;
+	double[] noise;
 	
 	@Override
 	public void generateModel(mRNATimeSeries dataPoints,
-			List<ValueTriplet<Double, String, SignalType>> timePoints) {
+			List<ValueTriplet<Double, String, SignalType>> timePoints,
+			double cutoff, boolean isExponentiallyDistributed) {
 		// Use another method to generate the model.
 		return;
 	}
@@ -155,12 +157,16 @@ public class TimeFitModel extends TimeSeriesModel {
 	private RealMatrix computeSplineBasisFunctions(double t) {
 
 		// The value of the spline basis functions evaluated at time point t. A q x 1 vector.
-		RealMatrix res = new Array2DRowRealMatrix(controlPoints.size(), 1);
+		RealMatrix res = new Array2DRowRealMatrix(1, controlPoints.size());
 		for(int i=0; i<controlPoints.size(); i++) {
 			// i is the number of the spline basis function, 4 is the order of the spline basis function
 			// t is the time
-			res.setEntry(i, 0, normalizedBSplineBasis(i, 4, t));
+			res.setEntry(0, i, normalizedBSplineBasis(i, 4, t));	
 		}
 		return res;
 	}
+	
+	/**
+	 * Get n values.
+	 */
 }

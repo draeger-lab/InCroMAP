@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -107,9 +108,19 @@ public class TimeFit extends TimeSeriesModel {
 	RealMatrix mu;
 
 	/**
-	 * The mapping of a gene to his class.
+	 * The mapping of a gene name to the position in the yMatrix
 	 */
-	int[] gene2class;
+	HashMap<Integer, Integer> id2pos;
+	
+	/**
+	 * TODO: delete ? The mapping of a gene's position in the yMatrix to his class.
+	 */
+	int[] pos2class;
+	
+	/**
+	 * The filtered data from which the model is generated.
+	 */
+	ArrayList<mRNATimeSeries> filteredData;
 
 	/**
 	 * The set of genes for a class.
@@ -172,7 +183,7 @@ public class TimeFit extends TimeSeriesModel {
 	/**
 	 * Maximum number of iteration for the EM-algorithm.
 	 */
-	int maxIteration = 15;
+	int maxIteration = 8;
 
 	/**
 	 * The class probability that are updated in the EM-algorithm.
@@ -199,21 +210,112 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	@Override
 	public void generateModel(mRNATimeSeries dataPoints,
-			List<ValueTriplet<Double, String, SignalType>> timePoints) {
+			List<ValueTriplet<Double, String, SignalType>> timePoints,
+			double cutoff, boolean isExponentiallyDistributed) {
 		// The model isn't build for one single gene but for all genes at the same time.
 		// intentially left blank!
 		return;
 	}
 
+	
+	/**
+	 * Generate the time series model for the data. Run a certain number of iterations and choose
+	 * the best generated model among them. The data can also be filtered, so that just genes are modelled
+	 * that suffice a cutoff value.
+	 * @param data
+	 * @param timePoints
+	 * @param iterations Number of models to generate. The best model is then chosen.
+	 * @param cutoff Consider just genes, that are at some time point greater than the cutoff value.
+	 * @param isExponentiallyDistributed Are the time points exponentially distributed?
+	 */
+	public void generateModel(ArrayList<mRNATimeSeries> data,
+			List<ValueTriplet<Double, String, SignalType>> timePoints,
+			int iterations, double cutoff, boolean isExponentiallyDistributed) {
+		// Array holding the generated models
+		TimeFit[] models = new TimeFit[iterations];
+		
+		filteredData = new ArrayList<mRNATimeSeries>();
+		for(mRNATimeSeries m : data) {
+			// Is one value better than the cutoff value?
+			for(Signal s : m.getSignals()) {
+				// Handle pValues
+				if(s.getType() == SignalType.pValue && s.getSignal().doubleValue() < cutoff) {
+					filteredData.add(m);
+					break;
+				}
+				// Handle Fold changes
+				else if(s.getType() == SignalType.FoldChange && Math.abs(s.getSignal().doubleValue()) >= cutoff) {
+					filteredData.add(m);
+					break;
+				}
+			}
+		}
+		
+		
+		// testing
+		System.out.println(filteredData.size() + " genes remained after filtering.");
+		System.out.println("ID: " + filteredData.get(0).getID());
+
+		// Generate the models
+		for(int i=0; i<iterations; i++) {
+			System.out.println("Generate model number " + i);
+			TimeFit tf = new TimeFit();
+			tf.generateModel(filteredData, timePoints, isExponentiallyDistributed);
+			models[i] = tf;
+		}
+		
+		// Choose the best model. That means the model with the highest logLikelihood.
+		TimeFit bestModel = models[0];
+		double bestLogLikelihood = models[0].logLikelihood;
+		for(int i = 1; i < iterations; i++) {
+			if(models[i].logLikelihood > bestLogLikelihood) {
+				bestLogLikelihood = models[i].logLikelihood;
+				bestModel = models[i];
+			}
+		}
+		
+		// testing
+		System.out.println("Best model has logLikelihood " + bestModel.logLikelihood);
+		
+		// Take the parameter of the best model
+		// TODO update the list
+		this.q = bestModel.q;
+		this.knots = bestModel.knots;
+		this.controlPoints = bestModel.controlPoints;
+		this.controlPointsColumn = bestModel.controlPointsColumn;
+		this.s = bestModel.s;
+		this.sts = bestModel.sts;
+		this.yMatrix = bestModel.yMatrix;
+		this.mu = bestModel.mu;
+		this.pos2class = bestModel.pos2class;
+		this.class2genes = bestModel.class2genes;
+		this.covMatrices = bestModel.covMatrices;
+		this.inverseCovMatrices = bestModel.inverseCovMatrices;
+		this.gamma = bestModel.gamma;
+		this.geneVariances = bestModel.geneVariances;
+		this.variance = bestModel.variance;
+		this.threshold = bestModel.threshold;
+		this.maxIteration = bestModel.maxIteration;
+		this.classProbs = bestModel.classProbs;
+		this.logLikelihood = bestModel.logLikelihood;
+		this.numClasses = bestModel.numClasses;
+		this.numGenes = bestModel.numGenes;
+		this.x = bestModel.x;
+		this.y = bestModel.y;
+		this.numDataPoints = bestModel.numDataPoints;	
+	}
+	
+	
 	/**
 	 * Generate the time series model for the data.
 	 * @param data
 	 * @param timePoints
 	 */
 	public void generateModel(ArrayList<mRNATimeSeries> data,
-			List<ValueTriplet<Double, String, SignalType>> timePoints) {
+			List<ValueTriplet<Double, String, SignalType>> timePoints,
+			boolean isExponentiallyDistributed) {
 
-		// TODO Log the actions, so that the source of exceptions can be located better
+		
 		// TODO Write JavaDoc comments for each method
 		
 		// Initialize all fields, so that the model can be computed
@@ -270,22 +372,32 @@ public class TimeFit extends TimeSeriesModel {
 	
 	
 	/**
-	 * 
+	 * Get the model for the mRNATimeSeries. If there is no model (because the gene was filtered out)
+	 * return null.
 	 * @param dataPoints
 	 * @param timePoints
 	 * @param gene
-	 * @return
+	 * @return The model for this mRNATimeSeries. If there is no model (because the gene was filtered out)
+	 * null is returned.
 	 */
 	public TimeFitModel getGeneModel(mRNATimeSeries dataPoints,
 			List<ValueTriplet<Double, String, SignalType>> timePoints,
 			int gene) {
 		TimeFitModel m = new TimeFitModel();
 		
+		int pos = filteredData.indexOf(dataPoints);
+		// testing
+		System.out.println("Pos of " + dataPoints.getID());
+		
+		// If the mRNATimeSeries haven't been modelled, return null
+		if(pos == -1)
+			return null;
+		
 		// To which class belongs the gene?
-		int classOfGene = gene2class[gene];
+		int classOfGene = pos2class[pos];
 		
 		// Generate the model with the parameters provided by the class of the gene
-		m.generateModel(dataPoints, mu.getColumnMatrix(classOfGene), gamma.get(classOfGene).getColumnMatrix(gene),
+		m.generateModel(dataPoints, mu.getColumnMatrix(classOfGene), gamma.get(classOfGene).getColumnMatrix(pos),
 				controlPoints, knots, timePoints);
 		
 		return m;
@@ -315,7 +427,13 @@ public class TimeFit extends TimeSeriesModel {
 		System.out.println(yMatrix.getColumnMatrix(0));
 		System.out.println("yMatrix Rows: " + yMatrix.getRowDimension() + "\tCols: " + yMatrix.getColumnDimension());
 		System.out.println("\n------------------\n");
-
+		
+		// Map the gene names to the row in the yMatrix
+		id2pos = new HashMap<Integer, Integer>(data.size());
+		for(mRNATimeSeries m : data) {
+			break;
+		}
+		
 		// How many time points and genes do we have?
 		numGenes = yMatrix.getColumnDimension();
 		numDataPoints = yMatrix.getRowDimension();
@@ -516,15 +634,20 @@ public class TimeFit extends TimeSeriesModel {
 		int numberOfKnots = q + order;
 		knots = new double[numberOfKnots];
 
-		// TODO update the comment
 		// Place the knots. Two knots before the first time point and two knots after the
 		// last time point are needed to describe the resulting model in the interval
 		// [firstTimePoint, lastTimePoint]
-		knots[2] = getFirstTimePoint();
-		knots[numberOfKnots-3] = getLastTimePoint();
+//		knots[2] = getFirstTimePoint();
+//		knots[numberOfKnots-3] = getLastTimePoint();
+//		double stepsize = (getLastTimePoint() - getFirstTimePoint()) / (numberOfKnots-5);
+//		for(int i=-2; i<numberOfKnots-2; i++)
+//			knots[i+2] = getFirstTimePoint() + stepsize * i;
+		
+		knots[3] = getFirstTimePoint();
 		double stepsize = (getLastTimePoint() - getFirstTimePoint()) / (numberOfKnots-5);
-		for(int i=-2; i<numberOfKnots-2; i++)
-			knots[i+2] = getFirstTimePoint() + stepsize * i;
+		for(int i=-3; i<numberOfKnots-3; i++) {
+			knots[i+3] = getFirstTimePoint() + stepsize * i;
+		}
 	}
 
 
@@ -560,18 +683,18 @@ public class TimeFit extends TimeSeriesModel {
 	 * other way round.
 	 */
 	private void initializeGenes2ClassMapping() {
-		class2genes = new ArrayList<>(numClasses);
+		class2genes = new ArrayList<ArrayList<Integer>>(numClasses);
 		for(int i=0; i<numClasses; i++) {
 			class2genes.add(new ArrayList<Integer>());
 		}
 		// Initialize the mapping from a gene to its class
-		gene2class = new int[numGenes];
+		pos2class = new int[numGenes];
 
 		// For each gene, select a class j uniformly at random.
 		int j;
 		for(int i=0; i<numGenes; i++) {
 			j = (int) (Math.random() * numClasses); // Select a random class j for gene i
-			gene2class[i] = j;
+			pos2class[i] = j;
 			// Add the gene to the class2gene mapping
 			class2genes.get(j).add(i);
 		}
@@ -687,7 +810,6 @@ public class TimeFit extends TimeSeriesModel {
 		BigDecimal remainderOf2 = n2.remainder(BigDecimal.ONE);
 		BigDecimal n2IntPart = n2.subtract(remainderOf2);
 		// Calculate big part of the power using context -
-		// TODO n2IntPart.intValueExact() -> java.lang.ArithmeticException: Overflow
 		BigDecimal intPow = new BigDecimal(1);
 		try{
 			intPow = n1.pow(n2IntPart.intValueExact());
@@ -751,15 +873,12 @@ public class TimeFit extends TimeSeriesModel {
 				e2 = -0.5 * (gamma.get(j).getColumnMatrix(i).transpose().multiply(inverseCovMatrices.get(j)).multiply(gamma.get(j).getColumnMatrix(i)).getEntry(0, 0));
 				if(!isFactorInfinite) {
 					factors[j] = classProbs[j] * Math.exp(e1) * Math.exp(e2);
-					//factors[j] = Math.log(classProbs[j]) + e1 + e2;
 					// Check if we need BigDecimals
 					if(Double.isInfinite(factors[j])) {
 						isFactorInfinite = true;
 						System.out.println("e1: " + e1 + " e2: " + e2);
 						// Copy the already computed factors
 						for(int k=0; k<j; k++) {
-							// TODO java.lang.NumberFormatException: Infinite or NaN
-							// factors[k] is infinite or NaN
 							try {
 								bigFactors[k] = new BigDecimal(factors[k]);							
 							} catch (Exception e) {
@@ -834,7 +953,6 @@ public class TimeFit extends TimeSeriesModel {
 			}
 
 			// Use the computed factors to compute P(j|i)
-			// TODO Negative probs can occure? :(
 			for (int j = 0; j<numClasses; j++) {
 				if(isFactorInfinite) {
 					probs[i][j] = (bigFactors[j].divide(bigSumFactors, 5)).doubleValue();					
@@ -902,7 +1020,6 @@ public class TimeFit extends TimeSeriesModel {
 				sum += m.multiply(m.transpose()).scalarMultiply(probs[i][j]).getEntry(0, 0) + traces[j];
 			}
 		}
-		// TODO sometimes variance is smaller than 0
 		variance = sum / n;
 		// testing
 		if(Double.isInfinite(variance) || Double.isNaN(variance) || variance <= 0)
@@ -976,7 +1093,6 @@ public class TimeFit extends TimeSeriesModel {
 			for(int i=0; i<numGenes; i++) {
 				sum += probs[i][j];
 			}
-			// TODO sometimes a class prob is negative
 			classProbs[j] = sum / numGenes;
 			if(classProbs[j] < 0) {
 				// testing
@@ -1020,18 +1136,12 @@ public class TimeFit extends TimeSeriesModel {
 					System.out.println("exp2: " + exp2);
 				System.out.println("--------");
 			}
-			//sum += probs[i][j] * (1/Math.pow(variance, numDataPoints)) * Math.exp(exp1) * Math.exp(exp2);
-			// TODO classPrpb?
 			sum += (1/Math.pow(Math.sqrt(variance), numDataPoints)) * Math.exp(exp1) * 1/squareRootDets[j] * Math.exp(exp2);
 			//}
 			newLogLikelihood += Math.log(sum);
-			
-			// testing
-			if(Double.isInfinite(newLogLikelihood)) {
-				int a = 1+1;
-			}
 		}
 		logLikelihood = newLogLikelihood;
+		// testing
 		System.out.println("-------------");
 		System.out.println(logLikelihood);
 		System.out.println("-------------");
@@ -1043,7 +1153,7 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	private void assignClassToGenes() {
 		for(int i=0; i<numGenes; i++) {
-			gene2class[i] = findClassOfGene(probs[i]);
+			pos2class[i] = findClassOfGene(probs[i]);
 		}
 	}
 	
@@ -1134,7 +1244,10 @@ public class TimeFit extends TimeSeriesModel {
 		
 		// Generate model
 		TimeFit tf = new TimeFit();
-		tf.generateModel(data, r.getTimePoints());
+		tf.generateModel(data, r.getTimePoints(), 3, 1.0, false);
+		
+		// TODO Save name and ID ... for each gene before generating the model
+		// TODO update data of the tab. Just show the modelled genes
 		
 		// Generate the single gene model for the first gene
 		TimeFitModel m = new TimeFitModel();
@@ -1161,5 +1274,23 @@ public class TimeFit extends TimeSeriesModel {
 //		}
 		
 		System.out.println("Value at 30h: " + m.computeValueAtTimePoint(30));
+	}
+
+
+	/**
+	 * Print information about the model.
+	 */
+	public void printModel() {
+		// Print the classes and the genes in them
+		for(int j=0; j<numClasses; j++) {
+			System.out.println("Class " + j + "contains " + class2genes.get(j).size() + " genes");
+		}
+		System.out.println("\n---------------------------\n");
+		
+		// Print the class centers
+		for(int j=0; j<numClasses; j++) {
+			System.out.println("Class " + j + "center: " + mu.getColumnMatrix(j));
+		}
+		System.out.println("\n---------------------------\n");
 	}
 }
