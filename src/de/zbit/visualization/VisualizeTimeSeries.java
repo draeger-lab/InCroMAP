@@ -123,8 +123,12 @@ public class VisualizeTimeSeries {
 	private List<List<mRNA>> mRNA;
 	/** The KEGG pathwayID of the visualized pathway */
 	private String pathwayID;
-	/** What enrichment result shall be visualized? The enrichment p-value or q-value*/
+	/** What enrichment result shall be visualized? The enrichment p-value or q-value?
+	 *  And what correction method shall be used? **/
 	private boolean visualizePValue = true;
+	private boolean useBH = false;
+	private boolean useBFH = false;
+	private boolean useBO = false;
 	/** The importer for the KEGG pathway, downloads pathway information from KEGG*/
 	private KEGGImporter keggImporter;
 	/** The treated species from which data was obtained */
@@ -150,7 +154,7 @@ public class VisualizeTimeSeries {
 	private TranslatorPanel<Graph2D> transPanel;
 	private VisualizeDataInPathway visData; 
 
-	private IntegratorPathwayPanel pathwayPanel;
+	IntegratorPathwayPanel pathwayPanel;
 
 
 	public VisualizeTimeSeries(NSTimeSeriesTab parent) {
@@ -897,5 +901,53 @@ public class VisualizeTimeSeries {
 		};
 		exporter.addActionListener(controller);
 		exporter.execute();
+	}
+
+	
+	/**
+	 * Select the BH correction method for multiple hypothesis testing
+	 */
+	public void setBH() {
+		useBH = true;
+		useBFH = false;
+		useBO = false;
+		
+		// Recompute the q-values for each time point
+		BenjaminiHochberg bh = new BenjaminiHochberg();
+		for(int i=0; i< numFrames; i++) {
+			bh.setQvalue(enrichments.get(i));			
+		}
+	}
+
+	
+	/**
+	 * Select the BFH correction method for multiple hypothesis testing
+	 */
+	public void setBFH() {
+		useBH = false;
+		useBFH = true;
+		useBO = false;
+		
+		// Recompute the q-values for each time point
+		BonferroniHolm bfh = new BonferroniHolm();
+		for(int i=0; i< numFrames; i++) {
+			bfh.setQvalue(enrichments.get(i));			
+		}
+	}
+
+	
+	/**
+	 * Select the BO correction method for multiple hypothesis testing
+	 */
+	public void setBO() {
+		useBH = false;
+		useBFH = false;
+		useBO = true;
+		
+		// Recompute the q-values for each time point
+		Bonferroni bo = new Bonferroni();
+		for(int i=0; i< numFrames; i++) {
+			bo.setQvalue(enrichments.get(i));			
+		}
 	}
 }

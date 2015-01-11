@@ -91,7 +91,7 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 		this.dx = new double[numPoints];
 		
 		for(int i=0; i<numPoints; i++) {
-			dx[i] = i+1==numPoints?0:x[i+1]-x[i]; // TODO
+			dx[i] = i+1==numPoints?0:x[i+1]-x[i];
 		}
 		
 		// Compute the tridiagonal linear equation system m*k=b
@@ -138,7 +138,6 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 	public double computeValueAtTimePoint(double timePoint) {
 		// Other classes calling this method don't know, that the time points could be
 		// logarithmized. So logarithmize the timePoint is necessary.
-		// TODO Maybe this does not work
 		if(isExponentiallyDistributed)
 			timePoint = translateTimePoint(timePoint);
 				

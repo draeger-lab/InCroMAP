@@ -22,16 +22,25 @@
 
 package de.zbit.gui.tabs;
 
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
@@ -43,16 +52,19 @@ import y.view.Graph2DView;
 import y.view.Graph2DViewMouseWheelZoomListener;
 import y.view.HitInfo;
 import de.zbit.graph.RestrictedEditMode;
+import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.JDropDownButton;
 import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.customcomponents.FilmControlPanel;
+import de.zbit.gui.layout.VerticalLayout;
 import de.zbit.io.FileDownload;
 import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.kegg.gui.TranslatorPanelTools;
 import de.zbit.util.Species;
 import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.gui.ProgressBarSwing;
 import de.zbit.visualization.VisualizeTimeSeries;
 import de.zbit.visualization.VisualizeTimeSeriesListener;
 import de.zbit.visualization.VisualizeTimeSeriesListener.VTSAction;
@@ -93,7 +105,9 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 	/** ToolBar buttons to change the visualized enrichment data */
 	private JMenuItem pValueButton;
 	private JMenuItem qValueButton;
-
+	JMenuItem BH_cor;
+	JMenuItem BFH_cor;
+	JMenuItem BO_cor;
 	
 	/**
 	 * 
@@ -175,13 +189,13 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
     
     // FDR correction method option
     JPopupMenu fdr = new JPopupMenu("FDR correction");
-    JMenuItem BH_cor = GUITools.createJMenuItem(controller,
+    BH_cor = GUITools.createJMenuItem(controller,
         VTSAction.FDR_CORRECTION_BH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class,true);
     fdr.add(BH_cor);
-    JMenuItem BFH_cor = GUITools.createJMenuItem(controller,
+    BFH_cor = GUITools.createJMenuItem(controller,
         VTSAction.FDR_CORRECTION_BFH, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class,true);
     fdr.add(BFH_cor);
-    JMenuItem BO_cor = GUITools.createJMenuItem(controller,
+    BO_cor = GUITools.createJMenuItem(controller,
         VTSAction.FDR_CORRECTION_BO, UIManager.getIcon("ICON_MATH_16"),null,null,JCheckBoxMenuItem.class,true);
     fdr.add(BO_cor);
     JDropDownButton fdrButton = new JDropDownButton("FDR correction", 
@@ -218,10 +232,11 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 		// Show progress-bar
 		final AbstractProgressBar pb = generateLoadingPanel(this, message);
 		FileDownload.ProgressBar = pb;
-		//getViewport().repaint();
+		getViewport().repaint();
 
 		return pb;
 	}
+	  
 
 	public void showGraph(Graph2D graph, int curFrame) {
 		showGraph(graph, curFrame, false);
@@ -334,12 +349,23 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 	}
 	
 	/**
-	 * 
+	 * Select the False Discovery Rate method for correcting the p-value.
 	 * @param string
 	 */
-	public void selectFDR(String string) {
-		// TODO Auto-generated method stub
-		
+	public void selectFDR(String fdr) {
+		if(fdr == VTSAction.FDR_CORRECTION_BH.toString()) {
+			BH_cor.setSelected(true);
+			BFH_cor.setSelected(false);
+			BO_cor.setSelected(false);
+		} else if (fdr == VTSAction.FDR_CORRECTION_BFH.toString()) {
+			BH_cor.setSelected(false);
+			BFH_cor.setSelected(true);
+			BO_cor.setSelected(false);
+		} else if (fdr == VTSAction.FDR_CORRECTION_BO.toString()) {
+			BH_cor.setSelected(false);
+			BFH_cor.setSelected(false);
+			BO_cor.setSelected(true);
+		}
 	}
 
 	/**

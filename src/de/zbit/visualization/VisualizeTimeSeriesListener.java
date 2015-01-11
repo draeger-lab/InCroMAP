@@ -21,17 +21,23 @@
  */
 package de.zbit.visualization;
 
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JViewport;
+
 import y.view.Graph2D;
 import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.actioncommand.ActionCommand;
+import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.TimeSeriesView;
 import de.zbit.util.StringUtil;
 import de.zbit.util.progressbar.AbstractProgressBar;
@@ -48,6 +54,8 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 	
 	/** The view which is controlled by this class. */
 	TimeSeriesView view;
+	
+	private Component originalViewportView;
 	
 	/** The modell which is visualized by the view */
 	VisualizeTimeSeries model;
@@ -188,6 +196,8 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			// TODO Progress bar does not show progress
   			model.getKeggImporter().setProgressBar(view.showTemporaryLoadingPanel(message));
   			
+  			System.out.println("Show loading panel case1");
+  			
   			break;
   			
   		case 2:
@@ -211,10 +221,13 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			 * The KEGGTranslator MUST BE the source.
   			 * Any loading string can OPTIONALLY be in the ActionCommand.
   			 */
-  			message = "Reconstructing pathway with online information from KEGG...";
+  			  			
+  			// Save the originalViewport and set the pathwayPanel. The pathwayPanel shows a nice ProgressBar for
+  			// generating the pathway
+  			originalViewportView = view.getViewport().getView();
+  			view.setViewportView(model.pathwayPanel);
   			
-  			// generate new ProgressBar, set the ProgressBar into the view and the KeggImporter
-  			model.getKeggImporter().setProgressBar(view.showTemporaryLoadingPanel(message));
+  			System.out.println("Show loading panel case3");
   			break;
   			
   		case 4:
@@ -224,9 +237,10 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			 */
   			log.info("Pathway translation complete.");
   			try {
-  				// Get the resulting document and check and handle eventual errors.
+  				// Restore the original viewport, so that the film generating process is shown
+  				view.setViewportView(originalViewportView);
   				model.setPathway((Graph2D) e.getSource());
-  				model.generateFilm();
+  				model.generateFilm();  					
   				
   			} catch (Throwable e2) {
   				if (!Thread.currentThread().isInterrupted()) {
@@ -251,14 +265,19 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   	
   	// Otherwise, the action came from an instance of VisualizeTimeSeries.
   	else {
-  		System.out.println("Listener else case");
   		String command = e.getActionCommand();
   		
   		if (command.equals(VTSAction.START_GENERATE_FILM.toString())) {
+  			System.out.println("This part of the code is reaches");
   			// Set the progress bar in the view
-  			AbstractProgressBar bar = view.showTemporaryLoadingPanel("Generating film of pathway " + model.getPathwayID());
-				bar.setNumberOfTotalCalls(e.getID()); // number of images to generate
-				setProgBar(bar);
+  			//AbstractProgressBar bar = view.showTemporaryLoadingPanel("Generating film of pathway " + model.getPathwayID());
+  			try {
+  				AbstractProgressBar bar = IntegratorTab.generateLoadingPanel(view, "Generating visualization of the data for pathway " + model.getPathwayID());
+  				bar.setNumberOfTotalCalls(e.getID()); // number of images to generate
+  				setProgBar(bar);  				
+  			} catch(Exception ex) {
+  				ex.printStackTrace();
+  			}
 				
   		} else if(command.equals(VTSAction.IMAGE_GENERATED.toString())) {
   			// Increment the counter of the progress bar
@@ -417,16 +436,30 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			Graph2D nextFrame = model.getFrame(curFrame);
   			view.showGraph(nextFrame, curFrame);
   		
+  		// TODO 
   		} else if(command.equals(VTSAction.FDR_CORRECTION_BH.toString())) {
   			// Change the option button selection
   			view.selectFDR(VTSAction.FDR_CORRECTION_BH.toString());
+  			// Change the visualization
+  			model.setBH();
+  			Graph2D nextFrame = model.getFrame(curFrame);
+  			view.showGraph(nextFrame, curFrame);
   		} else if(command.equals(VTSAction.FDR_CORRECTION_BFH.toString())) {
   			// Change the option button selection
   			view.selectFDR(VTSAction.FDR_CORRECTION_BFH.toString());
+  			// Change the visualization
+  			model.setBFH();
+  			Graph2D nextFrame = model.getFrame(curFrame);
+  			view.showGraph(nextFrame, curFrame);
     	} else if(command.equals(VTSAction.FDR_CORRECTION_BO.toString())) {
     		// Change the option button selection
     		view.selectFDR(VTSAction.FDR_CORRECTION_BO.toString());
+  			// Change the visualization
+  			model.setBO();
+  			Graph2D nextFrame = model.getFrame(curFrame);
+  			view.showGraph(nextFrame, curFrame);
     	}
+  		
   	}
   }
 
