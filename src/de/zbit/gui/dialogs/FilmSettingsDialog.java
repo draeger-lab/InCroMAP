@@ -122,7 +122,7 @@ public class FilmSettingsDialog extends JPanel {
 		
 		JLabel cutoffLabel = new JLabel("Cutoff value");	
 		// default value. 
-		cutoff = isPValue ? 0.5 : 1;	
+		cutoff = isPValue ? 0.05 : 1;	
 		String toolTip = "";
 		if(isPValue)
 			toolTip = "Filter genes with a p-value higher than the cutoff value.";

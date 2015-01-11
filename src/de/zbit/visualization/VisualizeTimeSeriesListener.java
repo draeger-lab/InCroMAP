@@ -21,6 +21,7 @@
  */
 package de.zbit.visualization;
 
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
@@ -118,11 +119,11 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 			case VISUALIZE_ENRICHMENT_QVAL:
 				return "Visualize enrichment q-value";
 			case FDR_CORRECTION_BH:
-        return "Benjamini Hochberg";
-      case FDR_CORRECTION_BFH:
-        return "Bonferroni Holm";
-      case FDR_CORRECTION_BO:
-        return "Bonferroni";
+				return "Benjamini Hochberg";
+			case FDR_CORRECTION_BFH:
+				return "Bonferroni Holm";
+			case FDR_CORRECTION_BO:
+				return "Bonferroni";
 			default:
 				return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
       }
@@ -145,7 +146,6 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 				return StringUtil.firstLetterUpperCase(toString().toLowerCase().replace('_', ' '));
 			}
 		}
-  	
   }
 
 	/**
@@ -185,6 +185,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			String message = "Downloading '" + model.getPathwayID() + "'" + " for '" + model.getSpecies().getKeggAbbr() + "'";
   			
   			// generate new ProgressBar, set the ProgressBar into the view and the KeggImporter
+  			// TODO Progress bar does not show progress
   			model.getKeggImporter().setProgressBar(view.showTemporaryLoadingPanel(message));
   			
   			break;
@@ -250,6 +251,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   	
   	// Otherwise, the action came from an instance of VisualizeTimeSeries.
   	else {
+  		System.out.println("Listener else case");
   		String command = e.getActionCommand();
   		
   		if (command.equals(VTSAction.START_GENERATE_FILM.toString())) {
@@ -445,7 +447,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
    * @param i
    */
 	private void playFilm(final int startFrame) {
-		
+		// TODO Rewrite this with timer
 		// This runnable will be executed in a new thread. It tests the time since the start
 		// and displays new images when needed.
 		// If the user uses the pause-, previous- or next-button the film pauses.
@@ -482,6 +484,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 						// Show the next frame
 						begin2 = System.currentTimeMillis();
 						view.showGraph(nextFrame, curFrame);
+						view.repaint();
 						end2 = System.currentTimeMillis();
 
 						// Because view shows a next frame, we can also deliver a previous frame

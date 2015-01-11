@@ -159,7 +159,11 @@ public class FilmControlPanel extends JPanel {
 	 * @param timeUnitString, the string which describes the time unit (e.g. "s" for seconds)
 	 */
 	public void setFrameToTimeUnit(int frame, double timePoint, String timeUnitString) {
-		String text = "Frame " + frame + " \u2259 " + String.format("%.2f", timePoint) + timeUnitString;
+		// Get the string representation of the time points
+		String time = "";
+		
+		//String text = "Frame " + frame + " \u2259 " + String.format("%.2f", timePoint) + timeUnitString;
+		String text = "Frame " + frame + " \u2259 " + Double.toString(timePoint) + timeUnitString;
 		frameToTimeUnit.setText(text);		
 	}
 

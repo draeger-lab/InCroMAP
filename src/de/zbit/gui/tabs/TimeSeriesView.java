@@ -269,7 +269,7 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 		controlPanel.setSliderValue(curFrame);
 		
 		repaint();
-	}
+		}
 
 	/**
 	 * Create the {@link Graph2DView} which displays the colored pathway (graph)

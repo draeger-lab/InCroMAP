@@ -171,16 +171,29 @@ public class VisualizeTimeSeries {
 			// Get the user input and filter genes
 			this.pathwayID = settingsDialog.getSelectedPathwayID();
 			this.cutoff = settingsDialog.getCutoff();
-
+			
+			// testing
+			System.out.println("Test: Chosen pathway: " + settingsDialog.getSelectedPathwayID());
+			System.out.println("Test: Chosen cutoff: " + settingsDialog.getCutoff());
+			System.out.println("Test: Chosen numFrames: " + settingsDialog.getNumFrames());
+			System.out.println("Test: NumDataPoints: " + parent.getNumObservations());
+			System.out.println("Test: timePoints: " + models.get(0).getDistributedTimePoints(settingsDialog.getNumFrames()));
+			
 			// How many frames should be created? And what are their time points?
 			if(settingsDialog.getJustVisualizeDate()) {
 				// Number of frames = number of observations
 				numFrames = parent.getNumObservations();
-				timePoints = computeTimePoints(numFrames, true);
+				//timePoints = computeTimePoints(numFrames, true);
+				timePoints = models.get(0).getOriginalTimePoints();
 			} else {
 				// Take the number of observations from the dialog
 				numFrames = settingsDialog.getNumFrames();
-				timePoints = computeTimePoints(numFrames, false);
+				//timePoints = computeTimePoints(numFrames, false);
+				timePoints = models.get(0).getDistributedTimePoints(numFrames);
+			}
+			
+			for(int i=0; i<timePoints.length; i++) {
+				System.out.println("TimePoint" + i + ": " + timePoints[i]);
 			}
 
 			// Initialize the view and the controller
@@ -189,7 +202,6 @@ public class VisualizeTimeSeries {
 
 			// Download pathway
 			this.keggImporter = new KEGGImporter(pathwayID, Format.JPG);
-			System.out.println("pathwayID: " + pathwayID);
 			keggImporter.addActionListener(controller);		
 			// Build and show the view
 			parent.getIntegratorUI().addTab(view, "Film of " + parent.getName());
@@ -232,18 +244,26 @@ public class VisualizeTimeSeries {
 				// Compute modelled mRNA values and their enrichment for each time point
 				mRNA = new ArrayList<List<mRNA>>(numFrames);
 				enrichments = new ArrayList<List<EnrichmentObject<String>>>(numFrames);
-				for(int i = 0; i < numFrames; i++) {
-					// Model mRNA data
-					ArrayList<mRNA> modelValues = computeModelValues(timePoints[i]);
-					mRNA.add(i, modelValues);
-
-					// Compute the enrichment
-					List<EnrichmentObject<String>> e = computeEnrichment(mRNA.get(i), mapFrameToTimePoint(i+1)); // because frame is 1 indexed
-					enrichments.add(i, e);
-
-					// Update the progress bar
-					fireActionEvent(new ActionEvent(transPanel.getDocument(), i, VTSAction.IMAGE_GENERATED.toString()));					
+				
+				System.out.println("Before the computing enrichments");
+				try {
+					for(int i = 0; i < numFrames; i++) {
+						System.out.println("Compute enrichment " + i);
+						// Model mRNA data
+						ArrayList<mRNA> modelValues = computeModelValues(timePoints[i]);
+						mRNA.add(i, modelValues);
+						
+						// Compute the enrichment
+						List<EnrichmentObject<String>> e = computeEnrichment(mRNA.get(i), mapFrameToTimePoint(i+1)); // because frame is 1 indexed
+						enrichments.add(i, e);
+						
+						// Update the progress bar
+						fireActionEvent(new ActionEvent(transPanel.getDocument(), i, VTSAction.IMAGE_GENERATED.toString()));					
+					}					
+				} catch(Exception e) {
+					e.printStackTrace();
 				}
+				System.out.println("After computing the computing enrichments");
 
 				// initialize the dimension
 				colorPathway(enrichments.get(0), mRNA.get(0), mapFrameToTimePoint(1));
@@ -287,12 +307,15 @@ public class VisualizeTimeSeries {
 
 		// sort model values by their signal
 		Collections.sort(modelValues, Signal.getComparator(generateExperimentName(timePoint), signalType));
-		modelValues = filterGenes(modelValues, generateExperimentName(timePoint),  cutoff, signalType);
+		modelValues = filterGenes(modelValues, generateExperimentName(timePoint), cutoff, signalType);
 
 		// compute the pathway enrichment for the given time point
 		List<EnrichmentObject<String>> l=null;
 		try {
 			if(modelValues.size() != 0) {
+				// TODO something throws a NullPointer exception here
+				if(enrich == null)
+					System.out.println("Enrich null");
 				l = enrich.getEnrichments(modelValues, null, null, false);
 			} else {
 				GUITools.showErrorMessage(view, "There is no differential expressed gene for timepoint "
@@ -403,9 +426,11 @@ public class VisualizeTimeSeries {
 	 * @return a List of mRNATimeSeries objects with one data column
 	 */
 	private ArrayList<mRNA> computeModelValues(double timePoint) {		
-		ArrayList<mRNA> values = new ArrayList<>(models.size());
+		ArrayList<mRNA> values = new ArrayList<mRNA>(models.size());
 
 		// Generate the experiment name for the mRNA for the given time point
+		// testing
+		System.out.println("Caller time point: " + timePoint);
 		String experimentName = generateExperimentName(timePoint);
 
 		// for each model, compute the value at the time point and build a mRNATimeSeries object
@@ -753,7 +778,7 @@ public class VisualizeTimeSeries {
 		// http://stackoverflow.com/questions/9727590/what-codecs-does-xuggler-support
 		// The extension has to be in round brackets (the extension is parsed from that)
 		final String[] possibleFileTypes = {"MPEG-4 (.mp4)", "Flash Video (.flv)", "Ogg (.ogg)"};
-		final Map<String, ICodec.ID> fileExtensionToCodec = new HashMap<>();
+		final Map<String, ICodec.ID> fileExtensionToCodec = new HashMap<String, ICodec.ID>();
 		fileExtensionToCodec.put(".mp4", ICodec.ID.CODEC_ID_MPEG4);
 		fileExtensionToCodec.put(".flv", ICodec.ID.CODEC_ID_FLV1);
 		fileExtensionToCodec.put(".ogg", ICodec.ID.CODEC_ID_THEORA);
@@ -766,7 +791,7 @@ public class VisualizeTimeSeries {
 			fireActionEvent(new ActionEvent(this, numFrames, VTSAction.START_GENERATE_FILM.toString()));
 				
 			// Show a dialog, where the user can choose the output file and
-				// the output file type
+			// the output file type
 				JPanel fileTypeDialog = new JPanel();
 				String tooltip = "To which video format should the visualization be exported?";
 				@SuppressWarnings("unchecked")

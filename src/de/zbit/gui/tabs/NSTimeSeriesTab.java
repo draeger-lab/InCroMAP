@@ -38,6 +38,8 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
+import de.zbit.gui.dialogs.FilmSettingsDialog;
+import de.zbit.gui.dialogs.ModelSettingsDialog;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.FileTools;
 import de.zbit.io.NameAndSignalReader;
@@ -213,6 +215,13 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 	}
 	
 	/**
+	 * Is the {@link de.zbit.data.Signal.SignalType} pValue?
+	 */
+	public boolean isPValue() {
+		return this.getSignalType() == SignalType.pValue;
+	}
+	
+	/**
 	 * @return the number of observations
 	 */
 	public int getNumObservations() {
@@ -229,6 +238,19 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		// Model each gene
 		mRNATimeSeries mRNA;
 		
+		// TODO Show a dialog where the user can choose
+		// - if the time points are exponentially distributed (common for concentrations 0.1, 0.01, 0.001 .... )
+		// - a cutoff value. Model just genes that are over the cutoff value at least at one time point (good for the timeFit algorithm, not for the CubicSplineInterpolation)
+		// Ask user for settings
+		ModelSettingsDialog settingsDialog = new ModelSettingsDialog(this);
+		GUITools.showAsDialog(this, settingsDialog, "Please choose settings for the model", false);
+		boolean isExponentiallyDistributed = settingsDialog.isExponentiallyDistributed();
+		double cutoff = settingsDialog.getCutoff();
+		
+		// testing
+		//System.out.println("BoxToggled? " + settingsDialog.isExponentiallyDistributed());
+		//System.out.println("cutoff value: " + settingsDialog.getCutoff());
+		
 		// The modelling step is different for the two methods.
 		if(classs == CubicSplineInterpolation.class) {
 			// Testing
@@ -238,8 +260,9 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 					mRNA = (mRNATimeSeries) o;
 
 					// if mRNA has no NCBI geneID, geneModel for the mRNA is null. Add also a new additional data column,
-					// with information whether the mRNA was modeled or not
-					if(mRNA.getID() == -1) {
+					// with information whether the mRNA was modeled or not.
+					// If the mRNA doesn't fulfill the cutoff value, the mRNA is not modelled.
+					if(mRNA.getID() == -1 || !TimeSeriesModel.geneFulfillsCutoff(mRNA, getSignalType(), cutoff)) {
 						mRNA.addData("Modeled?", "No");
 					} else {
 						try {
@@ -248,7 +271,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 							m.setName(mRNA.getName());
 							m.setGeneID(mRNA.getID());
 							m.setSignalType(getSignalType());
-							m.generateModel(mRNA, timePoints);
+							m.generateModel(mRNA, timePoints, cutoff, isExponentiallyDistributed);
 
 							geneModels.add(m);
 							mRNA.addData("Modeled?", "Yes");					
@@ -274,28 +297,33 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 			}
 			
 			// Compute the parameters for the single gene models
+			// TODO Ask user how many runs for time fit he wants!
 			try {
-				tf.generateModel(castedData, timePoints);
+				tf.generateModel(castedData, timePoints, 10, cutoff, isExponentiallyDistributed);
 			} catch(Exception e) {
 				e.printStackTrace();
 				GUITools.showErrorMessage(parent, "Exception computing the TimeFit model parameters");
-			}
+			}	
 
 			// Now generate the model for each single gene
 			for(int i=0; i<castedData.size(); i++) {
 				mRNA = castedData.get(i);
 				// if mRNA has no NCBI geneID, geneModel for the mRNA is null. Add also a new additional data column,
 				// with information whether the mRNA was modeled or not
-				if(mRNA.getID() == -1) {
+				if(mRNA.getID() == -1 || !TimeSeriesModel.geneFulfillsCutoff(mRNA, getSignalType(), cutoff)) {
 					mRNA.addData("Modeled?", "No");
 				} else {
 					try {
 						// generate a new model. ! Important: set name and idType manually ! They are needed later.
+						// TODO Don't add null models
 						TimeSeriesModel m = tf.getGeneModel(mRNA, timePoints, i);
+						if(m == null) {
+							mRNA.addData("Modeled?", "No");
+							continue;
+						}	
 						m.setName(mRNA.getName());
 						m.setGeneID(mRNA.getID());
 						m.setSignalType(getSignalType());
-						m.generateModel(mRNA, timePoints);
 
 						geneModels.add(m);
 						mRNA.addData("Modeled?", "Yes");					

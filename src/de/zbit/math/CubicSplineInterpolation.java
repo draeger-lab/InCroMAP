@@ -70,25 +70,28 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 	public CubicSplineInterpolation() {
 	}
 	
-	public CubicSplineInterpolation(mRNATimeSeries mRNA, List<ValueTriplet<Double, String, SignalType>> tp) {	
+	public CubicSplineInterpolation(mRNATimeSeries mRNA, List<ValueTriplet<Double, String, SignalType>> tp,
+			double cutoff, boolean isExponentiallyDistributed) {	
 		super(mRNA.getName(), mRNA.getID(), tp.get(0).getC()); // mRNA.getName() returns null, better mRNA.getProbeName()
-		generateModel(mRNA, tp);
+		generateModel(mRNA, tp, cutoff, isExponentiallyDistributed);
 	}
 
+	
 	@Override
 	public void generateModel(mRNATimeSeries dataPoints,
-			List<ValueTriplet<Double, String, SignalType>> timePoints) {
+			List<ValueTriplet<Double, String, SignalType>> timePoints,
+			double cutoff, boolean isExponentiallyDistributed) {
+		this.isExponentiallyDistributed = isExponentiallyDistributed;
 		int numPoints = dataPoints.getNumberOfSignals();
 		
-		// Get the points (x, f(x))
-		this.x = new double[numPoints];
-		this.y = new double[numPoints];
-		this.dx = new double[numPoints];		// distance between two time points
+		// Set the x- and y-values
+		processTimePoints(dataPoints, timePoints, isExponentiallyDistributed);
+		
+		// Compute the distances between two neighboring time points
+		this.dx = new double[numPoints];
 		
 		for(int i=0; i<numPoints; i++) {
-			x[i] = timePoints.get(i).getA();			// the i-th timePoints
-			y[i] = Double.valueOf(dataPoints.getSignalValue(timePoints.get(i).getC(), timePoints.get(i).getB()).toString());
-			dx[i] = i+1==numPoints?0:timePoints.get(i+1).getA()-timePoints.get(i).getA();
+			dx[i] = i+1==numPoints?0:x[i+1]-x[i]; // TODO
 		}
 		
 		// Compute the tridiagonal linear equation system m*k=b
@@ -130,8 +133,15 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 		}
 	}
 	
+	
 	@Override
 	public double computeValueAtTimePoint(double timePoint) {
+		// Other classes calling this method don't know, that the time points could be
+		// logarithmized. So logarithmize the timePoint is necessary.
+		// TODO Maybe this does not work
+		if(isExponentiallyDistributed)
+			timePoint = translateTimePoint(timePoint);
+				
 		// In which range is the time point?
 		int range = 0;
 		
@@ -140,19 +150,19 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 			// Model this timePoint with the first or the last polynome
 			range = timePoint < x[0] ? 1 : x.length;
 		}
-		
 		for(int i=0; i<x.length; i++){
-			range++;																					// is the timePoint in this intervall?
+			range++;											// is the timePoint in this intervall?
 			if(timePoint >= x[i] && timePoint <= x[i+1]) {		// timePoint is in the intervall i. First range indexed with 1
-				break;				
-			}																									// Otherwise look into the next intervall
+				break;
+			}													// Otherwise look into the next intervall
 		}
 		
 		// t is often used
 		double t = (timePoint-x[range-1]) / dx[range-1];
 		
 		// return the value of third order polonomial at given timePoint
-		return (1-t)*y[range-1] + t*y[range] + t*(1-t) * (a[range-1]*(1-t)+b[range-1]*t);
+		double res = (1-t)*y[range-1] + t*y[range] + t*(1-t) * (a[range-1]*(1-t)+b[range-1]*t);
+		return res;
 	}
 	
 	
@@ -167,14 +177,16 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 		
 		// timePoints
 		List<ValueTriplet<Double, String, SignalType>> tp = new ArrayList<ValueTriplet<Double,String,SignalType>>(3);
-		tp.add(new ValueTriplet<>(-1.0,"-1",Signal.SignalType.FoldChange));
-		tp.add(new ValueTriplet<>(0.0,"0",Signal.SignalType.FoldChange));
-		tp.add(new ValueTriplet<>(3.0,"3",Signal.SignalType.FoldChange));
+		tp.add(new ValueTriplet<Double, String, SignalType>(-1.0,"-1",Signal.SignalType.FoldChange));
+		tp.add(new ValueTriplet<Double, String, SignalType>(0.0,"0",Signal.SignalType.FoldChange));
+		tp.add(new ValueTriplet<Double, String, SignalType>(3.0,"3",Signal.SignalType.FoldChange));
 		
-		CubicSplineInterpolation c = new CubicSplineInterpolation(m, tp);
+		CubicSplineInterpolation c = new CubicSplineInterpolation(m, tp, 0, false);
 		
 		for(double i=-1.0; i<=3; i=i+0.01) {
 			System.out.println(c.computeValueAtTimePoint(i));
 		}
 	}
+
+
 }
