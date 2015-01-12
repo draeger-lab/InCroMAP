@@ -294,6 +294,10 @@ public abstract class TimeSeriesModel {
 	public SignalType getSignalType() {
 		return signalType;
 	}
+	
+	public boolean isExponentiallyDistributed() {
+		return this.isExponentiallyDistributed;
+	}
 
 	public void setName(String name) {
 		this.name = name;

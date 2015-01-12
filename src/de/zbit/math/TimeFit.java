@@ -198,7 +198,7 @@ public class TimeFit extends TimeSeriesModel {
 	/**
 	 * The number of gene classes.
 	 */
-	int numClasses = 20;
+	int numClasses = 5;
 
 	/**
 	 * The number of genes.
@@ -386,9 +386,7 @@ public class TimeFit extends TimeSeriesModel {
 		TimeFitModel m = new TimeFitModel();
 		
 		int pos = filteredData.indexOf(dataPoints);
-		// testing
-		System.out.println("Pos of " + dataPoints.getID());
-		
+				
 		// If the mRNATimeSeries haven't been modelled, return null
 		if(pos == -1)
 			return null;
@@ -1248,32 +1246,6 @@ public class TimeFit extends TimeSeriesModel {
 		
 		// TODO Save name and ID ... for each gene before generating the model
 		// TODO update data of the tab. Just show the modelled genes
-		
-		// Generate the single gene model for the first gene
-		TimeFitModel m = new TimeFitModel();
-		int gene = 8802;
-		int c = tf.findClassOfGene(tf.probs[gene]);
-		m.generateModel(data.get(gene), tf.mu.getColumnMatrix(c), tf.gamma.get(c).getColumnMatrix(gene), tf.controlPoints, tf.knots, r.getTimePoints());
-	
-//		// Return n modelled values for later visualization
-//		int n = 100;
-//		double diff = m.getLastTimePoint() - m.getFirstTimePoint();
-//		double[] ts = new double[100];
-//		double[] values = new double[n];
-//		for(int i=0; i<n; i++	) {
-//			ts[i] = m.getFirstTimePoint() + (i * (diff / (n-1)));
-//			values[i] = m.computeValueAtTimePoint(ts[i]);
-//		}
-//		// Print to console
-//		for(int i=0; i<n; i++) {
-//			System.out.print(ts[i] + "\t");
-//		}
-//		System.out.println();
-//		for(int i=0; i<n; i++) {
-//			System.out.print(values[i] + "\t");
-//		}
-		
-		System.out.println("Value at 30h: " + m.computeValueAtTimePoint(30));
 	}
 
 

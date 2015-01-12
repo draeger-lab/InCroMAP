@@ -264,6 +264,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 					// If the mRNA doesn't fulfill the cutoff value, the mRNA is not modelled.
 					if(mRNA.getID() == -1 || !TimeSeriesModel.geneFulfillsCutoff(mRNA, getSignalType(), cutoff)) {
 						mRNA.addData("Modeled?", "No");
+						mRNA.addData("Model", null);
 					} else {
 						try {
 							// generate a new model. ! Important: set name and idType manually ! They are needed later.
@@ -317,6 +318,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 				// with information whether the mRNA was modeled or not
 				if(mRNA.getID() == -1 || !TimeSeriesModel.geneFulfillsCutoff(mRNA, getSignalType(), cutoff)) {
 					mRNA.addData("Modeled?", "No");
+					mRNA.addData("Model", null);
 				} else {
 					try {
 						// generate a new model. ! Important: set name and idType manually ! They are needed later.
@@ -324,6 +326,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 						TimeSeriesModel m = tf.getGeneModel(mRNA, timePoints, i);
 						if(m == null) {
 							mRNA.addData("Modeled?", "No");
+							mRNA.addData("Model", null);
 							continue;
 						}	
 						m.setName(mRNA.getName());
@@ -355,10 +358,6 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		// The selected entries
 		List<mRNATimeSeries> selectedTimeSeries = (List<mRNATimeSeries>) this.getSelectedItems();
 		
-		// If no row is selected, don't do anything
-		if(selectedTimeSeries.size() == 0)
-			return;
-		
 		// The corresponding selected models
 		List<TimeSeriesModel> selectedModels = new ArrayList<TimeSeriesModel>();
 		for(int i=0; i<selectedTimeSeries.size(); i++) {
@@ -366,6 +365,10 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 				selectedModels.add((TimeSeriesModel) selectedTimeSeries.get(i).getData("Model"));
 			}
 		}
+		
+		// If no row is selected, don't do anything
+		if(selectedModels.size() == 0)
+			return;
 		
 		System.out.println(selectedModels);
 		parent.addTab(new VisualizeTimeSeriesAsLineChart(selectedModels, 200, timeUnit), "Models");

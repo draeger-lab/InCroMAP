@@ -37,7 +37,9 @@ import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
+import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 
@@ -101,8 +103,20 @@ public class VisualizeTimeSeriesAsLineChart extends JPanel implements BaseFrameT
 		
 		// The renderer
 		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
-		NumberAxis xax = new NumberAxis(unit);
+		
 		NumberAxis yax = new NumberAxis(selectedModels.get(0).getSignalType().toString());
+
+		// We need a logarithmized x-axes if the time points are exponentially distributed
+		ValueAxis xax;
+		if(selectedModels.get(0).isExponentiallyDistributed()) {
+			xax = new LogAxis(selectedModels.get(0).getSignalType().toString());
+			((LogAxis) xax).setBase(10);
+			xax.setStandardTickUnits(NumberAxis.createStandardTickUnits());			
+		} else {
+			xax = new NumberAxis(unit);			
+		}
+		
+		
 		
 		// The plot
 		XYPlot plot = new XYPlot(dataset, xax, yax, renderer);
