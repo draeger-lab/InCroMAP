@@ -274,7 +274,9 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 							m.generateModel(mRNA, timePoints, cutoff, isExponentiallyDistributed);
 
 							geneModels.add(m);
-							mRNA.addData("Modeled?", "Yes");					
+							mRNA.addData("Modeled?", "Yes");
+							mRNA.addData("Model", m);
+							NameAndSignals.additional_data_is_invisible.add("Model");
 						} catch (Exception e) {
 							e.printStackTrace();
 							GUITools.showErrorMessage(parent, "Exception while generating CubicSplineInterpolation model for " + mRNA.getName());
@@ -282,6 +284,9 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 					}
 				}
 			}
+			
+			//new VisualizeTimeSeriesAsLineChart(geneModels.get(0), 200, timeUnit);
+			
 		} else if(classs == TimeFit.class) {
 			// testing
 			System.out.println("Recognized TimeFit model method");
@@ -326,7 +331,9 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 						m.setSignalType(getSignalType());
 
 						geneModels.add(m);
-						mRNA.addData("Modeled?", "Yes");					
+						mRNA.addData("Modeled?", "Yes");
+						mRNA.addData("Model", m);
+						NameAndSignals.additional_data_is_invisible.add("Model");
 					} catch (Exception e) {
 						e.printStackTrace();
 						GUITools.showErrorMessage(parent, "Exception assigning TimeFitModel to gene to " + mRNA.getName());
@@ -339,4 +346,29 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		this.rebuildTable();
 		this.updateButtons(parent.getJMenuBar(), parent.getJToolBar());
 	}
+	
+
+	/**
+	 * Visualize the selected model(s) in a line chart.
+	 */
+	public void visualizeSelectedModelInChart() {
+		// The selected entries
+		List<mRNATimeSeries> selectedTimeSeries = (List<mRNATimeSeries>) this.getSelectedItems();
+		
+		// If no row is selected, don't do anything
+		if(selectedTimeSeries.size() == 0)
+			return;
+		
+		// The corresponding selected models
+		List<TimeSeriesModel> selectedModels = new ArrayList<TimeSeriesModel>();
+		for(int i=0; i<selectedTimeSeries.size(); i++) {
+			if(selectedTimeSeries.get(i).getData("Model") != null) {
+				selectedModels.add((TimeSeriesModel) selectedTimeSeries.get(i).getData("Model"));
+			}
+		}
+		
+		System.out.println(selectedModels);
+		parent.addTab(new VisualizeTimeSeriesAsLineChart(selectedModels, 200, timeUnit), "Models");
+	}
+  
 }

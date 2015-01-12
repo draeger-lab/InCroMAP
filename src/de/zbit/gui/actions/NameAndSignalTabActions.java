@@ -111,10 +111,14 @@ public class NameAndSignalTabActions implements ActionListener {
   JMenuItem BH_cor;
   JMenuItem BFH_cor;
   JMenuItem BO_cor;
+  JMenuItem keggPathway;
+  JMenuItem chart;
   // Another button to toggle
   AbstractButton filter=null;
-  // ... and another one
+  // ... and another two
   JDropDownButton enrichmentButton;
+  JDropDownButton visualizationButton;
+  
   
   public NameAndSignalTabActions(NameAndSignalsTab parent) {
     super();
@@ -167,7 +171,7 @@ public class NameAndSignalTabActions implements ActionListener {
     /**
      *  Visualize a modelled time series
      */
-    VISUALIZE_TIME_SERIES;
+    VISUALIZE_TIME_SERIES, VISUALIZE_MODEL_IN_CHART;
     
     /*
      * (non-Javadoc)
@@ -237,6 +241,8 @@ public class NameAndSignalTabActions implements ActionListener {
         	
         case VISUALIZE_TIME_SERIES:
         	return "Visualize the modelled time series";
+        case VISUALIZE_MODEL_IN_CHART:
+        	return "Visualize the selected model in a line chart";
           
         default:
           return null; // Deactivate
@@ -334,11 +340,9 @@ public class NameAndSignalTabActions implements ActionListener {
           NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_PENCIL_16")));
       
     
-    } if(tableContent.equals(mRNATimeSeries.class)) {
-    	// is the mRNA already modeled?
+    } if(tableContent.equals(mRNATimeSeries.class)) {	
     	
-
-      // Visualization option: Visualize pValue or qValue of the KEGG Pathway Enrichment?
+      // Generate time series menu
       JPopupMenu modelMethodMenu = new JPopupMenu("Model time series");
       JMenuItem spline = GUITools.createJMenuItem(this, NSAction.MODEL_TIME_SERIES_SPLINE,
       		UIManager.getIcon("ICON_GEAR_16"),null,null,JMenuItem.class,true);
@@ -350,14 +354,29 @@ public class NameAndSignalTabActions implements ActionListener {
       		UIManager.getIcon("ICON_GEAR_16"), modelMethodMenu);
       modelMethodButton.setToolTipText("Generate a continuous model, which can be visualized.");
       bar.add(modelMethodButton);
-          	
-//    	bar.add(GUITools.createJButton(this,
-//    			NSAction.MODEL_TIME_SERIES, UIManager.getIcon("ICON_GEAR_16")));
-    	bar.add(GUITools.createJButton(this,
-    			NSAction.VISUALIZE_TIME_SERIES, UIManager.getIcon("ICON_PATHWAY_16")));
+      
+      // Visualize Time Series Menu
+      JPopupMenu visualizationMenu = new JPopupMenu("Visualize time series");
+      keggPathway = GUITools.createJMenuItem(this, NSAction.VISUALIZE_TIME_SERIES,
+    		  UIManager.getIcon("ICON_PATHWAY_16"),null,null,JMenuItem.class,true);
+      chart = GUITools.createJMenuItem(this, NSAction.VISUALIZE_MODEL_IN_CHART,
+    		  UIManager.getIcon("ICON_PATHWAY_16"),null,null,JMenuItem.class,true);
+      visualizationMenu.add(keggPathway);
+      visualizationMenu.add(chart);
+      JDropDownButton visualizationButton= new JDropDownButton("Visualize time series",
+    		  UIManager.getIcon("ICON_PATHWAY_16"), visualizationMenu);
+      visualizationButton.setToolTipText("Visualize modelled values in KEGG Pathways or visualize a model in a line chart.");
+      visualizationMenu.setEnabled(false);
+      visualizationButton.setEnabled(false);
+      keggPathway.setEnabled(false);
+      chart.setEnabled(false);
+      bar.add(visualizationButton);
+      
+//      bar.add(GUITools.createJButton(this,
+//    			NSAction.VISUALIZE_TIME_SERIES, UIManager.getIcon("ICON_PATHWAY_16")));
     	
-    	// Same as for mRNA.class
-    	bar.add(GUITools.createJButton(this,
+      // Same as for mRNA.class
+      bar.add(GUITools.createJButton(this,
           NSAction.ADD_GENE_SYMBOLS, UIManager.getIcon("ICON_PENCIL_16")));	
     	
     } if (Region.class.isAssignableFrom(tableContent)) {
@@ -532,6 +551,10 @@ public class NameAndSignalTabActions implements ActionListener {
     		// Initializes the visualization. Adds a instance of TimeSeriesView to the tabbed Pane
     		new VisualizeTimeSeries((NSTimeSeriesTab)parent);
     	}
+    } else if(command.equals(NSAction.VISUALIZE_MODEL_IN_CHART.toString())) {
+    	if (parent instanceof NSTimeSeriesTab) {
+    		((NSTimeSeriesTab) parent).visualizeSelectedModelInChart();    		
+    	}
     }
   }
 
@@ -660,9 +683,11 @@ public class NameAndSignalTabActions implements ActionListener {
     // Enable 'Visualize time series' button if data is already modelled
     if(parent instanceof NSTimeSeriesTab) {
     	if(((NSTimeSeriesTab) parent).getModelMethod() == null) {
-        GUITools.setEnabled(false, toolBar, NSAction.VISUALIZE_TIME_SERIES);
+    		GUITools.setEnabled(false, toolBar, NSAction.VISUALIZE_TIME_SERIES);
+    		GUITools.setEnabled(false, toolBar, NSAction.VISUALIZE_MODEL_IN_CHART);
     	} else {
-        GUITools.setEnabled(true, toolBar, NSAction.VISUALIZE_TIME_SERIES);
+    		keggPathway.setEnabled(true);
+    		chart.setEnabled(true);
     	}
     }
   }

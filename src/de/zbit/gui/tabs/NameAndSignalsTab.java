@@ -38,6 +38,7 @@ import javax.swing.SwingWorker.StateValue;
 
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.mRNA.mRNA;
+import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.gui.IntegratorUI;
@@ -45,6 +46,7 @@ import de.zbit.gui.actions.NameAndSignalTabActions;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.FileTools;
 import de.zbit.io.NameAndSignalReader;
+import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.Reflect;
 import de.zbit.util.Species;
 import de.zbit.util.progressbar.AbstractProgressBar;
@@ -296,5 +298,4 @@ public class NameAndSignalsTab extends IntegratorTabWithTable implements Propert
 	public void setIntermediateBar(AbstractProgressBar intermediateBar) {
 		this.intermediateBar = intermediateBar;
 	}
-  
 }
