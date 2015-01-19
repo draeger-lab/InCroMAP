@@ -83,11 +83,11 @@ public class ModelSettingsDialog extends JPanel {
 	 * Generate a new model settings dialog.
 	 * @param parent
 	 */
-	public ModelSettingsDialog(NSTimeSeriesTab parent) {
+	public ModelSettingsDialog(NSTimeSeriesTab parent, double cutoffGuess) {
 		this.parent = parent;
 		
 		// The gene filter part
-		JComponent filterPanel = generateFilterPanel();
+		JComponent filterPanel = generateFilterPanel(cutoffGuess);
 		
 		// The time points are exponentially distributed part
 		JComponent distributionPanel = generateDistributionPanel();
@@ -106,15 +106,16 @@ public class ModelSettingsDialog extends JPanel {
 	
 	/**
 	 * Creates a panel where the user can choose a cutoff value.
+	 * @param cutoffGuess Value in the cutoff text field at the beginning
 	 * @return the panel
 	 */
-	private JComponent generateFilterPanel() {
+	private JComponent generateFilterPanel(double cutoffGuess) {
 		// pValue or FC?
 		final boolean isPValue = parent.isPValue();
 		
 		JLabel cutoffLabel = new JLabel("Cutoff value");	
-		// default value. 
-		double cutoff = isPValue ? 0.05 : 1;	
+		// Initial guess of the cutoff value. 
+		double cutoff = cutoffGuess;	
 		String toolTip = "";
 		if(isPValue)
 			toolTip = "Do not model genes where no p-value is lower than the cutoff.";

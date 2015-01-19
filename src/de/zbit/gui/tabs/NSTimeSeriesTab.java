@@ -34,6 +34,7 @@ import javax.swing.SwingWorker;
 import javax.swing.SwingWorker.StateValue;
 
 import de.zbit.data.NameAndSignals;
+import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.GUITools;
@@ -238,11 +239,28 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		// Model each gene
 		mRNATimeSeries mRNA;
 		
-		// TODO Show a dialog where the user can choose
+		// Show a dialog where the user can choose
 		// - if the time points are exponentially distributed (common for concentrations 0.1, 0.01, 0.001 .... )
 		// - a cutoff value. Model just genes that are over the cutoff value at least at one time point (good for the timeFit algorithm, not for the CubicSplineInterpolation)
+		// Fill the cutoff field with an reasonable initial value. Because CubicSplineInterpolation
+		// models each gene indepentend from other genes, we don't have to filter here. So set the cutoff field
+		// to zero.
+		double cutoffGuess = 0.0;
+		if(classs == CubicSplineInterpolation.class) {
+			cutoffGuess = 0.0;
+		} else if(classs == TimeFit.class) {
+			// Here a pre-filtering of the genes is reasonable, because the genes are clustered together
+			// and genes in the same cluster affect the model of other genes in the same cluster.
+			// So house holding genes would blur the models
+			if(this.getSignalType() == Signal.SignalType.FoldChange)
+				cutoffGuess = 1;
+			else if(this.getSignalType() == Signal.SignalType.pValue) {
+				cutoffGuess = 0.05;
+			}
+		}
+		
 		// Ask user for settings
-		ModelSettingsDialog settingsDialog = new ModelSettingsDialog(this);
+		ModelSettingsDialog settingsDialog = new ModelSettingsDialog(this, cutoffGuess);
 		GUITools.showAsDialog(this, settingsDialog, "Please choose settings for the model", false);
 		boolean isExponentiallyDistributed = settingsDialog.isExponentiallyDistributed();
 		double cutoff = settingsDialog.getCutoff();

@@ -28,6 +28,8 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -159,11 +161,10 @@ public class FilmControlPanel extends JPanel {
 	 * @param timeUnitString, the string which describes the time unit (e.g. "s" for seconds)
 	 */
 	public void setFrameToTimeUnit(int frame, double timePoint, String timeUnitString) {
-		// Get the string representation of the time points
-		String time = "";
-		
 		//String text = "Frame " + frame + " \u2259 " + String.format("%.2f", timePoint) + timeUnitString;
-		String text = "Frame " + frame + " \u2259 " + Double.toString(timePoint) + timeUnitString;
+		// Show the time points in scientific notation with two digits behind the point
+		NumberFormat formatter = new DecimalFormat("0.##E0");
+	    String text = "Frame " + frame + " \u2259 " + formatter.format(timePoint) + " " + timeUnitString; // 2,147484E9
 		frameToTimeUnit.setText(text);		
 	}
 
