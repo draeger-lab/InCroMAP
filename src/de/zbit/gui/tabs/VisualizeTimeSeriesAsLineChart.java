@@ -77,7 +77,7 @@ public class VisualizeTimeSeriesAsLineChart extends JPanel implements BaseFrameT
 		}
 		// Now check how many duplicates there are for each name
 		for(int i=0; i<size; i++) {
-			int[] indices = ArrayUtils.indecesOf(names, names[i]);
+			int[] indices = ArrayUtils.indicesOf(names, names[i]);
 			int occurrences = indices.length;
 			// Change the name of the duplicates
 			for(int j=1; j<occurrences; j++) {
