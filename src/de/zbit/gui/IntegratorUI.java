@@ -143,7 +143,7 @@ public class IntegratorUI extends BaseFrame {
   /**
    * The version of {@link #appName}
    */
-  public final static String appVersion = "1.6";
+  public final static String appVersion = "1.6.1";
   
   /**
    * A simple light blue color. Used e.g. in {@link PathwayVisualizationOptions}
