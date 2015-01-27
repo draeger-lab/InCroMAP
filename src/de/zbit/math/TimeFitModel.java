@@ -97,7 +97,15 @@ public class TimeFitModel extends TimeSeriesModel {
 		
 		// Return the modeled value as described in the paper.
 		// testing
-		System.out.println(this.name + " returned " + (s.multiply(mu.add(gamma)).getEntry(0, 0)));
+		//System.out.println(this.name + " returned " + (s.multiply(mu.add(gamma)).getEntry(0, 0)));
+		if(timePoint == 1.0) {
+			System.out.println("s(t): " + s.getRowDimension() + "x" + s.getColumnDimension());
+			System.out.println(s);
+			System.out.println("mu: " + mu.getRowDimension() + "x" + mu.getColumnDimension());
+			System.out.println(mu);
+			System.out.println("gamma: " + mu.getRowDimension() + "x" + gamma.getColumnDimension());
+			System.out.println(gamma);
+		}
 		return s.multiply(mu.add(gamma)).getEntry(0, 0);
 	}
 	
