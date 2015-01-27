@@ -181,7 +181,7 @@ public class TimeFit extends TimeSeriesModel {
 	/**
 	 * Maximum number of iteration for the EM-algorithm.
 	 */
-	int maxIteration = 200;
+	int maxIteration = 20;
 
 	/**
 	 * The class probability that are updated in the EM-algorithm.
@@ -196,7 +196,7 @@ public class TimeFit extends TimeSeriesModel {
 	/**
 	 * The number of gene classes.
 	 */
-	int numClasses = 10;
+	int numClasses = 9;
 
 	/**
 	 * The number of genes.
@@ -347,6 +347,9 @@ public class TimeFit extends TimeSeriesModel {
 			 */
 			findMAPEstimate();
 
+			// Compute the new class covariance matrices.
+			maximizeCovMatrices();
+
 			// Maximize the covariance matrices Γ, the variance and the class centers mu
 			maximizeVariance();
 
@@ -354,8 +357,6 @@ public class TimeFit extends TimeSeriesModel {
 			// multiplicate them
 			maximizeMu();
 
-			// Compute the new class covariance matrices.
-			maximizeCovMatrices();
 
 			// Update the class probabilities
 			updateClassProbs();
@@ -551,7 +552,7 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	private void chooseControlPoints(double[] timePoints) {
 		// A simple estimation for the number of control points.
-		this.q = (timePoints.length / 3)+3;
+		this.q = (timePoints.length / 3)+2;
 
 		// This is the best case we try to achieve: equidistant control points
 		double[] equidistantPoints = new double[q]; // Best x-values of the control points
@@ -626,16 +627,8 @@ public class TimeFit extends TimeSeriesModel {
 		int numberOfKnots = q + order;
 		knots = new double[numberOfKnots];
 
-		// Place the knots. Two knots before the first time point and two knots after the
+		// Place the knots. Three knots before the first time point and three knots after the
 		// last time point are needed to describe the resulting model in the interval
-		// [firstTimePoint, lastTimePoint]
-//		knots[2] = getFirstTimePoint();
-//		knots[numberOfKnots-3] = getLastTimePoint();
-//		double stepsize = (getLastTimePoint() - getFirstTimePoint()) / (numberOfKnots-5);
-//		for(int i=-2; i<numberOfKnots-2; i++)
-//			knots[i+2] = getFirstTimePoint() + stepsize * i;
-		
-		knots[3] = getFirstTimePoint();
 		double stepsize = (getLastTimePoint() - getFirstTimePoint()) / (numberOfKnots-7);
 		for(int i=-3; i<numberOfKnots-3; i++) {
 			knots[i+3] = getFirstTimePoint() + stepsize * i;
@@ -648,101 +641,20 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	private void initializeClassCenter() {
 		this.mu = new Array2DRowRealMatrix(q, numClasses);
-		
-		// Compute the variances of the data and choose genes with highest
-		// and lowest variance as class centers. Together with the variance,
-		// save also the column index of the gene in the yMatrix.
-		double[][] variances = new double[filteredData.size()][2];
-		Variance v = new Variance();
-		for(int i=0; i<numGenes; i++) {
-			variances[i][0] = v.evaluate(yMatrix.getColumn(i));
-			variances[i][1] = i;
-		}
-		
-		Arrays.sort(variances, new Comparator<double[]>() {
-            @Override
-            public int compare(final double[] entry1, final double[] entry2) {
-                final Double var1 = new Double(entry1[0]);
-                final Double var2 = new Double(entry2[0]);
-                return var1.compareTo(var2);
-            }
-        });
-		
-		// testing: variances are sorted from low to high variance
-		for(int i=0; i<numGenes; i++) {
-			System.out.println(variances[i][0]);
-		}
-		
 		// The already chosen class centers. Don't allow a two same class centers.
 		ArrayList<Integer> chosenGenes = new ArrayList<Integer>(numClasses);
-		
-		// Third of the class centers are chosen by their variance. Choose them from the upper third
-		// genes with highest variance
-		int third = numClasses / 3;
-		// Take the gene with the highest variance
-		int highestVariancePos = (int) variances[filteredData.size()-1][1];
-		setClassCenter(0, highestVariancePos);
-		chosenGenes.add(highestVariancePos);
-		// Choose the rest by chance
-		for(int j=1; j<third; j++) {
+
+		// Initialize the class centers 
+		int i;  // number of gene
+		for(int j=0; j<numClasses; j++) {
 			// Choose a new random gene.
-			int rand = (int) (Math.random() * numGenes) / 3;
-			int i = filteredData.size() - 1 - rand;
-			while (chosenGenes.contains(i)) {
-				rand = (int) (Math.random() * numGenes) / 3;
-				i = filteredData.size() - 1 - rand;
-			}
-			setClassCenter(j, i);
-			chosenGenes.add(i);
-		}
-		
-		// The second third of the class centers are chosen from the genes with the lowest variances
-		// Compute the mean expression of that genes and choose genes at chance.
-		int lowestVariancePos = (int) variances[0][1];
-		setClassCenter(0, lowestVariancePos);
-		chosenGenes.add(lowestVariancePos);
-		// Choose the rest by chance.
-		for(int j=third+1; j<2*third; j++) {
-			// Choose a new random gene.
-			int i = (int) (Math.random() * numGenes) / 3;
-			while (chosenGenes.contains(i)) {
-				i = (int) (Math.random() * numGenes) / 3;
-			}
-			setClassCenter(j, i);
-			chosenGenes.add(i);
-		}
-		
-		// The second third of the class centers are chosen randomly.
-		for(int j=2*third; j<numClasses; j++) {
-			// Choose a new random gene.
-			int i = (int) (Math.random() * numGenes);
+			i = (int) (Math.random() * numGenes);
 			while (chosenGenes.contains(i)) {
 				i = (int) (Math.random() * numGenes);
 			}
 			setClassCenter(j, i);
 			chosenGenes.add(i);
-		}
-//			
-//		// Old method: completely random
-//		// Initialize the class centers 
-//		int i;  // number of gene
-//		for(int j=0; j<numClasses; j++) {
-//			// Choose a new random gene.
-//			i = (int) (Math.random() * numGenes);
-//			while (chosenGenes.contains(i)) {
-//				i = (int) (Math.random() * numGenes);
-//			}
-//			setClassCenter(j, i);
-//			chosenGenes.add(i);
-//			// Compute the class center
-//			RealMatrix m = sts; // An intermediary result
-//			// Invert m
-//			m = new SingularValueDecomposition(m).getSolver().getInverse();
-//			// Compute the final initial class center, a q by 1 vector
-//			m = m.multiply(s.transpose()).multiply(yMatrix.getColumnMatrix(i));
-//			// Add the class center to the list of class centers
-//			mu.setColumnMatrix(j, m); // the j-th center is in the j-th column of mu
-//		}		
+		}		
 	}
 	
 	
@@ -778,20 +690,6 @@ public class TimeFit extends TimeSeriesModel {
 			// Add the gene to the class2gene mapping
 			class2genes.get(j).add(i);
 		}
-		
-		// For each gene, select the nearest class center
-//		for(int i=0; i<numGenes; i++) {
-//			int nearestClass = 0;
-//			double minDist = Double.MAX_VALUE;
-//			for(int j=0; j<numClasses; j++) {
-//				if(dists[i][j] < minDist) {
-//					minDist = dists[i][j];
-//					nearestClass = j;
-//				}
-//			}
-//			class2genes.get(nearestClass).add(i);
-//			pos2class[i] = nearestClass;
-//		}
 	}
 
 
@@ -892,53 +790,6 @@ public class TimeFit extends TimeSeriesModel {
 
 
 	/**
-	 * Compute the power of a BigDecimal to an double value.
-	 */
-	private BigDecimal bigDecimalPow(BigDecimal n1, BigDecimal n2) {
-		// Perform X^(A+B)=X^A*X^B (B = remainder)
-		// see: http://stackoverflow.com/questions/3579779/how-to-do-a-fractional-power-on-bigdecimal-in-java
-		int signOf2 = n2.signum();
-		double dn1 = n1.doubleValue();
-		// Compare the same row of digits according to context
-		n2 = n2.multiply(new BigDecimal(signOf2)); // n2 is now positive
-		BigDecimal remainderOf2 = n2.remainder(BigDecimal.ONE);
-		BigDecimal n2IntPart = n2.subtract(remainderOf2);
-		// Calculate big part of the power using context -
-		BigDecimal intPow = new BigDecimal(1);
-		try{
-			intPow = n1.pow(n2IntPart.intValueExact());
-		} catch(Exception e) {
-			System.out.println("n2IntPart: " + n2IntPart);
-			e.printStackTrace();
-		}
-		BigDecimal doublePow = new BigDecimal(Math.pow(dn1, remainderOf2.doubleValue()));
-		BigDecimal result = intPow.multiply(doublePow);
-
-		return result;
-	}
-
-
-	/**
-	 * 
-	 * @param bigE
-	 * @param e1
-	 * @param e2
-	 * @return
-	 */
-	private BigDecimal computeFactorAsBigDecimal(BigDecimal bigE, double e1,
-			double e2, double classProb) {
-		
-		// Compute logarithm of factor
-//		BigDecimal tmp = new BigDecimal(Math.log(classProb) + e1 + e2);
-//		System.out.println("Exponent big: " + tmp);
-//		return bigDecimalPow(bigE, tmp);
-		BigDecimal bigF1 = bigDecimalPow(bigE, new BigDecimal(e1));
-		BigDecimal bigF2 = bigDecimalPow(bigE, new BigDecimal(e2));
-		return new BigDecimal(classProb).multiply(bigF1).multiply(bigF2);
-	}
-
-
-	/**
 	 * 
 	 */
 	private void computeProbabilities() {
@@ -992,13 +843,6 @@ public class TimeFit extends TimeSeriesModel {
 				}
 			}
 		}
-		
-		// Don't allow the probs to be too small to avoid zeros in the later computings
-//		for(int i=0; i<numGenes; i++) {
-//			for(int j=0; j<numClasses; j++) {
-//				probs[i][j] = Math.max(probs[i][j], 1e-5);
-//			}
-//		}
 	}
 
 
@@ -1040,11 +884,11 @@ public class TimeFit extends TimeSeriesModel {
 		// For the variance, we have to compute a sum over genes and classes
 		double sum = 0;
 		// Two factors used for better coed
-		RealMatrix m;
 		for(int i=0; i<numGenes; i++) {
 			for(int j=0; j<numClasses; j++) {
+				RealMatrix m;
 				m = yMatrix.getColumnMatrix(i).subtract(s.multiply(mu.getColumnMatrix(j).add(gamma.get(j).getColumnMatrix(i))));
-				sum += m.transpose().scalarMultiply(probs[i][j]).multiply(m).getEntry(0, 0) + traces[j];
+				sum += probs[i][j] * m.transpose().multiply(m).getEntry(0, 0);// + traces[j];
 			}
 		}
 		variance = sum / n;
@@ -1090,7 +934,7 @@ public class TimeFit extends TimeSeriesModel {
 			m1 = inverseCovMatrices.get(j).add(sts.scalarMultiply(1/variance));
 			summands.add(new SingularValueDecomposition(m1).getSolver().getInverse());
 		}		
-		// Now compute the new covariance matrices
+			
 		for(int j=0; j<numClasses; j++) {
 			RealMatrix numerator = new Array2DRowRealMatrix(q, q);
 			double denominator = 0;
@@ -1114,9 +958,8 @@ public class TimeFit extends TimeSeriesModel {
 	 * 
 	 */
 	private void updateClassProbs() {
-		double sum = 0;
 		for(int j=0; j<numClasses; j++) {
-			sum = 0;
+			double sum = 0;
 			for(int i=0; i<numGenes; i++) {
 				sum += probs[i][j];
 			}
@@ -1134,8 +977,6 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	private void computeLogLikelihood() {
 		double newLogLikelihood = 0;
-		double exp1 = 0; // The first exponent
-		double exp2 = 0; // The second exponent
 		// Square root of the covMatrix determinants are often needed
 		double[] squareRootDets = new double[numClasses];
 		for(int j=0; j<numClasses; j++) {
@@ -1143,6 +984,8 @@ public class TimeFit extends TimeSeriesModel {
 		}
 		// Now compute the log likelihood
 		for(int i=0; i<numGenes; i++) {
+			double exp1 = 0; // The first exponent
+			double exp2 = 0; // The second exponent
 			double sum = 0;
 			// This indicator variable (dummy variable) assignes each gene to exactly one class.
 			// So this is the class j for gene i with the highest probability.
@@ -1182,7 +1025,6 @@ public class TimeFit extends TimeSeriesModel {
 			if(oldClass != newClass) {
 				class2genes.get(oldClass).remove(new Integer(i));
 				class2genes.get(newClass).add(new Integer(i));
-				
 			}
 		}
 	}
@@ -1274,7 +1116,7 @@ public class TimeFit extends TimeSeriesModel {
 		
 		// Generate model
 		TimeFit tf = new TimeFit();
-		tf.generateModel(data, r.getTimePoints(), 10, 1.0, false);
+		tf.generateModel(data, r.getTimePoints(), 5, 1.0, false);
 		
 		//tf.printModel();
 		// TODO Save name and ID ... for each gene before generating the model

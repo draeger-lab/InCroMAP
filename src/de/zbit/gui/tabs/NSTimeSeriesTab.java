@@ -323,7 +323,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 			// Compute the parameters for the single gene models
 			// TODO Ask user how many runs for time fit he wants!
 			try {
-				tf.generateModel(castedData, timePoints, 3, cutoff, isExponentiallyDistributed);
+				tf.generateModel(castedData, timePoints, 5, cutoff, isExponentiallyDistributed);
 			} catch(Exception e) {
 				e.printStackTrace();
 				GUITools.showErrorMessage(parent, "Exception computing the TimeFit model parameters");
