@@ -122,11 +122,6 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 			// Definitions of required and optional columns. Signal columns are created in the method
 			// getExpectedSignalColumnsOverridable, which is overridden in this class
 			ExpectedColumn[] exCol = getExpectedColumns();
-			// testing
-			System.out.println("Print the expected columns:");
-			for(int i=0; i<exCol.length; i++) {
-				System.out.println(exCol[i]);
-			}
 
 			int originalSize = getExpectedColumns().length;
 			
@@ -134,23 +129,11 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 			
 			// Check if the inputReader has a header
 			if(inputReader.getHeader() == null) {
-				System.out.println("InputReader open!");
 				inputReader.open();
-				System.out.println("----------------");
 			}
-			System.out.println("Is the header of the inputReader is null directly after the loadConfigurationFromCache?");
-			System.out.println(inputReader.getHeader() == null);
-			// for testing
-			System.out.println("Call getExpectedColumns?");
-			System.out.println(exCol.length!=originalSize);
-			System.out.println("----------------");
 			if (exCol.length!=originalSize) {
 				// Don't load corrupt information
 				exCol = getExpectedColumns();
-				// testing
-				for(int i=0; i<exCol.length; i++) {
-					System.out.println(exCol[i]);
-				}
 			}
 
 			// Show the CSV Import dialog
@@ -171,12 +154,6 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 				JPanel comp = new JPanel(new BorderLayout());
 				timeUnitTextfield = getTimeUnitTextfield();
 				// for testing
-				System.out.println("The isSignalColumn array:");
-				System.out.println("length: " + isSignalColumn.length);
-				for(int i=0; i<isSignalColumn.length; i++) {
-					System.out.println(isSignalColumn[i]);
-				}
-				System.out.println("---------------");
 				timePointsTable = createTimePointTable(inputReader, isSignalColumn);
 
 				// Add single components to the main component
@@ -528,17 +505,8 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 		colNames = new String[numCols];
 		String[] header = reader.getHeader();
 		// for testing
-		System.out.println("Is the header null?");
-		System.out.println(header == null);	
-		System.out.println("The header delivered by CSVReader:");
-		for(int i=0; i<header.length; i++)
-			System.out.println(header[i] == null);
-		//System.out.println(header[i]);
-		System.out.println("colNames length: " + colNames.length);
-		System.out.println("header length: " + header.length);
 		int pos = 0;
 		for(int i=0; i<signals.length; i++) {
-			System.out.println("i: " + i + "; pos:" + pos);
 			if(signals[i]==1) {
 				colNames[pos] = header[i];
 				pos++;

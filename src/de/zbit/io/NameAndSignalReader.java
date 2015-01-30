@@ -174,10 +174,6 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
     // Evaluate and load data from cache.
     File inputFile = new File(file);
     CSVReader inputReader = new CSVReader(file);
-    // for testing
-    System.out.println("Load configuration from cache?");
-    System.out.println(cache!=null && cache.contains(inputFile));
-    System.out.println("---------------");
     if (cache!=null && cache.contains(inputFile)) {
       ReaderCacheElement ci = cache.get(inputFile);
       ci.configureReader(inputReader);

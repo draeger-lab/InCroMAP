@@ -1461,7 +1461,11 @@ public class VisualizeDataInPathway {
               if (graph==null) {
                 String inputFile;
                 try {
-                  inputFile = KGMLSelectAndDownload.downloadPathway(pathwayID, false);
+                  if (KGMLSelectAndDownload.class.getResource("kgml/" + pathwayID + ".xml") != null) {
+                    inputFile = KGMLSelectAndDownload.class.getResource("kgml/" + pathwayID + ".xml").getPath();
+                  } else {
+                    inputFile = KGMLSelectAndDownload.downloadPathway(pathwayID, false);
+                  }
                   if (inputFile==null) throw new Exception("Failed to download pathway.");
                 } catch (Throwable t) {
                   GUITools.showErrorMessage(null, t);
