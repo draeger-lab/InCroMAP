@@ -1,11 +1,11 @@
 <!-- ANT build script for yfiles obfuscation           -->
 <!-- The java based ANT tool is available from         -->
 <!-- http://jakarta.apache.org/ant                     -->
-<project name="Integrator with Obfuscation" default="sign" basedir=".">
+<project name="Integrator with Obfuscation" default="run" basedir=".">
 
-  <target name="help">
-    <echo>
-      This is an ANT build script to build a stand-alone JAR for
+	<target name="help">
+		<echo>
+      	This is an ANT build script to build a stand-alone JAR for
     	Integrator. In the last step, obfuscating of all yFiles
     	classes and all other classes that make use of yFiles is
 	    performed.
@@ -17,253 +17,250 @@
 	    file, stored in $appJarObfSgn which is currently
 	    "IntegratorObfSgn.jar".
     </echo>
-  </target>
+	</target>
 
-  <!-- define some properties that are used throughout the tasks -->
-  <target name="init">
-    <echo>
+	<!-- define some properties that are used throughout the tasks -->
+	<target name="init">
+		<echo>
        PLESE MAKE SURE LOG LEVEL IN Integrator.java MAIN METHOD IS SET TO INFO!
     	 ALSO Ensure that list of "yFiles-using-classes to obfuscate" is complete!
     </echo>
-  	
-    <!-- the main class -->
-    <property name="main" value="de.zbit.Integrator"/>
-  	
-    <!-- the base directory of the Integrator repository -->
-    <property name="base" location=".."/>
-  	
-  	<!-- the path to SYSBIO -->
-  	<property name="SysBioPath" location="${base}/../SysBio" />
 
-    <!-- the path to KEGGtranslator -->
-    <property name="KEGGtranslatorPath" location="${base}/../KEGGTranslator" />
-  	
-    <!-- the path to SBVC -->
-    <property name="SBVCPath" location="${base}/../SBVC" />
-  	
-    <!-- the path to the Integrator sources -->
-  	<property name="src" location="${base}/src"/>
-  	
-    <!-- the path to the Integrator binaries -->
-    <property name="classes" location="${base}/bin"/>
-    
-    <!-- the unobfuscated application jar file -->
-    <property name="appJar" value="Integrator_Michael.jar"/>
+		<!-- the main class -->
+		<property name="main" value="de.zbit.Integrator" />
 
-    <!-- the obfuscated application jar file -->
-    <property name="appJarObf" value="IntegratorObf_Michael.jar"/>
+		<!-- the base directory of the Integrator repository -->
+		<property name="base" location=".." />
 
-    <!-- the obfuscated and signed application jar file -->
-    <property name="appJarObfSgn" value="IntegratorObfSgn_Michael.jar"/>
-  	
-    <!-- the yGuard jar file containing the obfuscation task -->
-    <property name="yGuardJar" value="yguard.jar"/>
-  	
-    <!-- the log file geenrated by the obfuscation task -->
-    <property name="obfuscationLog" value="obfuscation-log.xml"/>
-    	
-  </target>
+		<!-- the path to SYSBIO -->
+		<property name="SysBioPath" location="${base}/../SysBio" />
 
-  <!-- puts the application specific classes into application.jar. -->
-  <target name="jar" depends="init">
-  	<echo>
+		<!-- the path to KEGGtranslator -->
+		<property name="KEGGtranslatorPath" location="${base}/../KEGGTranslator" />
+
+		<!-- the path to SBVC -->
+		<property name="SBVCPath" location="${base}/../SBVC" />
+
+		<!-- the path to the Integrator sources -->
+		<property name="src" location="${base}/src" />
+
+		<!-- the path to the Integrator binaries -->
+		<property name="classes" location="${base}/bin" />
+
+		<!-- the unobfuscated application jar file -->
+		<property name="appJar" value="Integrator_Michael.jar" />
+
+		<!-- the obfuscated application jar file -->
+		<property name="appJarObf" value="IntegratorObf_Michael.jar" />
+
+		<!-- the obfuscated and signed application jar file -->
+		<property name="appJarObfSgn" value="IntegratorObfSgn_Michael.jar" />
+
+		<!-- the yGuard jar file containing the obfuscation task -->
+		<property name="yGuardJar" value="yguard.jar" />
+
+		<!-- the log file geenrated by the obfuscation task -->
+		<property name="obfuscationLog" value="obfuscation-log.xml" />
+
+	</target>
+
+	<!-- puts the application specific classes into application.jar. -->
+	<target name="jar" depends="init">
+		<echo>
   		Putting the application specific classes into application.jar!
     </echo>
-    <delete file="${appJar}"/>
-    <jar jarfile="${appJar}">
-            <manifest>
-              <attribute name="Main-Class" value="${main}"/>
-            	<attribute name="Built-By" value="Center for Bioinformatics Tuebingen (ZBIT)"/>
-              <attribute name="SplashScreen-Image" value="de/zbit/gui/img/splash.gif"/>
-            	<!-- Die folgenden 2 Attribute sind leider keine gültigen manifest attribute. -->
-            	<!--<attribute name="Xdock:name" value="Integrator"/>-->
-              <!--<attribute name="Xdock:icon" value="de/zbit/kegg/gui/img/IntegratorIcon_256.png"/>-->
-            </manifest>
-      <!-- INCLUDE/ EXCLUDE DEMO-->
-      <!--<fileset dir="${src}">-->
-      <!--  <include name="demo/view/**/*.properties"/>-->
-      <!--  <exclude name="demo/view/**/resource/**"/>-->
-      <!--</fileset>-->
-            <fileset dir="${classes}">
-            	<exclude name="**/package.html"/>
-            	<exclude name="KeggMappingsBinaryGenerator.class" />
-            </fileset>
-    	      <filelist dir="${base}" files="libquaqua.jnilib,libquaqua64.jnilib"/>
-    	     
-           <!-- JFREECHART -->
-    	     <zipfileset excludes="META-INF/*" src="${base}/lib/JFreeChart/jfreechart-1.0.14.jar"/>
-    	     <zipfileset excludes="META-INF/*" src="${base}/lib/JFreeChart/jcommon-1.0.17.jar"/>
-    	
-           <fileset dir="${SysBioPath}/bin">
-              <exclude name="de/zbit/resources/liftover/**/*"/>
-            	<exclude name="**/package.html"/>
-           	  <exclude name="overview.html"/>
-           </fileset>
-    	
-<!--    	      <zipfileset excludes="META-INF/*,de/zbit/resources/liftover/*,**/package.html" src="${base}/lib/sysbio_v2_light.jar"/> -->
-    	
-            <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/commons-discovery.jar"/>
-            <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/commons-logging.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/jaxrpc.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/wsdl4j.jar"/>
-            <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/axis.jar"/>
-            <!-- <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/Java5/saaj.jar"/>-->
-            <!-- <zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/WSDbfetch.jar"/>-->
-            <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/commons-cli-1.1.jar"/>
-    	      <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/quaqua.jar"/>
-    	      <zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/sysbio-osx-support.jar"/>
-            
-            <!--<zipfileset src="${base}/lib/2013-04-08-KEGGtranslator_for_InCroMAP.jar">
-              <exclude name="de/zbit/gui/prefs/PreferencePanels.class"/>
-            	<exclude name="de/zbit/kegg/map_title.tab"/>
-            	<exclude name="**/package.html"/>
-            	<exclude name="overview.html"/>
-            </zipfileset>-->
-            <!--<zipfileset excludes="META-INF/*.SF" src="${base}/lib/y.jar"/>-->
-    				<fileset dir="${KEGGtranslatorPath}/bin">
-    	       	<exclude name="de/zbit/gui/prefs/PreferencePanels.class"/>
-    	       	<exclude name="de/zbit/kegg/map_title.tab"/>
-    	       	<exclude name="**/package.html"/>
-    			<exclude name="**/package-info.class"/>
-    	        <exclude name="overview.html"/>
-    	      </fileset>
-    	      <zipfileset excludes="META-INF/*.SF" src="${KEGGtranslatorPath}/lib/y.jar"/>
-    	
-      <!-- Since 1.3, support for visualization of BioPAX pathways -->
-      <zipfileset src="${base}/lib/2013-04-08-SBVC_for_InCroMAP.jar">
-        <exclude name="**/package.html"/>
-      </zipfileset>
-      <!-- PaxTools -->
-      <zipfileset excludes="META-INF/*" src="${base}/lib/paxtools-4.1.1_customJenaFix.jar">
-      	<exclude name="javax/xml/namespace/QName.class"/>
-      	<exclude name="org/apache/commons/logging/**/*"/>
-        <exclude name="**/package.html"/>
-        <exclude name="overview.html"/>
-      </zipfileset>
-    	
-    </jar>
-  </target>
+		<delete file="${appJar}" />
+		<jar jarfile="${appJar}">
+			<manifest>
+				<attribute name="Main-Class" value="${main}" />
+				<attribute name="Built-By" value="Center for Bioinformatics Tuebingen (ZBIT)" />
+				<attribute name="SplashScreen-Image" value="de/zbit/gui/img/splash.gif" />
+				<!-- Die folgenden 2 Attribute sind leider keine gültigen manifest attribute. -->
+				<!--<attribute name="Xdock:name" value="Integrator"/>-->
+				<!--<attribute name="Xdock:icon" value="de/zbit/kegg/gui/img/IntegratorIcon_256.png"/>-->
+			</manifest>
+			<!-- INCLUDE/ EXCLUDE DEMO-->
+			<!--<fileset dir="${src}">-->
+			<!--  <include name="demo/view/**/*.properties"/>-->
+			<!--  <exclude name="demo/view/**/resource/**"/>-->
+			<!--</fileset>-->
+			<fileset dir="${classes}">
+				<exclude name="**/package.html" />
+				<exclude name="KeggMappingsBinaryGenerator.class" />
+			</fileset>
+			<filelist dir="${base}" files="libquaqua.jnilib,libquaqua64.jnilib" />
 
-  <!-- obfuscates y.jar and adjusts application.jar accordingly. -->
-  <!-- Generates the jar files yObf.jar and applicationObf.jar.  -->
-  <target name="obfuscate" depends="init">
-    <taskdef name="yguard" classname="com.yworks.yguard.YGuardTask" classpath="${yGuardJar}"/>
-    <yguard>
+			<!-- JFREECHART -->
+			<zipfileset excludes="META-INF/*" src="${base}/lib/JFreeChart/jfreechart-1.0.14.jar" />
+			<zipfileset excludes="META-INF/*" src="${base}/lib/JFreeChart/jcommon-1.0.17.jar" />
 
-      <!-- obfuscate yFiles for public deployment -->
-  	  <!-- <inoutpair in="${yJar}" out="${yJarObf}"/> -->
-      <!-- adjust your application accordingly to work with the obfuscated yFiles jar  -->
-      <inoutpair in="${appJar}" out="${appJarObf}"/>
+			<!-- commons-math -->
+			<zipfileset excludes="META-INF/*"  src="${base}/lib/commons-math3-3.3.jar"/>
+			
+			<!-- xuggler -->
+			<zipfileset excludes="META-INF/*"  src="${base}/lib/slf4j-api-1.6.4.jar"/>
+			<zipfileset excludes="META-INF/*"  src="${base}/lib/xuggle-xuggler-5.4.jar"/>
 
-      <!-- [OPTIONALLY] Keep the line number table and the source file attributes
+			<fileset dir="${SysBioPath}/bin">
+				<exclude name="de/zbit/resources/liftover/**/*" />
+				<exclude name="**/package.html" />
+				<exclude name="overview.html" />
+			</fileset>
+
+			<zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/commons-discovery.jar" />
+			<zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/commons-logging.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/jaxrpc.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/wsdl4j.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${SysBioPath}/lib/axis.jar" />
+			<zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/commons-cli-1.1.jar" />
+			<zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/quaqua.jar" />
+			<zipfileset excludes="META-INF/*" src="${SysBioPath}/lib/sysbio-osx-support.jar" />
+
+			<fileset dir="${KEGGtranslatorPath}/bin">
+				<exclude name="de/zbit/gui/prefs/PreferencePanels.class" />
+				<exclude name="de/zbit/kegg/map_title.tab" />
+				<exclude name="**/package.html" />
+				<exclude name="**/package-info.class" />
+				<exclude name="overview.html" />
+			</fileset>
+			<zipfileset excludes="META-INF/*.SF" src="${KEGGtranslatorPath}/lib/y.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${KEGGtranslatorPath}/lib/SBML2LaTeX_v1.0_slim.jar" />
+
+			<!-- Since 1.3, support for visualization of BioPAX pathways -->
+			<zipfileset src="${base}/lib/2013-04-08-SBVC_for_InCroMAP.jar">
+				<exclude name="**/package.html" />
+			</zipfileset>
+			<!-- PaxTools -->
+			<zipfileset excludes="META-INF/*" src="${base}/lib/paxtools-4.1.1_customJenaFix.jar">
+				<exclude name="javax/xml/namespace/QName.class" />
+				<exclude name="org/apache/commons/logging/**/*" />
+				<exclude name="**/package.html" />
+				<exclude name="overview.html" />
+			</zipfileset>
+
+		</jar>
+	</target>
+
+	<!-- obfuscates y.jar and adjusts application.jar accordingly. -->
+	<!-- Generates the jar files yObf.jar and applicationObf.jar.  -->
+	<target name="obfuscate" depends="init">
+		<taskdef name="yguard" classname="com.yworks.yguard.YGuardTask" classpath="${yGuardJar}" />
+		<yguard>
+
+			<!-- obfuscate yFiles for public deployment -->
+			<!-- <inoutpair in="${yJar}" out="${yJarObf}"/> -->
+			<!-- adjust your application accordingly to work with the obfuscated yFiles jar  -->
+			<inoutpair in="${appJar}" out="${appJarObf}" />
+
+			<!-- [OPTIONALLY] Keep the line number table and the source file attributes
                  of the public part of the "application" -->
-      <attribute name="LineNumberTable,LocalVariableTable,SourceFile">
-        <patternset>
-          <include name="de.zbit.**"/>
-        </patternset>
-      </attribute>
+			<attribute name="LineNumberTable,LocalVariableTable,SourceFile">
+				<patternset>
+					<include name="de.zbit.**" />
+				</patternset>
+			</attribute>
 
-      <rename logfile="${obfuscationLog}" replaceClassNameStrings="true" mainclass="${main}">
-        <!-- conservemanifest="true" -->
-        <!-- use some unique package prefix for obfuscated classes to avoid name clashes -->
-        <property name="obfuscation-prefix" value="obfuscatedintegrator"/>
+			<rename logfile="${obfuscationLog}" replaceClassNameStrings="true" mainclass="${main}">
+				<!-- conservemanifest="true" -->
+				<!-- use some unique package prefix for obfuscated classes to avoid name clashes -->
+				<property name="obfuscation-prefix" value="obfuscatedintegrator" />
 
 
-        <keep>
-        
-        	<package>
-        		<patternset>
-          	  <include name="de.**.*"/>
-        		</patternset>
-        	</package>
+				<keep>
 
-          
-             <!-- Keep all method, field, and class names of the "application"             -->
-             <!-- This could be adjusted to your needs if you don't want to let            -->
-             <!-- your whole application unobfuscated.                                     -->
-             <!-- In that case simply add some more "exclude" statements as depicted below -->
-             <class classes="private" methods="private" fields="private">
-              <patternset>
-              	<!-- Do not obfuscate anything, by default -->
-               <include name="**.*"/>
+					<package>
+						<patternset>
+							<include name="de.**.*" />
+						</patternset>
+					</package>
 
-                <!-- Obfuscate all classes that make use of y.jar -->
-              	<!-- KEGGtranslator classes (Keep in Sync!) -->
-                <exclude name="de.zbit.kegg.gui.TranslatorPanel"/>
 
-                <exclude name="de.zbit.kegg.ext.GenericDataMap"/>
-              	
-              	<exclude name="de.zbit.util.TranslatorTools"/>
-              	<exclude name="de.zbit.integrator.TranslatorToolsExtended.java" />
-              	
-                <exclude name="de.zbit.kegg.io.KEGG2yGraph"/>
-                <exclude name="de.zbit.kegg.io.YFilesWriter"/>
-              	
-              	<exclude name="de.zbit.graph.CollapseGroupNodesViewMode"/>
-                <exclude name="de.zbit.graph.RestrictedEditMode"/>
-                <exclude name="de.zbit.graph.RestrictedEditModeV2"/>
-              	<exclude name="de.zbit.graph.SearchSupport"/>
-              	<exclude name="de.zbit.graph.StackingNodeLayout"/>
-              	
-              	<!-- Integrator classes (Keep in Sync!) -->
-                <exclude name="de.zbit.graph.GradientNodeRealizer"/>
-                <exclude name="de.zbit.gui.actions.listeners.KEGGPathwayActionListener"/>
-                <exclude name="de.zbit.gui.actions.TranslatorTabActions"/>
-                <exclude name="de.zbit.gui.customcomponents.NodeShapeSelector"/>
-                <exclude name="de.zbit.integrator.NameAndSignal2PWTools"/>
-                <exclude name="de.zbit.visualization.VisualizeDataInPathway"/>
-                <exclude name="de.zbit.visualization.VisualizeMicroRNAdata"/>
+					<!-- Keep all method, field, and class names of the "application"             -->
+					<!-- This could be adjusted to your needs if you don't want to let            -->
+					<!-- your whole application unobfuscated.                                     -->
+					<!-- In that case simply add some more "exclude" statements as depicted below -->
+					<class classes="private" methods="private" fields="private">
+						<patternset>
+							<!-- Do not obfuscate anything, by default -->
+							<include name="**.*" />
 
-               <!-- Obfuscate the included y.jar -->
-               <exclude name="y.**.*"/>
-              </patternset>
-             </class>
-        		
-        </keep>
+							<!-- Obfuscate all classes that make use of y.jar -->
+							<!-- KEGGtranslator classes (Keep in Sync!) -->
+							<exclude name="de.zbit.kegg.gui.TranslatorPanel" />
 
-        <!-- make sure that the .properties files are renamed according to their               -->
-        <!-- corresponding class files, yFiles needs this to function properly when obfuscated -->
-        <adjust replaceName="true">
-          <include name="y/**/*.properties"/>
-        </adjust>
-      </rename>
-    </yguard>
-  </target>
+							<exclude name="de.zbit.kegg.ext.GenericDataMap" />
 
-  <!-- signs the obfuscated application -->
+							<exclude name="de.zbit.util.TranslatorTools" />
+							<exclude name="de.zbit.integrator.TranslatorToolsExtended.java" />
+
+							<exclude name="de.zbit.kegg.io.KEGG2yGraph" />
+							<exclude name="de.zbit.kegg.io.YFilesWriter" />
+
+							<exclude name="de.zbit.graph.CollapseGroupNodesViewMode" />
+							<exclude name="de.zbit.graph.RestrictedEditMode" />
+							<exclude name="de.zbit.graph.RestrictedEditModeV2" />
+							<exclude name="de.zbit.graph.SearchSupport" />
+							<exclude name="de.zbit.graph.StackingNodeLayout" />
+
+							<!-- Integrator classes (Keep in Sync!) -->
+							<exclude name="de.zbit.graph.GradientNodeRealizer" />
+							<exclude name="de.zbit.gui.actions.listeners.KEGGPathwayActionListener" />
+							<exclude name="de.zbit.gui.actions.TranslatorTabActions" />
+							<exclude name="de.zbit.gui.customcomponents.NodeShapeSelector" />
+							<exclude name="de.zbit.integrator.NameAndSignal2PWTools" />
+							<exclude name="de.zbit.visualization.VisualizeDataInPathway" />
+							<exclude name="de.zbit.visualization.VisualizeMicroRNAdata" />
+
+							<!-- Obfuscate the included y.jar -->
+							<exclude name="y.**.*" />
+						</patternset>
+					</class>
+
+				</keep>
+
+				<!-- make sure that the .properties files are renamed according to their               -->
+				<!-- corresponding class files, yFiles needs this to function properly when obfuscated -->
+				<adjust replaceName="true">
+					<include name="y/**/*.properties" />
+				</adjust>
+			</rename>
+		</yguard>
+	</target>
+
+	<!-- signs the obfuscated application -->
 	<!-- <target name="sign" depends="obfuscate"> -->
-  <target name="sign" depends="init">
-    <!-- Having an "keystore" file is required. Generate it with the "keytool" in the current directory. -->  	
-	  <signjar alias="Integrator" jar="${appJarObf}" keypass="d=dpfIntegrator!" keystore="keystore" signedjar="${appJarObfSgn}" storepass="d=dpfIntegrator!"/>
-  </target>
+	<target name="sign" depends="init">
+		<!-- Having an "keystore" file is required. Generate it with the "keytool" in the current directory. -->
+		<signjar alias="Integrator" jar="${appJarObf}" keypass="d=dpfIntegrator!" keystore="keystore" signedjar="${appJarObfSgn}" storepass="d=dpfIntegrator!" />
+	</target>
 
-	
-  <!-- executes the obfuscated application -->
-  <target name="run" depends="obfuscate">
-    <java classname="${main}" fork="true">
-      <classpath>
-        	<!-- <pathelement location="${yJarObf}"/> -->
-        <pathelement location="${appJarObf}"/>
-      </classpath>
-    </java>
-  </target>
 
-  <!-- opens a small browser that shows the name mapping performed by yGuard. -->
-  <target name="show" depends="obfuscate">
-    <echo message="${obfuscationLog}"/>
-    <java jar="${yGuardJar}" fork="true">
-      <arg value="${obfuscationLog}"/>
-    </java>
-  </target>
+	<!-- executes the obfuscated application -->
+	<target name="run" depends="obfuscate">
+		<java classname="${main}" fork="true">
+			<classpath>
+				<!-- <pathelement location="${yJarObf}"/> -->
+				<pathelement location="${appJarObf}" />
+			</classpath>
+		</java>
+	</target>
 
-  <!-- Removes all that has been built -->
-  <target name="clean" depends="init">
-  	<!-- <delete file="${yJarObf}"/> -->
-  	<delete file="${appJar}"/>
-    <delete file="${appJarObf}"/>
-    <delete file="${obfuscationLog}"/>
-    <delete includeemptydirs="true" dir="${classes}"/>
-    <delete file="${appJarObfSgn}"/>
-  </target>
+	<!-- opens a small browser that shows the name mapping performed by yGuard. -->
+	<target name="show" depends="obfuscate">
+		<echo message="${obfuscationLog}" />
+		<java jar="${yGuardJar}" fork="true">
+			<arg value="${obfuscationLog}" />
+		</java>
+	</target>
+
+	<!-- Removes all that has been built -->
+	<target name="clean" depends="init">
+		<!-- <delete file="${yJarObf}"/> -->
+		<delete file="${appJar}" />
+		<delete file="${appJarObf}" />
+		<delete file="${obfuscationLog}" />
+		<delete includeemptydirs="true" dir="${classes}" />
+		<delete file="${appJarObfSgn}" />
+	</target>
 
 </project>
