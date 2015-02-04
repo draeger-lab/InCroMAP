@@ -42,14 +42,17 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.apache.commons.math3.ml.distance.EuclideanDistance;
 import org.apache.commons.math3.stat.correlation.Covariance;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
+import org.jfree.util.Log;
 
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
@@ -340,6 +343,13 @@ public class TimeFit extends TimeSeriesModel {
 		
 		// Initialize all fields, so that the model can be computed
 		filteredData = data;
+		// adjust number of classes
+		numGenes = data.size();
+		if (numGenes / 3 < numClasses) {
+			numClasses = numGenes / 3;
+			System.out.println("Not enough genes present, reduced number of classes!");
+			Log.warn("Not enough genes present, reduced number of classes!");
+		}
 		init(data, timePoints);
 
 		// run the EM-algorithm
@@ -715,12 +725,26 @@ public class TimeFit extends TimeSeriesModel {
 		pos2class = new int[numGenes];
 
 		// For each gene, select a class j uniformly at random.
-		int j;
 		for(int i=0; i<numGenes; i++) {
-			j = (int) (Math.random() * numClasses); // Select a random class j for gene i
+			int j = (int) (Math.random() * numClasses); // Select a random class j for gene i
 			pos2class[i] = j;
 			// Add the gene to the class2gene mapping
 			class2genes.get(j).add(i);
+		}
+		// make sure that each class contains at least 3 genes
+		for(int j=0; j<numClasses; j++) {
+			while (class2genes.get(j).size() < 3) {
+				System.out.println("Class "+ j + " has only " + class2genes.get(j).size()+ " genes!");
+				for(int c=0; c<numClasses; c++) {
+					if (class2genes.get(c).size() > 3) {
+						int gene = class2genes.get(c).remove(0);
+						System.out.println("Moving gene " + gene + " from Class " + c + " to Class " + j + "!");
+						class2genes.get(j).add(gene);
+						pos2class[gene] = j;
+						break;
+					}
+				}
+			}
 		}
 	}
 
@@ -780,16 +804,20 @@ public class TimeFit extends TimeSeriesModel {
 		MultivariateNormalDistribution dist;
 		// Iterate over the classes and sample matrix of the variation coefficients
 		for(int j=0; j<numClasses; j++) {
-			// The distribution of the variation coefficients for class j
-			dist = new MultivariateNormalDistribution(new double[q], covMatrices.get(j).getData());
 			// The matrix for the variation coefficients of class j
 			RealMatrix m = new Array2DRowRealMatrix(q, numGenes);
-			// Fill the matrix with sample values
-			for(int i=0; i<numGenes; i++) {
-				m.setColumn(i, dist.sample());				
+			try {
+				// The distribution of the variation coefficients for class j
+				dist = new MultivariateNormalDistribution(new double[q], covMatrices.get(j).getData());
+				// Fill the matrix with sample values
+				for(int i=0; i<numGenes; i++) {
+					m.setColumn(i, dist.sample());				
+				}
+			} catch (SingularMatrixException e) {
+				Log.warn("Singular covariance matrix!");
 			}
 			gamma.add(m);
-		}		
+		}
 	}
 
 
@@ -843,7 +871,7 @@ public class TimeFit extends TimeSeriesModel {
 				RealMatrix m1 = yMatrix.getColumnMatrix(i).subtract(s.multiply((mu.getColumnMatrix(j).add(gamma.get(j).getColumnMatrix(i)))));
 				e1 = -(m1.transpose().multiply((m1.scalarMultiply(1 / variance))).getEntry(0, 0));
 				e2 = -0.5 * (gamma.get(j).getColumnMatrix(i).transpose().multiply(inverseCovMatrices.get(j)).multiply(gamma.get(j).getColumnMatrix(i)).getEntry(0, 0));
-				factors[j] = classProbs[j] * Math.exp(e1) * Math.exp(e2);
+				factors[j] = Math.log(classProbs[j]) + e1 + e2;
 			}
 			
 			// testing
@@ -854,7 +882,7 @@ public class TimeFit extends TimeSeriesModel {
 			}
 
 			// Sum up the factors
-			sumFactors = de.zbit.util.ArrayUtils.sum(factors);
+			sumFactors = NumberUtils.max(factors);
 
 			if(sumFactors == 0) {
 				System.out.println("SumFactors is 0");
@@ -862,7 +890,7 @@ public class TimeFit extends TimeSeriesModel {
 
 			// Use the computed factors to compute P(j|i)
 			for (int j = 0; j<numClasses; j++) {
-				probs[i][j] = factors[j] / sumFactors;	
+				probs[i][j] = Math.exp(factors[j] - sumFactors);	
 
 				if(Double.isInfinite(probs[i][j]))
 					System.out.println("prob" + i + j + " is infinite.");

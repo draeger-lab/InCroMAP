@@ -231,12 +231,12 @@ public class VisualizeTimeSeries {
 		visData = new VisualizeDataInPathway(transPanel, false);	 // VisualizeDataInPathway objects we can use already existing coloring methods
 
 		// This worker generates the film.
-		NotifyingWorker<List<List<EnrichmentObject<String>>>, Void> filmGenerator = new NotifyingWorker<List<List<EnrichmentObject<String>>>, Void>() {
+		NotifyingWorker<List<List<EnrichmentObject<String>>>> filmGenerator = new NotifyingWorker<List<List<EnrichmentObject<String>>>>() {
 
 			@Override
 			protected List<List<EnrichmentObject<String>>> doInBackground() throws Exception {				
 				// Call controller to set progress bar
-				fireActionEvent(new ActionEvent(this, numFrames, VTSAction.START_GENERATE_FILM.toString()));
+				publish(new ActionEvent(this, numFrames, VTSAction.START_GENERATE_FILM.toString()));
 
 				// Create an KEGGPathway enrichment
 				try {
@@ -262,7 +262,7 @@ public class VisualizeTimeSeries {
 						enrichments.add(i, e);
 						
 						// Update the progress bar
-						fireActionEvent(new ActionEvent(transPanel.getDocument(), i, VTSAction.IMAGE_GENERATED.toString()));					
+						publish(new ActionEvent(transPanel.getDocument(), i, VTSAction.IMAGE_GENERATED.toString()));					
 					}					
 				} catch(Exception e) {
 					e.printStackTrace();
@@ -287,7 +287,7 @@ public class VisualizeTimeSeries {
 			@Override
 			protected void done() {
 				// Tell the listener, that film was created
-				fireActionEvent(new ActionEvent(this, 0, VTSAction.END_GENERATE_FILM.toString()));
+				publish(new ActionEvent(this, 0, VTSAction.END_GENERATE_FILM.toString()));
 			}	
 		};
 
@@ -788,11 +788,11 @@ public class VisualizeTimeSeries {
 		fileExtensionToCodec.put(".ogg", ICodec.ID.CODEC_ID_THEORA);
 		
 		
-		NotifyingWorker<Void, Void> exporter = new NotifyingWorker<Void, Void>() {
+		NotifyingWorker<Void> exporter = new NotifyingWorker<Void>() {
 
 			@Override
 			protected Void doInBackground() throws Exception {
-			fireActionEvent(new ActionEvent(this, numFrames, VTSAction.START_GENERATE_FILM.toString()));
+			publish(new ActionEvent(this, numFrames, VTSAction.START_GENERATE_FILM.toString()));
 				
 			// Show a dialog, where the user can choose the output file and
 			// the output file type
@@ -813,7 +813,7 @@ public class VisualizeTimeSeries {
 					int end = s.indexOf(")", start);
 					format = s.substring(start, end);
 				} else {
-					fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+					publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
 					return null; // user didn't choose a file format
 				}
 				
@@ -826,7 +826,7 @@ public class VisualizeTimeSeries {
 						false, false, JFileChooser.FILES_ONLY, filter);
 
 				if (fc.showSaveDialog(view) != JFileChooser.APPROVE_OPTION) {
-					fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+					publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
 					return null;
 				}
 
@@ -843,18 +843,18 @@ public class VisualizeTimeSeries {
 		      f.createNewFile();
 		    } catch (IOException e) {
 		      GUITools.showErrorMessage(view, e);
-		      fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+		      publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
 		      return null;
 		    }
 				if (!f.canWrite() || f.isDirectory()) { 
 					GUITools.showNowWritingAccessWarning(view, f);
-					fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+					publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
 					return null;
 				}
 				
 				// Overwrite existing file?
 				if(showOverride && !GUITools.overwriteExistingFile(view, f)) {
-						fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+						publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
 			      return null;
 				}
 				
@@ -873,7 +873,7 @@ public class VisualizeTimeSeries {
 					pathwayImage = generatePathwayImage(i); // first frame has the number 1
 					
 					writer.encodeVideo(0, pathwayImage, timestamp, TimeUnit.MILLISECONDS);
-					fireActionEvent(new ActionEvent(this, i, VTSAction.IMAGE_GENERATED.toString()));
+					publish(new ActionEvent(this, i, VTSAction.IMAGE_GENERATED.toString()));
 				}
 					
 				// Because the damn decoder fails to decode the last two frames, encode the last image
@@ -887,13 +887,13 @@ public class VisualizeTimeSeries {
 					
 					// Set the progress bar when the last of the last frames was encoded.
 					if(j == 2)
-						fireActionEvent(new ActionEvent(transPanel.getDocument(), numFrames, VTSAction.IMAGE_GENERATED.toString()));
+						publish(new ActionEvent(transPanel.getDocument(), numFrames, VTSAction.IMAGE_GENERATED.toString()));
 				}
 						
 				// Close the writer. Film is now succesfully exported.
 				writer.close();
 				
-				fireActionEvent(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+				publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
 
 				
 				return null;

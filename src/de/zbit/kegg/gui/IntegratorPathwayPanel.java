@@ -132,7 +132,7 @@ public class IntegratorPathwayPanel extends TranslatorGraphPanel implements Spec
    * @param pathwayImporter
    * @param translationResult
    */
-  public IntegratorPathwayPanel(NotifyingWorker<?, ?> pathwayImporter, ActionListener translationResult) {
+  public IntegratorPathwayPanel(NotifyingWorker<?> pathwayImporter, ActionListener translationResult) {
     super(pathwayImporter, Format.JPG, translationResult);
   }
   

@@ -54,7 +54,7 @@ import de.zbit.util.StringUtil;
  * @author Clemens Wrzodek
  * @version $Rev$
  */
-public class GraphMLimporter extends NotifyingWorker<Graph2D, Void> {
+public class GraphMLimporter extends NotifyingWorker<Graph2D> {
   public static final transient Logger log = Logger.getLogger(GraphMLimporter.class.getName());
 
   
@@ -81,7 +81,7 @@ public class GraphMLimporter extends NotifyingWorker<Graph2D, Void> {
   protected Graph2D doInBackground() throws Exception {
     try {
       // 1. Read the file
-      fireActionEvent(new ActionEvent(this, 3, null));
+      publish(new ActionEvent(this, 3, null));
       log.info(String.format("Reading GraphML file '%s'...", graphmlFile.getName()));
       GraphMLIOHandler handler = new GraphMLIOHandler();
       
@@ -112,20 +112,20 @@ public class GraphMLimporter extends NotifyingWorker<Graph2D, Void> {
       
       // Reading done. Send some infos to the underlying listeners
       // Recommended ToolTip for this tab
-      fireActionEvent(new ActionEvent(this, 12, String.format("GraphML graph from file '%s'.", graphmlFile.getName())));
+      publish(new ActionEvent(this, 12, String.format("GraphML graph from file '%s'.", graphmlFile.getName())));
       
       // The species
       if (spec!=null) {
-        fireActionEvent(new ActionEvent(spec, 13, null));
+        publish(new ActionEvent(spec, 13, null));
       }
       
-      fireActionEvent(new ActionEvent(graph, 4, null));
+      publish(new ActionEvent(graph, 4, null));
       return graph;
       
     } catch (Exception e) {
       GUITools.showErrorMessage(null, e, "Could not import GraphML pathway.");
-      fireActionEvent(new ActionEvent(this, 2, null)); // Remove this tab
-      fireActionEvent(new ActionEvent(this, 5, null)); // Remove this from list of listeners
+      publish(new ActionEvent(this, 2, null)); // Remove this tab
+      publish(new ActionEvent(this, 5, null)); // Remove this from list of listeners
       return null;
     }
   }

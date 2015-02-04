@@ -326,7 +326,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 			
 			try {
 				// Cast the data, so that a model can be build from it	
-				NotifyingWorker<Void, Void> worker = new NotifyingWorker<Void, Void>() {
+				NotifyingWorker<Void> worker = new NotifyingWorker<Void>() {
 
 					@Override
 					protected Void doInBackground() throws Exception {
