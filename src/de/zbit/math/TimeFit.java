@@ -22,8 +22,12 @@
 
 package de.zbit.math;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.geom.Point2D;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,6 +36,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -47,8 +54,12 @@ import org.apache.commons.math3.stat.descriptive.moment.Variance;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNATimeSeries;
+import de.zbit.gui.GUITools;
+import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.io.mRNATimeSeriesReader;
 import de.zbit.util.objectwrapper.ValueTriplet;
+import de.zbit.util.progressbar.AbstractProgressBar;
+import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * Implementation of the TimeFit algorithm to compute a continous representation
@@ -64,6 +75,9 @@ import de.zbit.util.objectwrapper.ValueTriplet;
  * @author Felix Bartusch
  * @version $Rev$
  */
+
+// grep -H -R -l "^import y." ./
+
 public class TimeFit extends TimeSeriesModel {
 	/**
 	 * Order of the basis polynomials (i.e. for cubic polynomial order = 4)
@@ -226,9 +240,16 @@ public class TimeFit extends TimeSeriesModel {
 	 * @param cutoff Consider just genes, that are at some time point greater than the cutoff value.
 	 * @param isExponentiallyDistributed Are the time points exponentially distributed?
 	 */
-	public void generateModel(ArrayList<mRNATimeSeries> data,
+	public void generateModel(NSTimeSeriesTab parent, ArrayList<mRNATimeSeries> data,
 			List<ValueTriplet<Double, String, SignalType>> timePoints,
-			int iterations, double cutoff, boolean isExponentiallyDistributed) {
+			int iterations, double cutoff, boolean isExponentiallyDistributed,
+			AbstractProgressBar pb) {
+		
+		this.isExponentiallyDistributed = isExponentiallyDistributed;
+		// Set the total call number of the progress bar
+		int totalCalls = iterations * maxIteration;
+		pb.setNumberOfTotalCalls(totalCalls);
+		
 		// Array holding the generated models
 		TimeFit[] models = new TimeFit[iterations];
 		
@@ -256,8 +277,9 @@ public class TimeFit extends TimeSeriesModel {
 		for(int i=0; i<iterations; i++) {
 			System.out.println("Generate model number " + i);
 			TimeFit tf = new TimeFit();
-			tf.generateModel(filteredData, timePoints, isExponentiallyDistributed);
+			tf.generateModel(filteredData, timePoints, isExponentiallyDistributed, pb);
 			models[i] = tf;
+			pb.setCallNr((i+1) * maxIteration);
 		}
 		
 		// Choose the best model. That means the model with the highest logLikelihood.
@@ -311,7 +333,9 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	public void generateModel(ArrayList<mRNATimeSeries> data,
 			List<ValueTriplet<Double, String, SignalType>> timePoints,
-			boolean isExponentiallyDistributed) {
+			boolean isExponentiallyDistributed,
+			AbstractProgressBar pb) {
+		this.isExponentiallyDistributed = isExponentiallyDistributed;
 		// TODO Write JavaDoc comments for each method
 		
 		// Initialize all fields, so that the model can be computed
@@ -326,6 +350,8 @@ public class TimeFit extends TimeSeriesModel {
 		while((Math.abs(oldLogLikelihood - logLikelihood) > threshold && iteration < maxIteration) || Double.isInfinite(logLikelihood)) {
 			// increase counter
 			iteration++;
+			pb.DisplayBar();
+			
 			// Save the current logLikelihood
 			oldLogLikelihood = logLikelihood;
 			
@@ -394,7 +420,7 @@ public class TimeFit extends TimeSeriesModel {
 		
 		// Generate the model with the parameters provided by the class of the gene
 		m.generateModel(dataPoints, mu.getColumnMatrix(classOfGene), gamma.get(classOfGene).getColumnMatrix(pos),
-				controlPoints, knots, timePoints);
+				controlPoints, knots, timePoints, isExponentiallyDistributed);
 		
 		return m;
 	}
@@ -416,6 +442,9 @@ public class TimeFit extends TimeSeriesModel {
 	public void init(List<mRNATimeSeries> data,
 			List<ValueTriplet<Double, String, SignalType>> timePoints) {
 
+		// Set the x- and y-values (y-values not needed here, but function sets them)
+		processTimePoints(data.get(0), timePoints, isExponentiallyDistributed);
+		
 		// Generate a matrix from the mRNATimeSeries data
 		yMatrix = timeSeries2Matrix(data);
 		// testing
@@ -430,11 +459,14 @@ public class TimeFit extends TimeSeriesModel {
 
 		// Set the time points of the experiments
 		System.out.println("\n---------------------");
-		x = new double[numDataPoints];
+//		x = new double[numDataPoints];
+//		for(int i=0; i<numDataPoints; i++) {
+//			x[i] = timePoints.get(i).getA();
+//			// testing
+//			System.out.println("Set x[" + i + "]: " + timePoints.get(i).getA());
+//		}
 		for(int i=0; i<numDataPoints; i++) {
-			x[i] = timePoints.get(i).getA();
-			// testing
-			System.out.println("Set x[" + i + "]: " + timePoints.get(i).getA());
+			System.out.println("Set x[" + i + "]: " + x[i]);
 		}
 		System.out.println("---------------------\n");
 
@@ -556,12 +588,12 @@ public class TimeFit extends TimeSeriesModel {
 
 		// This is the best case we try to achieve: equidistant control points
 		double[] equidistantPoints = new double[q]; // Best x-values of the control points
-		double distance = getLastTimePoint() - getFirstTimePoint();
-		equidistantPoints[0] = getFirstTimePoint();
+		double distance = x[x.length-1] - x[0];
+		equidistantPoints[0] = x[0];
 		for(int i=1; i<q-1; i++) {
-			equidistantPoints[i] = getFirstTimePoint() + (i * (distance / (q-1)));
+			equidistantPoints[i] = x[0] + (i * (distance / (q-1)));
 		}
-		equidistantPoints[q-1] = getLastTimePoint();
+		equidistantPoints[q-1] = x[x.length-1];
 
 		// Keep track of the columns of the expression matrix belonging to the control points.
 		controlPointsColumn = new int[q];
@@ -569,7 +601,7 @@ public class TimeFit extends TimeSeriesModel {
 
 		// Select q control points, so that they are roughly equidistant
 		controlPoints = new ArrayList<Point2D>(q);
-		controlPoints.add(new Point2D.Double(getFirstTimePoint(), 0)); // we're not interested in the y-value yet
+		controlPoints.add(new Point2D.Double(x[0], 0)); // we're not interested in the y-value yet
 		// The first and last of the q control point is given, so choose the q-2 other
 		// control points.
 		for(int i=1; i<q-1; i++) {
@@ -589,7 +621,7 @@ public class TimeFit extends TimeSeriesModel {
 				}
 			}
 		}
-		controlPoints.add(new Point2D.Double(getLastTimePoint(), 0));
+		controlPoints.add(new Point2D.Double(x[x.length-1], 0));
 		controlPointsColumn[q-1] = numDataPoints-1;
 
 		// for testing
@@ -629,9 +661,9 @@ public class TimeFit extends TimeSeriesModel {
 
 		// Place the knots. Three knots before the first time point and three knots after the
 		// last time point are needed to describe the resulting model in the interval
-		double stepsize = (getLastTimePoint() - getFirstTimePoint()) / (numberOfKnots-7);
+		double stepsize = (x[x.length-1] - x[0]) / (numberOfKnots-7);
 		for(int i=-3; i<numberOfKnots-3; i++) {
-			knots[i+3] = getFirstTimePoint() + stepsize * i;
+			knots[i+3] = x[0] + stepsize * i;
 		}
 	}
 
@@ -1116,7 +1148,8 @@ public class TimeFit extends TimeSeriesModel {
 		
 		// Generate model
 		TimeFit tf = new TimeFit();
-		tf.generateModel(data, r.getTimePoints(), 5, 1.0, false);
+		NSTimeSeriesTab parent = new NSTimeSeriesTab(null, null);
+		tf.generateModel(parent, data, r.getTimePoints(), 5, 1.0, false, NSTimeSeriesTab.generateLoadingPanel(parent, "..."));
 		
 		//tf.printModel();
 		// TODO Save name and ID ... for each gene before generating the model
@@ -1142,5 +1175,78 @@ public class TimeFit extends TimeSeriesModel {
 			System.out.println("Class " + j + "center: " + mu.getColumnMatrix(j));
 		}
 		System.out.println("\n---------------------------\n");
+	}
+
+	
+	/**
+	 * The dialog asking the user for the parameters for the TimeFit model generation.
+	 * @return {@link JComponent} where the user can choose parameters
+	 */
+	@Override
+	public JComponent getIndividualSettingsPanel() {
+		// The field for the number of models to create
+		// Later, among the created models the best model is chosen
+		JLabel numModelLabel = new JLabel("Number of models");	
+		int numModels = 5;	
+		String numModelTooltip = "<html>Number of models that TimeFit will create.<br>"
+				+ "Among these models these models the best will be chosen.<br>"
+				+ "CAUTION: The higher the number of models, the longer the run time will be.<br></html>";
+		DecimalFormat format = new DecimalFormat("##");
+		JFormattedTextField numModelTextField = new JFormattedTextField(format);
+		numModelTextField.setText(String.valueOf(numModels));
+		numModelTextField.setToolTipText(numModelTooltip);
+		// build numModel panel
+		JComponent numModelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		numModelPanel.add(numModelLabel);
+		numModelPanel.add(numModelTextField);
+		
+		// The field for the maximum iterations per model
+		JLabel maxIterLabel = new JLabel("Maximum iterations per model");	
+		// Initial guess of the cutoff value. 
+		int maxIter = 50;	
+		String maxIterTooltip = "<html>A TimeFit model is computed iteratively computed.<br>"
+				+ "Here you can choose the maximum iterations performed per model.<br>"
+				+ "CAUTION: The higher the number of iterations, the longer the run time will be.<br></html>";
+		JFormattedTextField maxIterTextField = new JFormattedTextField(format);
+		maxIterTextField.setText(String.valueOf(maxIter));
+		maxIterTextField.setToolTipText(maxIterTooltip);
+		// build numModel panel
+		JComponent maxIterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		maxIterPanel.add(maxIterLabel);
+		maxIterPanel.add(maxIterTextField);
+		
+		// The field for the number of classes.
+		JLabel numClassesLabel = new JLabel("Number of clusters");	
+		// Initial guess of the cutoff value. 
+		int numClasses = 9;	
+		String numClassesTooltip = "<html>Please choose the number of clusters.<br>"
+				+ "CAUTION: The higher the number of clusters, the longer the run time will be.<br></html>";
+		JFormattedTextField numClassesTextField = new JFormattedTextField(format);
+		numClassesTextField.setText(String.valueOf(numClasses));
+		numClassesTextField.setToolTipText(numClassesTooltip);
+		// build numClasses panel
+		JComponent numClassesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		numClassesPanel.add(numClassesLabel);
+		numClassesPanel.add(numClassesTextField);
+		
+		// The resulting individual panel
+		JComponent panel = new JPanel(new BorderLayout());
+		panel.add(numModelPanel, BorderLayout.NORTH);
+		panel.add(maxIterPanel, BorderLayout.CENTER);
+		panel.add(numClassesPanel, BorderLayout.SOUTH);
+		numModelPanel = GUITools.createTitledPanel(panel, "TimeFit settings");
+
+		return panel;
+	};
+
+	/**
+	 * Return the class of gene i.
+	 * @param mRNA The time series of the gene
+	 * @param i The gene
+	 * @return
+	 */
+	public int getClassOfGene(mRNATimeSeries mRNA, int i) {
+		int pos = filteredData.indexOf(mRNA);
+		return pos2class[pos];
 	}
 }

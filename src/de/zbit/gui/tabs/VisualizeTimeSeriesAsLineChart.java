@@ -175,8 +175,8 @@ public class VisualizeTimeSeriesAsLineChart extends JPanel implements BaseFrameT
 		// color for the same series. Serieses with the same id belonging together.
 		Paint[] p = ChartColor.createDefaultPaintArray();
 		for(int i=0; i<size; i++) {
-			rendererModel.setSeriesPaint(i, p[i]);
-			rendererOriginal.setSeriesPaint(i, p[i]);			
+			rendererModel.setSeriesPaint(i, p[i % p.length]);
+			rendererOriginal.setSeriesPaint(i, p[i % p.length]);			
 		}
 		
 		// The plot of the models

@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.swing.JComponent;
+
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.Signal;
 import de.zbit.data.TableResult;
@@ -324,6 +326,16 @@ public abstract class TimeSeriesModel {
 	}
 	
 	/**
+	 * A {@link JComponent} asking for parameters used by the model method.
+	 * (e.g. maximum number of iterations for the {@link TimeFit} model method.)
+	 * @return A {@link JComponent} asking for several parameters or null of no
+	 * further parameters are needed by the method.
+	 */
+	public JComponent getIndividualSettingsPanel() {
+		return null;
+	}
+	
+	/**
 	 * Fulfills a mRNATimeSeries the cutoff value?
 	 */
 	public static boolean geneFulfillsCutoff(mRNATimeSeries m, SignalType signalType, double cutoff) {
@@ -342,4 +354,3 @@ public abstract class TimeSeriesModel {
 		return false;
 	}
 }
-

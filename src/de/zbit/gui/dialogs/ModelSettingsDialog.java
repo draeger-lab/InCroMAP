@@ -42,6 +42,7 @@ import javax.swing.JPanel;
 import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.tabs.NSTimeSeriesTab;
+import de.zbit.math.TimeSeriesModel;
 
 
 /**
@@ -74,6 +75,11 @@ public class ModelSettingsDialog extends JPanel {
 	private NSTimeSeriesTab parent;
 	
 	/**
+	 * The individual panel for each model method.
+	 */
+	private JComponent individualPanel;
+	
+	/**
 	 * Ok and Cancel buttons
 	 */
 	private JPanel buttons;
@@ -83,7 +89,7 @@ public class ModelSettingsDialog extends JPanel {
 	 * Generate a new model settings dialog.
 	 * @param parent
 	 */
-	public ModelSettingsDialog(NSTimeSeriesTab parent, double cutoffGuess) {
+	public ModelSettingsDialog(NSTimeSeriesTab parent, TimeSeriesModel method, double cutoffGuess) {
 		this.parent = parent;
 		
 		// The gene filter part
@@ -92,15 +98,26 @@ public class ModelSettingsDialog extends JPanel {
 		// The time points are exponentially distributed part
 		JComponent distributionPanel = generateDistributionPanel();
 		
+		// The special part for each model method (e.g. number of iterations for TimeFit)
+		individualPanel = method.getIndividualSettingsPanel();
+		
 		// The resulting panel
-		this.setLayout(new GridLayout(3,1));
+		if(individualPanel == null) {
+			this.setLayout(new GridLayout(3,1));
+		} else {
+			this.setLayout(new GridLayout(4,1));			
+		}
 		add(distributionPanel);
 		add(filterPanel);
+		// If there is an individualPanel, add it to the dialog
+		if(individualPanel != null) {
+			add(individualPanel);
+		}
+		// Add a cancel and an ok button to the dialog
 		this.buttons = GUITools.buildOkCancelButtons(this);
 		add(buttons);
 		
 		setVisible(true);
-	
 	}
 	
 	
