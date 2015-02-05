@@ -200,8 +200,8 @@
 							<exclude name="de.zbit.graph.RestrictedEditMode" />
 							<exclude name="de.zbit.graph.RestrictedEditModeV2" />
 							<exclude name="de.zbit.graph.SearchSupport" />
-							<exclude name="de.zbit.graph.StackingNodeLayout" />
-
+							<exclude name="de.zbit.graph.StackingNodeLayout" />						  
+						  
 							<!-- Integrator classes (Keep in Sync!) -->
 							<exclude name="de.zbit.graph.GradientNodeRealizer" />
 							<exclude name="de.zbit.gui.actions.listeners.KEGGPathwayActionListener" />
@@ -210,7 +210,14 @@
 							<exclude name="de.zbit.integrator.NameAndSignal2PWTools" />
 							<exclude name="de.zbit.visualization.VisualizeDataInPathway" />
 							<exclude name="de.zbit.visualization.VisualizeMicroRNAdata" />
-
+						  <exclude name="de.zbit.gui.customcomponents.FilmPanel" />
+						  <exclude name="de.zbit.gui.tabs.TimeSeriesView" />
+						  <exclude name="de.zbit.io.GraphMLimporter" />
+						  <exclude name="de.zbit.kegg.gui.IntegratorPathwayPanel" />
+						  <exclude name="de.zbit.visualization.VisualizeTimeSeriesListener" />
+							<exclude name="de.zbit.visualization.VisualizeTimeSeries" />
+						  <exclude name="de.zbit.integrator.TranslatorToolsExtended" />
+						  
 							<!-- Obfuscate the included y.jar -->
 							<exclude name="y.**.*" />
 						</patternset>
