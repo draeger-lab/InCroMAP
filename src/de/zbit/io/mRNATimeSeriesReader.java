@@ -471,7 +471,7 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 		// The two components of the TimeUnitTextField
 		JTextField field = new JTextField(10); // or a combo box, which is easier to generate and looks better?
 		field.setToolTipText("e.g. 'd' for days");		
-		JLabel description = new JLabel("Please select your time unit");
+		JLabel description = new JLabel("Please select your unit");
 		description.setHorizontalAlignment(JLabel.RIGHT);		
 
 		// Set Layout and add components

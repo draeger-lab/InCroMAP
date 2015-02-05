@@ -126,7 +126,7 @@ public abstract class TimeSeriesModel {
 	/**
 	 * Compute the interpolated value for certain coefficients at a certain time point.
 	 */
-	public abstract double computeValueAtTimePoint(double timePoint);
+	public abstract double computeValueAtTimePoint(double timePoint, boolean useOriginalData);
 	
 	
 	/**

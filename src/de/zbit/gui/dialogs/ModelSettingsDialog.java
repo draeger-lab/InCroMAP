@@ -22,13 +22,8 @@
 
 package de.zbit.gui.dialogs;
 
-import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
@@ -38,8 +33,10 @@ import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
 
-import de.zbit.data.Signal.SignalType;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.math.TimeSeriesModel;
@@ -55,14 +52,14 @@ import de.zbit.math.TimeSeriesModel;
 
 public class ModelSettingsDialog extends JPanel {
 	/**
-	 * Are the time points exponentially distributed?
-	 */
-	private boolean timePointsExponentiallyDistributed;
-	
-	/**
 	 * The textfield for the cutoff value.
 	 */
 	private JFormattedTextField cutoffTextField;
+	
+	/**
+	 * Label showing how many genes will remain after filtering
+	 */
+	private JLabel remainsLabel;
 	
 	/**
 	 * Checkbox for exponentially distributed time points.
@@ -92,30 +89,29 @@ public class ModelSettingsDialog extends JPanel {
 	public ModelSettingsDialog(NSTimeSeriesTab parent, TimeSeriesModel method, double cutoffGuess) {
 		this.parent = parent;
 		
-		// The gene filter part
-		JComponent filterPanel = generateFilterPanel(cutoffGuess);
-		
 		// The time points are exponentially distributed part
 		JComponent distributionPanel = generateDistributionPanel();
+		
+		// The gene filter part
+		JComponent filterPanel = generateFilterPanel(cutoffGuess);
 		
 		// The special part for each model method (e.g. number of iterations for TimeFit)
 		individualPanel = method.getIndividualSettingsPanel();
 		
-		// The resulting panel
-		if(individualPanel == null) {
-			this.setLayout(new GridLayout(3,1));
-		} else {
-			this.setLayout(new GridLayout(4,1));			
-		}
-		add(distributionPanel);
-		add(filterPanel);
+		// A panel common to all model methods
+		JComponent commonPanel = new JPanel(new GridLayout(2,1));
+		commonPanel.add(distributionPanel);
+		commonPanel.add(filterPanel);
+		
 		// If there is an individualPanel, add it to the dialog
-		if(individualPanel != null) {
+		if(individualPanel == null) {
+			this.setLayout(new GridLayout(1,1));
+			add(commonPanel);
+		} else {
+			this.setLayout(new GridLayout(2,1));
+			add(commonPanel);
 			add(individualPanel);
 		}
-		// Add a cancel and an ok button to the dialog
-		this.buttons = GUITools.buildOkCancelButtons(this);
-		add(buttons);
 		
 		setVisible(true);
 	}
@@ -127,9 +123,13 @@ public class ModelSettingsDialog extends JPanel {
 	 * @return the panel
 	 */
 	private JComponent generateFilterPanel(double cutoffGuess) {
+		// Add a listener to the text field. If the content is changed, update the remainsLabel.
+		// Label showing number of genes remaining after filtering
+		remainsLabel = new JLabel();
+		
 		// pValue or FC?
 		final boolean isPValue = parent.isPValue();
-		
+	
 		JLabel cutoffLabel = new JLabel("Cutoff value");	
 		// Initial guess of the cutoff value. 
 		double cutoff = cutoffGuess;	
@@ -146,13 +146,52 @@ public class ModelSettingsDialog extends JPanel {
 		
 		DecimalFormat format = new DecimalFormat("###.##", otherSymbols);
 		cutoffTextField = new JFormattedTextField(format);
+		cutoffTextField.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				setGenesRemainingText(e);
+			}
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				setGenesRemainingText(e);
+			}
+			
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				setGenesRemainingText(e);
+			}
+			
+			public void setGenesRemainingText(DocumentEvent e) {
+				// Get the double value of the cutoff text field
+				String text = "1.0";
+				double value = 0.0;
+				try {
+					text = e.getDocument().getText(0, e.getDocument().getLength());
+				} catch (BadLocationException e1) {
+				}
+				try{
+					value = Double.valueOf(text);
+				} catch(NumberFormatException ex) {
+					value = 0.0;
+				}
+				
+				// How many genes will remain after filtering?
+				int remainingGenes = parent.genesRemainingAfterFiltering(value);
+				
+				// Set the new text
+				remainsLabel.setText(remainingGenes + " genes will be modelled after filtering.");
+			}
+		});
+		
 		cutoffTextField.setText(String.valueOf(cutoff));
 		cutoffTextField.setToolTipText(toolTip);
 		
 		// build resulting panel
-		JComponent cutoffPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		//JComponent cutoffPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JComponent cutoffPanel = new JPanel(new GridLayout(2,2));
 		cutoffPanel.add(cutoffLabel);
 		cutoffPanel.add(cutoffTextField);
+		cutoffPanel.add(remainsLabel);
 		cutoffPanel = GUITools.createTitledPanel(cutoffPanel, "Filter settings");
 		
 		return cutoffPanel;
@@ -172,8 +211,7 @@ public class ModelSettingsDialog extends JPanel {
 		distPanel = GUITools.createTitledPanel(distPanel, "Time points distribution");
 		
 		return distPanel;
-	}
-	
+	}	
 	
 	/**
 	 * @return true, if ok button was pressed

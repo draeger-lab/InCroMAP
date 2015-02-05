@@ -220,6 +220,45 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	int numGenes;
 	
+	/**
+	 * Was the model succesfully generated?
+	 */
+	boolean isModelled = false;
+	
+	/**
+	 * Contains number of models chosen by the user
+	 */
+	private JFormattedTextField numModelTextField;
+
+	/**
+	 * Contains maximal iteration number per model chosen by the user
+	 */
+	private JFormattedTextField maxIterTextField;
+
+	/**
+	 * Contains number of classes chosen by the user
+	 */
+	private JFormattedTextField numClassesTextField;
+	
+	/**
+	 * Constructor does nothing. So that an object of this class can be instanced by
+	 * calling newInstance()
+	 */
+	public TimeFit() {
+		// Intentially left blank.
+		System.out.println("Call const");
+	}
+	
+	/**
+	 * @param numClasses The number of classes
+	 * @param maxIteration The maximal number of iterations of the EM-algorithm
+	 */
+	public TimeFit(int numClasses, int maxIteration) {
+		this.numClasses = numClasses;
+		this.maxIteration = maxIteration;
+	}
+
+
 	/* (non-Javadoc)
 	 * @see de.zbit.math.TimeSeriesModel#generateModel(de.zbit.data.mRNA.mRNATimeSeries, java.util.List)
 	 */
@@ -249,6 +288,21 @@ public class TimeFit extends TimeSeriesModel {
 			AbstractProgressBar pb) {
 		
 		this.isExponentiallyDistributed = isExponentiallyDistributed;
+		
+		// Get the parameters chosen by the user
+		System.out.println("Number of classes: " + numClassesTextField.getText());
+		System.out.println("Number of models: " + numModelTextField.getText());
+		System.out.println("Number of iterations: " + maxIterTextField.getText());
+		
+		try {
+			numClasses = Integer.valueOf(numClassesTextField.getText());
+			numClasses = Integer.valueOf(numModelTextField.getText());
+			maxIteration = Integer.valueOf(maxIterTextField.getText());
+		} catch (NumberFormatException e) {
+			GUITools.showErrorMessage(parent, "Cannot parse parameters to Integers");
+			return;
+		}
+		
 		// Set the total call number of the progress bar
 		int totalCalls = iterations * maxIteration;
 		pb.setNumberOfTotalCalls(totalCalls);
@@ -273,13 +327,16 @@ public class TimeFit extends TimeSeriesModel {
 			}
 		}
 		
-		// testing
-		System.out.println(filteredData.size() + " genes remained after filtering.");
-
+		// We need at least 3 * numClasses genes.
+		if(filteredData.size() / 3 < numClasses) {
+			GUITools.showErrorMessage(parent, "Not enough genes remained after filtering.");
+			return;
+		}
+		
 		// Generate the models
 		for(int i=0; i<iterations; i++) {
 			System.out.println("Generate model number " + i);
-			TimeFit tf = new TimeFit();
+			TimeFit tf = new TimeFit(numClasses, maxIteration);
 			tf.generateModel(filteredData, timePoints, isExponentiallyDistributed, pb);
 			models[i] = tf;
 			pb.setCallNr((i+1) * maxIteration);
@@ -297,11 +354,8 @@ public class TimeFit extends TimeSeriesModel {
 		
 		bestModel.printModel();
 		
-		// testing
-		//System.out.println("Best model has logLikelihood " + bestModel.logLikelihood);
-		
 		// Take the parameter of the best model
-		// TODO update the list
+		isModelled = true;
 		this.q = bestModel.q;
 		this.knots = bestModel.knots;
 		this.controlPoints = bestModel.controlPoints;
@@ -440,7 +494,7 @@ public class TimeFit extends TimeSeriesModel {
 	 * @see de.zbit.math.TimeSeriesModel#computeValueAtTimePoint(double)
 	 */
 	@Override
-	public double computeValueAtTimePoint(double timePoint) {
+	public double computeValueAtTimePoint(double timePoint, boolean useOriginalData) {
 		// Intentially left blank
 		return 0;
 	}
@@ -1175,7 +1229,7 @@ public class TimeFit extends TimeSeriesModel {
 		System.out.println("Loaded data for " + data.size() + " genes.");
 		
 		// Generate model
-		TimeFit tf = new TimeFit();
+		TimeFit tf = new TimeFit(9, 20);
 		NSTimeSeriesTab parent = new NSTimeSeriesTab(null, null);
 		tf.generateModel(parent, data, r.getTimePoints(), 5, 1.0, false, NSTimeSeriesTab.generateLoadingPanel(parent, "..."));
 		
@@ -1220,11 +1274,11 @@ public class TimeFit extends TimeSeriesModel {
 				+ "Among these models these models the best will be chosen.<br>"
 				+ "CAUTION: The higher the number of models, the longer the run time will be.<br></html>";
 		DecimalFormat format = new DecimalFormat("##");
-		JFormattedTextField numModelTextField = new JFormattedTextField(format);
+		numModelTextField = new JFormattedTextField(format);
 		numModelTextField.setText(String.valueOf(numModels));
 		numModelTextField.setToolTipText(numModelTooltip);
 		// build numModel panel
-		JComponent numModelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JComponent numModelPanel = new JPanel(new GridLayout(1,2));
 		numModelPanel.add(numModelLabel);
 		numModelPanel.add(numModelTextField);
 		
@@ -1235,11 +1289,11 @@ public class TimeFit extends TimeSeriesModel {
 		String maxIterTooltip = "<html>A TimeFit model is computed iteratively computed.<br>"
 				+ "Here you can choose the maximum iterations performed per model.<br>"
 				+ "CAUTION: The higher the number of iterations, the longer the run time will be.<br></html>";
-		JFormattedTextField maxIterTextField = new JFormattedTextField(format);
+		maxIterTextField = new JFormattedTextField(format);
 		maxIterTextField.setText(String.valueOf(maxIter));
 		maxIterTextField.setToolTipText(maxIterTooltip);
 		// build numModel panel
-		JComponent maxIterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JComponent maxIterPanel = new JPanel(new GridLayout(1,2));
 		maxIterPanel.add(maxIterLabel);
 		maxIterPanel.add(maxIterTextField);
 		
@@ -1249,23 +1303,31 @@ public class TimeFit extends TimeSeriesModel {
 		int numClasses = 9;	
 		String numClassesTooltip = "<html>Please choose the number of clusters.<br>"
 				+ "CAUTION: The higher the number of clusters, the longer the run time will be.<br></html>";
-		JFormattedTextField numClassesTextField = new JFormattedTextField(format);
+		numClassesTextField = new JFormattedTextField(format);
 		numClassesTextField.setText(String.valueOf(numClasses));
 		numClassesTextField.setToolTipText(numClassesTooltip);
 		// build numClasses panel
-		JComponent numClassesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JComponent numClassesPanel = new JPanel(new GridLayout(1,2));
 		numClassesPanel.add(numClassesLabel);
 		numClassesPanel.add(numClassesTextField);
 		
 		// The resulting individual panel
-		JComponent panel = new JPanel(new BorderLayout());
-		panel.add(numModelPanel, BorderLayout.NORTH);
-		panel.add(maxIterPanel, BorderLayout.CENTER);
-		panel.add(numClassesPanel, BorderLayout.SOUTH);
+		JComponent panel = new JPanel(new GridLayout(3,1));
+		panel.add(numModelPanel);
+		panel.add(maxIterPanel);
+		panel.add(numClassesPanel);
 		numModelPanel = GUITools.createTitledPanel(panel, "TimeFit settings");
 
 		return panel;
 	};
+	
+	
+	/**
+	 * Was the model generated?
+	 */
+	public boolean isModelled() {
+		return isModelled;
+	}
 
 	/**
 	 * Return the class of gene i.

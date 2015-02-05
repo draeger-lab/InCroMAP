@@ -135,7 +135,7 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 	
 	
 	@Override
-	public double computeValueAtTimePoint(double timePoint) {
+	public double computeValueAtTimePoint(double timePoint, boolean useOriginalData) {
 		// Other classes calling this method don't know, that the time points could be
 		// logarithmized. So logarithmize the timePoint is necessary.
 		if(isExponentiallyDistributed)
@@ -183,7 +183,7 @@ public class CubicSplineInterpolation extends TimeSeriesModel {
 		CubicSplineInterpolation c = new CubicSplineInterpolation(m, tp, 0, false);
 		
 		for(double i=-1.0; i<=3; i=i+0.01) {
-			System.out.println(c.computeValueAtTimePoint(i));
+			System.out.println(c.computeValueAtTimePoint(i, false));
 		}
 	}
 

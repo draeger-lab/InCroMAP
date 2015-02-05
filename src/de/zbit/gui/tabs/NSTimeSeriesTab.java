@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JViewport;
 import javax.swing.SwingWorker;
@@ -39,6 +41,7 @@ import javax.swing.SwingWorker.StateValue;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
+import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
@@ -237,7 +240,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void modelTimeSeries(Class<? extends TimeSeriesModel> classs) {
+	public void modelTimeSeries(final Class<? extends TimeSeriesModel> classs) {
 		
 		this.modelMethod = classs;
 		this.geneModels = new ArrayList<TimeSeriesModel>(this.data.size());
@@ -265,84 +268,129 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 			}
 		}
 		
-		// Ask user for settings
+		// A instance of the model method. Used to get an individualPanel
+		// for the settings dialog and to compute model parameters
+		// (e.g in the TimeFit method)
 		ModelSettingsDialog settingsDialog = null;
+		TimeSeriesModel model = null;
 		try {
-			settingsDialog = new ModelSettingsDialog(this, classs.newInstance(), cutoffGuess);
-		} catch (Exception e1) {
+			model = classs.newInstance();
+			settingsDialog = new ModelSettingsDialog(this, model, cutoffGuess);
+		} catch (Exception e2) {
 			GUITools.showErrorMessage(this, "Cannot build model settings dialog");
 		}
-		
-		GUITools.showAsDialog(this, settingsDialog, "Please choose settings for the model", false);
-		final boolean isExponentiallyDistributed = settingsDialog.isExponentiallyDistributed();
-		final double cutoff = settingsDialog.getCutoff();
-		
-		// testing
-		//System.out.println("BoxToggled? " + settingsDialog.isExponentiallyDistributed());
-		//System.out.println("cutoff value: " + settingsDialog.getCutoff());
-		
-		// The modelling step is different for the two methods.
-		if(classs == CubicSplineInterpolation.class) {
-			for(Object o : this.data) {
-				if(o instanceof mRNATimeSeries) {
-					mRNA = (mRNATimeSeries) o;
-
-					// if mRNA has no NCBI geneID, geneModel for the mRNA is null. Add also a new additional data column,
-					// with information whether the mRNA was modeled or not.
-					// If the mRNA doesn't fulfill the cutoff value, the mRNA is not modelled.
-					if(mRNA.getID() == -1 || !TimeSeriesModel.geneFulfillsCutoff(mRNA, getSignalType(), cutoff)) {
-						mRNA.addData("Modeled?", "No");
-						mRNA.addData("Model", null);
-					} else {
-						try {
-							// generate a new model. ! Important: set name and idType manually ! They are needed later.
-							TimeSeriesModel m = classs.newInstance();
-							m.setName(mRNA.getName());
-							m.setGeneID(mRNA.getID());
-							m.setSignalType(getSignalType());
-							m.generateModel(mRNA, timePoints, cutoff, isExponentiallyDistributed);
-
-							geneModels.add(m);
-							mRNA.addData("Modeled?", "Yes");
-							mRNA.addData("Model", m);
-							NameAndSignals.additional_data_is_invisible.add("Model");
-						} catch (Exception e) {
-							e.printStackTrace();
-							GUITools.showErrorMessage(parent, "Exception while generating CubicSplineInterpolation model for " + mRNA.getName());
-						}
-					}
-				}
-			}
-		} else if(classs == TimeFit.class) {
-			final TimeFit tf = new TimeFit();
-			
-			
-			// Compute the parameters for the single gene models
-			// TODO Ask user how many runs for time fit he wants!
-			// TODO Show progress bar
-
-			final ArrayList<mRNATimeSeries> castedData = (ArrayList<mRNATimeSeries>) data;
-			final NSTimeSeriesTab parent = this;
-			
-			try {
-				// Cast the data, so that a model can be build from it	
-				NotifyingWorker<Void> worker = new NotifyingWorker<Void>() {
-
-					@Override
-					protected Void doInBackground() throws Exception {
-						final AbstractProgressBar pb = generateLoadingPanel(parent, "Computing time series models ...");
-						tf.generateModel(parent, castedData, timePoints, 5, cutoff, isExponentiallyDistributed, pb);
-						getTimeFitModels(castedData, tf, cutoff);
-						return null;
-					}
-				};
-				worker.execute();
 				
-			} catch(Exception e) {
-				e.printStackTrace();
-				GUITools.showErrorMessage(parent, "Exception computing the TimeFit model parameters");
+		// Ask user for settings
+		if(GUITools.showAsDialog(this, settingsDialog, "Please choose settings for the model", true) == JOptionPane.OK_OPTION) {
+			final boolean isExponentiallyDistributed = settingsDialog.isExponentiallyDistributed();
+			final double cutoff = settingsDialog.getCutoff();
+			
+			// The modelling step is different for the two methods.
+			if(classs == CubicSplineInterpolation.class) {
+				// Create a loading tab
+				setIntermediateBar(IntegratorTab.generateLoadingPanel(this, "Computing time series models ..."));
+				
+				try {
+					// Cast the data, so that a model can be build from it	
+					NotifyingWorker<Collection<? extends TableResult>> worker = new NotifyingWorker<Collection<? extends TableResult>>() {
+
+						@Override
+						protected Collection<? extends TableResult> doInBackground() throws Exception {
+							AbstractProgressBar pb = getIntermediateBar();
+							pb.setNumberOfTotalCalls(data.size());
+							for(Object o : data) {
+								pb.DisplayBar();
+								if(o instanceof mRNATimeSeries) {
+									mRNATimeSeries mRNA = (mRNATimeSeries) o;
+									
+									// Remove additional data columns of the TimeFit method not needed for this method
+									mRNA.removeData("Cluster");
+																		
+									mRNA.addData("Modeled?", "No");
+									mRNA.addData("Model", null);
+									NameAndSignals.additional_data_is_invisible.add("Model");
+
+									// if mRNA has no NCBI geneID, geneModel for the mRNA is null. Add also a new additional data column,
+									// with information whether the mRNA was modeled or not.
+									// If the mRNA doesn't fulfill the cutoff value, the mRNA is not modelled.
+									if(mRNA.getID() == -1 || !TimeSeriesModel.geneFulfillsCutoff(mRNA, getSignalType(), cutoff)) {
+										mRNA.addData("Modeled?", "No");
+										mRNA.addData("Model", null);
+										
+									} else {
+										try {
+											// generate a new model. ! Important: set name and idType manually ! They are needed later.
+											TimeSeriesModel m = classs.newInstance();
+											m.setName(mRNA.getName());
+											m.setGeneID(mRNA.getID());
+											m.setSignalType(getSignalType());
+											m.generateModel(mRNA, timePoints, cutoff, isExponentiallyDistributed);
+
+											geneModels.add(m);
+											mRNA.addData("Modeled?", "Yes");
+											mRNA.addData("Model", m);
+											NameAndSignals.additional_data_is_invisible.add("Model");
+										} catch (Exception e) {
+											e.printStackTrace();
+											GUITools.showErrorMessage(parent, "Exception while generating CubicSplineInterpolation model for " + mRNA.getName());
+										}
+									}
+								}
+							}
+							
+							rebuildTable();
+							return data;
+						}
+					};
+					worker.addPropertyChangeListener(this);
+					worker.execute();
+				} catch(Exception e) {
+					e.printStackTrace();
+					GUITools.showErrorMessage(parent, "Exception computing the TimeFit model parameters");
+				}
+				
+				// Repaint table of the tab to show new 'Modeled?' column
+				this.rebuildTable();
+				
+			} else if(classs == TimeFit.class) {
+				// Cast the model to the TimeFit class. So that the parameter chosen by the user can
+				// be used.
+				final TimeFit tf = (TimeFit) model;
+				// Create a loading tab
+				setIntermediateBar(IntegratorTab.generateLoadingPanel(this, "Computing time series models ..."));
+				
+				// Compute the parameters for the single gene models
+				final ArrayList<mRNATimeSeries> castedData = (ArrayList<mRNATimeSeries>) data;
+				final NSTimeSeriesTab parent = this;
+				
+				try {
+					// Cast the data, so that a model can be build from it	
+					NotifyingWorker<Collection<? extends TableResult>> worker = new NotifyingWorker<Collection<? extends TableResult>>() {
+
+						@Override
+						protected Collection<? extends TableResult> doInBackground() throws Exception {
+							AbstractProgressBar pb = getIntermediateBar();
+							tf.generateModel(parent, castedData, timePoints, 5, cutoff, isExponentiallyDistributed, pb);
+							if(tf.isModelled()) {
+								getTimeFitModels(castedData, tf, cutoff);							
+							}
+//							else {
+//								GUITools.showErrorMessage(parent, "Not enough genes remained after filtering.");
+//							}
+							return data;
+						}
+					};
+					worker.addPropertyChangeListener(this);
+					worker.execute();
+					
+				} catch(Exception e) {
+					e.printStackTrace();
+					GUITools.showErrorMessage(parent, "Exception computing the TimeFit model parameters");
+				}
+				//this.rebuildTable();
 			}
 		}
+		
 	}
 
 
@@ -389,7 +437,6 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		}
 		// Repaint table of the tab to show new 'Modeled?' column
 		this.rebuildTable();
-		this.updateButtons(parent.getJMenuBar(), parent.getJToolBar());
 	}
 
 
@@ -415,5 +462,17 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		System.out.println(selectedModels);
 		parent.addTab(new VisualizeTimeSeriesAsLineChart(selectedModels, 200, timeUnit), "Models");
 	}
-  
+	
+	
+	/**
+	 * How many genes remain after filtering?
+	 */
+	public int genesRemainingAfterFiltering(double cutoff) {
+		int res = 0;
+		for(Object o : this.data) {
+			if(TimeSeriesModel.geneFulfillsCutoff((mRNATimeSeries) o, getSignalType(), cutoff))
+				res++;
+		}
+		return res;
+	}
 }

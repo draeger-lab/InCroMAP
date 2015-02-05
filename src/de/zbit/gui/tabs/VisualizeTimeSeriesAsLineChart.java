@@ -96,7 +96,7 @@ public class VisualizeTimeSeriesAsLineChart extends JPanel implements BaseFrameT
 			m = selectedModels.get(i);
 			double[] y = new double[n];
 			for(int j=0; j<n; j++) {
-				y[j] = m.computeValueAtTimePoint(xModel[j]);
+				y[j] = m.computeValueAtTimePoint(xModel[j], false);
 			}
 			yModel.add(y);
 		}

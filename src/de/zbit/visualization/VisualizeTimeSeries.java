@@ -156,6 +156,8 @@ public class VisualizeTimeSeries {
 
 	IntegratorPathwayPanel pathwayPanel;
 
+	private boolean useOriginalData;
+
 
 	public VisualizeTimeSeries(NSTimeSeriesTab parent) {
 		// Get the required information from the parent tab
@@ -187,13 +189,13 @@ public class VisualizeTimeSeries {
 			if(settingsDialog.getJustVisualizeDate()) {
 				// Number of frames = number of observations
 				numFrames = parent.getNumObservations();
-				//timePoints = computeTimePoints(numFrames, true);
 				timePoints = models.get(0).getOriginalTimePoints();
+				useOriginalData = true;
 			} else {
 				// Take the number of observations from the dialog
 				numFrames = settingsDialog.getNumFrames();
-				//timePoints = computeTimePoints(numFrames, false);
 				timePoints = models.get(0).getDistributedTimePoints(numFrames);
+				useOriginalData = false;
 			}
 			
 			for(int i=0; i<timePoints.length; i++) {
@@ -249,10 +251,8 @@ public class VisualizeTimeSeries {
 				mRNA = new ArrayList<List<mRNA>>(numFrames);
 				enrichments = new ArrayList<List<EnrichmentObject<String>>>(numFrames);
 				
-				System.out.println("Before the computing enrichments");
 				try {
 					for(int i = 0; i < numFrames; i++) {
-						System.out.println("Compute enrichment " + i);
 						// Model mRNA data
 						ArrayList<mRNA> modelValues = computeModelValues(timePoints[i]);
 						mRNA.add(i, modelValues);
@@ -267,7 +267,6 @@ public class VisualizeTimeSeries {
 				} catch(Exception e) {
 					e.printStackTrace();
 				}
-				System.out.println("After computing the computing enrichments");
 
 				// initialize the dimension
 				colorPathway(enrichments.get(0), mRNA.get(0), mapFrameToTimePoint(1));
@@ -297,7 +296,7 @@ public class VisualizeTimeSeries {
 			filmGenerator.execute();			
 		} catch(Exception e) {
 			// If there is an error, inform the user about that
-			e.printStackTrace();
+			GUITools.showErrorMessage(view, "Cannot generate time series visualization.");
 			controller.actionPerformed(new ActionEvent(e, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
 		}
 	}
@@ -438,8 +437,9 @@ public class VisualizeTimeSeries {
 		String experimentName = generateExperimentName(timePoint);
 
 		// for each model, compute the value at the time point and build a mRNATimeSeries object
+		// If the user wants to display the original data, just the original data is returned.
 		for(TimeSeriesModel m : models) {
-			double val = m.computeValueAtTimePoint(timePoint);
+			double val = m.computeValueAtTimePoint(timePoint, useOriginalData);
 			mRNA mrna = new mRNA(m.getName(), m.getGeneID());
 			mrna.addSignal(val, experimentName , m.getSignalType()); // name of SignalColumn is arbitrary
 
@@ -755,7 +755,7 @@ public class VisualizeTimeSeries {
 				s = m.getName();
 				s += "\t" + String.valueOf(m.getGeneID());
 				for(int i = 1; i <= numFrames; i++){
-					s += "\t" + m.computeValueAtTimePoint(mapFrameToTimePoint(i));
+					s += "\t" + m.computeValueAtTimePoint(mapFrameToTimePoint(i), false);
 				}
 				s += "\n";
 				try {

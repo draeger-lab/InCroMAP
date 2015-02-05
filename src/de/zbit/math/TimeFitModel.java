@@ -93,9 +93,18 @@ public class TimeFitModel extends TimeSeriesModel {
 	
 	
 	@Override
-	public double computeValueAtTimePoint(double timePoint) {
+	public double computeValueAtTimePoint(double timePoint, boolean useOriginalData) {
 		if(isExponentiallyDistributed)
 			timePoint = translateTimePoint(timePoint);
+		
+		// Maybe just the original (not modelled) data is requested. 
+		if(useOriginalData) {
+			System.out.println("Original data");
+			for(int i=0; i<x.length; i++) {
+				if(timePoint == x[i])
+						return y[i];
+			}
+		}
 		
 		// The spline basis function at time point t
 		RealMatrix s = computeSplineBasisFunctions(timePoint);
