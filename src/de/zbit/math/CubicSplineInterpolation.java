@@ -22,7 +22,6 @@
 package de.zbit.math;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
@@ -34,7 +33,6 @@ import org.apache.commons.math3.linear.RealVector;
 
 import de.zbit.data.Signal;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.util.objectwrapper.ValueTriplet;
 

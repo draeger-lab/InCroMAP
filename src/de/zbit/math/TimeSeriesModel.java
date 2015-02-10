@@ -21,7 +21,6 @@
  */
 package de.zbit.math;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -29,7 +28,6 @@ import javax.swing.JComponent;
 
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.Signal;
-import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.util.objectwrapper.ValueTriplet;
 

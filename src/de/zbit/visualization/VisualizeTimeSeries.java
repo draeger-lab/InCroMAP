@@ -78,7 +78,6 @@ import de.zbit.math.BonferroniHolm;
 import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.NotifyingWorker;
 import de.zbit.util.Species;
-import de.zbit.util.objectwrapper.ValuePair;
 import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
 import de.zbit.utils.SignalColor;
@@ -386,7 +385,7 @@ public class VisualizeTimeSeries {
 			Graphics g = image.getGraphics();
 			g.setColor(Color.BLACK);
 			g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, image.getHeight() / 40));
-			g.drawString(String.format("%.2f", mapFrameToTimePoint(frame)) + " " + timeUnit, 10, image.getHeight()/40);
+			g.drawString(String.format("%.2f", mapFrameToTimePoint(frame)) + " " + timeUnit, 8 * image.getWidth() / 10, image.getHeight()/40);
 		} catch (IOException e) {
 			controller.actionPerformed(new ActionEvent(e, 0, VTSAction.SHOW_VIDEO_FAILED.toString()));
 		}
@@ -511,41 +510,6 @@ public class VisualizeTimeSeries {
 
 		// And now color the graph according to the new data.
 		visData.visualizeData(mRNA, source.getTabName(), generateExperimentName(timePoint), getSignalType());
-	}
-
-
-	/**
-	 * @param numFrames the number of frames
-	 * @param justObservations if true, the time points are the same as the time points of the observations.
-	 * @return the time points for which the pathway should be modeled. 
-	 */
-	private double[] computeTimePoints(int numFrames, boolean justObservations) {
-		timePoints = new double[numFrames];
-
-		// If just the observations gets visualized, the result is an array of the
-		// observation time points
-		if(justObservations) {
-			// The list of time points of the observations
-			List<ValueTriplet<Double, String, SignalType>> vp = source.getTimePoints();
-
-			// For each observation, get the time point
-			for(int i=0; i < vp.size(); i++)
-				timePoints[i] = vp.get(i).getA();
-
-		} else { // compute equidistant time points
-
-			// get a sample TimeSeriesModel, first and last time point to model
-			TimeSeriesModel m = models.toArray(new TimeSeriesModel[1])[0];
-			double begin = m.getFirstTimePoint();
-			double end = m.getLastTimePoint();
-			double step = (end - begin) / (numFrames-1); // numFrames-1: first and last frame show first and last data column
-
-			for(int i = 0; i < timePoints.length; i++) {
-				timePoints[i] = begin + (i * step);
-			}
-		}
-
-		return timePoints;
 	}
 
 

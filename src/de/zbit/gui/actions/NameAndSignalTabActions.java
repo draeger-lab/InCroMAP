@@ -76,7 +76,6 @@ import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.IntegratorTabWithTable;
 import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
-import de.zbit.gui.tabs.TimeSeriesView;
 import de.zbit.math.BenjaminiHochberg;
 import de.zbit.math.Bonferroni;
 import de.zbit.math.BonferroniHolm;
@@ -88,7 +87,6 @@ import de.zbit.util.StringUtil;
 import de.zbit.util.objectwrapper.ValuePair;
 import de.zbit.utils.FilterNSTable;
 import de.zbit.visualization.VisualizeTimeSeries;
-import de.zbit.visualization.VisualizeTimeSeriesListener.VTSAction;
 
 /**
  * Actions for the {@link JToolBar} in {@link IntegratorTabWithTable}

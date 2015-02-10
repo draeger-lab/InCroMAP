@@ -22,25 +22,15 @@
 
 package de.zbit.gui.tabs;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
@@ -52,19 +42,15 @@ import y.view.Graph2DView;
 import y.view.Graph2DViewMouseWheelZoomListener;
 import y.view.HitInfo;
 import de.zbit.graph.RestrictedEditMode;
-import de.zbit.graph.gui.TranslatorPanel;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.JDropDownButton;
-import de.zbit.gui.actions.NameAndSignalTabActions.NSAction;
 import de.zbit.gui.customcomponents.FilmControlPanel;
-import de.zbit.gui.layout.VerticalLayout;
 import de.zbit.io.FileDownload;
 import de.zbit.kegg.gui.IntegratorPathwayPanel;
 import de.zbit.kegg.gui.TranslatorPanelTools;
 import de.zbit.util.Species;
 import de.zbit.util.progressbar.AbstractProgressBar;
-import de.zbit.util.progressbar.gui.ProgressBarSwing;
 import de.zbit.visualization.VisualizeTimeSeries;
 import de.zbit.visualization.VisualizeTimeSeriesListener;
 import de.zbit.visualization.VisualizeTimeSeriesListener.VTSAction;

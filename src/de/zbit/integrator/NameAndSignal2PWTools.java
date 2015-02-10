@@ -22,7 +22,6 @@
 package de.zbit.integrator;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,10 +56,7 @@ import de.zbit.data.miRNA.miRNA;
 import de.zbit.graph.io.def.GraphMLmaps;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.prefs.PathwayVisualizationOptions;
-import de.zbit.kegg.io.KEGG2yGraph;
-import de.zbit.mapper.compounds.KeggCompound2InChIKeyMapper;
 import de.zbit.util.TranslatorTools;
-import de.zbit.util.objectwrapper.ValuePairUncomparable;
 import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
 import de.zbit.visualization.VisualizeMicroRNAdata;
@@ -394,7 +390,6 @@ public class NameAndSignal2PWTools {
     
     
     // Map each NameAndSignal to a list of nodes
-    Set<ValuePairUncomparable<Node, T>> alreadyTreated = new HashSet<ValuePairUncomparable<Node, T>>();
     Set<Node> nodesToLayout = new HashSet<Node>();
     for (T ns : nsList) {
       // Get Node(s) for current NameAndSignals
@@ -435,46 +430,8 @@ public class NameAndSignal2PWTools {
 
               for (Node n: node) {
                 // ---------------------------------
-                // Look if the node already has been colored during this run
-                Object nIsCopy = tools.getInfo(n, GraphMLmapsExtended.NODE_IS_COPY);
-                //Object nNameAndSignal = tools.getInfo(n, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
-                // Take "NODE_BELONGS_TO", because raw miRNA have 1)NameAndSignal and 2)isMiRNA
-                // annotated after addition, BUT they dont't belong to any visualized signal.
-                Object nBelongsTo = tools.getInfo(n, GraphMLmapsExtended.NODE_BELONGS_TO);
-                if ((nBelongsTo!=null || nIsCopy!=null)&& false ) { // &&false because node splitting has forcecully removed.
-                  // Node already belongs to any nameAndSignal or even is already a splitted group node
-                  Node groupNode = n;
-                  if (nIsCopy!=null && ((Boolean)nIsCopy) ) {
-                    // If node is a child, get the parent node that represents this gene.
-                    groupNode = hm.getParentNode(n);
-                  }
-                  
-                  // Avoid splitting the same node for all already splitted instances.
-                  // => Remember splitted node and corresponding ns and only treat once.
-                  ValuePairUncomparable<Node, T> id = new ValuePairUncomparable<Node, T>(groupNode,ns);
-                  if (alreadyTreated.contains(id)) continue;
-                  else alreadyTreated.add(id);
-                  
-                  // Convert to group node and create node, representing the previous NameAndSignals that mapped to the node
-                  if (!hm.isGroupNode(groupNode)) {
-                    Node previous = convertToGroupNode(groupNode);
-                    nodesToLayout.add(previous);
-                    nodesToLayout.add(groupNode);
-                  }
-                  
-                  // Create a node in this group node, that corresponds to the current NameAndSignals
-                  // First, create a virgin child node copy.
-                  Node copy = hm.getChildren(groupNode).node().createCopy(graph);
-                  nodesToLayout.add(copy);
-                  
-                  tools.resetWidthAndHeight(copy);
-                  removeAllUnregisteredMaps(copy);
-                  prepareChildNode(groupNode, copy, ns);
-                  n=copy; // Change color of copy, not of original node.
-                } else {
-                  // Node is a simple node (not a member of a splitted node)
-                  tools.setInfo(n, GraphMLmapsExtended.NODE_IS_COPY, null);
-                }
+                // Node is a simple node (not a member of a splitted node)
+                tools.setInfo(n, GraphMLmapsExtended.NODE_IS_COPY, null);
                 
                 // Simply set keys that node now belongs to input dataset.
                 tools.setInfo(n, GraphMLmapsExtended.NODE_BELONGS_TO, key);
@@ -601,51 +558,6 @@ public class NameAndSignal2PWTools {
   
 
   /**
-   * Converts the given node to a group node and adds a previously cloned instance of it
-   * as first child. 
-   * @param groupNode the future group node.
-   * @return the child node (which corresponds to a node, the input node previously looked like).
-   */
-  private Node convertToGroupNode(Node groupNode) {
-    Node copy = groupNode.createCopy(graph);
-    NameAndSignals groupNameAndSignals = (NameAndSignals)tools.getInfo(groupNode, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
-    Object parent = tools.getInfo(groupNode, GraphMLmapsExtended.NODE_BELONGS_TO);
-    
-    NodeRealizer nr = KEGG2yGraph.setupGroupNode(graph.getRealizer(groupNode).getLabel(), graph.getLabelText(copy));
-    hm.convertToGroupNode(groupNode);
-    graph.setRealizer(groupNode, nr);
-    tools.setInfo(groupNode, GraphMLmapsExtended.NODE_IS_COPY, false);
-    tools.setInfo(groupNode, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, null); // May belong to multiples => iterate childs.
-    tools.setInfo(groupNode, GraphMLmapsExtended.NODE_BELONGS_TO, null); // May belong to multiples => iterate childs.
-    tools.setInfo(groupNode, GraphMLmapsExtended.NODE_NUMBER_OF_CHILDREN, 0);
-    
-    // Paint above other nodes.
-    graph.moveToLast(groupNode);
-    
-    prepareChildNode(groupNode, copy, groupNameAndSignals);
-    tools.setInfo(copy, GraphMLmapsExtended.NODE_BELONGS_TO, parent); // Ensure a real replicate of the old node.
-    
-    return copy;
-  }
-  
-  /**
-   * Removes all annotated signals from a node.
-   * @param node
-   */
-  private void removeAllUnregisteredMaps(Node node) {
-    // This is actually a dirty workaround for the
-    // removeSignals() method in VisualizeDataInPathway().
-    Collection<String> allDescriptors = tools.getMapDescriptors();
-    if (allDescriptors==null) return;
-    
-    for (String descriptor : allDescriptors) {
-      if (!GraphMLmapsExtendedContainsMap(descriptor)) {
-        tools.getMap(descriptor).set(node, null);
-      }
-    }
-  }
-  
-  /**
    * Check if {@link GraphMLmapsExtended} contains a map with the
    * given descriptor.
    * @param descriptor
@@ -667,78 +579,6 @@ public class NameAndSignal2PWTools {
   
   
 
-  /**
-   * Prepare a child node to arrange in the parent group node and set all
-   * attributes as given by the {@link NameAndSignals}.
-   * <p>This method is intended for one node, splitted into multiple other
-   * ones (corresponding to various isoforms or probes of the parent node).
-   * <p><b>This method does NOT set the {@link GraphMLmapsExtended#NODE_BELONGS_TO}
-   * attribute! Please set it manually on the child.</b> All other attributes 
-   * are set on the child. The group node gets the number of children increased.
-   * @param groupNode
-   * @param child
-   * @param ns
-   */
-  private void prepareChildNode(Node groupNode, Node child, NameAndSignals ns) {
-    NodeRealizer cr = graph.getRealizer(child);
-    
-    // Set a uniquely describing label
-    if (ns!=null) {
-      String unique = ns.getUniqueLabel();
-      if (unique.endsWith("more)")) {
-        int pos = unique.lastIndexOf("(");
-        if (pos>0) {
-          unique = unique.substring(0, pos).trim() + "\n" + unique.substring(pos);
-        }
-      }
-      graph.setLabelText(child, unique);
-    }
-    
-    // Setup hierarchy
-    hm.setParentNode(child, groupNode);
-    
-    // Doesn't work unfortunately!
-    //int nodesInGroup = hm.getInnerGraph(groupNode).N();
-    
-    // Get and increase number of children of group node
-    Object children = tools.getInfo(groupNode, GraphMLmapsExtended.NODE_NUMBER_OF_CHILDREN);
-    if (children==null || !(children instanceof Integer)) {
-      children = 0;
-    }    
-    Integer nodesInGroup = ((Integer)children)+1;
-    tools.setInfo(groupNode, GraphMLmapsExtended.NODE_NUMBER_OF_CHILDREN, nodesInGroup);
-    
-    /* Parent node must not change x and y or width and height!
-     * Child node X and Y determine coordinates of parent group node automatically!
-     * => Only set child x and y.
-     */
-    TranslatorTools.setStackingChildNodePosition(cr, cr, nodesInGroup);   
-    
-    // Make node as big as the label, don't change size of miRNAs.
-    if (!tools.getBoolInfo(groupNode, GraphMLmapsExtended.NODE_IS_MIRNA)) {
-      cr.setWidth(Math.max(cr.getWidth(), cr.getLabel().getWidth()+2));
-      cr.setHeight(Math.max(cr.getHeight(), cr.getLabel().getHeight()+2));
-    }
-    
-    // Clone map contents of group node
-    NodeMap[] maps = graph.getRegisteredNodeMaps();
-    for (NodeMap map: maps) {
-      Object o = map.get(groupNode);
-      if (o!=null) {
-        map.set(child, o);
-      }
-    }
-    
-    // Set new coordinates
-    tools.setInfo(child, GraphMLmaps.NODE_POSITION, (int) cr.getX() + "|" + (int) cr.getY());
-    tools.setInfo(child, GraphMLmapsExtended.NODE_IS_COPY, true);
-    tools.setInfo(child, GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, ns);
-    tools.setInfo(child, GraphMLmapsExtended.NODE_NUMBER_OF_CHILDREN, null);
-    
-    // Paint above other nodes.
-    graph.moveToLast(child);
-  }
-  
   /**
    * Puts all {@link NameAndSignals} matching a node into
    * the node annotation with Key <code>vd</code>.

@@ -22,17 +22,10 @@
 
 package de.zbit.math;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.geom.Point2D;
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -49,9 +42,7 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
-import org.apache.commons.math3.ml.distance.EuclideanDistance;
 import org.apache.commons.math3.stat.correlation.Covariance;
-import org.apache.commons.math3.stat.descriptive.moment.Variance;
 import org.jfree.util.Log;
 
 import de.zbit.data.Signal;
@@ -62,7 +53,6 @@ import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.io.mRNATimeSeriesReader;
 import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.progressbar.AbstractProgressBar;
-import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * Implementation of the TimeFit algorithm to compute a continous representation
@@ -1161,56 +1151,6 @@ public class TimeFit extends TimeSeriesModel {
 		}
 		return pos;
 	}
-
-	/**
-	 * Get some data to test the TimeFit algorithm.
-	 */
-	private static RealMatrix sampleTestData(int numGenes, int numExperiments, int numClasses) {
-		double[][] testData = new double[numExperiments][numGenes];
-		double[][] means = new double[numClasses][numExperiments];
-		double[][] sds = new double[numClasses][numExperiments];
-
-		// Generate random means and standard deviations. The means are between the
-		// given min and max
-		Random r = new Random();
-		double minMean = -0.5;
-		double maxMean = 0.5;
-		double minSD = .005;
-		double maxSD = .01;
-		for(int i=0; i<numClasses; i++) {
-			for(int j=0; j<numExperiments; j++) {
-				means[i][j] = minMean + r.nextDouble() * (maxMean-minMean);
-				sds[i][j] = minSD + r.nextDouble() * (maxSD-minSD);
-			}
-		}
-
-		// Now sample the test data
-		for(int i=0; i<numGenes; i++) {
-			// Choose a random class for the gene
-			int clas = r.nextInt(numClasses);
-			for(int j=0; j<numExperiments; j++){
-				testData[j][i] = means[clas][j] + r.nextGaussian() * sds[clas][j];
-			}
-		}
-
-		return new Array2DRowRealMatrix(testData);
-	}
-	
-	
-	/**
-	 * Load a .csv with mRNA time series data. This is just for test porpuses.
-	 * @param path Path to the csv file to load.
-	 */
-	private static ArrayList<mRNATimeSeries> loadmRNATimeSeriesData(String path) {
-		mRNATimeSeriesReader r = new mRNATimeSeriesReader();
-		// testing
-		System.out.println("Start loading time series data from " + path);
-		ArrayList<mRNATimeSeries> data = (ArrayList<mRNATimeSeries>) r.importWithGUI(new JPanel(), path);
-		
-		System.out.println("End loaded time series data");
-		return data;
-	}
-
 
 	/**
 	 * @param args

@@ -185,17 +185,6 @@ public class VisualizeDataInPathway {
   }
   
   /**
-   * This constructor is private because with a direct graph, we can
-   * not track which data has already been visualized.
-   * <p>Still, this is needed for a non-graphical (e.g., batch)
-   * data processing.
-   * @param graph
-   */
-  private VisualizeDataInPathway(Graph2D graph){
-    this(graph, true);
-  }
-  
-  /**
    * @param graph
    * @param isInteractive if false, no SWING Dialog messages will be issued
    */
@@ -590,47 +579,6 @@ public class VisualizeDataInPathway {
   @SuppressWarnings("unused")
   private <T extends NameAndSignals> void writeSignalsToNodes(Collection<T> nsList, String tabName) {
     writeSignalsToNodes(nsList, tabName, null, null);
-  }
-  
-  /**
-   * Write the signals into the node annotation list.
-   * <p><b>This method only works for visualized datasets, i.e 
-   * {@link #prepareGraph(Collection, String, String, SignalType)} must have been called before.   * @param nsList
-   * @param tabName any unique identifier for the input dataset. E.g., 
-   * the tab or the filename or anything else.
-   * @param experimentName
-   * @param type
-   */
-  private <T extends NameAndSignals> void writeAnnotatedSignalsToNodes(Iterable<T> nsList, String tabName, String experimentName, SignalType type) {
-    Map<Node, Set<T>> node2nsMap = nsTools.getAnnotatedNodes(nsList);
-    // Q:Add a public writeSignalstoNodes method AND a public removeSignalsFrom Nodes method that uses names and GENE IDs.
-    // overwrite geneID field of splitted node with ns.GeneId(). && check uniqueLabel() for splitted=true.
-    
-    // A: Zu viel Aufwand... (wenn label und id equal, aber doch 2 probes, kann nicht unterscheiden. 
-    // 2) wie verfahren wenn nur ein teil (nänlich die gene mit nur einer sonde) der NameAndSignals aus den
-    // DataMaps sich mappen lässt?
-    
-    // Remove previous signals
-    removeSignal(tabName, experimentName, type);
-    
-    // Write signals to nodes
-    //Map<VisualizedData, NodeMap> signalMaps = getAnnotatedSignals(true);
-    for (Node n : graph.getNodeArray()) {
-      Collection<T> n_nsList = node2nsMap.get(n);
-      // Do we have associated signals?
-      if (n_nsList!=null && n_nsList.size()>0) {
-        writeSignalsToNode(n, n_nsList, tabName, experimentName, type);
-        //----------
-      }
-    }
-    
-
-    // Register signalMaps in graph
-    // Is already done by writeSignalsToNode() !
-//    for (Entry<VisualizedData, NodeMap> signalSet : signalMaps.entrySet()) {
-//      String v = getSignalMapIdentifier(signalSet.getKey());
-//      tools.addMap(v, signalSet.getValue());
-//    }
   }
   
   /**
@@ -1110,7 +1058,6 @@ public class VisualizeDataInPathway {
     double maxWidth = PathwayVisualizationOptions.DNA_METHYLATION_MAXIMUM_BOX_WIDTH.getValue(prefs);
     double halfWidth = ((double)maxWidth/2);
     // The protein mod. box height is required to calc. the dna methylation bar height
-    int protBoxHeight = PathwayVisualizationOptions.PROTEIN_MODIFICATION_BOX_HEIGHT.getValue(prefs);
     float maxFC = PathwayVisualizationOptions.FOLD_CHANGE_FOR_MAXIMUM_COLOR.getValue(prefs);
     double minPV = PathwayVisualizationOptions.P_VALUE_FOR_MAXIMUM_COLOR.getValue(prefs);
     Float ignoreFC = PathwayVisualizationOptions.DONT_VISUALIZE_FOLD_CHANGES.getValue(prefs);
@@ -1131,7 +1078,6 @@ public class VisualizeDataInPathway {
 //    System.out.println(Arrays.toString(minMax));
     // TODO: Test a few to know good max values. Test setting min to global min?
     log.config(String.format("Min/max values for box to visualize data: %s to %s.", minMax[0], minMax[1]));
-    double maxSignalValue = minMax[1]+minMax[0];
     VisualizedData visData = new VisualizedData(tabName, experimentName, type, NameAndSignals.getType(nsList));
     
     // TODO: Better show pValue AND fold-change!

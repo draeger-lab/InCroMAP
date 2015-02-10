@@ -61,7 +61,6 @@ import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
 
 import de.zbit.AppConf;
 import de.zbit.data.EnrichmentObject;

@@ -32,7 +32,6 @@ import de.zbit.gui.IntegratorUITools;
 import de.zbit.mapper.MappingUtils.IdentifierClass;
 import de.zbit.mapper.MappingUtils.IdentifierType;
 import de.zbit.mapper.compounds.InChIKey2CompoundNameMapper;
-import de.zbit.util.StringUtil;
 
 /**
  * An implementation for {@link NameAndSignals} that correspond to compounds.

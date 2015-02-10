@@ -35,10 +35,8 @@ import javax.swing.JToolBar;
 import org.jfree.chart.ChartColor;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.ui.ApplicationFrame;
 import org.jfree.chart.axis.LogAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
@@ -47,7 +45,6 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 
 import de.zbit.gui.BaseFrameTab;
 import de.zbit.math.TimeSeriesModel;
-import de.zbit.sequence.region.Region;
 import de.zbit.util.ArrayUtils;
 import de.zbit.visualization.VisualizeGenesInChartTab;
 

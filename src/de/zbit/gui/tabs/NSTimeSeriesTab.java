@@ -21,7 +21,6 @@
  */
 package de.zbit.gui.tabs;
 
-import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -31,10 +30,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JComponent;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JViewport;
 import javax.swing.SwingWorker;
 import javax.swing.SwingWorker.StateValue;
 
@@ -45,7 +41,6 @@ import de.zbit.data.TableResult;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUI;
-import de.zbit.gui.dialogs.FilmSettingsDialog;
 import de.zbit.gui.dialogs.ModelSettingsDialog;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.io.FileTools;
@@ -53,13 +48,11 @@ import de.zbit.io.NameAndSignalReader;
 import de.zbit.io.mRNATimeSeriesReader;
 import de.zbit.math.CubicSplineInterpolation;
 import de.zbit.math.TimeFit;
-import de.zbit.math.TimeFitModel;
 import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.NotifyingWorker;
 import de.zbit.util.Species;
 import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.progressbar.AbstractProgressBar;
-import de.zbit.util.progressbar.ProgressBar;
 
 /**
  * A special tab for the {@link IntegratorUI} for

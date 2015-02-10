@@ -458,7 +458,6 @@ public abstract class AbstractEnrichment<EnrichIDType> {
    * @param geneList
    * @param idType
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   public <T> List<EnrichmentObject<EnrichIDType>> getEnrichments(Collection<T> geneList,
   		IdentifierType geneIdType, IdentifierType cpdIdType) {
   	// For the visualization of mRNA time series data, I needed to speed up p-value computation

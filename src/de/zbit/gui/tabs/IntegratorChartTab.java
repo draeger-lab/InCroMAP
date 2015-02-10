@@ -24,7 +24,6 @@ package de.zbit.gui.tabs;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Point;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -122,11 +121,6 @@ public class  IntegratorChartTab extends IntegratorTab<JFreeChart> {
    * The panel for the {@link JFreeChart} available in {@link #getData()}
    */
   private ChartPanel chartPanel;
-  
-  /**
-   * The last right mouse down position on {@link #chartPanel}
-   */
-  private Point rightMouseDown;
   
   /**
    * @param parent

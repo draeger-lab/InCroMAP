@@ -22,15 +22,10 @@
 package de.zbit.visualization;
 
 import java.awt.Component;
-import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.JViewport;
 
 import y.view.Graph2D;
 import de.zbit.graph.gui.TranslatorPanel;
