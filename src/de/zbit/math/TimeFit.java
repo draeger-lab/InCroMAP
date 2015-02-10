@@ -50,7 +50,6 @@ import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.tabs.NSTimeSeriesTab;
-import de.zbit.io.mRNATimeSeriesReader;
 import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.progressbar.AbstractProgressBar;
 
@@ -118,7 +117,7 @@ public class TimeFit extends TimeSeriesModel {
 	RealMatrix mu;
 	
 	/**
-	 * TODO: delete ? The mapping of a gene's position in the yMatrix to his class.
+	 * The mapping of a gene's position in the yMatrix to his class.
 	 */
 	int[] pos2class;
 	
@@ -236,7 +235,6 @@ public class TimeFit extends TimeSeriesModel {
 	 */
 	public TimeFit() {
 		// Intentially left blank.
-		System.out.println("Call const");
 	}
 	
 	/**
@@ -286,7 +284,7 @@ public class TimeFit extends TimeSeriesModel {
 		
 		try {
 			numClasses = Integer.valueOf(numClassesTextField.getText());
-			numClasses = Integer.valueOf(numModelTextField.getText());
+			iterations = Integer.valueOf(numModelTextField.getText());
 			maxIteration = Integer.valueOf(maxIterTextField.getText());
 		} catch (NumberFormatException e) {
 			GUITools.showErrorMessage(parent, "Cannot parse parameters to Integers");
@@ -325,7 +323,6 @@ public class TimeFit extends TimeSeriesModel {
 		
 		// Generate the models
 		for(int i=0; i<iterations; i++) {
-			System.out.println("Generate model number " + i);
 			TimeFit tf = new TimeFit(numClasses, maxIteration);
 			tf.generateModel(filteredData, timePoints, isExponentiallyDistributed, pb);
 			models[i] = tf;
@@ -383,7 +380,6 @@ public class TimeFit extends TimeSeriesModel {
 			boolean isExponentiallyDistributed,
 			AbstractProgressBar pb) {
 		this.isExponentiallyDistributed = isExponentiallyDistributed;
-		// TODO Write JavaDoc comments for each method
 		
 		// Initialize all fields, so that the model can be computed
 		filteredData = data;
@@ -391,7 +387,6 @@ public class TimeFit extends TimeSeriesModel {
 		numGenes = data.size();
 		if (numGenes / 3 < numClasses) {
 			numClasses = numGenes / 3;
-			System.out.println("Not enough genes present, reduced number of classes!");
 			Log.warn("Not enough genes present, reduced number of classes!");
 		}
 		init(data, timePoints);
@@ -443,9 +438,6 @@ public class TimeFit extends TimeSeriesModel {
 
 			// Compute the new log likelihood.
 			computeLogLikelihood();	
-			
-			System.out.println("Variance: " + variance);
-			System.out.println("LogLikelihood: " + logLikelihood);
 		}
 	}
 
@@ -501,59 +493,24 @@ public class TimeFit extends TimeSeriesModel {
 		
 		// Generate a matrix from the mRNATimeSeries data
 		yMatrix = timeSeries2Matrix(data);
-		// testing
-		System.out.println("yMatrix[0]:");
-		System.out.println(yMatrix.getColumnMatrix(0));
-		System.out.println("yMatrix Rows: " + yMatrix.getRowDimension() + "\tCols: " + yMatrix.getColumnDimension());
-		System.out.println("\n------------------\n");
 		
 		// How many time points and genes do we have?
 		numGenes = yMatrix.getColumnDimension();
 		numDataPoints = yMatrix.getRowDimension();
-
-		// Set the time points of the experiments
-		System.out.println("\n---------------------");
-//		x = new double[numDataPoints];
-//		for(int i=0; i<numDataPoints; i++) {
-//			x[i] = timePoints.get(i).getA();
-//			// testing
-//			System.out.println("Set x[" + i + "]: " + timePoints.get(i).getA());
-//		}
-		for(int i=0; i<numDataPoints; i++) {
-			System.out.println("Set x[" + i + "]: " + x[i]);
-		}
-		System.out.println("---------------------\n");
 
 		// Place the control points
 		chooseControlPoints(x);
 
 		// Place the knots
 		placeKnots();
-		// testing
-		System.out.println("\n---------------------");
-		for(int i=0; i<knots.length; i++) {
-			System.out.println("Knot " + i + ": " + knots[i]);
-		}
-		System.out.println("---------------------\n");
 
 		// Compute the values of the basis B-splines
 		// S, where S_[ij] = b_{j,4}(t_i)
 		computeS();
-		// testing
-		System.out.println("\n---------------------");
-		System.out.println("S:");
-		for(int i=0; i<numDataPoints; i++) {
-			System.out.println(s.getRowMatrix(i));
-		}
-		System.out.println("---------------------\n");
 
 		// 1. Initialize the class center for each class as described in the paper.
 		// The center of a class is the mean value of the spline coefficients of genes in the class.
 		initializeClassCenter();
-		// testing
-		System.out.println("\n---------------------");
-		System.out.println("Initial class centers: " + mu);
-		System.out.println("---------------------\n");
 
 		// Initialize the assignment of genes to their classes.
 		// The classes are initialized
@@ -677,11 +634,6 @@ public class TimeFit extends TimeSeriesModel {
 		}
 		controlPoints.add(new Point2D.Double(x[x.length-1], 0));
 		controlPointsColumn[q-1] = numDataPoints-1;
-
-		// for testing
-		for(int i=0; i<q; i++) {
-			System.out.println("Control Point " + i + "\t opt: " + equidistantPoints[i] + "\t\t\tchosen: " + controlPoints.get(i).getX());
-		}
 	}
 
 
@@ -689,7 +641,6 @@ public class TimeFit extends TimeSeriesModel {
 	 * 
 	 */
 	private void computeS() {
-		// TODO is this right?
 		double[][] s_matrix = new double[numDataPoints][q];
 
 		for(int i=0; i<numDataPoints; i++) {
@@ -778,11 +729,9 @@ public class TimeFit extends TimeSeriesModel {
 		// make sure that each class contains at least 3 genes
 		for(int j=0; j<numClasses; j++) {
 			while (class2genes.get(j).size() < 3) {
-				System.out.println("Class "+ j + " has only " + class2genes.get(j).size()+ " genes!");
 				for(int c=0; c<numClasses; c++) {
 					if (class2genes.get(c).size() > 3) {
 						int gene = class2genes.get(c).remove(0);
-						System.out.println("Moving gene " + gene + " from Class " + c + " to Class " + j + "!");
 						class2genes.get(j).add(gene);
 						pos2class[gene] = j;
 						break;
@@ -802,7 +751,6 @@ public class TimeFit extends TimeSeriesModel {
 
 		covMatrices = new ArrayList<RealMatrix>(numClasses);
 		RealMatrix subMatrix;
-		System.out.println("Rows: " + yMatrix.getRowDimension() + "Columns: " + yMatrix.getColumnDimension());
 		for(int j=0; j<numClasses; j++) {
 			// Get a submatrix with the expression values of genes of class j
 			Integer[] cols = new Integer[class2genes.get(j).size()];
@@ -874,7 +822,6 @@ public class TimeFit extends TimeSeriesModel {
 			geneVariances[i] = MathUtils.variance(yMatrix.getColumnMatrix(i).getSubMatrix(controlPointsColumn, new int[1]).getColumn(0)); 
 		}
 		variance = de.zbit.util.ArrayUtils.sum(geneVariances) / numGenes;
-		System.out.println("Variance: \t" + geneVariances[1]);	
 	}
 
 
@@ -889,7 +836,6 @@ public class TimeFit extends TimeSeriesModel {
 				noiseVectors.setEntry(i, j, rand.nextGaussian() * geneVariances[i]);
 			}
 		}
-		System.out.println("Noise vector: \t" + noiseVectors.getRowMatrix(1).toString()); // Testing output
 	}
 
 
@@ -908,7 +854,6 @@ public class TimeFit extends TimeSeriesModel {
 			double e1;
 			double e2;
 			factors = new double[numClasses];
-			//System.out.println("Compute prob for gene: " + i);
 			// Compute the factors uses for this gene once
 			for(int j = 0; j<numClasses; j++) {
 				// The factors
@@ -918,33 +863,12 @@ public class TimeFit extends TimeSeriesModel {
 				factors[j] = Math.log(classProbs[j]) + e1 + e2;
 			}
 			
-			// testing
-			if(i == 1) {
-				for(int k=0; k<numClasses; k++) {
-					System.out.println("factor" + k + ": " + factors[k]);
-				}
-			}
-
 			// Sum up the factors
 			sumFactors = NumberUtils.max(factors);
-
-			if(sumFactors == 0) {
-				System.out.println("SumFactors is 0");
-			}
 
 			// Use the computed factors to compute P(j|i)
 			for (int j = 0; j<numClasses; j++) {
 				probs[i][j] = Math.exp(factors[j] - sumFactors);	
-
-				if(Double.isInfinite(probs[i][j]))
-					System.out.println("prob" + i + j + " is infinite.");
-				else if(Double.isNaN(probs[i][j])) {
-					System.out.println("prob" + i + j + " is NaN");
-				}
-				else if(probs[i][j] < 0) {
-					// testing
-					System.out.println("prob" + i + j + " is less than 0!");
-				}
 			}
 		}
 	}
@@ -996,9 +920,6 @@ public class TimeFit extends TimeSeriesModel {
 			}
 		}
 		variance = sum / n;
-		// testing
-		if(Double.isInfinite(variance) || Double.isNaN(variance) || variance <= 0)
-			System.out.println("Maximize variance: variance NaN or infinite");
 	}
 
 
@@ -1015,13 +936,7 @@ public class TimeFit extends TimeSeriesModel {
 				m2 = m2.add(s.transpose().scalarMultiply(probs[i][j]).multiply(yMatrix.getColumnMatrix(i).subtract(s.multiply(gamma.get(j).getColumnMatrix(i)))));
 			}
 			// m1 has to be inverted
-			try{
-				m1 = new SingularValueDecomposition(m1).getSolver().getInverse();
-			} catch(Exception e) {
-				System.out.println("mu is singular.");
-				System.out.println(mu);
-				System.exit(-1);
-			}
+			m1 = new SingularValueDecomposition(m1).getSolver().getInverse();
 			mu.setColumnMatrix(j, m1.multiply(m2));
 		}
 	}
@@ -1068,10 +983,6 @@ public class TimeFit extends TimeSeriesModel {
 				sum += probs[i][j];
 			}
 			classProbs[j] = sum / numGenes;
-			if(classProbs[j] < 0) {
-				// testing
-				System.out.println("ClassProb less than 0!");
-			}
 		}
 	}
 
@@ -1098,18 +1009,6 @@ public class TimeFit extends TimeSeriesModel {
 			RealMatrix m = yMatrix.getColumnMatrix(i).subtract(s.multiply(mu.getColumnMatrix(j).add(gamma.get(j).getColumnMatrix(i))));
 			exp1 = - (m.transpose().multiply(m).scalarMultiply(1/(2*variance)).getEntry(0, 0));
 			exp2 = -0.5 * (gamma.get(j).getColumnMatrix(i).transpose().multiply(inverseCovMatrices.get(j)).multiply(gamma.get(j).getColumnMatrix(i)).getEntry(0, 0));
-			if(Double.isNaN(exp1) || Double.isNaN(exp2) || Double.isInfinite(exp1) || Double.isInfinite(exp2)){
-				System.out.println("--------");
-				if (Double.isNaN(exp1))
-					System.out.println("exp1 is NaN");
-				if (Double.isNaN(exp2))
-					System.out.println("exp2 is NaN");
-				if (Double.isInfinite(exp1))
-					System.out.println("exp1: " + exp1);
-				if(Double.isInfinite(exp2))
-					System.out.println("exp2: " + exp2);
-				System.out.println("--------");
-			}
 			sum += (1/Math.pow(Math.sqrt(variance), numDataPoints)) * Math.exp(exp1) * 1/squareRootDets[j] * Math.exp(exp2);
 			//}
 			newLogLikelihood += Math.log(sum);
@@ -1152,51 +1051,33 @@ public class TimeFit extends TimeSeriesModel {
 		return pos;
 	}
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {	
-		// Load the test data
-		//ArrayList<mRNATimeSeries> data = loadmRNATimeSeriesData("/home/fex/Dropbox/Paper/MCF-7.txt");
-		String path = "/home/fex/Dropbox/Paper/MCF-7.txt";
-		mRNATimeSeriesReader r = new mRNATimeSeriesReader();
-		// testing
-		System.out.println("Start loading time series data from " + path);
-		ArrayList<mRNATimeSeries> data = (ArrayList<mRNATimeSeries>) r.importWithGUI(new JPanel(), path);
-		
-		System.out.println("End loaded time series data");
-		// testing
-		System.out.println("Loaded data for " + data.size() + " genes.");
-		
-		// Generate model
-		TimeFit tf = new TimeFit(9, 20);
-		NSTimeSeriesTab parent = new NSTimeSeriesTab(null, null);
-		tf.generateModel(parent, data, r.getTimePoints(), 5, 1.0, false, NSTimeSeriesTab.generateLoadingPanel(parent, "..."));
-		
-		//tf.printModel();
-		// TODO Save name and ID ... for each gene before generating the model
-		// TODO update data of the tab. Just show the modelled genes
-	}
+//	/**
+//	 * @param args
+//	 */
+//	public static void main(String[] args) {	
+//		// Load the test data
+//		//ArrayList<mRNATimeSeries> data = loadmRNATimeSeriesData("/home/fex/Dropbox/Paper/MCF-7.txt");
+//		String path = "/home/fex/Dropbox/Paper/MCF-7.txt";
+//		mRNATimeSeriesReader r = new mRNATimeSeriesReader();
+//		ArrayList<mRNATimeSeries> data = (ArrayList<mRNATimeSeries>) r.importWithGUI(new JPanel(), path);
+//		
+//		
+//		// Generate model
+//		TimeFit tf = new TimeFit(9, 20);
+//		NSTimeSeriesTab parent = new NSTimeSeriesTab(null, null);
+//		tf.generateModel(parent, data, r.getTimePoints(), 5, 1.0, false, NSTimeSeriesTab.generateLoadingPanel(parent, "..."));
+//		
+//		//tf.printModel();
+//	}
 
 
 	/**
 	 */
 	public void printModel() {
 		// Print the classes and the genes in them
-		for(int i=0; i<numGenes; i++) {
-			System.out.println("Gene " + i + " belongs to class " + pos2class[i]);
-		}
-		System.out.println("\n---------------------------\n");
 		for(int j=0; j<numClasses; j++) {
 			System.out.println("Class " + j + "contains " + class2genes.get(j).size() + " genes");
 		}
-		System.out.println("\n---------------------------\n");
-		
-		// Print the class centers
-		for(int j=0; j<numClasses; j++) {
-			System.out.println("Class " + j + "center: " + mu.getColumnMatrix(j));
-		}
-		System.out.println("\n---------------------------\n");
 	}
 
 	
