@@ -129,6 +129,7 @@
 			<!-- Since 1.3, support for visualization of BioPAX pathways -->
 			<zipfileset src="${base}/lib/2013-04-08-SBVC_for_InCroMAP.jar">
 				<exclude name="**/package.html" />
+				<exclude name="**/BioPAXImporter.class" />
 			</zipfileset>
 			<!-- PaxTools -->
 			<zipfileset excludes="META-INF/*" src="${base}/lib/paxtools-4.1.1_customJenaFix.jar">
