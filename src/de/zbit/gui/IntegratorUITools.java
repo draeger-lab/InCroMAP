@@ -1155,6 +1155,7 @@ public class IntegratorUITools {
    * Lets the user choose pathways and observations and a output format. Batch creates a 
    * picture for every pathway and observation.
    */
+  @SuppressWarnings("rawtypes")
   public static void showBatchPathwayDialog() {
 
     // Create a list of available datasets and signals.
@@ -1190,7 +1191,7 @@ public class IntegratorUITools {
     lh.add(expScroll);
     
     // Create pathway list
-    final JList pathways = new JList(new String[]{"Please wait, loading list of pathways."});
+    final JList pathways = new JList<>(new String[]{"Please wait, loading list of pathways."});
     pathways.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     pathways.setEnabled(false);
     

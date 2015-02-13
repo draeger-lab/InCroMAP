@@ -30,5 +30,10 @@ package de.zbit.io;
  * @version $Rev$
  */
 public class GenericGeneBasedDataReader extends mRNAReader {
+
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 3624627197833707543L;
   // Intentionally blank.
 }

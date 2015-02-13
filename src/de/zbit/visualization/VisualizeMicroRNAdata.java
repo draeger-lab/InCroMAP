@@ -49,7 +49,6 @@ import de.zbit.gui.IntegratorUI;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.integrator.GraphMLmapsExtended;
 import de.zbit.kegg.io.KEGG2yGraph;
-import de.zbit.util.StringUtil;
 import de.zbit.util.TranslatorTools;
 
 /**
@@ -113,10 +112,10 @@ public class VisualizeMicroRNAdata {
     data = NameAndSignals.geneCentered(data, IntegratorUITools.getMergeTypeSilent());
     
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
-    tools.ensureMapExists(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS, true);
-    Map<Object, List<Node>> mi2n_map = tools.getReverseMap(GraphMLmapsExtended.NODE_NAME_AND_SIGNALS);
-    Map<String, List<Node>> mi2n_mapNameBased = tools.getRNA2NodeMap();
+    tools.ensureMapExists(GraphMLmapsExtended.NODE_NAME, true);
+    Map<Object, List<Node>> mi2n_map = tools.getReverseMap(GraphMLmapsExtended.NODE_NAME);
     Set<Node> nodesToLayout = new HashSet<Node>();
+    
     
     // Optional step: count number of nodes to add
     // and warn user if more than 30 nodes!
@@ -134,10 +133,7 @@ public class VisualizeMicroRNAdata {
           visualizedMiRNAs++;
           
           // we have a microRNA that has targets that are contained in the current graph.
-          //Node mi_node = getMicroRNAnode(mi2n_map, m);
-          List<Node> list = mi2n_map.get(m);
-          // FallBack on Name-based list
-          if (list==null || list.size()<1) list = mi2n_mapNameBased.get(m.getName().toUpperCase().trim());
+           List<Node> list = mi2n_map.get(m.getTrimmedMiRNAName());
           if (list==null || list.size()<1) {
             Node n2 = createMicroRNANode(m);
             list = new LinkedList<Node>();
@@ -278,14 +274,7 @@ public class VisualizeMicroRNAdata {
    * @return a {@link Node} corresponding to the given <code>mirna</code>.
    */
   private Node createMicroRNANode(miRNA mirna) {
-    String label = mirna.getName();
-    // Trim organism prefix from microRNA.
-    int pos = label.indexOf("miR");
-    if (pos>=0) {
-      label = label.substring(pos);
-    } else if (StringUtil.countChar(label, '-')==2) {
-      label = label.substring(label.indexOf('-')+1);
-    }
+    String label = mirna.getTrimmedMiRNAName();
     
     NodeRealizer nr = new ShapeNodeRealizer(ShapeNodeRealizer.TRIANGLE);
     nr.setFillColor(IntegratorUI.LIGHT_BLUE);

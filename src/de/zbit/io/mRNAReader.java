@@ -40,6 +40,10 @@ import de.zbit.util.progressbar.ProgressBar;
  * @version $Rev$
  */
 public class mRNAReader extends AbstractGeneBasedNSreader<mRNA> {
+  /**
+   * 
+   */
+  private static final long serialVersionUID = -8419425056725476543L;
   public static final transient Logger log = Logger.getLogger(mRNAReader.class.getName());
   
 

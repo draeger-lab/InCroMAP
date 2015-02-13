@@ -61,6 +61,11 @@ import de.zbit.util.progressbar.AbstractProgressBar;
  * @version $Rev$
  */
 public abstract class NameAndSignalReader<T extends NameAndSignals> implements Serializable {
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 1309348635278853541L;
+
   public static final transient Logger log = Logger.getLogger(NameAndSignalReader.class.getName());
   
   /**
@@ -574,7 +579,7 @@ public abstract class NameAndSignalReader<T extends NameAndSignals> implements S
     // Application can (as of today) only process pValues and fold changes.
     Collection<ExpectedColumn> r = new ArrayList<ExpectedColumn>(maxNumberOfColumns); 
     for (int i=1; i<=maxNumberOfColumns; i++) {
-      ExpectedColumn e = new ExpectedColumn("Additional data " + i, null, false, false,false,true,null);
+      ExpectedColumn e = new ExpectedColumn("Additional data " + i, null, false, false,false,true,(String[])null);
       r.add(e);
     }
     return r;

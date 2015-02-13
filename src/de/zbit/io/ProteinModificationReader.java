@@ -36,6 +36,11 @@ import de.zbit.gui.csv.ExpectedColumn;
  * @version $Rev$
  */
 public class ProteinModificationReader extends AbstractGeneBasedNSreader<ProteinModificationExpression> {
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 2265341442430171774L;
+
   public static final transient Logger log = Logger.getLogger(ProteinModificationReader.class.getName());
   
   int analyteIDCol=-1;

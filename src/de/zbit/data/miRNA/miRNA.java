@@ -37,6 +37,7 @@ import de.zbit.data.NSwithProbes;
 import de.zbit.data.NameAndSignals;
 import de.zbit.data.Signal.MergeType;
 import de.zbit.data.id.GeneID;
+import de.zbit.util.StringUtil;
 
 /**
  * A generic class to hold miRNAs with Signals and Targets.
@@ -324,6 +325,18 @@ public class miRNA extends NSwithProbes {
       }
     }
     
+  }
+
+  public String getTrimmedMiRNAName() {
+    String label = getName();
+    // Trim organism prefix from microRNA.
+    int pos = label.indexOf("miR");
+    if (pos>=0) {
+      label = label.substring(pos);
+    } else if (StringUtil.countChar(label, '-')>=2) {
+      label = label.substring(label.indexOf('-')+1);
+    }
+    return label;
   }
 
   /**

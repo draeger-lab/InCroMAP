@@ -52,6 +52,11 @@ import de.zbit.math.TimeSeriesModel;
 
 public class ModelSettingsDialog extends JPanel {
 	/**
+   * 
+   */
+  private static final long serialVersionUID = -368982249627600338L;
+
+  /**
 	 * The textfield for the cutoff value.
 	 */
 	private JFormattedTextField cutoffTextField;

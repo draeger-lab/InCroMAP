@@ -48,6 +48,7 @@ import de.zbit.data.miRNA.miRNAandTarget;
 import de.zbit.data.miRNA.miRNAtargets;
 import de.zbit.data.protein.ProteinModificationExpression;
 import de.zbit.graph.gui.TranslatorPanel;
+import de.zbit.graph.io.def.GraphMLmaps;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;
 import de.zbit.gui.JDropDownButton;
@@ -454,11 +455,10 @@ public class TranslatorTabActions implements ActionListener{
    */
   public static void removeMicroRNAnodes(TranslatorTools tools) {
     synchronized (tools.getGraph()) {
-      Map<String, List<Node>> mi2node = tools.getRNA2NodeMap();
-      for (List<Node> nl: mi2node.values()) {
-        for (Node n: nl) {
-          tools.getGraph().removeNode(n);
-        }
+      Map<Object, List<Node>> nodeMap = tools.getReverseMap(GraphMLmaps.NODE_TYPE);
+      List<Node> miNodes = nodeMap.get("RNA");
+      for (Node n : miNodes) {
+        tools.getGraph().removeNode(n);
       }
     }
   }

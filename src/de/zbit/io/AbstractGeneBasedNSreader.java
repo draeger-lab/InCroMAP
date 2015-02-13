@@ -64,6 +64,11 @@ import de.zbit.util.objectwrapper.ValueTriplet;
  * @param <T> any {@link NameAndSignals} to read from input file
  */
 public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> extends NameAndSignalReader<T> {
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 6805006123723256783L;
+
   public static final transient Logger log = Logger.getLogger(mRNAReader.class.getName());
   
   /**
@@ -144,6 +149,11 @@ public abstract class  AbstractGeneBasedNSreader<T extends NameAndSignals> exten
     
     // The user may choose multiple identifier columns
     ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),isIdentifierRequired(),true,true,false,regExForIdTypes.toArray(new String[0])) {
+      /**
+       * 
+       */
+      private static final long serialVersionUID = 440898079339435492L;
+
       /* (non-Javadoc)
        * @see de.zbit.gui.csv.ExpectedColumn#getInitialSuggestions(de.zbit.io.csv.CSVReader)
        */

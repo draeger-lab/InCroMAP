@@ -197,6 +197,7 @@ public class miRNATargetReader {
     if ((col_miRNA<0)||(col_Target<0)) {
       log.warning("Could not read miRNA file, due to missing columns - " +
         "miRNA_col: " + col_miRNA + ", target_col: " + col_Target);
+      in.close();
       return null;
     }
     //IdentifierType targetIDtype = this.targetIDtype;
@@ -360,10 +361,10 @@ public class miRNATargetReader {
   public static void main(String[] args) throws IOException {
     LogUtil.initializeLogging(Level.FINE);
     String prefix = "C:/Users/wrzodek/Desktop/OLDPC/EigeneDateien/Downloads/miRNA_targets/";
-    String file;
-    miRNATargetReader r;
-    miRNAtargets t;
-    miRNAtargets t_all = new miRNAtargets();
+//    String file;
+//    miRNATargetReader r;
+//    miRNAtargets t;
+//    miRNAtargets t_all = new miRNAtargets();
     
     batchCreateFiles(prefix+"ChosenSets/");
     if (true) return;
@@ -403,96 +404,96 @@ public class miRNATargetReader {
      * COLUMNS: 6 = "Target:miRNA", score: 8 (0.0 - 1.0) -- posterior probability (HIGHER is better). 
      * NOTE   : (column8) "Use a cutoff of P>0.5 for medium confidence and P>0.8 for high confidence miRNA target sites"
      */
-    file = prefix+"2010-01 mm_targets_FullList_flat.tab.gz";
-    r = new miRNATargetReaderElMMo("mouse");
-    r.col_pValueOrScore=8;
-    r.col_Target=6; // Column 6 = "Target:miRNA"
-    r.isExperimental=false;
-    r.predictionAlgorithm="ElMMo v4";
-    t = r.readCSV(file);
-    t_all.addAll(t);
-    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
-    
-    // Predictions ("TargetScan v5.1")
-    // Seem all to be "high confidence"
-    file = prefix+"2009-04 TargetScanMouse_targets.txt.zip";
-    r = new miRNATargetReaderTARGETSCAN("mouse");
-    r.col_pValueOrScore=9;
-    r.col_Species=3; // Contains NCBI Taxonomy Identifiers (ints).
-    r.isExperimental=false;
-    r.predictionAlgorithm="TargetScan v5.1";
-    t = r.readCSV(file);
-    t_all.addAll(t);
-    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
-    
-    // Predictions ("Diana v3")
-    // Higher is better, Webservice uses 7.3 as cutoff. This removes about 84% of the data.
-    file = prefix+"2009-07-10-microT_v3.0.txt.gz";
-    r = new miRNATargetReader("mouse");
-    r.col_pValueOrScore=3;
-    r.col_Target=2;
-    r.isExperimental=false;
-    r.predictionAlgorithm="DIANA - microT v3.0";
-    t = r.readCSV(file);
-    t_all.addAll(t);
-    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
-    
-    // Experimental "TarBase V5.0"
-    file = prefix+"2008-11-19 TarBase_V5.txt";
-    r = new miRNATargetReader("mouse");
-    r.col_Reference=20;
-    r.col_Target=9;
-    r.isExperimental=true;
-    r.col_Species=4; // OPTIONAL.
-    r.predictionAlgorithm = "TarBase V5.0";
-    t = r.readCSV(file);
-    t_all.addAll(t);
-    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
-    
-    
-    // Experimental "miRTarBase" (Strong experimental)
-    file = prefix+"2011-04 miRTarBase_SE_WR.txt";
-    r = new miRNATargetReader("mouse");
-    r.col_Reference=8;
-    r.isExperimental=true;
-    r.col_Species=2; // OPTIONAL.
-    r.predictionAlgorithm = "miRTarBase (SE)";
-    t = r.readCSV(file);
-    t_all.addAll(t);
-    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
-    
-    
-    // Weak Experimental "miRTarBase" (Weak experimental)
-    file = prefix+"2011-04 miRTarBase_SE_WR.txt";
-    t = r.readCSV(file);
-    r.predictionAlgorithm = "miRTarBase (WE)";
-    t_all.addAll(t);
-    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
-    
-    
-    // Experimental "miRecords"
-    file = prefix+"2010-11-25 EXPERIMENTAL miRecords_version3.txt";
-    r = new miRNATargetReader("mouse");
-    r.col_Reference=0;
-    r.isExperimental=true;
-    r.col_Species=6; // OPTIONAL. // 1=TargetGene_specied, 6=miRNA species
-    r.predictionAlgorithm = "miRecords_v3";
-    t = r.readCSV(file);
-    t_all.addAll(t);
-    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
-    
-    // SAVE
-    SerializableTools.saveGZippedObject("miRNAtargets.dat", t_all);
-    CSVwriteableIO.write(t_all, "miRNAtargets.txt");
-    
-    // Filter for HC and save again
-    t_all.filterTargets("DIANA - microT v3.0", 7.3, true);
-    t_all.filterTargets("DIANA - microT v4.0", 0.3, true);
-    t_all.filterTargets("ElMMo v4", 0.8, true);
-    t_all.printSummary();
-    
-    SerializableTools.saveGZippedObject("miRNAtargets_HC.dat", t_all);
-    CSVwriteableIO.write(t_all, "miRNAtargets_HC.txt");
+//    file = prefix+"2010-01 mm_targets_FullList_flat.tab.gz";
+//    r = new miRNATargetReaderElMMo("mouse");
+//    r.col_pValueOrScore=8;
+//    r.col_Target=6; // Column 6 = "Target:miRNA"
+//    r.isExperimental=false;
+//    r.predictionAlgorithm="ElMMo v4";
+//    t = r.readCSV(file);
+//    t_all.addAll(t);
+//    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
+//    
+//    // Predictions ("TargetScan v5.1")
+//    // Seem all to be "high confidence"
+//    file = prefix+"2009-04 TargetScanMouse_targets.txt.zip";
+//    r = new miRNATargetReaderTARGETSCAN("mouse");
+//    r.col_pValueOrScore=9;
+//    r.col_Species=3; // Contains NCBI Taxonomy Identifiers (ints).
+//    r.isExperimental=false;
+//    r.predictionAlgorithm="TargetScan v5.1";
+//    t = r.readCSV(file);
+//    t_all.addAll(t);
+//    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
+//    
+//    // Predictions ("Diana v3")
+//    // Higher is better, Webservice uses 7.3 as cutoff. This removes about 84% of the data.
+//    file = prefix+"2009-07-10-microT_v3.0.txt.gz";
+//    r = new miRNATargetReader("mouse");
+//    r.col_pValueOrScore=3;
+//    r.col_Target=2;
+//    r.isExperimental=false;
+//    r.predictionAlgorithm="DIANA - microT v3.0";
+//    t = r.readCSV(file);
+//    t_all.addAll(t);
+//    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
+//    
+//    // Experimental "TarBase V5.0"
+//    file = prefix+"2008-11-19 TarBase_V5.txt";
+//    r = new miRNATargetReader("mouse");
+//    r.col_Reference=20;
+//    r.col_Target=9;
+//    r.isExperimental=true;
+//    r.col_Species=4; // OPTIONAL.
+//    r.predictionAlgorithm = "TarBase V5.0";
+//    t = r.readCSV(file);
+//    t_all.addAll(t);
+//    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
+//    
+//    
+//    // Experimental "miRTarBase" (Strong experimental)
+//    file = prefix+"2011-04 miRTarBase_SE_WR.txt";
+//    r = new miRNATargetReader("mouse");
+//    r.col_Reference=8;
+//    r.isExperimental=true;
+//    r.col_Species=2; // OPTIONAL.
+//    r.predictionAlgorithm = "miRTarBase (SE)";
+//    t = r.readCSV(file);
+//    t_all.addAll(t);
+//    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
+//    
+//    
+//    // Weak Experimental "miRTarBase" (Weak experimental)
+//    file = prefix+"2011-04 miRTarBase_SE_WR.txt";
+//    t = r.readCSV(file);
+//    r.predictionAlgorithm = "miRTarBase (WE)";
+//    t_all.addAll(t);
+//    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
+//    
+//    
+//    // Experimental "miRecords"
+//    file = prefix+"2010-11-25 EXPERIMENTAL miRecords_version3.txt";
+//    r = new miRNATargetReader("mouse");
+//    r.col_Reference=0;
+//    r.isExperimental=true;
+//    r.col_Species=6; // OPTIONAL. // 1=TargetGene_specied, 6=miRNA species
+//    r.predictionAlgorithm = "miRecords_v3";
+//    t = r.readCSV(file);
+//    t_all.addAll(t);
+//    System.out.println("New:" + t.sizeOfTargets() + " All:"+ t_all.sizeOfTargets() + " Unique:"+ t_all.sizeOfUniqueTargets() + " miRNAs:" + t_all.size());
+//    
+//    // SAVE
+//    SerializableTools.saveGZippedObject("miRNAtargets.dat", t_all);
+//    CSVwriteableIO.write(t_all, "miRNAtargets.txt");
+//    
+//    // Filter for HC and save again
+//    t_all.filterTargets("DIANA - microT v3.0", 7.3, true);
+//    t_all.filterTargets("DIANA - microT v4.0", 0.3, true);
+//    t_all.filterTargets("ElMMo v4", 0.8, true);
+//    t_all.printSummary();
+//    
+//    SerializableTools.saveGZippedObject("miRNAtargets_HC.dat", t_all);
+//    CSVwriteableIO.write(t_all, "miRNAtargets_HC.txt");
     
   }
   

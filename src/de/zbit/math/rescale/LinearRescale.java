@@ -37,6 +37,7 @@ public class LinearRescale extends AbstractRescale {
   public <T extends Number & Comparable<T>> LinearRescale (Number min, Number max, T newMin, T newMax) {
     super(min, max, newMin, newMax);
   }
+  @SuppressWarnings("unchecked")
   public <T extends Number & Comparable<T>> LinearRescale (Number min, Number max, T... targetMinMax) {
     super(min, max, targetMinMax);
   }

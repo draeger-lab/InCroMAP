@@ -79,6 +79,7 @@ public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
    * @param tooltip
    * @return true if at least one item has been modified.
    */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public static boolean addToolTipToJComboBox(JComponent sigOptionalPanel,
     final Object comboBoxElement, final String tooltip) {
     
@@ -122,6 +123,7 @@ public class SignalOptionPanel extends PreferencesPanelForKeyProvider  {
    * @param toRemove
    * @return true if and only if at least one item has been removed
    */
+  @SuppressWarnings("rawtypes")
   public static boolean removeItemFromJComboBox(JComponent c, Object toRemove) {
     
     if (c instanceof JComboBox) {

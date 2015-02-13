@@ -52,6 +52,11 @@ import de.zbit.util.Species;
 public abstract class AbstractGeneAndRegionBasedNSreader<T extends NameAndSignals & Region> extends AbstractGeneBasedNSreader<T> {
 
   /**
+   * 
+   */
+  private static final long serialVersionUID = 6518338057158584787L;
+
+  /**
    * Probe position start (or just "position").
    */
   protected int probeStartCol=-1;

@@ -66,12 +66,13 @@ public class PathwayVisualizationOptionPanel extends PreferencesPanelForKeyProvi
   /**
    * 
    */
+  @SuppressWarnings("unchecked")
   private void changeNodeShapeSelector() {
     Object c = option2component.get(PathwayVisualizationOptions.CHANGE_NODE_SHAPE);
     if (c!=null && c instanceof JLabeledComponent) {
       Object c2 = ((JLabeledComponent)c).getColumnChooser();
       if (c2 instanceof JComboBox) {
-        ((JComboBox)c2).setRenderer(new NodeShapeSelector());
+        ((JComboBox<?>)c2).setRenderer(new NodeShapeSelector());
       } else {
         // Huh? should be a ComboBox!
         System.err.println("Could not change renderer of node shape selector!");

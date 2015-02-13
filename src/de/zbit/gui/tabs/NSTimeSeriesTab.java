@@ -238,9 +238,6 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		this.modelMethod = classs;
 		this.geneModels = new ArrayList<TimeSeriesModel>(this.data.size());
 
-		// Model each gene
-		mRNATimeSeries mRNA;
-		
 		// Show a dialog where the user can choose
 		// - if the time points are exponentially distributed (common for concentrations 0.1, 0.01, 0.001 .... )
 		// - a cutoff value. Model just genes that are over the cutoff value at least at one time point (good for the timeFit algorithm, not for the CubicSplineInterpolation)
@@ -438,7 +435,8 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 	 */
 	public void visualizeSelectedModelInChart() {
 		// The selected entries
-		List<mRNATimeSeries> selectedTimeSeries = (List<mRNATimeSeries>) this.getSelectedItems();
+		@SuppressWarnings("unchecked")
+    List<mRNATimeSeries> selectedTimeSeries = (List<mRNATimeSeries>) this.getSelectedItems();
 
 		// The corresponding selected models
 		List<TimeSeriesModel> selectedModels = new ArrayList<TimeSeriesModel>();

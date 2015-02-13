@@ -61,6 +61,7 @@ public abstract class AbstractRescale {
   public <T extends Number & Comparable<T>> AbstractRescale (Number min, Number max, T newMin, T newMax) {
     this (min, max, new Double[]{newMin.doubleValue(), newMax.doubleValue()});
   }
+  @SuppressWarnings("unchecked")
   public <T extends Number & Comparable<T>> AbstractRescale (Number min, Number max, T... targetMinMax) {
     this (min, max, Arrays.asList(targetMinMax));
   }

@@ -52,6 +52,11 @@ import de.zbit.util.Species;
  * @version $Rev$
  */
 public class SNPReader extends NameAndSignalReader<SNP> {
+  /**
+   * 
+   */
+  private static final long serialVersionUID = -1766196212647157548L;
+
   public static final transient Logger log = Logger.getLogger(SNPReader.class.getName());
   
   /**

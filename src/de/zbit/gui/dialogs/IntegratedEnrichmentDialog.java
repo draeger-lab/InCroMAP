@@ -85,12 +85,12 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
   /**
    * A list of available datasets (dependent on {@link #orgSel}).
    */
-  private JList datasets = null;
+  private JList<Object> datasets = null;
   
   /**
    * Enrichment type selection
    */
-  private JComboBox enrichment = null;
+  private JComboBox<?> enrichment = null;
   
   /**
    * Connect datasets with "and"
@@ -129,6 +129,7 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
     createDialog();
   }
   
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   private void createDialog() throws Exception {
     LayoutHelper lh = new LayoutHelper(this);
     
@@ -274,7 +275,7 @@ public class IntegratedEnrichmentDialog  extends JPanel implements ActionListene
       
       // Get selected tabs
       List<NameAndSignalsTab> selectedTabs = new ArrayList<NameAndSignalsTab>();
-      for (Object tab: dialog.datasets.getSelectedValues()) {
+      for (Object tab: dialog.datasets.getSelectedValuesList()) {
         NameAndSignalsTab nsTab = ((LabeledObject<NameAndSignalsTab>)tab).getObject();
         selectedTabs.add(nsTab);
       }

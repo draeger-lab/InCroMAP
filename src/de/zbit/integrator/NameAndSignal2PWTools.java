@@ -59,7 +59,6 @@ import de.zbit.gui.prefs.PathwayVisualizationOptions;
 import de.zbit.util.TranslatorTools;
 import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
-import de.zbit.visualization.VisualizeMicroRNAdata;
 
 
 /**
@@ -369,7 +368,7 @@ public class NameAndSignal2PWTools {
     // Get GeneID 2 Node map
     Map<Integer, List<Node>> gi2n_map = tools.getGeneID2NodeMap();
     Map<String, List<Node>> ci2n_map = null; // CompoundID2Node mapping
-    Map<String, List<Node>> mi2n_map = tools.getRNA2NodeMap();
+    Map<Object, List<Node>> mi2n_map = tools.getReverseMap(GraphMLmaps.NODE_NAME);
     Map<String, List<Node>> pw2n_map = tools.getPathwayReferenceNodeMap();
     
     // If pathway-centered, preprocess data
@@ -398,7 +397,7 @@ public class NameAndSignal2PWTools {
         node = Arrays.asList(new Node[]{ns2n.get(ns)});
       } else if (ns instanceof miRNA) {
         if (ns.getName()==null) continue;
-        Node miNode = VisualizeMicroRNAdata.getMicroRNAnode(mi2n_map, (miRNA) ns, graph);
+        Node miNode = mi2n_map.get( ((miRNA) ns).getTrimmedMiRNAName()).get(0);
         if (miNode==null) continue; // Contains no node in the current graph 
         node = Arrays.asList(new Node[]{miNode});
       } else if (ns instanceof Compound) {
@@ -595,6 +594,7 @@ public class NameAndSignal2PWTools {
     
     Map<Node, Set<T>> node2Ns = getNodeToNameAndSignalMapping(nsList);
     for (Node node: node2Ns.keySet()) {
+      @SuppressWarnings("unchecked")
       Map<VisualizedData, Collection<?>> rawNs = (Map<VisualizedData, Collection<?>>) rawNsMap.get(node);
       if (rawNs==null) {
         rawNs = new HashMap<VisualizedData, Collection<?>>();

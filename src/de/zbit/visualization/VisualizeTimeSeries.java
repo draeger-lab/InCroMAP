@@ -27,6 +27,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -78,7 +79,6 @@ import de.zbit.math.BonferroniHolm;
 import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.NotifyingWorker;
 import de.zbit.util.Species;
-import de.zbit.util.objectwrapper.ValueTriplet;
 import de.zbit.util.prefs.SBPreferences;
 import de.zbit.utils.SignalColor;
 import de.zbit.visualization.VisualizeTimeSeriesListener.VTSAction;
@@ -125,9 +125,6 @@ public class VisualizeTimeSeries {
 	/** What enrichment result shall be visualized? The enrichment p-value or q-value?
 	 *  And what correction method shall be used? **/
 	private boolean visualizePValue = true;
-	private boolean useBH = false;
-	private boolean useBFH = false;
-	private boolean useBO = false;
 	/** The importer for the KEGG pathway, downloads pathway information from KEGG*/
 	private KEGGImporter keggImporter;
 	/** The treated species from which data was obtained */
@@ -763,8 +760,8 @@ public class VisualizeTimeSeries {
 				JPanel fileTypeDialog = new JPanel();
 				String tooltip = "To which video format should the visualization be exported?";
 				@SuppressWarnings("unchecked")
-				JComboBox<String> fileTypeComboBox = GUITools.createJComboBox(possibleFileTypes,
-						null, true, "File type chooser", tooltip, 0, null);
+        JComboBox<String> fileTypeComboBox = GUITools.createJComboBox(possibleFileTypes,
+						null, true, "File type chooser", tooltip, 0, (ItemListener[]) null);
 
 				fileTypeDialog.add(fileTypeComboBox);
 				int confirmed = GUITools.showAsDialog(view, fileTypeDialog, "Please choose the output format", true);
@@ -872,10 +869,6 @@ public class VisualizeTimeSeries {
 	 * Select the BH correction method for multiple hypothesis testing
 	 */
 	public void setBH() {
-		useBH = true;
-		useBFH = false;
-		useBO = false;
-		
 		// Recompute the q-values for each time point
 		BenjaminiHochberg bh = new BenjaminiHochberg();
 		for(int i=0; i< numFrames; i++) {
@@ -888,10 +881,6 @@ public class VisualizeTimeSeries {
 	 * Select the BFH correction method for multiple hypothesis testing
 	 */
 	public void setBFH() {
-		useBH = false;
-		useBFH = true;
-		useBO = false;
-		
 		// Recompute the q-values for each time point
 		BonferroniHolm bfh = new BonferroniHolm();
 		for(int i=0; i< numFrames; i++) {
@@ -904,10 +893,6 @@ public class VisualizeTimeSeries {
 	 * Select the BO correction method for multiple hypothesis testing
 	 */
 	public void setBO() {
-		useBH = false;
-		useBFH = false;
-		useBO = true;
-		
 		// Recompute the q-values for each time point
 		Bonferroni bo = new Bonferroni();
 		for(int i=0; i< numFrames; i++) {

@@ -41,6 +41,10 @@ import de.zbit.gui.csv.ExpectedColumn;
 public class DNAmethylationReader extends AbstractGeneAndRegionBasedNSreader<DNAmethylation> {
 
   /**
+   * 
+   */
+  private static final long serialVersionUID = -752336778849751318L;
+  /**
    * Column containining chromosome and position information (REGEX: "CHR.{1,2}?FS\\d+").
    */
   protected int chromosomeAndPositionCol=-1;

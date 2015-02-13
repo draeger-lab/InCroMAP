@@ -51,6 +51,11 @@ import de.zbit.util.objectwrapper.ValueTriplet;
  * @version $Rev$
  */
 public class miRNAReader extends NameAndSignalReader<miRNA> {
+  /**
+   * 
+   */
+  private static final long serialVersionUID = -8978055155758978755L;
+
   public static final transient Logger log = Logger.getLogger(miRNAReader.class.getName());
   
   /**

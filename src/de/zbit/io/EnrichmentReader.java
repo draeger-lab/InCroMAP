@@ -109,6 +109,11 @@ public class EnrichmentReader extends NameAndSignalReader<EnrichmentObject<Strin
     // DAVID: "PValue", GSEA: "NOM p-val", InCro: "P-value"
     // => First column wo ohne minuns ein "pval" enthalten ist.
     ExpectedColumn ep = new ExpectedColumn("P-value", true) {
+      /**
+       * 
+       */
+      private static final long serialVersionUID = 4208948387314512199L;
+
       public int getInitialSuggestion(de.zbit.io.csv.CSVReader r) {
         int sug = r.getColumnContaining("p-val");
         if (sug<0) {

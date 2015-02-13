@@ -39,6 +39,11 @@ import de.zbit.util.Species;
 public class GenericGeneReader extends AbstractGeneAndRegionBasedNSreader<GenericGene> {
   
   /**
+   * 
+   */
+  private static final long serialVersionUID = 2147398766306431433L;
+
+  /**
    * Index to re-identify the "Strand" column.
    */
   private int indexOfStrandColumnInExColumnList = -1;

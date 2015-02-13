@@ -45,7 +45,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import de.zbit.data.Signal.SignalType;
-import de.zbit.data.mRNA.mRNA;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.GUITools;
 import de.zbit.gui.IntegratorUITools;

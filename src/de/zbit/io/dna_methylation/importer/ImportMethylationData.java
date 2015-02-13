@@ -81,6 +81,11 @@ public class ImportMethylationData extends AbstractGeneBasedNSreader<DNAmethylat
    *  
    */
   
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 3319861194044459134L;
+
   public static void main(String[] args) {
     
   }

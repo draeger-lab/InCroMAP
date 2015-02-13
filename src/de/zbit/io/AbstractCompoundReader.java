@@ -66,6 +66,11 @@ import de.zbit.util.objectwrapper.ValueTriplet;
 
 
 public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends NameAndSignalReader<T> {
+  /**
+   * 
+   */
+  private static final long serialVersionUID = -6191867276666778093L;
+
   public static final transient Logger log = Logger.getLogger(AbstractCompoundReader.class.getName());
   
   /**
@@ -148,6 +153,11 @@ public abstract class  AbstractCompoundReader<T extends NameAndSignals> extends 
     
     // The user may choose multiple identifier columns
     ExpectedColumn e = new ExpectedColumn("Identifier", idTypes.toArray(),isIdentifierRequired(),true,true,false,regExForIdTypes.toArray(new String[0])) {
+      /**
+       * 
+       */
+      private static final long serialVersionUID = 982677334471165012L;
+
       /* (non-Javadoc)
        * @see de.zbit.gui.csv.ExpectedColumn#getInitialSuggestions(de.zbit.io.csv.CSVReader)
        */

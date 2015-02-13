@@ -53,6 +53,7 @@ import y.view.ShapeNodePainter;
  * @author Clemens Wrzodek
  * @version $Rev$
  */
+@SuppressWarnings("rawtypes")
 public class NodeShapeSelector extends JComboBox implements ListCellRenderer {
   private static final long serialVersionUID = -6888199259419237517L;
   
@@ -72,11 +73,13 @@ public class NodeShapeSelector extends JComboBox implements ListCellRenderer {
     this (validChoices);
   }
   
-  private NodeShapeSelector(ComboBoxModel aModel) {
+  @SuppressWarnings("unchecked")
+  private NodeShapeSelector(ComboBoxModel<?> aModel) {
     super (aModel);
     setRenderer(this);
   }
   
+  @SuppressWarnings({ "unchecked" })
   public NodeShapeSelector(Byte[] allowedShapes) {
     this (new DefaultComboBoxModel(allowedShapes));
   }
@@ -106,6 +109,7 @@ public class NodeShapeSelector extends JComboBox implements ListCellRenderer {
   /* (non-Javadoc)
    * @see javax.swing.ListCellRenderer#getListCellRendererComponent(javax.swing.JList, java.lang.Object, int, boolean, boolean)
    */
+  @SuppressWarnings("unchecked")
   @Override
   public Component getListCellRendererComponent(JList list, Object value,
     int index, final boolean isSelected, final boolean cellHasFocus) {

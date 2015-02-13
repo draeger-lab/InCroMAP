@@ -1369,6 +1369,7 @@ public class VisualizeDataInPathway {
     final String[] pathwayIDs, final String outputFormat, final File outputDir) {
     
     SwingWorker<Integer, Void> batchPicCreator = new SwingWorker<Integer, Void>() {
+      @SuppressWarnings("unchecked")
       @Override
       protected Integer doInBackground() throws Exception {
 
