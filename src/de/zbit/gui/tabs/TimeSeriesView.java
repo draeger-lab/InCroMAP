@@ -192,7 +192,7 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
     
     // Export as video button
     JButton export = GUITools.createJButton(controller,
-    		VTSAction.EXPORT_AS_VIDEO, UIManager.getIcon("ICON_SAVE_16"));
+    		VTSAction.EXPORT_AS_GIF, UIManager.getIcon("ICON_SAVE_16"));
     bar.add(export);
     
     GUITools.setOpaqueForAllElements(bar, false); 

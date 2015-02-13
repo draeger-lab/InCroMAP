@@ -27,7 +27,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,23 +36,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
-import javax.swing.JComboBox;
+import javax.imageio.stream.FileImageOutputStream;
+import javax.imageio.stream.ImageOutputStream;
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import com.xuggle.mediatool.IMediaWriter;
-import com.xuggle.mediatool.ToolFactory;
-import com.xuggle.xuggler.ICodec;
 
 import y.io.IOHandler;
 import y.io.JPGIOHandler;
@@ -80,6 +71,7 @@ import de.zbit.math.TimeSeriesModel;
 import de.zbit.util.NotifyingWorker;
 import de.zbit.util.Species;
 import de.zbit.util.prefs.SBPreferences;
+import de.zbit.utils.GifSequenceWriter;
 import de.zbit.utils.SignalColor;
 import de.zbit.visualization.VisualizeTimeSeriesListener.VTSAction;
 import de.zbit.kegg.gui.IntegratorPathwayPanel;
@@ -96,7 +88,9 @@ import de.zbit.kegg.io.KEGGtranslatorIOOptions.Format;
  * @version $Rev$
  */
 public class VisualizeTimeSeries {
-	public static final transient Logger log = Logger.getLogger(TranslatorPanel.class.getName());
+	private static final int TIME_PER_FRAME = 1000;
+
+  public static final transient Logger log = Logger.getLogger(TranslatorPanel.class.getName());
 
 	/**
 	 * The view showing the film.
@@ -722,7 +716,6 @@ public class VisualizeTimeSeries {
 				try {
 					fw.write(s);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}		
@@ -738,131 +731,97 @@ public class VisualizeTimeSeries {
 	/**
 	 * Export the generated film to file.
 	 */
-	public void exportFilm() {
-		// You can add all codecs, which are supported by xuggler.
-		// http://stackoverflow.com/questions/9727590/what-codecs-does-xuggler-support
-		// The extension has to be in round brackets (the extension is parsed from that)
-		final String[] possibleFileTypes = {"MPEG-4 (.mp4)", "Flash Video (.flv)", "Ogg (.ogg)"};
-		final Map<String, ICodec.ID> fileExtensionToCodec = new HashMap<String, ICodec.ID>();
-		fileExtensionToCodec.put(".mp4", ICodec.ID.CODEC_ID_MPEG4);
-		fileExtensionToCodec.put(".flv", ICodec.ID.CODEC_ID_FLV1);
-		fileExtensionToCodec.put(".ogg", ICodec.ID.CODEC_ID_THEORA);
-		
-		
-		NotifyingWorker<Void> exporter = new NotifyingWorker<Void>() {
+  public void exportFilm() {
+    // You can add all codecs, which are supported by xuggler.
+    // http://stackoverflow.com/questions/9727590/what-codecs-does-xuggler-support
+    // The extension has to be in round brackets (the extension is parsed from
+    // that)
+    NotifyingWorker<Void> exporter = new NotifyingWorker<Void>() {
 
-			@Override
-			protected Void doInBackground() throws Exception {
-			publish(new ActionEvent(this, numFrames, VTSAction.START_GENERATE_FILM.toString()));
-				
-			// Show a dialog, where the user can choose the output file and
-			// the output file type
-				JPanel fileTypeDialog = new JPanel();
-				String tooltip = "To which video format should the visualization be exported?";
-				@SuppressWarnings("unchecked")
-        JComboBox<String> fileTypeComboBox = GUITools.createJComboBox(possibleFileTypes,
-						null, true, "File type chooser", tooltip, 0, (ItemListener[]) null);
+      @Override
+      protected Void doInBackground() throws Exception {
+        publish(new ActionEvent(this, numFrames,
+            VTSAction.START_GENERATE_FILM.toString()));
 
-				fileTypeDialog.add(fileTypeComboBox);
-				int confirmed = GUITools.showAsDialog(view, fileTypeDialog, "Please choose the output format", true);
+        String format = ".gif";
 
-				// Get the chosen format
-				final String format;
-				if(confirmed == JOptionPane.OK_OPTION) {
-					String s = (String) fileTypeComboBox.getSelectedItem();
-					int start = s.indexOf("(", 0) + 1;
-					int end = s.indexOf(")", start);
-					format = s.substring(start, end);
-				} else {
-					publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
-					return null; // user didn't choose a file format
-				}
-				
-				FileNameExtensionFilter filter = new FileNameExtensionFilter(
-		        format + " files", format.substring(1)); // substring: because first character is '.'
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+            format + " files", format.substring(1)); // substring: because first
+                                               // character is '.'
 
-				// Let the user choose the output destination
-				File saveDir = GUIOptions.SAVE_DIR.getValue(SBPreferences.getPreferencesFor(GUIOptions.class));
-				JFileChooser fc = GUITools.createJFileChooser(saveDir.toString(),
-						false, false, JFileChooser.FILES_ONLY, filter);
+        // Let the user choose the output destination
+        File saveDir = GUIOptions.SAVE_DIR.getValue(SBPreferences
+            .getPreferencesFor(GUIOptions.class));
+        JFileChooser fc = GUITools.createJFileChooser(saveDir.toString(),
+            false, false, JFileChooser.FILES_ONLY, filter);
 
-				if (fc.showSaveDialog(view) != JFileChooser.APPROVE_OPTION) {
-					publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
-					return null;
-				}
+        if (fc.showSaveDialog(view) != JFileChooser.APPROVE_OPTION) {
+          publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+          return null;
+        }
 
-				// Check file
-				File f = fc.getSelectedFile();
-				
-				// Attach (correct) file extension.
-				String path = FileTools.trimExtension(f.getPath()) + format;
-				f = new File(path);
-				
-				// Check if file exists and is writable
-		    boolean showOverride = f.exists();
-		    if (!f.exists()) try {
-		      f.createNewFile();
-		    } catch (IOException e) {
-		      GUITools.showErrorMessage(view, e);
-		      publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
-		      return null;
-		    }
-				if (!f.canWrite() || f.isDirectory()) { 
-					GUITools.showNowWritingAccessWarning(view, f);
-					publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
-					return null;
-				}
-				
-				// Overwrite existing file?
-				if(showOverride && !GUITools.overwriteExistingFile(view, f)) {
-						publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
-			      return null;
-				}
-				
-				// File exists, we can now write to it!	
-				IMediaWriter writer = ToolFactory.makeWriter(f.getPath());
-				int width = new Double(dimension.getWidth()).intValue();
-				int height = new Double(dimension.getHeight()).intValue();
-							
-				writer.addVideoStream(0, 0, fileExtensionToCodec.get(format), width, height);
-				
-				// Generate frame for frame and encode them. The last frame has to be handled manually. Why?
-				// Read the comment a few lines below.
-				BufferedImage pathwayImage;
-				for(int i=1; i < numFrames; i++) {
-					long timestamp = ((i-1) * 1000);  // Timestamp, when image should be displayed, in MILLIseconds
-					pathwayImage = generatePathwayImage(i); // first frame has the number 1
-					
-					writer.encodeVideo(0, pathwayImage, timestamp, TimeUnit.MILLISECONDS);
-					publish(new ActionEvent(this, i, VTSAction.IMAGE_GENERATED.toString()));
-				}
-					
-				// Because the damn decoder fails to decode the last two frames, encode the last image
-				// three times, so we can decode it later one time -.-
-				// See also: https://groups.google.com/forum/#!topic/xuggler-users/FXgmW4dViF8
-				BufferedImage lastFrame = generatePathwayImage(numFrames);
-				for(int j = 0; j < 3; j++) {
-					long timestamp = ((numFrames-1) * 1000)+j;  // Timestamp, when image should be displayed in MILLIseconds
-					
-					writer.encodeVideo(0, lastFrame, timestamp, TimeUnit.MILLISECONDS);
-					
-					// Set the progress bar when the last of the last frames was encoded.
-					if(j == 2)
-						publish(new ActionEvent(transPanel.getDocument(), numFrames, VTSAction.IMAGE_GENERATED.toString()));
-				}
-						
-				// Close the writer. Film is now succesfully exported.
-				writer.close();
-				
-				publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+        // Check file
+        File f = fc.getSelectedFile();
 
-				
-				return null;
-			}		
-		};
-		exporter.addActionListener(controller);
-		exporter.execute();
-	}
+        // Attach (correct) file extension.
+        String path = FileTools.trimExtension(f.getPath()) + format;
+        f = new File(path);
+
+        // Check if file exists and is writable
+        boolean showOverride = f.exists();
+        if (!f.exists())
+          try {
+            f.createNewFile();
+          } catch (IOException e) {
+            GUITools.showErrorMessage(view, e);
+            publish(new ActionEvent(this, 0,
+                VTSAction.END_EXPORT_FILM.toString()));
+            return null;
+          }
+        if (!f.canWrite() || f.isDirectory()) {
+          GUITools.showNowWritingAccessWarning(view, f);
+          publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+          return null;
+        }
+
+        // Overwrite existing file?
+        if (showOverride && !GUITools.overwriteExistingFile(view, f)) {
+          publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+          return null;
+        }
+
+        // generate first image to infer image type
+        BufferedImage pathwayImage;
+        pathwayImage = generatePathwayImage(1);
+        ImageOutputStream outputStream = new FileImageOutputStream(f);
+        // File exists, we can now write to it!
+        GifSequenceWriter writer = new GifSequenceWriter(outputStream,
+            pathwayImage.getType(), TIME_PER_FRAME, false);
+        writer.writeToSequence(pathwayImage);
+
+        // Generate frame for frame and encode them. The last frame has to be
+        // handled manually. Why?
+        // Read the comment a few lines below.
+        for (int i = 2; i < numFrames; i++) {
+          pathwayImage = generatePathwayImage(i); // first frame has the number
+                                                  // 1
+
+          writer.writeToSequence(pathwayImage);
+          publish(new ActionEvent(this, i, VTSAction.IMAGE_GENERATED.toString()));
+        }
+
+        // Close the writer. Film is now succesfully exported.
+        writer.close();
+        outputStream.close();
+
+        publish(new ActionEvent(this, 0, VTSAction.END_EXPORT_FILM.toString()));
+
+        return null;
+      }
+    };
+    exporter.addActionListener(controller);
+    exporter.execute();
+  }
 
 	
 	/**

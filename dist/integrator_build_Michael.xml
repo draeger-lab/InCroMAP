@@ -97,10 +97,6 @@
 			<!-- commons-math -->
 			<zipfileset excludes="META-INF/*"  src="${base}/lib/commons-math3-3.3.jar"/>
 			
-			<!-- xuggler -->
-			<zipfileset excludes="META-INF/*"  src="${base}/lib/slf4j-api-1.6.4.jar"/>
-			<zipfileset excludes="META-INF/*"  src="${base}/lib/xuggle-xuggler-5.4.jar"/>
-
 			<fileset dir="${SysBioPath}/bin">
 				<exclude name="de/zbit/resources/liftover/**/*" />
 				<exclude name="**/package.html" />

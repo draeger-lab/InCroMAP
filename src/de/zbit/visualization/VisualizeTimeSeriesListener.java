@@ -102,7 +102,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 		GO_TO_POSITION,
 		
 		/** Export the generated film to a file */
-		EXPORT_AS_VIDEO,
+		EXPORT_AS_GIF,
 		
 		/** Film was succesfully exported */
 		END_EXPORT_FILM,
@@ -117,6 +117,8 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 		@Override
 		public String getName() {
 			switch (this) {
+			case EXPORT_AS_GIF:
+			  return "Export as GIF";
 			case VISUALIZE_ENRICHMENT_PVAL:
 				return "Visualize enrichment p-value";
 			case VISUALIZE_ENRICHMENT_QVAL:
@@ -135,6 +137,8 @@ public class VisualizeTimeSeriesListener implements ActionListener {
 		@Override
 		public String getToolTip() {
 			switch (this) {
+			case EXPORT_AS_GIF:
+        return "Export movie as animated GIF";
 			case VISUALIZE_ENRICHMENT_PVAL:
 				return "Visualize the enrichment p-value.";
 			case VISUALIZE_ENRICHMENT_QVAL:
@@ -396,7 +400,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   				}
   			}
 				
-			} else if(command.equals(VTSAction.EXPORT_AS_VIDEO.toString())) {
+			} else if(command.equals(VTSAction.EXPORT_AS_GIF.toString())) {
 				
 				// Start exporting the film
 				if(isFilmGenerated())

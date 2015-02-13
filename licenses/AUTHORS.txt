@@ -15,6 +15,12 @@ Andreas Dräger (1)
   andreas.draeger@uni-tuebingen.de
 Finja Büchel (1)
   finja.buechel@uni-tuebingen.de
+Lars Rosenbaum
+  lars.rosenbaum@uni.tuebingen.de
+Michael R�mer (1)
+  michael.roemer@uni-tuebingen.de
+Felix Bartusch (1)
+  felix.bartusch@student.uni-tuebingen.de
 
 ###################
 #   Supervisor    #
