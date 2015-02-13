@@ -9,7 +9,7 @@
  * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
  * obtain the latest version of Integrator.
  *
- * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ * Copyright (C) 2011-2015 by the University of Tuebingen, Germany.
  *
  * Integrator is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public License
@@ -178,11 +178,11 @@ public class VisualizeTimeSeries {
 			this.cutoff = settingsDialog.getCutoff();
 			
 			// testing
-			System.out.println("Test: Chosen pathway: " + settingsDialog.getSelectedPathwayID());
-			System.out.println("Test: Chosen cutoff: " + settingsDialog.getCutoff());
-			System.out.println("Test: Chosen numFrames: " + settingsDialog.getNumFrames());
-			System.out.println("Test: NumDataPoints: " + parent.getNumObservations());
-			System.out.println("Test: timePoints: " + models.get(0).getDistributedTimePoints(settingsDialog.getNumFrames()));
+//			System.out.println("Test: Chosen pathway: " + settingsDialog.getSelectedPathwayID());
+//			System.out.println("Test: Chosen cutoff: " + settingsDialog.getCutoff());
+//			System.out.println("Test: Chosen numFrames: " + settingsDialog.getNumFrames());
+//			System.out.println("Test: NumDataPoints: " + parent.getNumObservations());
+//			System.out.println("Test: timePoints: " + models.get(0).getDistributedTimePoints(settingsDialog.getNumFrames()));
 			
 			// How many frames should be created? And what are their time points?
 			if(settingsDialog.getJustVisualizeDate()) {
@@ -197,9 +197,9 @@ public class VisualizeTimeSeries {
 				useOriginalData = false;
 			}
 			
-			for(int i=0; i<timePoints.length; i++) {
-				System.out.println("TimePoint" + i + ": " + timePoints[i]);
-			}
+//			for(int i=0; i<timePoints.length; i++) {
+//				System.out.println("TimePoint" + i + ": " + timePoints[i]);
+//			}
 
 			// Initialize the view and the controller
 			this.view = new TimeSeriesView(pathwayID, this, controller, parent.getIntegratorUI(), species);
@@ -316,8 +316,8 @@ public class VisualizeTimeSeries {
 		try {
 			if(modelValues.size() != 0) {
 				// TODO something throws a NullPointer exception here
-				if(enrich == null)
-					System.out.println("Enrich null");
+//				if(enrich == null)
+//					System.out.println("Enrich null");
 				l = enrich.getEnrichments(modelValues, null, null, false);
 			} else {
 				GUITools.showErrorMessage(view, "There is no differential expressed gene for timepoint "
@@ -432,7 +432,7 @@ public class VisualizeTimeSeries {
 
 		// Generate the experiment name for the mRNA for the given time point
 		// testing
-		System.out.println("Caller time point: " + timePoint);
+//		System.out.println("Caller time point: " + timePoint);
 		String experimentName = generateExperimentName(timePoint);
 
 		// for each model, compute the value at the time point and build a mRNATimeSeries object

@@ -9,7 +9,7 @@
  * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
  * obtain the latest version of Integrator.
  *
- * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ * Copyright (C) 2011-2015 by the University of Tuebingen, Germany.
  *
  * Integrator is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public License
@@ -452,7 +452,7 @@ public class NSTimeSeriesTab extends NameAndSignalsTab implements PropertyChange
 		if(selectedModels.size() == 0)
 			return;
 		
-		System.out.println(selectedModels);
+//		System.out.println(selectedModels);
 		parent.addTab(new VisualizeTimeSeriesAsLineChart(selectedModels, 200, timeUnit), "Models");
 	}
 	

@@ -9,7 +9,7 @@
  * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
  * obtain the latest version of Integrator.
  *
- * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ * Copyright (C) 2011-2015 by the University of Tuebingen, Germany.
  *
  * Integrator is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public License
@@ -174,8 +174,8 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   public synchronized void actionPerformed(ActionEvent e) {
   	// if ActionCommand is null, the action came from the KEGGImporter
   	// for testing
-  	System.out.println("VisualizeTimeSeriesListener: " + e.toString());
-  	System.out.println("ActionEvent ID: " + e.getID());
+//  	System.out.println("VisualizeTimeSeriesListener: " + e.toString());
+//  	System.out.println("ActionEvent ID: " + e.getID());
 
   	if(e.getActionCommand() == null) {
   		switch(e.getID()) {
@@ -191,7 +191,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			// TODO Progress bar does not show progress
   			model.getKeggImporter().setProgressBar(view.showTemporaryLoadingPanel(message));
   			
-  			System.out.println("Show loading panel case1");
+//  			System.out.println("Show loading panel case1");
   			
   			break;
   			
@@ -222,7 +222,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   			originalViewportView = view.getViewport().getView();
   			view.setViewportView(model.pathwayPanel);
   			
-  			System.out.println("Show loading panel case3");
+//  			System.out.println("Show loading panel case3");
   			break;
   			
   		case 4:
@@ -263,7 +263,7 @@ public class VisualizeTimeSeriesListener implements ActionListener {
   		String command = e.getActionCommand();
   		
   		if (command.equals(VTSAction.START_GENERATE_FILM.toString())) {
-  			System.out.println("This part of the code is reaches");
+//  			System.out.println("This part of the code is reaches");
   			// Set the progress bar in the view
   			//AbstractProgressBar bar = view.showTemporaryLoadingPanel("Generating film of pathway " + model.getPathwayID());
   			try {

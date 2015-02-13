@@ -9,7 +9,7 @@
  * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
  * obtain the latest version of Integrator.
  *
- * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ * Copyright (C) 2011-2015 by the University of Tuebingen, Germany.
  *
  * Integrator is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public License
@@ -185,7 +185,7 @@ public class Integrator extends Launcher {
    */
   @Override
   public short getYearOfProgramRelease() {
-    return 2014;
+    return 2015;
   }
   
   /* (non-Javadoc)

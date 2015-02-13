@@ -9,7 +9,7 @@
  * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
  * obtain the latest version of Integrator.
  *
- * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ * Copyright (C) 2011-2015 by the University of Tuebingen, Germany.
  *
  * Integrator is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public License
@@ -278,9 +278,9 @@ public class TimeFit extends TimeSeriesModel {
 		this.isExponentiallyDistributed = isExponentiallyDistributed;
 		
 		// Get the parameters chosen by the user
-		System.out.println("Number of classes: " + numClassesTextField.getText());
-		System.out.println("Number of models: " + numModelTextField.getText());
-		System.out.println("Number of iterations: " + maxIterTextField.getText());
+//		System.out.println("Number of classes: " + numClassesTextField.getText());
+//		System.out.println("Number of models: " + numModelTextField.getText());
+//		System.out.println("Number of iterations: " + maxIterTextField.getText());
 		
 		try {
 			numClasses = Integer.valueOf(numClassesTextField.getText());
@@ -339,7 +339,7 @@ public class TimeFit extends TimeSeriesModel {
 			}
 		}
 		
-		bestModel.printModel();
+//		bestModel.printModel();
 		
 		// Take the parameter of the best model
 		isModelled = true;

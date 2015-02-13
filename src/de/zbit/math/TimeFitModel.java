@@ -9,7 +9,7 @@
  * <http://www.cogsys.cs.uni-tuebingen.de/software/InCroMAP> to
  * obtain the latest version of Integrator.
  *
- * Copyright (C) 2011 by the University of Tuebingen, Germany.
+ * Copyright (C) 2011-2015 by the University of Tuebingen, Germany.
  *
  * Integrator is free software; you can redistribute it and/or 
  * modify it under the terms of the GNU Lesser General Public License
@@ -99,7 +99,7 @@ public class TimeFitModel extends TimeSeriesModel {
 		
 		// Maybe just the original (not modelled) data is requested. 
 		if(useOriginalData) {
-			System.out.println("Original data");
+//			System.out.println("Original data");
 			for(int i=0; i<x.length; i++) {
 				if(timePoint == x[i])
 						return y[i];
@@ -112,14 +112,14 @@ public class TimeFitModel extends TimeSeriesModel {
 		// Return the modeled value as described in the paper.
 		// testing
 		//System.out.println(this.name + " returned " + (s.multiply(mu.add(gamma)).getEntry(0, 0)));
-		if(timePoint == 1.0) {
-			System.out.println("s(t): " + s.getRowDimension() + "x" + s.getColumnDimension());
-			System.out.println(s);
-			System.out.println("mu: " + mu.getRowDimension() + "x" + mu.getColumnDimension());
-			System.out.println(mu);
-			System.out.println("gamma: " + mu.getRowDimension() + "x" + gamma.getColumnDimension());
-			System.out.println(gamma);
-		}
+//		if(timePoint == 1.0) {
+//			System.out.println("s(t): " + s.getRowDimension() + "x" + s.getColumnDimension());
+//			System.out.println(s);
+//			System.out.println("mu: " + mu.getRowDimension() + "x" + mu.getColumnDimension());
+//			System.out.println(mu);
+//			System.out.println("gamma: " + mu.getRowDimension() + "x" + gamma.getColumnDimension());
+//			System.out.println(gamma);
+//		}
 		return s.multiply(mu.add(gamma)).getEntry(0, 0);
 	}
 	
