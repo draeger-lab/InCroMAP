@@ -50,7 +50,7 @@
   SysBio 1295
   SBVC 2013-04-08-SBVC_for_InCroMAP.jar -> based on 177
  
-* Integrator 1.7 (released beta in Februar 2013 (2015-02-XX) is based on the following subversion revisions:
+* Integrator 1.7 (released beta in Februar 2015 (2015-02-15) is based on the following subversion revisions:
   Integrator 351
   KEGGTranslator 406
   SysBio 1368
