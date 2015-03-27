@@ -229,9 +229,10 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 	}
 	
 	/**
-	 * Testing the visualization of a graph. So I can see the result of manipulating the graph
-	 * in the class VisualizeTimeSeries
-	 * @param graph
+	 * Show a graph in the view.
+	 * @param graph to show
+	 * @param curFrame number of the current frame
+	 * @param resizeGraph should the graph be resized?
 	 */
 	public void showGraph(Graph2D graph, int curFrame, boolean resizeGraph) {
 		
@@ -245,6 +246,7 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 	
 		// Set the new graph
 		pathwayPanel.getGraph2DView().setGraph2D(graph);
+		pathwayPanel.getGraph2DView().updateView();
 		
 		// Update the detailPanel of the pathwayPanel if a node was selected.
 		// For that, simulate that there is an click on the previous selected node
@@ -264,12 +266,10 @@ public class TimeSeriesView extends IntegratorTab<Graph2D> {
 			} catch (Throwable t) {} // Not really a problem
 		}
 	
-		// Update the control panel
+		// Update the slider in the control panel
 		controlPanel.setFrameToTimeUnit(curFrame,
 				model.mapFrameToTimePoint(curFrame), model.getTimeUnit());
 		controlPanel.setSliderValue(curFrame);
-		
-		repaint();
 		}
 
 	/**

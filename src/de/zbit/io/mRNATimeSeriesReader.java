@@ -26,6 +26,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.FontMetrics;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +45,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
+
 import de.zbit.data.Signal.SignalType;
 import de.zbit.data.mRNA.mRNATimeSeries;
 import de.zbit.gui.GUITools;
@@ -54,6 +56,8 @@ import de.zbit.gui.csv.ExpectedColumn;
 import de.zbit.gui.table.JTableRowBased;
 import de.zbit.integrator.ReaderCache;
 import de.zbit.integrator.ReaderCacheElement;
+import de.zbit.integrator.TimeSeriesCache;
+import de.zbit.integrator.TimeSeriesCacheElement;
 import de.zbit.io.csv.CSVReader;
 import de.zbit.util.ArrayUtils;
 import de.zbit.util.Species;
@@ -71,7 +75,7 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 	/**
 	 *  String describing the timeUnit, e.g. "sec", "day", "hour", "mol", etc.
 	 */
-	private String timeUnit = "";
+	private String timeUnit = null;
 
 	/**
 	 * This list holds the time information.
@@ -124,7 +128,9 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 
 			int originalSize = getExpectedColumns().length;
 			
+			// Get the cached information
 			CSVReader inputReader = loadConfigurationFromCache(cache, file, exCol, spec);
+			TimeSeriesCache timeSeriesCache = TimeSeriesCache.getCache();
 			
 			// Check if the inputReader has a header
 			if(inputReader.getHeader() == null) {
@@ -150,11 +156,13 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 				changeExCol(c, isSignalColumn, types, isPValue);
 
 				// Create new panel, that allows to select timeUnit, timePoints and species
-				JPanel comp = new JPanel(new BorderLayout());
-				timeUnitTextfield = getTimeUnitTextfield();
-				// for testing
-				timePointsTable = createTimePointTable(inputReader, isSignalColumn);
-
+				JPanel comp = new JPanel(new BorderLayout());			
+				
+				// Read time series information from cache if it exists
+				TimeSeriesCacheElement ce = timeSeriesCache.get(new File(c.getApprovedCSVReader().getFilename()));
+				timeUnitTextfield = getTimeUnitTextfield(ce);
+				timePointsTable = createTimePointTable(inputReader, isSignalColumn, ce);
+				
 				// Add single components to the main component
 				comp.add(spec, BorderLayout.PAGE_START);
 				comp.add(timeUnitTextfield, BorderLayout.CENTER);
@@ -195,8 +203,12 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 				try {
 					// Store time unit and time points from user input
 					this.timeUnit = ((JTextField) timeUnitTextfield.getComponents()[1]).getText();
-					createTimePointsFromUserInput(c, timePointsTable, exCol); // does nothing
-					//Utils.saveObject(FileTools.removeFileExtension(c.getApprovedCSVReader().getFilename())+"-reader.dat", this);
+					double[] tpArray = createTimePointsFromUserInput(c, timePointsTable, exCol);
+					
+					// Store time series information in the cache
+					if (timeSeriesCache!=null) timeSeriesCache.add(TimeSeriesCacheElement.createInstance(tpArray, timeUnit, c));
+					
+					// Read the data and return it.
 					return read(c.getApprovedCSVReader());
 
 				} catch (Exception e) {
@@ -401,15 +413,16 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 	}
 
 	/**
-	 * User's time points input is stored as two-dimensional array. This is ugly, so create a list from the array.
-	 * Ignore the empty cells, because user doesn't want to use this columns.
+	 * Process the time points from the user input together with information about
+	 * the signal type.
 	 * @param table 
 	 * @param offset 
 	 * @param exCol 
+	 * @return 
 	 * @throws Exception 
 	 * 
 	 */
-	private void createTimePointsFromUserInput(CSVImporterV2 c, JTable table, ExpectedColumn[] exCol) throws Exception {
+	private double[] createTimePointsFromUserInput(CSVImporterV2 c, JTable table, ExpectedColumn[] exCol) throws Exception {
 		//Get the preview panel and the preview table
 		JComponent previewPanel = c.getPreviewPanel();
 		JTableRowBased previewTable = null;
@@ -436,16 +449,17 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 		// Read the user input
 		this.timePoints = new ArrayList<ValueTriplet<Double, String, SignalType>>();
 		TableModel model = table.getModel();
+		double[] tpArray = new double[model.getColumnCount()];
 
 		for(int i=0; i<numCol; i++) {			
 			if(boxes[i].getSelectedIndex() > 2) {					// a signal column
 				JComboBox<?> typeBox = (JComboBox<?>) previewModel.getValueAt(1, i);
-
+				// Add the time point
 				timePoints.add(
 						new ValueTriplet<Double, String, SignalType>(
 								(Double) model.getValueAt(0, boxes[i].getSelectedIndex()-3),
 								boxes[i].getSelectedItem().toString(),
-								(SignalType) typeBox.getSelectedItem()));	
+								(SignalType) typeBox.getSelectedItem()));
 			}
 		}
 
@@ -459,13 +473,23 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 			if(i+1<timePoints.size() && Math.abs((timePoints.get(i).getA() - timePoints.get(i+1).getA())) < 0.000000001)
 				throw new Exception("Time points have to be different");
 		}
+		
+		// Generate an array of the time points which are then cached
+		int i = 0;
+		for(ValueTriplet<Double, String, SignalType> tp: timePoints) {
+			tpArray[i] = tp.getA();
+			i++;
+		}
+		
+		return tpArray;
 	}
 
 	/**
-	 * Show a textfield to let user fill in the time unit
-	 * @return
+	 * Generate a textfield to let user fill in the time unit
+	 * @param ce cache element with cached time series information
+	 * @return the textfield
 	 */
-	private static JPanel getTimeUnitTextfield() {
+	private static JPanel getTimeUnitTextfield(TimeSeriesCacheElement ce) {
 		JPanel panel = new JPanel();
 		// The two components of the TimeUnitTextField
 		JTextField field = new JTextField(10); // or a combo box, which is easier to generate and looks better?
@@ -478,6 +502,11 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 		panel.setPreferredSize(null);
 		panel.add(description);
 		panel.add(field);
+		
+		// Use cached time unit if it exists
+		if(ce != null) {
+			field.setText(ce.getTimeUnit());
+		}
 
 		GUITools.createTitledPanel(panel, "Time unit selection");
 		return panel;
@@ -488,9 +517,10 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 	 * which describe the time points of the experiment.
 	 * @param reader The CSVReader
 	 * @param signals The array contains information about signal columns
+	 * @param ce cache containing the time points
 	 * @return
 	 */
-	private JTable createTimePointTable(final CSVReader reader, Integer[] signals) {
+	private JTable createTimePointTable(final CSVReader reader, Integer[] signals, TimeSeriesCacheElement ce) {
 
 		// How many columns the table need?
 		int counter = 0;
@@ -555,7 +585,20 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 				}
 			}
 		};
-
+		
+		// Use cached time unit if it exists
+		if(ce != null) {
+			double[] cachedTimePoints = ce.getTimePoints();
+			
+			// Is the column number of the table model the same as the arrays length?
+			if(cachedTimePoints.length == m.getColumnCount()) {
+				for(int i=0; i<cachedTimePoints.length; i++) {
+					// Use a string here because the table model works with user inputs.
+					m.setValueAt(String.valueOf(cachedTimePoints[i]), 0, i);
+				}
+			}
+		}
+		
 		// Build new JTable with the given dimension and experiment names
 		JTable table = new JTable(m);
 
@@ -613,6 +656,7 @@ public class mRNATimeSeriesReader extends AbstractGeneBasedNSreader<mRNATimeSeri
 	protected void processAdditionalExpectedColumns(
 			List<ExpectedColumn> additional) {		
 	}
+	
 
 	/* (non-Javadoc)
 	 * @see de.zbit.io.AbstractGeneBasedNSreader#createObject(java.lang.String, java.lang.Integer, java.lang.String[])

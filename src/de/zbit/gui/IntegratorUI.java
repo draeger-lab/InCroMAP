@@ -86,6 +86,7 @@ import de.zbit.gui.tabs.IntegratorTab;
 import de.zbit.gui.tabs.NSTimeSeriesTab;
 import de.zbit.gui.tabs.NameAndSignalsTab;
 import de.zbit.integrator.ReaderCache;
+import de.zbit.integrator.TimeSeriesCache;
 import de.zbit.io.BioPAXimporterInCroMAP;
 import de.zbit.io.CompoundReader;
 import de.zbit.io.DNAmethylationReader;
@@ -1133,6 +1134,7 @@ public class IntegratorUI extends BaseFrame {
     try {
       Translator.saveCache();
       ReaderCache.saveIfRequired();
+      TimeSeriesCache.saveIfRequired();
       
       SBProperties props = new SBProperties();
       if (openDir != null && openDir.length() > 1) {
