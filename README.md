@@ -4,7 +4,7 @@
 **Integrated analysis of Cross-platform MicroArray and Pathway data**
 
 [![License (LGPL version 3)](https://img.shields.io/badge/license-LGPLv3.0-blue.svg?style=plastic)](http://opensource.org/licenses/GPL-3.0)
-[![Latest version](https://img.shields.io/badge/Latest_version-1.7-brightgreen.svg?style=plastic)](https://github.com/draeger-lab/InCroMap/releases/)
+[![Latest version](https://img.shields.io/badge/Latest_version-1.7-brightgreen.svg?style=plastic)](releases/tag/1c25ac8)
 [![DOI](http://img.shields.io/badge/DOI-10.1016%20%2F%20j.jchromb.2014.04.030-blue.svg?style=plastic)](http://dx.doi.org/10.1016/j.jchromb.2014.04.030)
 
 *Authors:* [Clemens Wrzodek](https://github.com/Clemens82/), [Johannes Eichner](https://github.com/jeichner/), [Andreas Dräger](https://github.com/draeger/), Finja Wrzodek, Lars Rosenbaum, [Michael Römer](https://github.com/mroemer/), and [Andreas Zell](https://github.com/ZellTuebingen/)
