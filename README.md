@@ -4,7 +4,7 @@
 **Integrated analysis of Cross-platform MicroArray and Pathway data**
 
 [![License (LGPL version 3)](https://img.shields.io/badge/license-LGPLv3.0-blue.svg?style=plastic)](http://opensource.org/licenses/GPL-3.0)
-[![Latest version](https://img.shields.io/badge/Latest_version-1.7-brightgreen.svg?style=plastic)](https://github.com/InCroMap/releases/tag/1c25ac8)
+[![Latest version](https://img.shields.io/badge/Latest_version-1.7-brightgreen.svg?style=plastic)](https://github.com/InCroMAP/releases/tag/1c25ac8)
 [![DOI](http://img.shields.io/badge/DOI-10.1016%20%2F%20j.jchromb.2014.04.030-blue.svg?style=plastic)](http://dx.doi.org/10.1016/j.jchromb.2014.04.030)
 
 *Authors:* [Clemens Wrzodek](https://github.com/Clemens82/), [Johannes Eichner](https://github.com/jeichner/), [Andreas Dräger](https://github.com/draeger/), Finja Wrzodek, Lars Rosenbaum, [Michael Römer](https://github.com/mroemer/), and [Andreas Zell](https://github.com/ZellTuebingen/)
@@ -16,7 +16,7 @@ Have you ever tried to integrate omics data from different biological layers? In
 
 ### Publications
 
-Article citations are **critical** for us to be able to continue support for InCroMap.  If you use InCroMap and you publish papers about work that uses InCroMap, we ask that you **please cite the most recent InCroMap paper** and possibly further manuscripts about this tool:
+Article citations are **critical** for us to be able to continue support for InCroMAP.  If you use InCroMAP and you publish papers about work that uses InCroMAP, we ask that you **please cite the most recent InCroMAP paper** and possibly further manuscripts about this tool:
 
 1. Johannes Eichner, Lars Rosenbaum, Clemens Wrzodek, Hans-Ulrich Häring, Andreas Zell, and Rainer Lehmann. [Integrated enrichment analysis and pathway-centered visualization of metabolomics, proteomics, transcriptomics, and genomics data by using the InCroMAP software](http://www.sciencedirect.com/science/article/pii/S1570023214002682).
   Journal of Chromatography B, May 2014. [ [DOI](http://dx.doi.org/10.1016/j.jchromb.2014.04.030) ]
