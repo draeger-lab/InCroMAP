@@ -1,4 +1,4 @@
-# InCroMap
+# InCroMAP
 <img align="right" src="resources/de/zbit/gui/img/IntegratorIcon_128.png"/>
 
 **Integrated analysis of Cross-platform MicroArray and Pathway data**
